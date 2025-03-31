@@ -1,6 +1,6 @@
 # Abzu
 
-This is Abzu.
+Waters of wisdom... knowledge graph of silicon.
 
 ## Project Setup
 
