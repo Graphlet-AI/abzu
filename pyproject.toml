@@ -1,0 +1,66 @@
+[project]
+name = "abzu"
+version = "0.1.0"
+description = "Abzu"
+authors = [
+    {name = "Russell Jurney",email = "russell.jurney@gmail.com"}
+]
+license = {text = "COMMERCIAL"}
+readme = "README.md"
+requires-python = "3.12.*"
+
+[tool.poetry.urls]
+"Code Repository" = "https://github.com/Graphlet-AI/abzu"
+"Bug Tracker" = "https://github.com/Graphlet-AI/abzu/issues"
+
+[tool.poetry.dependencies]
+python = "3.12.*"
+
+[tool.poetry.group.dev.dependencies]
+flake8 = "^7.1.1"
+isort = "^5.13.2"
+mypy = "^1.14.0"
+pytest = "^8.3.4"
+ipython = "^8.31.0"
+pandas-stubs = "^2.2.3.241126"
+ipykernel = "^6.29.5"
+nbformat = "^5.10.4"
+jupyter-black = "^0.4.0"
+pre-commit = "^4.1.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[[tool.poetry.source]]
+name = "pypi"
+priority = "primary"
+
+[[tool.poetry.source]]
+name = "rapids"
+url = "https://pypi.nvidia.com"
+priority = "supplemental"
+
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+include = ["stellarbrain", "test"]
+
+[tool.flake8]
+max-line-length = 100
+
+[tool.isort]
+profile = "black"
+src_paths = ["stellarbrain", "test"]
+
+[tool.mypy]
+python_version = "3.12"
+mypy_path = ["stellarbrain", "test"]
+warn_return_any = true
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+ignore_missing_imports = true
+
+[tool.pytest]
+testpaths = ["tests"]
