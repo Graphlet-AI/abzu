@@ -21,7 +21,6 @@ class ArticleCrawler(scrapy.Spider):
         super().__init__(*args, **kwargs)
         self.start_urls: list[str] = [archive_url]
         self.output_file: Path = Path(output_path)
-        self.articles: list[dict[str, str]] = []
 
     def parse(self, response: scrapy.http.Response) -> Iterator[scrapy.Request]:
         """Parse the archive page and follow links to individual articles."""
@@ -53,8 +52,6 @@ class ArticleCrawler(scrapy.Spider):
 
         with open(self.output_file, "a", encoding="utf-8") as f:
             f.write(json.dumps(article, ensure_ascii=False, sort_keys=False) + "\n")
-
-        self.articles = []
 
 
 # To run sequential crawls without restarting the reactor:
