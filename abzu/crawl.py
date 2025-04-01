@@ -49,9 +49,13 @@ class ArticleCrawler(scrapy.Spider):
 
     def save(self, article) -> None:
         """Save all collected articles to the output file."""
-
-        with open(self.output_file, "a", encoding="utf-8") as f:
-            f.write(json.dumps(article, ensure_ascii=False, sort_keys=False) + "\n")
+        try:
+            with open(self.output_file, "a", encoding="utf-8") as f:
+                f.write(json.dumps(article, ensure_ascii=False, sort_keys=False) + "\n")
+        except IOError as e:
+            self.logger.error(f"Failed to write article to {self.output_file}: {e}")
+        except TypeError as e:
+            self.logger.error(f"Failed to serialize article data: {e}")
 
 
 # To run sequential crawls without restarting the reactor:
