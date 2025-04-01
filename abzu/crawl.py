@@ -4,6 +4,11 @@ from pathlib import Path
 from typing import Any, Iterator
 
 import scrapy
+from scrapy.crawler import CrawlerRunner
+from scrapy.http.response import Response
+from scrapy.utils.log import configure_logging
+from scrapy.utils.project import get_project_settings
+from twisted.internet import defer, reactor
 
 DEFAULT_PATH = "data/articles.jsonl"
 
@@ -22,7 +27,7 @@ class ArticleCrawler(scrapy.Spider):
         self.start_urls: list[str] = [archive_url]
         self.output_file: Path = Path(output_path)
 
-    def parse(self, response: scrapy.http.Response) -> Iterator[scrapy.Request]:
+    def parse(self, response: Response) -> Iterator[scrapy.Request]:
         """Parse the archive page and follow links to individual articles."""
         # Find all article links - adjust selector based on actual HTML structure
         article_links = response.css("a::attr(href)").getall()
@@ -31,7 +36,7 @@ class ArticleCrawler(scrapy.Spider):
             if absolute_url.startswith("https://semianalysis.com/20"):
                 yield scrapy.Request(absolute_url, callback=self.parse_article)
 
-    def parse_article(self, response: scrapy.http.Response) -> None:
+    def parse_article(self, response: Response) -> None:
         """Parse and save individual article content."""
         title = response.css("title::text").get() or "untitled"
         text_fragments = response.css("div.entry-content *::text").getall()
@@ -60,11 +65,6 @@ class ArticleCrawler(scrapy.Spider):
 
 # To run sequential crawls without restarting the reactor:
 def main():
-    from scrapy.crawler import CrawlerRunner
-    from scrapy.utils.log import configure_logging
-    from scrapy.utils.project import get_project_settings
-    from twisted.internet import defer, reactor
-
     configure_logging()
     settings = get_project_settings()
     # Set low concurrency and add a download delay
