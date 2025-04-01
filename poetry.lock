@@ -65,6 +65,23 @@ files = [
 visualize = ["Twisted (>=16.1.1)", "graphviz (>0.5.1)"]
 
 [[package]]
+name = "baml-py"
+version = "0.82.0"
+description = "BAML python bindings (pyproject.toml)"
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "baml_py-0.82.0-cp38-abi3-macosx_10_12_x86_64.whl", hash = "sha256:3bd0a422a447fa6227a40ced5923ecee1d21ccd06b5ad77fbde3452eb3ec33dd"},
+    {file = "baml_py-0.82.0-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:8e81540334badb6fbef5b1d532e34c163284e674e119b652238d1ba55607c5c5"},
+    {file = "baml_py-0.82.0-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:de2f5a0aca9da0999bf6bfeff6dbac7ba770fa645c577eff49d3d0138d49d319"},
+    {file = "baml_py-0.82.0-cp38-abi3-manylinux_2_24_aarch64.whl", hash = "sha256:fbaffe78e6343c36efbc350a2aac5f9ee271b81866a6398c2eec7bb6dc23ea15"},
+    {file = "baml_py-0.82.0-cp38-abi3-musllinux_1_1_aarch64.whl", hash = "sha256:3bee5b1535ac109bb3a6ec3cac66562e6748f687521471febab95693f5be58d1"},
+    {file = "baml_py-0.82.0-cp38-abi3-musllinux_1_1_x86_64.whl", hash = "sha256:a88b263031e17cfc87a8d47a3f05990a2bc98c5e8c61a092159b05577a392f68"},
+    {file = "baml_py-0.82.0-cp38-abi3-win_amd64.whl", hash = "sha256:99609172b0c59e99edef0a95fd634f6aea9b3aff9b01972dec38b38ff804a30d"},
+]
+
+[[package]]
 name = "black"
 version = "25.1.0"
 description = "The uncompromising code formatter."
@@ -2400,4 +2417,4 @@ testing = ["coverage[toml]", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.1"
 python-versions = "3.12.*"
-content-hash = "73d6491ae88a6384a7ffd85533caaf467e4910a3a9e469fc3f7063d9ed2ec8ce"
+content-hash = "03d6b3546a3f6b3b03210c508fdefdffc50001f007921c061e71ca2b63e2e9dc"
