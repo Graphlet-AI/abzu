@@ -10,5 +10,25 @@ conda activate abzu
 
 poetry install
 
+# black, isort, flake8, mypy
 pre-commit install
+
+# To rebuild abzu.baml_client
+baml-cli generate
+```
+
+## Crawl
+
+Crawl SemiAnalysis.com via:
+
+```bash
+python abzu/crawl.py
+```
+
+## Information Extraction
+
+Run the information extracton via:
+
+```bash
+
 ```
