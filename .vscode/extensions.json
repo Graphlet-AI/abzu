@@ -1,5 +1,19 @@
 {
     "recommendations": [
-        "boundary.baml-extension"
+        "boundary.baml-extension",
+        "njpwerner.autodocstring",
+        "ms-python.black-formatter",
+        "anysphere.pyright",
+        "ms-azuretools.vscode-docker",
+        "ms-python.flake8",
+        "ms-pythone.isort",
+        "ms-toolsai.jupyter",
+        "ms-toolsai.vscode-jupyter-cell-tags",
+        "ms-toolsai.jupyter-renderers",
+        "ms-python.mypy-type-checker",
+        "dvirtz.parquet-viewer",
+        "ms-python.vscode-pylance",
+        "ms-python.debugpy",
+        "redhat.vscode-yaml"
     ]
 }
