@@ -20,7 +20,7 @@ client<llm> Gemini25Pro {
     provider google-ai
     retry_policy Constant
     options {
-        model "gemini-2.5-pro-exp-03-25"
+        model "gemini-2.5-pro-preview-03-25"
         api_key env.GEMINI_API_KEY
     }
 }
