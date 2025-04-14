@@ -1,33 +1,88 @@
 
 // This is a BAML config file, which extends the Jinja2 templating language to write LLM functions.
 
-class Document {
-  companies Company[]
-  products Product[]
-  technologies Technology[]
+class IndustryArticle {
+  
+  title string
+  @description("Title of the article")
+
+  // date string?
+  // @description("Date the article was published in ISO-8601 format")
+
+  authors Author[]
+  @description("Authors of the article")
+
+  summary string
+  @description("Summary of the article")
+
+  companies Company[]?
+  @description("Companies mentioned in the article")
+
+  tickers Ticker[]?
+  @description("Ticker symbols of the companies mentioned in the article")
+
+  products Product[]?
+  @description("Products mentioned in the article")
+
+  technologies Technology[]?
+  @description("Technologies mentioned in the article. Technologies does not include products")
+}
+
+class Author {
+  name string
+  @description("Name of the author")
+
+  // url string?
+  // @description("URL of the author's profile")
+}
+
+class Ticker {
+  name string
+  @description("Name of the company")
+
+  symbol string
+  @description("Ticker symbol of the company if publicly traded")
+
+  exchange string?
+  @description("Exchange where the company is traded")
 }
 
 class Company {
   name string
-  ticker string
+  @description("Formal name of the company with company suffix")
+
+  ticker Ticker?
+  @description("Ticker symbol of the company if publicly traded")
+
   description string
+  @description("Description of the company")
 }
 
 class Product {
   name string
-  manufacturer string
+  @description("Name of the company's product")
+
+  company Company
+  @description("Name of the company that makes the product")
+
   description string
+  @description("Description of the product. What does it do? What is it used for?")
 }
 
 class Technology {
   name string
-  developer string
+  @description("Name of the technology")
+
+  developer Company
+  @description("Name of the company that invented or developed the technology")
+
   description string
+  @description("Description of the technology. What does it do? What is it used for?")
 }
 
-function ExtractThings(article_text: string) -> Document {
+function ExtractIndustryArticle(article_text: string) -> IndustryArticle {
   // see clients.baml
-  client Gemini25Pro
+  client CustomGemini25Pro
 
   // The prompt uses Jinja syntax. Change the models or this text and watch the prompt preview change!
   prompt #"
@@ -46,7 +101,7 @@ function ExtractThings(article_text: string) -> Document {
 }
 
 test Test1 {
-  functions [ExtractThings]
+  functions [ExtractIndustryArticle]
   args {
     article_text #"
 Title: Nvidia’s Christmas Present: GB300 & B300 – Reasoning Inference, Amazon, Memory, Supply Chain Blackwell Delays, Microsoft Orders, GB300 BOM, Nvidia Gross Margin, ConnectX-8, VRMs, Micron, Samsung, SK Hynix, Wistron, FII Foxconn, Aspeed, Axiado
@@ -96,6 +151,7 @@ Many more samples to search with working on the same problem to improve accuracy
 As such, the tokenomics with NVL72 are more than 10x better, especially on long reasoning chains. KVCache eating up memory is a killer for economics, but NVL72 is the only way to scale reasoning lengths to 100k+ tokens at high batches.
 
 Blackwell Supply Chain Reworked for GB300
+
 With GB300, the supply chain and content that Nvidia supplies drastically changes. For the GB200 Nvidia provides the whole Bianca board (including the Blackwell GPU, Grace CPU, 512GB of LPDDR5X, VRM content all integrated onto one PCB) as well as the switch tray and copper backplane.
 
 For GB300, instead of supplying the whole Bianca board, Nvidia will only supply the B300 on an “SXM Puck” module, the Grace CPU on a BGA package, and the HMC which will be from US based startup Axiado instead of Aspeed for GB200.
@@ -113,6 +169,7 @@ Nvidia also offers the 800G ConnectX-8 NIC on the GB300 platform, offering twice
 ConnectX-8 offers a huge improvement versus ConnectX-7. Not only does it have 2x bandwidth, but it also has 48 PCIe lanes instead of 32 PCIe lanes, enabling unique architectures such as the air cooled MGX B300A. Furthermore, ConnectX-8 is SpectrumX capable whereas on the prior 400G generation, SpectrumX required much less efficient Bluefield 3 DPUs.
 
 Hyperscaler Impacts with GB300
+
 The hyperscaler impacts from delayed GB200 and GB300 mean that many orders starting in Q3 shift over to Nvidia’s new more expensive GPU. As of last week, all hyperscalers have decided to go forward with GB300. Partially this is due to the increased performance of GB300 due to higher FLOPS and more Memory, but also a portion of this is due to the ability to have control of their destiny.
 
 Due to time to market challenges and significant changes in rack, cooling, and power delivery/density, hyperscalers were not allowed to change the GB200 much at the server level. This resulted in Meta abandoning all hope of being able to multi-source NICs from Broadcom and Nvidia in favor of relying solely on Nvidia. In other cases, such as Google, they abandoned their in-house NIC in favor of only going with Nvidia.
