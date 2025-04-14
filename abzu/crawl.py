@@ -72,7 +72,7 @@ def main():
     settings.set("DOWNLOAD_DELAY", 0.5)
 
     runner = CrawlerRunner(settings)
-    archive_urls = [f"https://semianalysis.com/archives/page/{n}/" for n in range(1, 24)]
+    archive_urls = reversed([f"https://semianalysis.com/archives/page/{n}/" for n in range(1, 24)])
 
     @defer.inlineCallbacks
     def crawl():
