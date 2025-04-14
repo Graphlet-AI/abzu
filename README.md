@@ -1,6 +1,6 @@
 # Abzu
 
-Waters of wisdom... knowledge graph of silicon.
+A Knowledge Graph Bloomberg Terminal™ + Waters of wisdom... knowledge graph of silicon.
 
 ## Project Setup
 
@@ -14,6 +14,7 @@ poetry install
 pre-commit install
 
 # To rebuild abzu.baml_client
+# NOTE: make sure your plugin and baml-py versions match!
 baml-cli generate
 ```
 
