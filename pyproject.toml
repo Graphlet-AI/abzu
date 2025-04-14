@@ -16,6 +16,7 @@ requires-python = "3.12.*"
 [tool.poetry.dependencies]
 python = "3.12.*"
 scrapy = "^2.12.0"
+baml-py = "^0.83.0"
 
 [tool.poetry.group.dev.dependencies]
 flake8 = "^7.1.1"
