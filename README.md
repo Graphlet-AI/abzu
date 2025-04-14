@@ -28,8 +28,11 @@ python abzu/crawl.py
 
 ## Information Extraction
 
-Run the information extracton via:
+Run the information extracton via the [VSCode Plugin](https://marketplace.visualstudio.com/items?itemName=Boundary.baml-extension):
 
 ```bash
+baml-cli generate
 
+# To run the test data
+baml-cli test
 ```
