@@ -18,5 +18,5 @@
         "--profile",
         "black",
     ],
-    "autoDocstring.docstringFormat": "numpy",
+    "autoDocstring.docstringFormat": "numpy"
 }
