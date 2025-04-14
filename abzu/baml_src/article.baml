@@ -5,7 +5,6 @@ class Document {
   companies Company[]
   products Product[]
   technologies Technology[]
-  edges Edge[]
 }
 
 class Company {
@@ -25,14 +24,6 @@ class Technology {
   developer string
   description string
 }
-
-class Edge {
-  source string
-  target string
-  relationship string
-  description string
-}
-
 
 function ExtractThings(article_text: string) -> Document {
   // see clients.baml
