@@ -5,7 +5,7 @@ generator target {
     // Valid values: "python/pydantic", "typescript", "ruby/sorbet", "rest/openapi"
     output_type "python/pydantic"
 
-    project "abzu/baml_src"
+    project "abzu"
 
     // Where the generated code will be saved (relative to baml_src/)
     output_dir "../abzu/"
@@ -18,3 +18,4 @@ generator target {
     // This controls what `b.FunctionName()` will be (sync or async).
     default_client_mode sync
 }
+
