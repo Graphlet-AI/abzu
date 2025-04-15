@@ -3,6 +3,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Iterator
 
+import dateutil.parser
 import scrapy
 from scrapy.crawler import CrawlerRunner
 from scrapy.http.response import Response
@@ -39,15 +40,20 @@ class ArticleCrawler(scrapy.Spider):
     def parse_article(self, response: Response) -> None:
         """Parse and save individual article content."""
         title = response.css("title::text").get() or "untitled"
-        text_fragments = response.css("div.entry-content *::text").getall()
-        content = " ".join(text_fragments).strip()
+        text_fragments: list[str] = response.css("div.entry-content *::text").getall()
+        posted_at: datetime = dateutil.parser.parse(
+            str(response.css('meta[property="article:published_time"]::attr(content)').get())
+        )
+
+        content: str = " ".join(text_fragments).strip()
 
         self.save(
             {
                 "url": response.url,
                 "list_url": self.start_urls[0],
                 "title": title,
-                "timestamp": datetime.now().isoformat(),
+                "posted_at": posted_at.isoformat(),
+                "collected_at": datetime.now().isoformat(),
                 "content": content,
             }
         )
