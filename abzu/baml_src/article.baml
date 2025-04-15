@@ -6,8 +6,11 @@ class IndustryArticle {
   title string
   @description("Title of the article")
 
-  // date string?
-  // @description("Date the article was published in ISO-8601 format")
+  collected_at string?
+  @description("Date the article was collected, in ISO-8601 format")
+  
+  posted_at string?
+  @description("Date the article was published, in ISO-8601 format")
 
   authors Author[]
   @description("Authors of the article")
@@ -29,15 +32,15 @@ class IndustryArticle {
 }
 
 class Author {
-  name string
+  author_name string
   @description("Name of the author")
 
-  // url string?
-  // @description("URL of the author's profile")
+  profile_url string?
+  @description("URL of the author's profile")
 }
 
 class Ticker {
-  name string
+  company_name string
   @description("Name of the company")
 
   symbol string
@@ -48,7 +51,7 @@ class Ticker {
 }
 
 class Company {
-  name string
+  company_name string
   @description("Formal name of the company with company suffix")
 
   ticker Ticker?
@@ -56,10 +59,31 @@ class Company {
 
   description string
   @description("Description of the company")
+
+  website_url string?
+  @description("URL of the company's website")
+
+  headquarters_location string?
+  @description("Location of the company's headquarters")
+
+  revenue_usd int?
+  @description("Revenue of the company in USD")
+
+  employees int?
+  @description("Number of employees of the company")
+
+  founded_year int?
+  @description("Year the company was founded")
+
+  ceo string?
+  @description("Name of the company's CEO")
+
+  linkedin_url string?
+  @description("LinkedIn URL of the company")
 }
 
 class Product {
-  name string
+  product_name string
   @description("Name of the company's product")
 
   company Company
@@ -70,7 +94,7 @@ class Product {
 }
 
 class Technology {
-  name string
+  technology_name string
   @description("Name of the technology")
 
   developer Company
@@ -78,6 +102,28 @@ class Technology {
 
   description string
   @description("Description of the technology. What does it do? What is it used for?")
+}
+
+class Partnership {
+  src_company Company
+  @description("First company in partnership")
+
+  dst_company Company
+  @description("Second company in partnership")
+
+  description string
+  @description("Description of the partnership. What is its purpose?")
+}
+
+class Customer {
+  src_company Company
+  @description("Selling company")
+
+  dst_company Company
+  @description("Buying company")
+
+  description string
+  @description("Description of the customer relationship")
 }
 
 function ExtractIndustryArticle(article_text: string) -> IndustryArticle {

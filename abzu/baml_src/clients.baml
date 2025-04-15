@@ -26,8 +26,16 @@ client<llm> CustomGemini25Pro {
     }
 }
 
+client<llm> CustomGeminiFallback {
+  provider fallback
+  retry_policy Exponential
+  options {
+    strategy [CustomGemini25Pro, CustomO3Mini]
+  }
+}
+
 // https://docs.boundaryml.com/docs/snippets/clients/fallback
-client<llm> OpenaiFallback {
+client<llm> OpenAIFallback {
   provider fallback
   retry_policy Constant
   options {
@@ -47,7 +55,7 @@ retry_policy Constant {
 }
 
 retry_policy Exponential {
-  max_retries 2
+  max_retries 3
   // Strategy is optional
   strategy {
     type exponential_backoff
