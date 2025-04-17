@@ -36,8 +36,14 @@ python abzu/crawl.py
 Run the information extracton via the [VSCode Plugin](https://marketplace.visualstudio.com/items?itemName=Boundary.baml-extension):
 
 ```bash
+# Setup Gemini key
+export GEMINI_API_KEY="foobarlovesyou"
+
 baml-cli generate
 
 # To run the test data
 baml-cli test
+
+# To extract BAML types from SemiAnalysis.com articles
+abzu process articles
 ```

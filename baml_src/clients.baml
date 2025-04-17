@@ -16,17 +16,26 @@ client<llm> CustomGPT4o {
   }
 }
 
-client<llm> Gemini25Pro {
+client<llm> CustomGemini20Flash {
     provider google-ai
     retry_policy Constant
     options {
-        model "gemini-2.5-pro-exp-03-25"
+        // model "gemini-2.5-pro-preview-03-25"
+        model "gemini-2.0-flash"
         api_key env.GEMINI_API_KEY
     }
 }
 
+client<llm> CustomGeminiFallback {
+  provider fallback
+  retry_policy Exponential
+  options {
+    strategy [CustomGemini20Flash, CustomO3Mini]
+  }
+}
+
 // https://docs.boundaryml.com/docs/snippets/clients/fallback
-client<llm> OpenaiFallback {
+client<llm> OpenAIFallback {
   provider fallback
   retry_policy Constant
   options {
@@ -46,7 +55,7 @@ retry_policy Constant {
 }
 
 retry_policy Exponential {
-  max_retries 2
+  max_retries 3
   // Strategy is optional
   strategy {
     type exponential_backoff

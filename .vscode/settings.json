@@ -16,7 +16,7 @@
     "flake8.enabled": true,
     "isort.args": [
         "--profile",
-        "black",
+        "black"
     ],
-    "autoDocstring.docstringFormat": "numpy",
+    "autoDocstring.docstringFormat": "numpy"
 }
