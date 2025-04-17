@@ -53,6 +53,20 @@ def main(args: Optional[List[str]] = None) -> int:
     crawl_cmd.add_argument(
         "--pages", type=int, default=24, help="Number of pages to crawl (default: 24)"
     )
+    crawl_cmd.add_argument(
+        "-b",
+        "--batch-size",
+        type=int,
+        default=5,
+        help="Number of pages to crawl concurrently (default: 5)",
+    )
+    crawl_cmd.add_argument(
+        "-c",
+        "--concurrent-requests",
+        type=int,
+        default=5,
+        help="Number of concurrent requests per spider (default: 5)",
+    )
 
     # Parse args
     parsed_args = parser.parse_args(args)
@@ -74,7 +88,11 @@ def main(args: Optional[List[str]] = None) -> int:
         from abzu.cli.crawl import crawl_main
 
         return crawl_main(
-            url=parsed_args.url, output_path=parsed_args.output, pages=parsed_args.pages
+            url=parsed_args.url,
+            output_path=parsed_args.output,
+            pages=parsed_args.pages,
+            batch_size=parsed_args.batch_size,
+            concurrent_requests=parsed_args.concurrent_requests,
         )
     else:
         parser.print_help()

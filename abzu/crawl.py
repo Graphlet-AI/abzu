@@ -1,6 +1,6 @@
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any, Iterator, List
 
 import dateutil.parser
 import scrapy
@@ -18,6 +18,20 @@ DEFAULT_PATH = "data/articles.jsonl"
 class ArticleCrawler(scrapy.Spider):
     name = "article_crawler"
 
+    # Class level attributes for tracking
+    _backup_done = False
+    _total_articles_processed = 0
+
+    custom_settings = {
+        "COOKIES_ENABLED": False,
+        "RETRY_ENABLED": True,
+        "RETRY_TIMES": 3,
+        "AUTOTHROTTLE_ENABLED": True,
+        "AUTOTHROTTLE_START_DELAY": 1.0,
+        "AUTOTHROTTLE_MAX_DELAY": 5.0,
+        "DOWNLOAD_TIMEOUT": 30,
+    }
+
     def __init__(
         self,
         archive_url: str,
@@ -28,6 +42,8 @@ class ArticleCrawler(scrapy.Spider):
         super().__init__(*args, **kwargs)
         self.start_urls: list[str] = [archive_url]
         self.output_file: Path = Path(output_path)
+        self.start_time = datetime.now()
+        self.articles_processed = 0
 
     def parse(self, response: Response) -> Iterator[scrapy.Request]:
         """Parse the archive page and follow links to individual articles."""
@@ -63,7 +79,7 @@ class ArticleCrawler(scrapy.Spider):
         """Save all collected articles to the output file."""
         # First article will create a backup if file exists
         # Subsequent articles will not (more efficient for large crawls)
-        static_backup_done = getattr(self, "_backup_done", False)
+        static_backup_done = getattr(self.__class__, "_backup_done", False)
         create_backup = not static_backup_done
 
         if append_jsonl(article, self.output_file, create_backup):
@@ -71,32 +87,85 @@ class ArticleCrawler(scrapy.Spider):
                 self.logger.info(f"Backup created: {self.output_file}.bak")
                 # Set flag so we don't create multiple backups during the crawl
                 self.__class__._backup_done = True
+
+            # Update stats
+            self.articles_processed += 1
+            self.__class__._total_articles_processed += 1
+
+            # Log progress occasionally
+            if self.articles_processed % 10 == 0:
+                elapsed = datetime.now() - self.start_time
+                rate = self.articles_processed / max(elapsed.total_seconds(), 1)
+                self.logger.info(
+                    f"Crawler progress: {self.articles_processed} articles from {self.start_urls[0]} "
+                    f"(rate: {rate:.2f} articles/sec)"
+                )
         else:
             self.logger.error(f"Failed to save article to {self.output_file}")
 
+    def closed(self, reason):
+        """Called when the crawler is closed."""
+        elapsed = datetime.now() - self.start_time
+        self.logger.info(
+            f"Crawler finished: processed {self.articles_processed} articles from {self.start_urls[0]} "
+            f"in {elapsed.total_seconds():.2f} seconds"
+        )
 
-# To run sequential crawls without restarting the reactor:
-def main():
+
+# To run batch crawls with async
+def run_batch_crawl(urls: List[str], output_path: str = DEFAULT_PATH, concurrent_requests: int = 5):
+    """Run crawlers in batches concurrently."""
     configure_logging()
     settings = get_project_settings()
-    # Set low concurrency and add a download delay
-    settings.set("CONCURRENT_REQUESTS", 1)
-    settings.set("DOWNLOAD_DELAY", 0.5)
+    # Set concurrency and other settings
+    settings.set("CONCURRENT_REQUESTS", concurrent_requests)
+    settings.set("CONCURRENT_REQUESTS_PER_DOMAIN", concurrent_requests)
+    settings.set("DOWNLOAD_DELAY", 0.2)
+    settings.set("LOG_LEVEL", "INFO")
 
     runner = CrawlerRunner(settings)
-    archive_urls = reversed([f"https://semianalysis.com/archives/page/{n}/" for n in range(1, 24)])
+
+    # Create a cooperative deferred list for our batch
+    deferreds = []
+    for url in urls:
+        # Schedule crawler for each URL
+        deferred = runner.crawl(ArticleCrawler, archive_url=url, output_path=output_path)
+        deferreds.append(deferred)
+
+    # Return a single deferred that fires when all crawlers complete
+    return defer.DeferredList(deferreds)
+
+
+def main(batch_size: int = 5, concurrent_requests: int = 5):
+    """Run crawlers in batches."""
+    configure_logging()
+
+    # Get all archive URLs
+    archive_urls = list(
+        reversed([f"https://semianalysis.com/archives/page/{n}/" for n in range(1, 24)])
+    )
+    total_urls = len(archive_urls)
+
+    # Process URLs in batches
+    batches = [archive_urls[i : i + batch_size] for i in range(0, total_urls, batch_size)]
+    print(f"Processing {total_urls} URLs in {len(batches)} batches of up to {batch_size} URLs each")
 
     @defer.inlineCallbacks
-    def crawl():
-        for archive_url in archive_urls:
-            yield runner.crawl(
-                ArticleCrawler,
-                archive_url=archive_url,
-                output_path=DEFAULT_PATH,
-            )
+    def process_batches():
+        start_time = datetime.now()
+        for i, batch in enumerate(batches):
+            print(f"Starting batch {i + 1}/{len(batches)} with {len(batch)} URLs")
+            # Process this batch
+            yield run_batch_crawl(batch, DEFAULT_PATH, concurrent_requests)
+            print(f"Completed batch {i + 1}/{len(batches)}")
+
+        # All done!
+        elapsed = (datetime.now() - start_time).total_seconds()
+        print(f"All batches completed in {elapsed:.2f} seconds")
         reactor.stop()
 
-    crawl()
+    # Start the process
+    process_batches()
     reactor.run()  # Blocks until reactor.stop() is called.
 
 
