@@ -2,14 +2,14 @@ import pyspark.sql.types as T
 
 author_type = T.StructType(
     [
-        T.StructField("author_name", T.StringType(), nullable=False),
+        T.StructField("name", T.StringType(), nullable=False),
         T.StructField("profile_url", T.StringType(), nullable=True),
     ]
 )
 
 ticker_type = T.StructType(
     [
-        T.StructField("company_name", T.StringType(), nullable=False),
+        T.StructField("name", T.StringType(), nullable=False),
         T.StructField("symbol", T.StringType(), nullable=False),
         T.StructField("exchange", T.StringType(), nullable=True),
     ]
@@ -17,7 +17,7 @@ ticker_type = T.StructType(
 
 company_type = T.StructType(
     [
-        T.StructField("company_name", T.StringType(), nullable=False),
+        T.StructField("name", T.StringType(), nullable=False),
         T.StructField("ticker", ticker_type, nullable=True),
         T.StructField("description", T.StringType(), nullable=False),
         T.StructField("website_url", T.StringType(), nullable=True),
@@ -32,7 +32,7 @@ company_type = T.StructType(
 
 product_type = T.StructType(
     [
-        T.StructField("product_name", T.StringType(), nullable=False),
+        T.StructField("name", T.StringType(), nullable=False),
         T.StructField("company", company_type, nullable=False),
         T.StructField("description", T.StringType(), nullable=False),
     ]
@@ -40,7 +40,7 @@ product_type = T.StructType(
 
 technology_type = T.StructType(
     [
-        T.StructField("technology_name", T.StringType(), nullable=False),
+        T.StructField("name", T.StringType(), nullable=False),
         T.StructField("developer", company_type, nullable=False),
         T.StructField("description", T.StringType(), nullable=False),
     ]

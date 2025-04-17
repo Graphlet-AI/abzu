@@ -32,7 +32,7 @@ class IndustryArticle {
 }
 
 class Author {
-  author_name string
+  name string
   @description("Name of the author")
 
   profile_url string?
@@ -40,7 +40,7 @@ class Author {
 }
 
 class Ticker {
-  company_name string
+  name string
   @description("Name of the company")
 
   symbol string
@@ -51,7 +51,7 @@ class Ticker {
 }
 
 class Company {
-  company_name string
+  name string
   @description("Formal name of the company with company suffix")
 
   ticker Ticker?
@@ -83,7 +83,7 @@ class Company {
 }
 
 class Product {
-  product_name string
+  name string
   @description("Name of the company's product")
 
   company Company
@@ -94,7 +94,7 @@ class Product {
 }
 
 class Technology {
-  technology_name string
+  name string
   @description("Name of the technology")
 
   developer Company
