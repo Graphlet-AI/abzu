@@ -25,6 +25,9 @@ pydantic = "^2.11.3"
 pandas = "^2.2.3"
 graphistry = "^0.36.0"
 pyarrow = "^19.0.1"
+seaborn = "^0.13.2"
+networkx = "^3.4.2"
+matplotlib = "^3.10.1"
 
 [tool.poetry.group.dev.dependencies]
 flake8 = "^7.1.1"
