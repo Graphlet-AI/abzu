@@ -134,7 +134,7 @@ function ExtractIndustryArticle(article_text: string) -> IndustryArticle {
   prompt #"
     Parse the following article, perform information extraction to return a structured representation of the data in the schema below. Include only the information that is explicitly stated in the article.
 
-    Resume:
+    Industry Article:
     ---
     {{ article_text }}
     ---
