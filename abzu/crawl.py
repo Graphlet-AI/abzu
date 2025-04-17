@@ -1,4 +1,3 @@
-import json
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Iterator
@@ -10,6 +9,8 @@ from scrapy.http.response import Response
 from scrapy.utils.log import configure_logging
 from scrapy.utils.project import get_project_settings
 from twisted.internet import defer, reactor
+
+from abzu.utils import append_jsonl
 
 DEFAULT_PATH = "data/articles.jsonl"
 
@@ -60,13 +61,18 @@ class ArticleCrawler(scrapy.Spider):
 
     def save(self, article) -> None:
         """Save all collected articles to the output file."""
-        try:
-            with open(self.output_file, "a", encoding="utf-8") as f:
-                f.write(json.dumps(article, ensure_ascii=False, sort_keys=False) + "\n")
-        except IOError as e:
-            self.logger.error(f"Failed to write article to {self.output_file}: {e}")
-        except TypeError as e:
-            self.logger.error(f"Failed to serialize article data: {e}")
+        # First article will create a backup if file exists
+        # Subsequent articles will not (more efficient for large crawls)
+        static_backup_done = getattr(self, "_backup_done", False)
+        create_backup = not static_backup_done
+
+        if append_jsonl(article, self.output_file, create_backup):
+            if create_backup and Path(f"{self.output_file}.bak").exists():
+                self.logger.info(f"Backup created: {self.output_file}.bak")
+                # Set flag so we don't create multiple backups during the crawl
+                self.__class__._backup_done = True
+        else:
+            self.logger.error(f"Failed to save article to {self.output_file}")
 
 
 # To run sequential crawls without restarting the reactor:

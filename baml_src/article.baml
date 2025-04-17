@@ -128,7 +128,7 @@ class Customer {
 
 function ExtractIndustryArticle(article_text: string) -> IndustryArticle {
   // see clients.baml
-  client CustomGemini25Pro
+  client CustomGemini20Flash
 
   // The prompt uses Jinja syntax. Change the models or this text and watch the prompt preview change!
   prompt #"

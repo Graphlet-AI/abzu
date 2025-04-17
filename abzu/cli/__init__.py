@@ -31,6 +31,13 @@ def main(args: Optional[List[str]] = None) -> int:
         default="data/processed_articles.jsonl",
         help="Output JSONL file path (default: data/processed_articles.jsonl)",
     )
+    articles_cmd.add_argument(
+        "-b",
+        "--batch-size",
+        type=int,
+        default=5,
+        help="Number of articles to process concurrently (default: 5)",
+    )
 
     # Crawl command
     crawl_cmd = subparsers.add_parser("crawl", help="Crawl content from sources")
@@ -55,7 +62,11 @@ def main(args: Optional[List[str]] = None) -> int:
         if parsed_args.subcommand == "articles":
             from abzu.cli.process_articles import process_main
 
-            return process_main(parsed_args.input, parsed_args.output)
+            return process_main(
+                input_file=parsed_args.input,
+                output_file=parsed_args.output,
+                batch_size=parsed_args.batch_size,
+            )
         else:
             process_cmd.print_help()
             return 1
