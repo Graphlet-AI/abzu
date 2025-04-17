@@ -5,14 +5,15 @@ description = "Project Abzu"
 authors = ["Russell Jurney <russell.jurney@gmail.com>"]
 license = "COMMERCIAL"
 readme = "README.md"
-packages = [{include = "abzu"}, {include = "scripts"}]
+packages = [{include = "abzu"}]
 
 [tool.poetry.urls]
 "Code Repository" = "https://github.com/Graphlet-AI/abzu"
 "Bug Tracker" = "https://github.com/Graphlet-AI/abzu/issues"
 
 [tool.poetry.scripts]
-process-articles = "scripts.process_articles:main"
+process-articles = "abzu.cli.process_articles:main"
+abzu = "abzu.cli:main"
 
 [tool.poetry.dependencies]
 python = "3.12.*"
