@@ -32,6 +32,21 @@ def main(args: Optional[List[str]] = None) -> int:
         help="Output JSONL file path (default: data/processed_articles.jsonl)",
     )
 
+    # Crawl command
+    crawl_cmd = subparsers.add_parser("crawl", help="Crawl content from sources")
+    crawl_cmd.add_argument(
+        "-u", "--url", help="URL to start crawling from (defaults to predefined archive URLs)"
+    )
+    crawl_cmd.add_argument(
+        "-o",
+        "--output",
+        default="data/articles.jsonl",
+        help="Output JSONL file path (default: data/articles.jsonl)",
+    )
+    crawl_cmd.add_argument(
+        "--pages", type=int, default=24, help="Number of pages to crawl (default: 24)"
+    )
+
     # Parse args
     parsed_args = parser.parse_args(args)
 
@@ -44,6 +59,12 @@ def main(args: Optional[List[str]] = None) -> int:
         else:
             process_cmd.print_help()
             return 1
+    elif parsed_args.command == "crawl":
+        from abzu.cli.crawl import crawl_main
+
+        return crawl_main(
+            url=parsed_args.url, output_path=parsed_args.output, pages=parsed_args.pages
+        )
     else:
         parser.print_help()
         return 1
