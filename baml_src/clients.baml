@@ -26,11 +26,20 @@ client<llm> CustomGemini20Flash {
     }
 }
 
+client<llm> CustomGemini25Pro {
+    provider google-ai
+    retry_policy Exponential
+    options {
+        model "gemini-2.5-pro-preview-03-25"
+        api_key env.GEMINI_API_KEY
+    }
+}
+
 client<llm> CustomGeminiFallback {
   provider fallback
   retry_policy Exponential
   options {
-    strategy [CustomGemini20Flash, CustomO3Mini]
+    strategy [CustomGemini25Pro,CustomGemini20Flash]
   }
 }
 
