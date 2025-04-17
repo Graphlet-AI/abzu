@@ -38,7 +38,7 @@ async def process_article_async(article: Dict[str, Any]) -> Optional[IndustryArt
         result = await async_b.ExtractIndustryArticle(article_text)
 
         # Pass through timestamps from the original article
-        result.collected_at = article.get("published_at", None)
+        result.collected_at = article.get("collected_at", None)
         result.published_at = article.get("published_at", None)
 
         logger.info(f"Processed article: {article.get('title', 'unknown')}")
