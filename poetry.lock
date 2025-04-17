@@ -1780,21 +1780,6 @@ docs = ["sphinx (!=5.2.0,!=5.2.0.post0,!=7.2.5)", "sphinx_rtd_theme"]
 test = ["pretend", "pytest (>=3.0.1)", "pytest-rerunfailures"]
 
 [[package]]
-name = "pyparsing"
-version = "3.2.3"
-description = "pyparsing module - Classes and methods to define and execute parsing grammars"
-optional = false
-python-versions = ">=3.9"
-groups = ["main"]
-files = [
-    {file = "pyparsing-3.2.3-py3-none-any.whl", hash = "sha256:a749938e02d6fd0b59b356ca504a24982314bb090c383e3cf201c95ef7e2bfcf"},
-    {file = "pyparsing-3.2.3.tar.gz", hash = "sha256:b9c13f1ab8b3b542f72e28f634bad4de758ab3ce4546e4301970ad6fa77c38be"},
-]
-
-[package.extras]
-diagrams = ["jinja2", "railroad-diagrams"]
-
-[[package]]
 name = "pypydispatcher"
 version = "2.1.2"
 description = "Multi-producer-multi-consumer signal dispatching mechanism"
@@ -2340,27 +2325,6 @@ files = [
 ]
 
 [[package]]
-name = "sparkdantic"
-version = "2.2.0"
-description = "A pydantic -> spark schema library"
-optional = false
-python-versions = "<4.0.0,>3.9.1"
-groups = ["main"]
-files = [
-    {file = "sparkdantic-2.2.0-py3-none-any.whl", hash = "sha256:7bd34b3fcd90d82f63b4fa3ebe459abfd867e83d6f129c2619da71fcd55147fd"},
-    {file = "sparkdantic-2.2.0.tar.gz", hash = "sha256:18eec2fff16b43c0fd1bad3ef6d327152fede346f77395976b68d9718c8e0dea"},
-]
-
-[package.dependencies]
-jmespath = ">=1.0.1,<2.0.0"
-packaging = ">=24.2,<25.0"
-pydantic = ">=2.1.1,<3.0.0"
-pyparsing = ">=3.1.1,<4.0.0"
-
-[package.extras]
-pyspark = ["pyspark (>=3.3.0,<4.0.0)"]
-
-[[package]]
 name = "stack-data"
 version = "0.6.3"
 description = "Extract data from python stack frames and tracebacks for informative displays"
@@ -2647,4 +2611,4 @@ testing = ["coverage[toml]", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.1"
 python-versions = "3.12.*"
-content-hash = "c8aa8766c5f22ee099699c7c23b3a5467066446b629e3e66805cd30e60b54b41"
+content-hash = "d67d507ccae3de8194a3651c36c45d6eefe78c8057c69a2ebc327ed3f3a57ee5"
