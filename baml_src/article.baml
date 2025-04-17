@@ -9,10 +9,10 @@ class IndustryArticle {
   collected_at string?
   @description("Date the article was collected, in ISO-8601 format")
   
-  posted_at string?
+  published_at string?
   @description("Date the article was published, in ISO-8601 format")
 
-  authors Author[]
+  authors Author[]?
   @description("Authors of the article")
 
   summary string
