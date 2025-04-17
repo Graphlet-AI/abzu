@@ -39,6 +39,28 @@ def main(args: Optional[List[str]] = None) -> int:
         help="Number of articles to process concurrently (default: 5)",
     )
 
+    # Knowledge Graph subcommand
+    kg_cmd = process_subparsers.add_parser("kg", help="Process articles into a knowledge graph")
+    kg_cmd.add_argument(
+        "-i",
+        "--input",
+        default="data/processed_articles.jsonl",
+        help="Input processed articles JSONL file (default: data/processed_articles.jsonl)",
+    )
+    kg_cmd.add_argument(
+        "-o",
+        "--output",
+        default="data/knowledge_graph",
+        help="Output directory for knowledge graph (default: data/knowledge_graph)",
+    )
+    kg_cmd.add_argument(
+        "-p",
+        "--partitions",
+        type=int,
+        default=4,
+        help="Number of Spark partitions (default: 4)",
+    )
+
     # Crawl command
     crawl_cmd = subparsers.add_parser("crawl", help="Crawl content from sources")
     crawl_cmd.add_argument(
@@ -80,6 +102,15 @@ def main(args: Optional[List[str]] = None) -> int:
                 input_file=parsed_args.input,
                 output_file=parsed_args.output,
                 batch_size=parsed_args.batch_size,
+            )
+        elif parsed_args.subcommand == "kg":
+            # Import here to avoid loading Spark when not needed
+            from abzu.cli.process_kg import process_kg_main
+
+            return process_kg_main(
+                input_file=parsed_args.input,
+                output_dir=parsed_args.output,
+                partitions=parsed_args.partitions,
             )
         else:
             process_cmd.print_help()

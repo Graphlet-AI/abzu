@@ -33,9 +33,6 @@ def build_knowledge_graph(
     processed_df: DataFrame = spark.read.json(input_path)
     logger.info(f"Loaded {processed_df.count():,} processed articles")
 
-    # Show schema to verify structure
-    processed_df.printSchema()
-
     # Show a sample record
     processed_df.show(1, truncate=100, vertical=True)
 
@@ -52,15 +49,9 @@ def build_knowledge_graph(
         F.explode_outer(F.col("companies")).alias("company")
     ).filter("company IS NOT NULL")
 
-    # Debug schema
-    logger.info("Company raw schema:")
-    companies_raw_df.printSchema()
-
     # Need to handle the companies schema based on what's returned
     # First select all fields from the company struct
     companies_df = companies_raw_df.select("company.*")
-    logger.info("Company expanded schema:")
-    companies_df.printSchema()
     companies_df = companies_df.dropDuplicates(["name"])
     logger.info(f"Extracted {companies_df.count():,} unique companies")
 
@@ -70,14 +61,8 @@ def build_knowledge_graph(
         F.explode_outer(F.col("products")).alias("product")
     ).filter("product IS NOT NULL")
 
-    # Debug schema
-    logger.info("Product raw schema:")
-    products_raw_df.printSchema()
-
     # Select all fields from the product struct
     products_df = products_raw_df.select("product.*")
-    logger.info("Product expanded schema:")
-    products_df.printSchema()
 
     # We need to handle nested structures carefully
     # For deduplication, create name columns
@@ -90,10 +75,6 @@ def build_knowledge_graph(
     technologies_raw_df = processed_df.select(
         F.explode_outer(F.col("technologies")).alias("technology")
     ).filter("technology IS NOT NULL")
-
-    # Debug schema
-    logger.info("Technology raw schema:")
-    technologies_raw_df.printSchema()
 
     # Select all fields from the technology struct
     technologies_df = technologies_raw_df.select("technology.*")
@@ -111,14 +92,8 @@ def build_knowledge_graph(
         "ticker IS NOT NULL"
     )
 
-    # Debug schema
-    logger.info("Ticker raw schema:")
-    tickers_raw_df.printSchema()
-
     # Select all fields from the ticker struct
     tickers_df = tickers_raw_df.select("ticker.*")
-    logger.info("Ticker expanded schema:")
-    tickers_df.printSchema()
     tickers_df = tickers_df.dropDuplicates(["symbol"])
     logger.info(f"Extracted {tickers_df.count():,} unique ticker symbols")
 
