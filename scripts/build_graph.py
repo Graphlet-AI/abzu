@@ -142,7 +142,7 @@ def build_knowledge_graph(
         f"{output_path}/company_ticker_relationships.parquet"
     )
     product_company_df.write.mode("overwrite").parquet(
-        f"{output_path}/product_company_relationships"
+        f"{output_path}/product_company_relationships.parquet"
     )
     tech_company_df.write.mode("overwrite").parquet(
         f"{output_path}/tech_company_relationships.parquet"
