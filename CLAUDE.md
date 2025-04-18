@@ -15,7 +15,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Python version: 3.12
 - Formatter: black with isort (profile=black)
 - Types: Always use type annotations, warn on any return
-- Imports: Use absolute imports, organize with isort (profile=black)
+- Imports: Use absolute imports, organize imports to be PEP compliant with isort (profile=black)
 - Error handling: Use mdecific exception types with logging
 - Naming: snake_case for variables/functions, CamelCase for classes
 - BAML: Use for LLM-related code, regenerate client with `baml-cli generate`
