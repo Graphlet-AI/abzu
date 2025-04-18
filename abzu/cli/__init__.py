@@ -1,8 +1,15 @@
 """CLI tools for Abzu."""
 
 import argparse
+import logging
 import sys
 from typing import List, Optional
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 
 def main(args: Optional[List[str]] = None) -> int:
@@ -93,26 +100,8 @@ def main(args: Optional[List[str]] = None) -> int:
         help="Number of Spark partitions (default: 4)",
     )
 
-    # Backward compatibility - default KG command delegates to raw
-    kg_cmd.add_argument(
-        "-i",
-        "--input",
-        default="data/processed_articles.jsonl",
-        help="Input processed articles JSONL file (default: data/processed_articles.jsonl)",
-    )
-    kg_cmd.add_argument(
-        "-o",
-        "--output",
-        default="data/knowledge_graph",
-        help="Output directory for knowledge graph (default: data/knowledge_graph)",
-    )
-    kg_cmd.add_argument(
-        "-p",
-        "--partitions",
-        type=int,
-        default=4,
-        help="Number of Spark partitions (default: 4)",
-    )
+    # Add required KG subcommand help
+    kg_cmd.set_defaults(kg_subcommand=argparse.SUPPRESS)
 
     # Crawl command
     crawl_cmd = subparsers.add_parser("crawl", help="Crawl content from sources")
@@ -160,29 +149,26 @@ def main(args: Optional[List[str]] = None) -> int:
             # Import here to avoid loading Spark when not needed
             from abzu.cli.process_kg import process_raw_kg, process_refine_kg
 
-            if hasattr(parsed_args, "kg_subcommand") and parsed_args.kg_subcommand:
-                if parsed_args.kg_subcommand == "raw":
-                    return process_raw_kg(
-                        input_file=parsed_args.input,
-                        output_dir=parsed_args.output,
-                        partitions=parsed_args.partitions,
-                    )
-                elif parsed_args.kg_subcommand == "refine":
-                    return process_refine_kg(
-                        input_dir=parsed_args.input,
-                        output_dir=parsed_args.output,
-                        partitions=parsed_args.partitions,
-                    )
-                else:
-                    kg_cmd.print_help()
-                    return 1
-            else:
-                # Default behavior for backward compatibility
+            if not hasattr(parsed_args, "kg_subcommand") or not parsed_args.kg_subcommand:
+                kg_cmd.print_help()
+                logger.error("\nError: Please specify a knowledge graph subcommand (raw or refine)")
+                return 1
+
+            if parsed_args.kg_subcommand == "raw":
                 return process_raw_kg(
                     input_file=parsed_args.input,
                     output_dir=parsed_args.output,
                     partitions=parsed_args.partitions,
                 )
+            elif parsed_args.kg_subcommand == "refine":
+                return process_refine_kg(
+                    input_dir=parsed_args.input,
+                    output_dir=parsed_args.output,
+                    partitions=parsed_args.partitions,
+                )
+            else:
+                kg_cmd.print_help()
+                return 1
         else:
             process_cmd.print_help()
             return 1

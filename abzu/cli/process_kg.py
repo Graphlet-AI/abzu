@@ -181,9 +181,9 @@ def process_refine_kg(
 
 def main() -> int:
     """Command line interface for process_kg."""
-    # This function is kept for backward compatibility
-    # It simply calls the raw KG processing function
-    return process_raw_kg()
+    logger.error("This module should not be called directly.")
+    logger.error("Please use 'abzu process kg [raw|refine]' instead.")
+    return 1
 
 
 if __name__ == "__main__":
