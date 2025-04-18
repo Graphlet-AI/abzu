@@ -2,3 +2,4 @@ data
 abzu/baml_client
 dist
 .ipynb_checkpoints
+nohup.out
