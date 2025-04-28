@@ -3,9 +3,10 @@
 import logging
 import os
 import time
-from typing import Optional
+from typing import Any, Optional, cast
 
-from twisted.internet import defer, reactor
+from twisted.internet import defer
+from twisted.internet import reactor as twisted_reactor
 
 from abzu.crawl import DEFAULT_PATH, run_batch_crawl
 
@@ -62,12 +63,13 @@ def crawl_main(
             elapsed = time.time() - start_time
             logger.info(f"All batches completed in {elapsed:.2f} seconds")
             logger.info(f"Data saved to {output_path}")
-            reactor.stop()
+            twisted_reactor.stop()
 
         # Start the process
         process_batches()
-        # Blocks until reactor.stop() is called
-        reactor.run()
+        # Blocks until twisted_reactor.stop() is called
+        # Add cast to Any to help mypy understand this method exists
+        cast(Any, twisted_reactor).run()
 
         return 0
     except Exception as e:

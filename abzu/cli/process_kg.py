@@ -20,21 +20,12 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def process_kg_main(  # noqa: C901
-    input_file: str = "data/processed_articles.jsonl",
-    output_dir: str = "data/knowledge_graph",
-    partitions: int = 4,
+def run_spark_script(
+    script_path: str,
+    args: list,
+    description: str,
 ) -> int:
-    """Process articles into a knowledge graph.
-
-    This function is a wrapper around the scripts/build_graph.py script
-    which uses PySpark to build a knowledge graph from the processed articles.
-
-    Args:
-        input_file: Path to the input JSONL file with processed articles
-        output_dir: Directory to store the knowledge graph
-        partitions: Number of Spark partitions to use
-    """
+    """Run a PySpark script with the given arguments."""
     # Check if PySpark is installed
     if not is_pyspark_installed():
         logger.error("PySpark is not installed. Please install it with:")
@@ -43,33 +34,16 @@ def process_kg_main(  # noqa: C901
         logger.error("  poetry add pyspark")
         return 1
 
-    # Check if the input file exists
-    if not Path(input_file).exists():
-        logger.error(f"Input file not found: {input_file}")
-        return 1
-
-    # Construct the command to run the build_graph.py script
-    script_path = str(Path(__file__).parents[2] / "scripts" / "build_graph.py")
-
-    # Ensure the script exists
+    # Check if the script exists
     if not Path(script_path).exists():
-        logger.error(f"Build graph script not found: {script_path}")
+        logger.error(f"Script not found: {script_path}")
         return 1
 
     # Ensure the script is executable
     Path(script_path).chmod(0o755)
 
     # Build the command - try to use python directly to avoid path issues
-    cmd = [
-        sys.executable,  # Use the same Python interpreter
-        script_path,
-        "--input",
-        input_file,
-        "--output",
-        output_dir,
-        "--partitions",
-        str(partitions),
-    ]
+    cmd = [sys.executable, script_path] + args
 
     # Log the command
     logger.info(f"Running command: {' '.join(cmd)}")
@@ -122,29 +96,94 @@ def process_kg_main(  # noqa: C901
         return_code = process.wait()
 
         if return_code == 0:
-            logger.info(f"Knowledge graph successfully built and saved to {output_dir}")
+            logger.info(f"{description} completed successfully")
             return 0
         else:
-            logger.error(f"Knowledge graph build failed with exit code {return_code}")
+            logger.error(f"{description} failed with exit code {return_code}")
 
             # Provide more helpful information
             logger.error("\nTroubleshooting steps:")
             logger.error("1. Ensure PySpark is installed: pip install pyspark")
             logger.error("2. Check if Java is installed: java -version")
-            logger.error("3. Try running the script directly: python scripts/build_graph.py")
+            logger.error("3. Try running the script directly: python " + script_path)
             logger.error("4. Ensure you have at least 4GB of RAM available")
             logger.error("5. Check for any network issues if using distributed Spark")
 
             return return_code
 
     except Exception as e:
-        logger.error(f"Failed to run build_graph.py: {e}")
+        logger.error(f"Failed to run script: {e}")
         return 1
+
+
+def process_raw_kg(
+    input_file: str = "data/processed_articles.jsonl",
+    output_dir: str = "data/knowledge_graph",
+    partitions: int = 4,
+) -> int:
+    """Process articles into a raw knowledge graph.
+
+    This function is a wrapper around the abzu/spark/build_graph.py script
+    which uses PySpark to build a knowledge graph from the processed articles.
+
+    Args:
+        input_file: Path to the input JSONL file with processed articles
+        output_dir: Directory to store the knowledge graph
+        partitions: Number of Spark partitions to use
+    """
+    # Construct the command to run the build_graph.py script
+    script_path = str(Path(__file__).parents[1] / "spark" / "build_graph.py")
+
+    # Build the args list
+    args = [
+        "--input",
+        input_file,
+        "--output",
+        output_dir,
+        "--partitions",
+        str(partitions),
+    ]
+
+    return run_spark_script(script_path, args, "Knowledge graph build")
+
+
+def process_refine_kg(
+    input_dir: str = "data/knowledge_graph",
+    output_dir: str = "data/refined_knowledge_graph",
+    partitions: int = 4,
+) -> int:
+    """Refine the knowledge graph by creating bidirectional relationships.
+
+    This function is a wrapper around the abzu/spark/refine_kg.py script
+    which uses PySpark to refine the knowledge graph by creating bidirectional
+    relationships and a unified edge list.
+
+    Args:
+        input_dir: Path to the directory with raw knowledge graph
+        output_dir: Directory to store the refined knowledge graph
+        partitions: Number of Spark partitions to use
+    """
+    # Construct the path to the refine_kg.py script
+    script_path = str(Path(__file__).parents[1] / "spark" / "refine_kg.py")
+
+    # Build the args list
+    args = [
+        "--input",
+        input_dir,
+        "--output",
+        output_dir,
+        "--partitions",
+        str(partitions),
+    ]
+
+    return run_spark_script(script_path, args, "Knowledge graph refinement")
 
 
 def main() -> int:
     """Command line interface for process_kg."""
-    return process_kg_main()
+    logger.error("This module should not be called directly.")
+    logger.error("Please use 'abzu process kg [raw|refine]' instead.")
+    return 1
 
 
 if __name__ == "__main__":

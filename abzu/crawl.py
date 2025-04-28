@@ -1,6 +1,7 @@
+import os
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Iterator, List
+from typing import Any, Iterator, List, cast
 
 import dateutil.parser
 import scrapy
@@ -30,6 +31,12 @@ class ArticleCrawler(scrapy.Spider):
         "AUTOTHROTTLE_START_DELAY": 1.0,
         "AUTOTHROTTLE_MAX_DELAY": 5.0,
         "DOWNLOAD_TIMEOUT": 30,
+        # Zyte Smart Proxy Manager settings
+        "DOWNLOADER_MIDDLEWARES": {
+            "scrapy_zyte_smartproxy.ZyteSmartProxyMiddleware": 610,
+        },
+        "ZYTE_SMARTPROXY_ENABLED": True,
+        "ZYTE_SMARTPROXY_APIKEY": os.environ.get("ZYTE_API_KEY", ""),
     }
 
     def __init__(
@@ -123,6 +130,21 @@ def run_batch_crawl(urls: List[str], output_path: str = DEFAULT_PATH, concurrent
     settings.set("DOWNLOAD_DELAY", 0.2)
     settings.set("LOG_LEVEL", "INFO")
 
+    # Configure Zyte Smart Proxy if API key is available
+    zyte_api_key = os.environ.get("ZYTE_API_KEY")
+    if zyte_api_key:
+        settings.set(
+            "DOWNLOADER_MIDDLEWARES",
+            {
+                "scrapy_zyte_smartproxy.ZyteSmartProxyMiddleware": 610,
+            },
+        )
+        settings.set("ZYTE_SMARTPROXY_ENABLED", True)
+        settings.set("ZYTE_SMARTPROXY_APIKEY", zyte_api_key)
+        print("Zyte Smart Proxy enabled")
+    else:
+        print("Warning: ZYTE_API_KEY not set, running without proxy")
+
     runner = CrawlerRunner(settings)
 
     # Create a cooperative deferred list for our batch
@@ -166,7 +188,8 @@ def main(batch_size: int = 5, concurrent_requests: int = 5):
 
     # Start the process
     process_batches()
-    reactor.run()  # Blocks until reactor.stop() is called.
+    # Add cast to Any to help mypy understand this method exists
+    cast(Any, reactor).run()  # Blocks until reactor.stop() is called.
 
 
 if __name__ == "__main__":
