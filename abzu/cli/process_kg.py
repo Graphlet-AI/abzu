@@ -123,7 +123,7 @@ def process_raw_kg(
 ) -> int:
     """Process articles into a raw knowledge graph.
 
-    This function is a wrapper around the scripts/build_graph.py script
+    This function is a wrapper around the abzu/spark/build_graph.py script
     which uses PySpark to build a knowledge graph from the processed articles.
 
     Args:
@@ -132,7 +132,7 @@ def process_raw_kg(
         partitions: Number of Spark partitions to use
     """
     # Construct the command to run the build_graph.py script
-    script_path = str(Path(__file__).parents[2] / "scripts" / "build_graph.py")
+    script_path = str(Path(__file__).parents[1] / "spark" / "build_graph.py")
 
     # Build the args list
     args = [

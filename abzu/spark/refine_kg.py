@@ -49,7 +49,7 @@ def refine_knowledge_graph(
     # Load relationship dataframes
     logger.info(f"Loading knowledge graph relationships from {input_path}...")
     product_company_df: DataFrame = spark.read.parquet(
-        f"{input_path}/product_company_relationships"
+        f"{input_path}/product_company_relationships.parquet"
     )
     company_ticker_df: DataFrame = spark.read.parquet(
         f"{input_path}/company_ticker_relationships.parquet"
