@@ -56,6 +56,7 @@ pre-commit install
 ```bash
 # To rebuild abzu.baml_client
 # NOTE: make sure your plugin and baml-py versions match!
+baml-cli test
 baml-cli generate
 ```
 
@@ -64,7 +65,7 @@ baml-cli generate
 Crawl SemiAnalysis.com via:
 
 ```bash
-python abzu/crawl.py
+abzu crawl
 ```
 
 ## Information Extraction
