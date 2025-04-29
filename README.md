@@ -64,7 +64,7 @@ baml-cli generate
 Crawl SemiAnalysis.com via:
 
 ```bash
-python abzu/crawl.py
+abzu crawl
 ```
 
 ## Information Extraction
