@@ -23,7 +23,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Error handling: Use mdecific exception types with logging
 - Naming: snake_case for variables/functions, CamelCase for classes
 - BAML: Use for LLM-related code, regenerate client with `baml-cli generate`
-- Whitespaces: leave no trailing whitespaces, use 4 spaces for indentation
+- Whitespaces: leave no trailing whitespaces, use 4 spaces for indentation, leave no whitespace on blank lines
+- Strings: Use double quotes for strings, use f-strings for string interpolation
 - Docstrings: Use Numpy style for docstrings, include type hints in docstrings
 - Comments: Use comments to explain complex code, avoid obvious comments
 - Tests: Use pytest for testing, include type hints in test functions, use fixtures for setup/teardown
@@ -37,3 +38,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - Command Line Interfaces - at the end of your coding tasks, please alter the 'abzu' CLI to accommodate the changes.
 - PySpark - Limit the number of functions within scripts that control dataflow in Spark scripts. We prefer a more linear flow. This only applies to Spark code.
+- Flake8 - fix flake8 errors without being asked.
+- Mypy - fix mypy errors without being asked.
+- Pre-commit - fix pre-commit errors without being asked.
