@@ -1,4 +1,5 @@
 import os
+from typing import List
 
 import openai
 from langchain.chains import LLMChain
@@ -13,7 +14,7 @@ os.environ["OPENAI_API_KEY"] = "sk-proj-"
 openai.api_key = "sk-proj-"
 
 spam_prompt_template = """
-You are a news headline spam classifier. 
+You are a news headline spam classifier.
 Given the headline below, you must label it as "SPAM" or "NOT SPAM".
 
 Headline: "{headline}"
@@ -33,7 +34,7 @@ spam_chain = LLMChain(llm=spam_llm, prompt=spam_prompt)
 
 def is_spam(headline: str) -> bool:
     """Use the spam_chain to classify each headline."""
-    classification = spam_chain.run(headline=headline).strip().upper()
+    classification: str = spam_chain.run(headline=headline).strip().upper()
     return classification == "SPAM"
 
 
@@ -66,8 +67,6 @@ documents = [Document(page_content=headline) for headline in filtered_headlines]
 
 # Create the FAISS vector store from documents
 vectorstore = FAISS.from_documents(documents, embedding_model)
-
-from typing import Any, Dict, List
 
 
 def cluster_headlines(vectorstore, headlines: List[str], threshold: float = 0.8):
@@ -124,7 +123,7 @@ def cluster_headlines(vectorstore, headlines: List[str], threshold: float = 0.8)
 clusters = cluster_headlines(vectorstore, filtered_headlines, threshold=0.8)
 
 summary_prompt_template = """
-You are an AI assistant that summarizes news headlines. 
+You are an AI assistant that summarizes news headlines.
 Given the following list of related headlines, provide a single short summary:
 
 Headlines:
@@ -147,4 +146,5 @@ for cluster in clusters:
 
 print("\nSummaries of each cluster:")
 for i, summ in enumerate(unique_summaries, 1):
+    print(f"{i}. {summ}")
     print(f"{i}. {summ}")

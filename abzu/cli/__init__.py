@@ -12,7 +12,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def main(args: Optional[List[str]] = None) -> int:
+def main(args: Optional[List[str]] = None) -> int:  # noqa: C901
     """Main entry point for the abzu command line interface."""
     if args is None:
         args = sys.argv[1:]
@@ -105,32 +105,81 @@ def main(args: Optional[List[str]] = None) -> int:
 
     # Crawl command
     crawl_cmd = subparsers.add_parser("crawl", help="Crawl content from sources")
-    crawl_cmd.add_argument(
+    crawl_subparsers = crawl_cmd.add_subparsers(dest="crawl_subcommand", help="Crawl subcommands")
+
+    # SemiAnalysis subcommand
+    semianalysis_cmd = crawl_subparsers.add_parser(
+        "semianalysis", help="Crawl SemiAnalysis website"
+    )
+    semianalysis_cmd.add_argument(
         "-u", "--url", help="URL to start crawling from (defaults to predefined archive URLs)"
     )
-    crawl_cmd.add_argument(
+    semianalysis_cmd.add_argument(
         "-o",
         "--output",
         default="data/articles.jsonl",
         help="Output JSONL file path (default: data/articles.jsonl)",
     )
-    crawl_cmd.add_argument(
+    semianalysis_cmd.add_argument(
         "--pages", type=int, default=24, help="Number of pages to crawl (default: 24)"
     )
-    crawl_cmd.add_argument(
+    semianalysis_cmd.add_argument(
         "-b",
         "--batch-size",
         type=int,
         default=5,
         help="Number of pages to crawl concurrently (default: 5)",
     )
-    crawl_cmd.add_argument(
+    semianalysis_cmd.add_argument(
         "-c",
         "--concurrent-requests",
         type=int,
         default=5,
         help="Number of concurrent requests per spider (default: 5)",
     )
+
+    # Add required crawl subcommand help
+    crawl_cmd.set_defaults(crawl_subcommand=argparse.SUPPRESS)
+
+    # API command
+    api_cmd = subparsers.add_parser("api", help="API access to external data sources")
+    api_subparsers = api_cmd.add_subparsers(dest="api_subcommand", help="API subcommands")
+
+    # Financial Datasets subcommand
+    financialdatasets_cmd = api_subparsers.add_parser(
+        "financialdatasets", help="Financial Datasets API access"
+    )
+    financialdatasets_subparsers = financialdatasets_cmd.add_subparsers(
+        dest="financialdatasets_subcommand", help="Financial Datasets API subcommands"
+    )
+
+    # Facts subcommand
+    facts_cmd = financialdatasets_subparsers.add_parser(
+        "facts", help="Get company facts from Financial Datasets API"
+    )
+    facts_cmd.add_argument("-t", "--ticker", help="Company ticker symbol (e.g., AAPL)")
+    facts_cmd.add_argument("-c", "--cik", help="Company Central Index Key (e.g., 0000320193)")
+    facts_cmd.add_argument(
+        "-f", "--file", help="Path to JSONL file with records containing 'ticker' or 'cik' field"
+    )
+    facts_cmd.add_argument(
+        "-k",
+        "--api-key",
+        help="API key for Financial Datasets (defaults to FINANCIAL_DATASETS_API_KEY env var)",
+    )
+    facts_cmd.add_argument(
+        "-p",
+        "--pretty",
+        action="store_true",
+        help="Format JSON output with indentation (only when printing to stdout)",
+    )
+    facts_cmd.add_argument(
+        "-o", "--output", help="Output file path (if not provided, prints to stdout)"
+    )
+
+    # Add required subcommand help
+    financialdatasets_cmd.set_defaults(financialdatasets_subcommand=argparse.SUPPRESS)
+    api_cmd.set_defaults(api_subcommand=argparse.SUPPRESS)
 
     # Parse args
     parsed_args = parser.parse_args(args)
@@ -173,15 +222,56 @@ def main(args: Optional[List[str]] = None) -> int:
             process_cmd.print_help()
             return 1
     elif parsed_args.command == "crawl":
-        from abzu.cli.crawl import crawl_main
+        if not hasattr(parsed_args, "crawl_subcommand") or not parsed_args.crawl_subcommand:
+            crawl_cmd.print_help()
+            logger.error("\nError: Please specify a crawl subcommand (semianalysis)")
+            return 1
 
-        return crawl_main(
-            url=parsed_args.url,
-            output_path=parsed_args.output,
-            pages=parsed_args.pages,
-            batch_size=parsed_args.batch_size,
-            concurrent_requests=parsed_args.concurrent_requests,
-        )
+        if parsed_args.crawl_subcommand == "semianalysis":
+            from abzu.cli.crawl import crawl_main
+
+            return crawl_main(
+                url=parsed_args.url,
+                output_path=parsed_args.output,
+                pages=parsed_args.pages,
+                batch_size=parsed_args.batch_size,
+                concurrent_requests=parsed_args.concurrent_requests,
+            )
+        else:
+            crawl_cmd.print_help()
+            return 1
+    elif parsed_args.command == "api":
+        if not hasattr(parsed_args, "api_subcommand") or not parsed_args.api_subcommand:
+            api_cmd.print_help()
+            logger.error("\nError: Please specify an API subcommand (financialdatasets)")
+            return 1
+
+        if parsed_args.api_subcommand == "financialdatasets":
+            if (
+                not hasattr(parsed_args, "financialdatasets_subcommand")
+                or not parsed_args.financialdatasets_subcommand
+            ):
+                financialdatasets_cmd.print_help()
+                logger.error("\nError: Please specify a Financial Datasets API subcommand (facts)")
+                return 1
+
+            if parsed_args.financialdatasets_subcommand == "facts":
+                from abzu.cli.api import financialdatasets_facts_main
+
+                return financialdatasets_facts_main(
+                    ticker=parsed_args.ticker,
+                    cik=parsed_args.cik,
+                    input_file=parsed_args.file,
+                    api_key=parsed_args.api_key,
+                    pretty=parsed_args.pretty,
+                    output_file=parsed_args.output,
+                )
+            else:
+                financialdatasets_cmd.print_help()
+                return 1
+        else:
+            api_cmd.print_help()
+            return 1
     else:
         parser.print_help()
         return 1
