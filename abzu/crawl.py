@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Iterator, List, cast
+from typing import Any, Iterator, List, Optional, cast
 
 import dateutil.parser
 import scrapy
@@ -9,6 +9,7 @@ from scrapy.crawler import CrawlerRunner
 from scrapy.http.response import Response
 from scrapy.utils.log import configure_logging
 from scrapy.utils.project import get_project_settings
+from tqdm import tqdm
 from twisted.internet import defer, reactor
 
 from abzu.utils import append_jsonl
@@ -28,15 +29,9 @@ class ArticleCrawler(scrapy.Spider):
         "RETRY_ENABLED": True,
         "RETRY_TIMES": 3,
         "AUTOTHROTTLE_ENABLED": True,
-        "AUTOTHROTTLE_START_DELAY": 1.0,
+        "AUTOTHROTTLE_START_DELAY": 0.5,
         "AUTOTHROTTLE_MAX_DELAY": 5.0,
-        "DOWNLOAD_TIMEOUT": 30,
-        # Zyte Smart Proxy Manager settings
-        "DOWNLOADER_MIDDLEWARES": {
-            "scrapy_zyte_smartproxy.ZyteSmartProxyMiddleware": 610,
-        },
-        "ZYTE_SMARTPROXY_ENABLED": True,
-        "ZYTE_SMARTPROXY_APIKEY": os.environ.get("ZYTE_API_KEY", ""),
+        "DOWNLOAD_TIMEOUT": 10,
     }
 
     def __init__(
@@ -99,6 +94,13 @@ class ArticleCrawler(scrapy.Spider):
             self.articles_processed += 1
             self.__class__._total_articles_processed += 1
 
+            # Update the progress bar if it exists
+            # Access the global progress bar without re-declaring it
+            if _progress_bar:
+                _progress_bar.set_postfix(
+                    articles=self.__class__._total_articles_processed, refresh=True
+                )
+
             # Log progress occasionally
             if self.articles_processed % 10 == 0:
                 elapsed = datetime.now() - self.start_time
@@ -119,9 +121,21 @@ class ArticleCrawler(scrapy.Spider):
         )
 
 
+# Global progress bar
+_progress_bar: Optional[tqdm] = None
+
+
 # To run batch crawls with async
-def run_batch_crawl(urls: List[str], output_path: str = DEFAULT_PATH, concurrent_requests: int = 5):
+def run_batch_crawl(
+    urls: List[str],
+    output_path: str = DEFAULT_PATH,
+    concurrent_requests: int = 1,
+    progress_bar: Optional[tqdm] = None,
+):
     """Run crawlers in batches concurrently."""
+    global _progress_bar
+    _progress_bar = progress_bar
+
     configure_logging()
     settings = get_project_settings()
     # Set concurrency and other settings
@@ -130,35 +144,24 @@ def run_batch_crawl(urls: List[str], output_path: str = DEFAULT_PATH, concurrent
     settings.set("DOWNLOAD_DELAY", 0.2)
     settings.set("LOG_LEVEL", "INFO")
 
-    # Configure Zyte Smart Proxy if API key is available
-    zyte_api_key = os.environ.get("ZYTE_API_KEY")
-    if zyte_api_key:
-        settings.set(
-            "DOWNLOADER_MIDDLEWARES",
-            {
-                "scrapy_zyte_smartproxy.ZyteSmartProxyMiddleware": 610,
-            },
-        )
-        settings.set("ZYTE_SMARTPROXY_ENABLED", True)
-        settings.set("ZYTE_SMARTPROXY_APIKEY", zyte_api_key)
-        print("Zyte Smart Proxy enabled")
-    else:
-        print("Warning: ZYTE_API_KEY not set, running without proxy")
-
     runner = CrawlerRunner(settings)
 
     # Create a cooperative deferred list for our batch
     deferreds = []
     for url in urls:
+        print(f"Starting crawl for {url}")
         # Schedule crawler for each URL
         deferred = runner.crawl(ArticleCrawler, archive_url=url, output_path=output_path)
         deferreds.append(deferred)
+        # Update progress bar for each URL submitted
+        if _progress_bar:
+            _progress_bar.update(1)
 
     # Return a single deferred that fires when all crawlers complete
     return defer.DeferredList(deferreds)
 
 
-def main(batch_size: int = 5, concurrent_requests: int = 5):
+def main(batch_size: int = 1, concurrent_requests: int = 1):
     """Run crawlers in batches."""
     configure_logging()
 

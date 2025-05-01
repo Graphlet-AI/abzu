@@ -28,6 +28,7 @@ This document serves as a guide for converting the existing argparse-based CLI t
 ## Conversion Steps
 
 1. **Create Basic Command Structure**
+
    ```python
    @click.group()
    def cli():
@@ -36,6 +37,7 @@ This document serves as a guide for converting the existing argparse-based CLI t
    ```
 
 2. **Add Command Groups**
+
    ```python
    @cli.group()
    def process():
@@ -60,6 +62,7 @@ This document serves as a guide for converting the existing argparse-based CLI t
 ## Example Conversion
 
 ### Before (argparse)
+
 ```python
 parser = argparse.ArgumentParser(description="Abzu - Industry knowledge extraction")
 subparsers = parser.add_subparsers(dest="command", help="Commands")
@@ -74,6 +77,7 @@ articles_cmd.add_argument("-i", "--input", default="data/articles.jsonl")
 ```
 
 ### After (Click)
+
 ```python
 @click.group()
 def cli():

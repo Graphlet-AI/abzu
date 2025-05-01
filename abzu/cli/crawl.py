@@ -5,6 +5,7 @@ import os
 import time
 from typing import Any, Optional, cast
 
+from tqdm import tqdm
 from twisted.internet import defer
 from twisted.internet import reactor as twisted_reactor
 
@@ -44,6 +45,16 @@ def crawl_main(
 
         total_urls = len(urls)
 
+        # Create progress bar for total pages to crawl
+        progress = tqdm(
+            total=total_urls,
+            desc="Crawling pages",
+            unit="page",
+            position=0,
+            leave=True,
+            colour="green"
+        )
+
         # Process URLs in batches
         batches = [urls[i : i + batch_size] for i in range(0, total_urls, batch_size)]
         logger.info(
@@ -54,13 +65,19 @@ def crawl_main(
         def process_batches():
             start_time = time.time()
             for i, batch in enumerate(batches):
-                logger.info(f"Starting batch {i + 1}/{len(batches)} with {len(batch)} URLs")
-                # Process this batch
-                yield run_batch_crawl(batch, output_path, concurrent_requests)
-                logger.info(f"Completed batch {i + 1}/{len(batches)}")
+                batch_desc = f"Batch {i + 1}/{len(batches)}"
+                progress.set_description(batch_desc)
+                # Process this batch with our progress bar
+                yield run_batch_crawl(
+                    batch,
+                    output_path,
+                    concurrent_requests,
+                    progress_bar=progress
+                )
 
             # All done!
             elapsed = time.time() - start_time
+            progress.close()
             logger.info(f"All batches completed in {elapsed:.2f} seconds")
             logger.info(f"Data saved to {output_path}")
             twisted_reactor.stop()
