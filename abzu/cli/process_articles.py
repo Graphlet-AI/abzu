@@ -19,11 +19,18 @@ logger = logging.getLogger(__name__)
 
 
 def load_articles(file_path: str) -> List[Dict[str, Any]]:
-    """Load articles from a JSONL file."""
+    """Load articles from a JSONL file and deduplicate them."""
     logger.info(f"Loading articles from {file_path}")
     articles = load_jsonl(file_path)
     logger.info(f"Loaded {len(articles)} articles")
-    return articles
+
+    # Deduplicate articles by URL
+    from abzu.utils import deduplicate_articles
+
+    deduped_articles = deduplicate_articles(articles)
+    logger.info(f"After deduplication: {len(deduped_articles)} unique articles")
+
+    return deduped_articles
 
 
 async def process_article_async(article: Dict[str, Any]) -> Optional[IndustryArticle]:

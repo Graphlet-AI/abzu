@@ -187,7 +187,7 @@ def financialdatasets():
 
 
 @financialdatasets.command()
-@click.option("-t", "--ticker", help="Company ticker symbol (e.g., AAPL)")
+@click.option("-t", "--ticker", required=True, help="Company ticker symbol (e.g., AAPL)")
 @click.option("-c", "--cik", help="Company Central Index Key (e.g., 0000320193)")
 @click.option(
     "-f",
