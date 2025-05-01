@@ -29,6 +29,7 @@ seaborn = "^0.13.2"
 networkx = "^3.4.2"
 matplotlib = "^3.10.1"
 graphframes-latest = "^0.8.3"
+requests = "^2.32.3"
 
 [tool.poetry.group.dev.dependencies]
 flake8 = "^7.1.1"
