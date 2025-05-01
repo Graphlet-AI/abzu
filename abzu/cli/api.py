@@ -164,15 +164,12 @@ def financialdatasets_facts_main(  # noqa: C901
         0 on success, 1 on failure
     """
     try:
-        # Validate input parameters
-        if not ticker and not cik and not input_file:
-            logger.error("Either ticker, cik, or input_file parameter is required")
-            return 1
+        # The validation is now handled by the click command
 
         api = FinancialDatasetsAPI(api_key)
 
-        # Case 1: Process a single company
-        if ticker or cik:
+        # Case 1: Process a single company using ticker/cik
+        if not input_file:
             result = api.get_company_facts(ticker, cik)
 
             # Write or print the result
@@ -189,7 +186,7 @@ def financialdatasets_facts_main(  # noqa: C901
                     print(json.dumps(result))
 
         # Case 2: Process companies from an input file
-        elif input_file:
+        else:
             if not os.path.exists(input_file):
                 logger.error(f"Input file does not exist: {input_file}")
                 return 1

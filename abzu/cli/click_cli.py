@@ -187,7 +187,7 @@ def financialdatasets():
 
 
 @financialdatasets.command()
-@click.option("-t", "--ticker", required=True, help="Company ticker symbol (e.g., AAPL)")
+@click.option("-t", "--ticker", help="Company ticker symbol (e.g., AAPL)")
 @click.option("-c", "--cik", help="Company Central Index Key (e.g., 0000320193)")
 @click.option(
     "-f",
@@ -209,8 +209,14 @@ def financialdatasets():
 @click.option(
     "-o", "--output", "output_file", help="Output file path (if not provided, prints to stdout)"
 )
-def facts(ticker, cik, input_file, api_key, pretty, output_file):
+@click.pass_context
+def facts(ctx, ticker, cik, input_file, api_key, pretty, output_file):
     """Get company facts from Financial Datasets API."""
+    # Display help if no required parameters are provided
+    if not ticker and not cik and not input_file:
+        click.echo(ctx.get_help())
+        return 0
+
     from abzu.cli.api import financialdatasets_facts_main
 
     return financialdatasets_facts_main(
