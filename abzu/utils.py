@@ -5,7 +5,7 @@ import logging
 import os
 import shutil
 from pathlib import Path
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Set, Union
 
 logger = logging.getLogger(__name__)
 
@@ -128,3 +128,43 @@ def load_jsonl(file_path: Union[str, Path]) -> List[Dict[str, Any]]:
         logger.error(f"Failed to load data from {path}: {e}")
 
     return data
+
+
+def build_crawled_url_index(file_path: Union[str, Path]) -> Set[str]:
+    """
+    Read a JSONL file and build an index of already crawled URLs.
+
+    Args:
+        file_path: Path to the JSONL file containing articles
+
+    Returns:
+        Set of URLs that have already been crawled
+    """
+    path = Path(file_path)
+    crawled_urls: Set[str] = set()
+
+    if not path.exists():
+        logger.info(f"No existing articles file found at {path}, starting fresh")
+        return crawled_urls
+
+    try:
+        # Count entries for logging
+        total_entries = 0
+        with open(path, "r", encoding="utf-8") as f:
+            for line in f:
+                try:
+                    item = json.loads(line.strip())
+                    if "url" in item:
+                        crawled_urls.add(item["url"])
+                    total_entries += 1
+                except json.JSONDecodeError:
+                    logger.warning(f"Failed to parse line in {path}")
+                except Exception as e:
+                    logger.warning(f"Error processing line in {path}: {e}")
+        logger.info(
+            f"Loaded {len(crawled_urls)} unique URLs from {total_entries} entries in {path}"
+        )
+    except Exception as e:
+        logger.error(f"Failed to build URL index from {path}: {e}")
+
+    return crawled_urls

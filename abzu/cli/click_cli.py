@@ -151,15 +151,15 @@ def crawl():
     "-b",
     "--batch-size",
     type=int,
-    default=5,
-    help="Number of pages to crawl concurrently (default: 5)",
+    default=1,
+    help="Number of pages to crawl sequentially (default: 1)",
 )
 @click.option(
     "-c",
     "--concurrent-requests",
     type=int,
-    default=5,
-    help="Number of concurrent requests per spider (default: 5)",
+    default=1,
+    help="Number of concurrent requests per spider (default: 1)",
 )
 def semianalysis(url, output_path, pages, batch_size, concurrent_requests):
     """Crawl SemiAnalysis website."""

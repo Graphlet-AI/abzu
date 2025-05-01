@@ -5,7 +5,7 @@ description = "Project Abzu"
 authors = ["Russell Jurney <russell.jurney@gmail.com>"]
 license = "COMMERCIAL"
 readme = "README.md"
-packages = [{include = "abzu"}]
+packages = [{ include = "abzu" }]
 
 [tool.poetry.urls]
 "Code Repository" = "https://github.com/Graphlet-AI/abzu"
@@ -34,6 +34,7 @@ click = "^8.1.8"
 langchain = "^0.3.24"
 langchain-community = "^0.3.23"
 openai = "^1.76.2"
+tqdm = "^4.66.1"
 
 [tool.poetry.group.dev.dependencies]
 flake8 = "^7.2.0"

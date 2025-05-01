@@ -10,6 +10,7 @@ from twisted.internet import defer
 from twisted.internet import reactor as twisted_reactor
 
 from abzu.crawl import DEFAULT_PATH, run_batch_crawl
+from abzu.utils import build_crawled_url_index
 
 # Configure logging
 logging.basicConfig(
@@ -22,8 +23,8 @@ def crawl_main(
     url: Optional[str] = None,
     output_path: str = DEFAULT_PATH,
     pages: int = 24,
-    batch_size: int = 5,
-    concurrent_requests: int = 5,
+    batch_size: int = 1,
+    concurrent_requests: int = 1,
 ) -> int:
     """Crawl articles from specified URLs in batch mode."""
     try:
@@ -52,8 +53,14 @@ def crawl_main(
             unit="page",
             position=0,
             leave=True,
-            colour="green"
+            colour="green",
+            bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} pages [ETA: {remaining}]",
         )
+
+        # Build an index of already crawled URLs
+        logger.info(f"Building index of previously crawled URLs from {output_path}")
+        crawled_urls = build_crawled_url_index(output_path)
+        logger.info(f"Found {len(crawled_urls)} previously crawled URLs")
 
         # Process URLs in batches
         batches = [urls[i : i + batch_size] for i in range(0, total_urls, batch_size)]
@@ -67,12 +74,13 @@ def crawl_main(
             for i, batch in enumerate(batches):
                 batch_desc = f"Batch {i + 1}/{len(batches)}"
                 progress.set_description(batch_desc)
-                # Process this batch with our progress bar
+                # Process this batch with our progress bar and crawled URLs index
                 yield run_batch_crawl(
                     batch,
                     output_path,
                     concurrent_requests,
-                    progress_bar=progress
+                    progress_bar=progress,
+                    crawled_urls=crawled_urls,
                 )
 
             # All done!

@@ -1,7 +1,7 @@
-import os
+import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Iterator, List, Optional, cast
+from typing import Any, Iterator, List, Optional, Set, cast
 
 import dateutil.parser
 import scrapy
@@ -12,7 +12,7 @@ from scrapy.utils.project import get_project_settings
 from tqdm import tqdm
 from twisted.internet import defer, reactor
 
-from abzu.utils import append_jsonl
+from abzu.utils import append_jsonl, build_crawled_url_index
 
 DEFAULT_PATH = "data/articles.jsonl"
 
@@ -23,6 +23,7 @@ class ArticleCrawler(scrapy.Spider):
     # Class level attributes for tracking
     _backup_done = False
     _total_articles_processed = 0
+    _skipped_articles = 0
 
     custom_settings = {
         "COOKIES_ENABLED": False,
@@ -32,12 +33,17 @@ class ArticleCrawler(scrapy.Spider):
         "AUTOTHROTTLE_START_DELAY": 0.5,
         "AUTOTHROTTLE_MAX_DELAY": 5.0,
         "DOWNLOAD_TIMEOUT": 10,
+        "DOWNLOAD_DELAY": 0.5,  # Enforce a minimum delay of 0.5 seconds between requests
+        "RANDOMIZE_DOWNLOAD_DELAY": False,  # Don't randomize the delay
+        "CONCURRENT_REQUESTS": 1,  # Only one request at a time
+        "CONCURRENT_REQUESTS_PER_DOMAIN": 1,  # Only one request per domain at a time
     }
 
     def __init__(
         self,
         archive_url: str,
         output_path: str = DEFAULT_PATH,
+        crawled_urls: Optional[Set[str]] = None,
         *args: Any,
         **kwargs: Any,
     ) -> None:
@@ -46,26 +52,46 @@ class ArticleCrawler(scrapy.Spider):
         self.output_file: Path = Path(output_path)
         self.start_time = datetime.now()
         self.articles_processed = 0
+        # Set of URLs that have already been crawled
+        self.crawled_urls = crawled_urls if crawled_urls is not None else set()
 
     def parse(self, response: Response) -> Iterator[scrapy.Request]:
         """Parse the archive page and follow links to individual articles."""
+        # Print the archive page being crawled
+        print(f"Parsing archive page: {response.url}")
         # Find all article links - adjust selector based on actual HTML structure
         article_links = response.css("a::attr(href)").getall()
+        found_articles = 0
+        new_articles = 0
+        skipped_articles = 0
         for link in article_links:
             absolute_url = response.urljoin(link)
             if absolute_url.startswith("https://semianalysis.com/20"):
-                yield scrapy.Request(absolute_url, callback=self.parse_article)
+                found_articles += 1
+                # Check if URL has already been crawled
+                if absolute_url in self.crawled_urls:
+                    skipped_articles += 1
+                    self.__class__._skipped_articles += 1
+                    print(f"Skipping already crawled URL: {absolute_url}")
+                else:
+                    new_articles += 1
+                    yield scrapy.Request(absolute_url, callback=self.parse_article)
+
+        print(
+            f"Found {found_articles} articles on page: {response.url} "
+            f"(new: {new_articles}, skipped: {skipped_articles})"
+        )
 
     def parse_article(self, response: Response) -> None:
         """Parse and save individual article content."""
+        # Print the URL being crawled
+        print(f"Crawling article: {response.url}")
         title = response.css("title::text").get() or "untitled"
         text_fragments: list[str] = response.css("div.entry-content *::text").getall()
         posted_at: datetime = dateutil.parser.parse(
             str(response.css('meta[property="article:published_time"]::attr(content)').get())
         )
-
         content: str = " ".join(text_fragments).strip()
-
         self.save(
             {
                 "url": response.url,
@@ -116,7 +142,8 @@ class ArticleCrawler(scrapy.Spider):
         """Called when the crawler is closed."""
         elapsed = datetime.now() - self.start_time
         self.logger.info(
-            f"Crawler finished: processed {self.articles_processed} articles from {self.start_urls[0]} "
+            f"Crawler finished: processed {self.articles_processed} articles from {self.start_urls[0]}, "
+            f"skipped {self.__class__._skipped_articles} already crawled articles, "
             f"in {elapsed.total_seconds():.2f} seconds"
         )
 
@@ -131,34 +158,44 @@ def run_batch_crawl(
     output_path: str = DEFAULT_PATH,
     concurrent_requests: int = 1,
     progress_bar: Optional[tqdm] = None,
+    crawled_urls: Optional[Set[str]] = None,
 ):
-    """Run crawlers in batches concurrently."""
+    """Run crawlers sequentially, one at a time."""
     global _progress_bar
     _progress_bar = progress_bar
 
+    # If crawled_urls is None, build it from the output file
+    if crawled_urls is None:
+        crawled_urls = build_crawled_url_index(output_path)
+        print(f"Built index of {len(crawled_urls)} previously crawled URLs")
+
     configure_logging()
     settings = get_project_settings()
-    # Set concurrency and other settings
-    settings.set("CONCURRENT_REQUESTS", concurrent_requests)
-    settings.set("CONCURRENT_REQUESTS_PER_DOMAIN", concurrent_requests)
-    settings.set("DOWNLOAD_DELAY", 0.2)
+    # Set settings to enforce sequential processing
+    settings.set("CONCURRENT_REQUESTS", 1)
+    settings.set("CONCURRENT_REQUESTS_PER_DOMAIN", 1)
+    settings.set("DOWNLOAD_DELAY", 0.5)  # Minimum delay between requests
     settings.set("LOG_LEVEL", "INFO")
 
     runner = CrawlerRunner(settings)
 
-    # Create a cooperative deferred list for our batch
-    deferreds = []
-    for url in urls:
-        print(f"Starting crawl for {url}")
-        # Schedule crawler for each URL
-        deferred = runner.crawl(ArticleCrawler, archive_url=url, output_path=output_path)
-        deferreds.append(deferred)
-        # Update progress bar for each URL submitted
-        if _progress_bar:
-            _progress_bar.update(1)
+    # Define a function to process URLs one at a time
+    @defer.inlineCallbacks
+    def process_sequentially(url_list):
+        for url in url_list:
+            print(f"Starting crawl for {url}")
+            # Process one URL at a time with the crawled_urls set
+            yield runner.crawl(
+                ArticleCrawler, archive_url=url, output_path=output_path, crawled_urls=crawled_urls
+            )
+            # Update progress bar after each URL is processed
+            if _progress_bar:
+                _progress_bar.update(1)
+            # Add a small delay between spiders to ensure complete separation
+            time.sleep(0.5)
 
-    # Return a single deferred that fires when all crawlers complete
-    return defer.DeferredList(deferreds)
+    # Return a deferred that fires when all URLs are processed sequentially
+    return process_sequentially(urls)
 
 
 def main(batch_size: int = 1, concurrent_requests: int = 1):
