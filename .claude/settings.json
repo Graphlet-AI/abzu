@@ -20,7 +20,8 @@
       "Bash(poetry run isort:*)",
       "Bash(poetry run flake8:*)",
       "Bash(poetry run pytest:*)",
-      "Bash(poetry run pytest tests/)"
+      "Bash(poetry run pytest tests/)",
+      "Fetch(*)"
     ],
     "deny": [
       "Bash(pip install:*)"
