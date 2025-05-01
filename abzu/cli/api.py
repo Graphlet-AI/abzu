@@ -94,7 +94,7 @@ def read_jsonl(file_path: str) -> Iterator[Dict[str, Any]]:
 
 def process_batch_companies(
     api: FinancialDatasetsAPI,
-    companies: List[Dict[str, str]],
+    companies: List[Dict[str, Any | None]],
     output_file: Optional[str] = None,
 ) -> List[Dict[str, Any]]:
     """Process a batch of companies in parallel.
@@ -109,7 +109,7 @@ def process_batch_companies(
     """
     results = []
 
-    def process_company(company: Dict[str, str]) -> Dict[str, Any]:
+    def process_company(company: Dict[str, str]) -> Dict[str, Any | None]:
         """Process a single company."""
         ticker = company.get("ticker")
         cik = company.get("cik")
@@ -195,7 +195,7 @@ def financialdatasets_facts_main(  # noqa: C901
                 return 1
 
             # Read companies from JSONL file
-            companies = []
+            companies: List[Dict[str, Any | None]] = []
             for record in read_jsonl(input_file):
                 ticker_val = record.get("ticker")
                 cik_val = record.get("cik")

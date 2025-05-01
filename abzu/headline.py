@@ -8,6 +8,7 @@ from langchain.prompts import PromptTemplate
 from langchain_community.embeddings import OpenAIEmbeddings
 from langchain_community.llms import OpenAI
 from langchain_community.vectorstores import FAISS
+from scipy.spatial.distance import cosine
 
 # Make sure to set your OpenAI API key:
 os.environ["OPENAI_API_KEY"] = "sk-proj-"
@@ -75,7 +76,7 @@ def cluster_headlines(vectorstore, headlines: List[str], threshold: float = 0.8)
     where each cluster is a list of headlines considered 'similar'.
     'threshold' is the dot-product similarity threshold.
     """
-    clusters = []
+    clusters: list[list[str]] = []
 
     for headline in headlines:
         # Search for the most similar doc among already accepted "representative" docs
@@ -99,7 +100,7 @@ def cluster_headlines(vectorstore, headlines: List[str], threshold: float = 0.8)
             # Using the built-in FAISS store for direct dot-product might be simpler,
             # but let's do a manual dot product as an example:
 
-            sim = sum(a * b for a, b in zip(embedding, rep_embedding))
+            sim = 1 - cosine(embedding, rep_embedding)  # Cosine similarity
 
             if sim > best_similarity:
                 best_similarity = sim
