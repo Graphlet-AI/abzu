@@ -3,3 +3,4 @@ abzu/baml_client
 dist
 .ipynb_checkpoints
 nohup.out
+.claude/settings.local.json
