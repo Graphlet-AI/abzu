@@ -13,7 +13,7 @@ packages = [{include = "abzu"}]
 
 [tool.poetry.scripts]
 process-articles = "abzu.cli.process_articles:main"
-abzu = "abzu.cli:main"
+abzu = "abzu.cli.click_cli:main"
 
 [tool.poetry.dependencies]
 python = "3.12.*"
@@ -30,6 +30,7 @@ networkx = "^3.4.2"
 matplotlib = "^3.10.1"
 graphframes-latest = "^0.8.3"
 requests = "^2.32.3"
+click = "^8.1.8"
 
 [tool.poetry.group.dev.dependencies]
 flake8 = "^7.1.1"
