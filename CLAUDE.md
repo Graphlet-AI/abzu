@@ -22,4 +22,5 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Claude Code Style
 
+- Command Line Interfaces - at the end of your coding tasks, please alter the 'abzu' CLI to accommodate the changes.
 - PySpark - Limit the number of functions within scripts that control dataflow in Spark scripts. We prefer a more linear flow. This only applie to Spark code.
