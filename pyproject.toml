@@ -5,7 +5,7 @@ description = "Project Abzu"
 authors = ["Russell Jurney <russell.jurney@gmail.com>"]
 license = "COMMERCIAL"
 readme = "README.md"
-packages = [{include = "abzu"}]
+packages = [{ include = "abzu" }]
 
 [tool.poetry.urls]
 "Code Repository" = "https://github.com/Graphlet-AI/abzu"
@@ -13,12 +13,12 @@ packages = [{include = "abzu"}]
 
 [tool.poetry.scripts]
 process-articles = "abzu.cli.process_articles:main"
-abzu = "abzu.cli:main"
+abzu = "abzu.cli.click_cli:main"
 
 [tool.poetry.dependencies]
 python = "3.12.*"
 scrapy = "^2.12.0"
-baml-py = "^0.83.0"
+baml-py = "^0.86.1"
 pyspark = "^3.5.5"
 python-dateutil = "^2.9.0.post0"
 pydantic = "^2.11.3"
@@ -29,9 +29,15 @@ seaborn = "^0.13.2"
 networkx = "^3.4.2"
 matplotlib = "^3.10.1"
 graphframes-latest = "^0.8.3"
+requests = "^2.32.3"
+click = "^8.1.8"
+langchain = "^0.3.24"
+langchain-community = "^0.3.23"
+openai = "^1.76.2"
+tqdm = "^4.66.1"
 
 [tool.poetry.group.dev.dependencies]
-flake8 = "^7.1.1"
+flake8 = "^7.2.0"
 isort = "^5.13.2"
 mypy = "^1.14.0"
 pytest = "^8.3.4"
@@ -43,6 +49,9 @@ jupyter-black = "^0.4.0"
 pre-commit = "^4.1.0"
 jupyter = "^1.1.1"
 nbdime = "^4.0.2"
+types-requests = "^2.32.0.20250328"
+flake8-pyproject = "^1.2.3"
+poetry-types = "^0.6.0"
 
 [build-system]
 requires = ["poetry-core"]
@@ -60,10 +69,6 @@ priority = "supplemental"
 [tool.black]
 line-length = 100
 target-version = ["py312"]
-include = ["abzu", "tests"]
-
-[tool.flake8]
-max-line-length = 100
 
 [tool.isort]
 profile = "black"
@@ -78,9 +83,11 @@ warn_redundant_casts = true
 warn_unused_ignores = true
 ignore_missing_imports = true
 
+[tool.flake8]
+max-line-length = 100
+ignore = ["E203", "E266", "E501", "W503", "C901"]
+extend-ignore = ["E203", "E266", "E501", "W503", "C901"]
+
 [[tool.mypy.overrides]]
 module = "abzu.baml_client.*"
 ignore_errors = true
-
-[tool.pytest]
-testpaths = ["tests"]

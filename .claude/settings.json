@@ -1,0 +1,43 @@
+{
+    "permissions": {
+        "allow": [
+            "Bash(git status:*)",
+            "Bash(git diff:*)",
+            "Bash(git log:*)",
+            "Bash(poetry update:*)",
+            "Bash(pip show:*)",
+            "Bash(pip freeze:*)",
+            "Bash(pip list:*)",
+            "Bash(mypy:*)",
+            "Bash(pytest:*)",
+            "Bash(black:*)",
+            "Bash(isort:*)",
+            "Bash(flake8:*)",
+            "Bash(jupyter notebook:*)",
+            "Bash(poetry run mypy *)",
+            "Bash(poetry run mypy:*)",
+            "Bash(poetry run black:*)",
+            "Bash(poetry run isort:*)",
+            "Bash(poetry run flake8:*)",
+            "Bash(poetry run pytest:*)",
+            "Bash(poetry run pytest tests/)",
+            "Bash(ls:*)",
+            "Bash(poetry add:*)",
+            "Bash(poetry install:*)",
+            "Bash(poetry update:*)",
+            "Bash(touch *__init__.py"
+        ],
+        "deny": [
+            "Bash(pip install:*)"
+        ]
+    },
+    "dontCrawlDirectory": false,
+    "mcpServers": { },
+    "ignorePatterns": [ ],
+    "exampleFiles": [
+        "abzu/crawl.py",
+        "abzu/cli/process_kg.py",
+        "scripts/build_graph.py",
+        "abzu/cli/crawl.py"
+    ]
+}

@@ -6,10 +6,13 @@ class IndustryArticle {
   title string
   @description("Title of the article")
 
+  article_url string
+  @description("URL of the article")
+
   collected_at string?
   @description("Date the article was collected, in ISO-8601 format")
   
-  published_at string?
+  posted_at string?
   @description("Date the article was published, in ISO-8601 format")
 
   authors Author[]?

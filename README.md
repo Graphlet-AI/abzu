@@ -106,6 +106,37 @@ abzu process kg refine
 }
 ```
 
+### FinancialDatasets.ai Company FActs
+
+```json
+{
+  "company_facts": {
+    "ticker": "WOLF",
+    "name": "Wolfspeed Inc",
+    "cik": "0000895419",
+    "industry": "Semiconductors",
+    "sector": "Technology",
+    "category": "Common Stock",
+    "exchange": "NYSE",
+    "is_active": true,
+    "listing_date": "1993-02-09",
+    "location": "North Carolina; U.S.A",
+    "market_cap": 488493323.08000004,
+    "number_of_employees": 5013,
+    "sec_filings_url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0000895419",
+    "sic_code": "3674.0",
+    "sic_industry": "Semiconductors & Related Devices",
+    "sic_sector": "Manufacturing",
+    "website_url": "https://www.wolfspeed.com",
+    "weighted_average_shares": 155571122
+  },
+  "request": {
+    "ticker": "WOLF",
+    "cik": null
+  }
+}
+```
+
 ### Knowledge Graph Parquet
 
 Vertices:
