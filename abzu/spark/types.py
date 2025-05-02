@@ -65,6 +65,7 @@ customer_type = T.StructType(
 doc_schema = T.StructType(
     [
         T.StructField("title", T.StringType(), nullable=False),
+        T.StructField("article_url", T.StringType(), nullable=False),
         T.StructField("collected_at", T.DateType(), nullable=False),
         T.StructField("posted_at", T.DateType(), nullable=False),
         T.StructField(

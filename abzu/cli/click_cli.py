@@ -24,7 +24,13 @@ def process():
     pass
 
 
-@process.command()
+@process.group()
+def articles():
+    """Process articles through LLM extraction pipeline."""
+    pass
+
+
+@articles.command(name="semianalysis")
 @click.option(
     "-i",
     "--input",
@@ -46,8 +52,8 @@ def process():
     default=5,
     help="Number of articles to process concurrently (default: 5)",
 )
-def articles(input_file, output_file, batch_size):
-    """Process articles through LLM extraction pipeline."""
+def process_semianalysis(input_file, output_file, batch_size):
+    """Process SemiAnalysis articles through LLM extraction pipeline."""
     from abzu.cli.process_articles import process_main
 
     return process_main(
@@ -135,7 +141,7 @@ def crawl():
     pass
 
 
-@crawl.command()
+@crawl.command(name="semianalysis")
 @click.option(
     "-u", "--url", help="URL to start crawling from (defaults to predefined archive URLs)"
 )
@@ -161,7 +167,7 @@ def crawl():
     default=1,
     help="Number of concurrent requests per spider (default: 1)",
 )
-def semianalysis(url, output_path, pages, batch_size, concurrent_requests):
+def crawl_semianalysis(url, output_path, pages, batch_size, concurrent_requests):
     """Crawl SemiAnalysis website."""
     from abzu.cli.crawl import crawl_main
 
