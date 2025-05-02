@@ -2,6 +2,14 @@
 
 A Knowledge Graph Bloomberg Terminal™ + Waters of wisdom... knowledge graph of silicon.
 
+## Abzu Steps
+
+The `abzu steps` command that installs via `poetry install` will describe the steps required to build the knowledge graph.
+
+```bash
+abzu steps
+```
+
 ## Project Setup
 
 ### Create Python Environment
@@ -86,6 +94,9 @@ abzu process articles
 
 # Extract each vertex / edge into its own Parquet
 abzu process kg raw
+
+# To enrich with FinancialDatasets.ai company facts TODO: make this the default path
+abzu api financialdatasets --file data/knowledge_graph/tickers.parquet
 
 # Create a combined vertex / edge list
 abzu process kg refine
