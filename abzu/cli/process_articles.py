@@ -46,7 +46,7 @@ async def process_article_async(article: Dict[str, Any]) -> Optional[IndustryArt
 
         # Pass through timestamps from the original article
         result.collected_at = article.get("collected_at", None)
-        result.published_at = article.get("published_at", None)
+        result.posted_at = article.get("posted_at", None)
 
         logger.info(f"Processed article: {article.get('title', 'unknown')}")
         return result
