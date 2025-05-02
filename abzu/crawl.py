@@ -14,7 +14,7 @@ from twisted.internet import defer, reactor
 
 from abzu.utils import append_jsonl, build_crawled_url_index
 
-DEFAULT_PATH = "data/articles.jsonl"
+DEFAULT_PATH = "data/semianalysis.jsonl"
 
 
 class ArticleCrawler(scrapy.Spider):

@@ -45,7 +45,7 @@ This document serves as a guide for converting the existing argparse-based CLI t
        pass
    
    @process.command()
-   @click.option("-i", "--input", default="data/articles.jsonl", help="Input JSONL file path")
+   @click.option("-i", "--input", default="data/semianalysis.jsonl", help="Input JSONL file path")
    def articles(input):
        """Process articles."""
        # Implementation
@@ -73,7 +73,7 @@ process_subparsers = process_cmd.add_subparsers(dest="subcommand", help="Process
 
 # Articles subcommand
 articles_cmd = process_subparsers.add_parser("articles", help="Process articles")
-articles_cmd.add_argument("-i", "--input", default="data/articles.jsonl")
+articles_cmd.add_argument("-i", "--input", default="data/semianalysis.jsonl")
 ```
 
 ### After (Click)
@@ -90,8 +90,8 @@ def process():
     pass
 
 @process.command()
-@click.option("-i", "--input", default="data/articles.jsonl", 
-              help="Input JSONL file path (default: data/articles.jsonl)")
+@click.option("-i", "--input", default="data/semianalysis.jsonl", 
+              help="Input JSONL file path (default: data/semianalysis.jsonl)")
 def articles(input):
     """Process articles."""
     from abzu.cli.process_articles import process_main

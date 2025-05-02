@@ -114,7 +114,7 @@ async def process_articles_async(
 
 
 async def async_main(
-    input_file: str = "data/articles.jsonl",
+    input_file: str = "data/semianalysis.jsonl",
     output_file: str = "data/processed_articles.jsonl",
     batch_size: int = 5,
 ) -> int:
@@ -141,7 +141,7 @@ async def async_main(
 
 
 def process_main(
-    input_file: str = "data/articles.jsonl",
+    input_file: str = "data/semianalysis.jsonl",
     output_file: str = "data/processed_articles.jsonl",
     batch_size: int = 5,
 ) -> int:

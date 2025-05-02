@@ -29,8 +29,8 @@ def main(args: Optional[List[str]] = None) -> int:  # noqa: C901
     articles_cmd.add_argument(
         "-i",
         "--input",
-        default="data/articles.jsonl",
-        help="Input JSONL file path (default: data/articles.jsonl)",
+        default="data/semianalysis.jsonl",
+        help="Input JSONL file path (default: data/semianalysis.jsonl)",
     )
     articles_cmd.add_argument(
         "-o",
@@ -117,8 +117,8 @@ def main(args: Optional[List[str]] = None) -> int:  # noqa: C901
     semianalysis_cmd.add_argument(
         "-o",
         "--output",
-        default="data/articles.jsonl",
-        help="Output JSONL file path (default: data/articles.jsonl)",
+        default="data/semianalysis.jsonl",
+        help="Output JSONL file path (default: data/semianalysis.jsonl)",
     )
     semianalysis_cmd.add_argument(
         "--pages", type=int, default=24, help="Number of pages to crawl (default: 24)"

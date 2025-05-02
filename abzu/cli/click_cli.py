@@ -29,8 +29,8 @@ def process():
     "-i",
     "--input",
     "input_file",
-    default="data/articles.jsonl",
-    help="Input JSONL file path (default: data/articles.jsonl)",
+    default="data/semianalysis.jsonl",
+    help="Input JSONL file path (default: data/semianalysis.jsonl)",
 )
 @click.option(
     "-o",
@@ -143,8 +143,8 @@ def crawl():
     "-o",
     "--output",
     "output_path",
-    default="data/articles.jsonl",
-    help="Output JSONL file path (default: data/articles.jsonl)",
+    default="data/semianalysis.jsonl",
+    help="Output JSONL file path (default: data/semianalysis.jsonl)",
 )
 @click.option("--pages", type=int, default=24, help="Number of pages to crawl (default: 24)")
 @click.option(
