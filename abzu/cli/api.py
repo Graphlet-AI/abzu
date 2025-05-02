@@ -10,6 +10,7 @@ from typing import Any, Dict, Iterator, List, Optional
 
 import requests
 from requests.adapters import HTTPAdapter
+from tqdm import tqdm
 from urllib3.util.retry import Retry
 
 # Configure logging
@@ -25,7 +26,7 @@ class FinancialDatasetsAPI:
     BASE_URL = "https://api.financialdatasets.ai"
 
     def __init__(
-        self, api_key: Optional[str] = None, max_retries: int = 5, pause_seconds: float = 0.3
+        self, api_key: Optional[str] = None, max_retries: int = 5, pause_seconds: float = 0.35
     ):
         """Initialize the API client with retry capabilities.
 
@@ -35,7 +36,7 @@ class FinancialDatasetsAPI:
             max_retries: Maximum number of retries for rate-limited requests (429 status code).
                          Defaults to 5.
             pause_seconds: Number of seconds to pause between API requests to prevent rate limiting.
-                           Defaults to 0.3 seconds.
+                           Defaults to 0.35 seconds.
         """
         self.api_key = api_key or os.environ.get("FINANCIAL_DATASETS_API_KEY")
         if not self.api_key:
@@ -194,6 +195,7 @@ def process_batch_companies(
     api: FinancialDatasetsAPI,
     companies: List[Dict[str, Any | None]],
     output_file: Optional[str] = None,
+    show_progress: bool = True,
 ) -> List[Dict[str, Any]]:
     """Process a batch of companies in parallel.
 
@@ -201,11 +203,14 @@ def process_batch_companies(
         api: FinancialDatasetsAPI instance
         companies: List of dictionaries with ticker and/or cik keys
         output_file: File to write results to (if None, return without writing)
+        show_progress: Whether to display a progress bar (default: True)
 
     Returns:
         List of API results
     """
     results = []
+    total_companies = len(companies)
+    logger.info(f"Processing {total_companies} companies")
 
     def process_company(company: Dict[str, str]) -> Dict[str, Any | None]:
         """Process a single company."""
@@ -226,7 +231,18 @@ def process_batch_companies(
 
     # Process companies in parallel using ThreadPoolExecutor
     with ThreadPoolExecutor(max_workers=5) as executor:
-        results = list(executor.map(process_company, companies))
+        # Use tqdm to show progress
+        if show_progress:
+            results = list(
+                tqdm(
+                    executor.map(process_company, companies),
+                    total=total_companies,
+                    desc="Processing companies",
+                    unit="company",
+                )
+            )
+        else:
+            results = list(executor.map(process_company, companies))
 
     # Write results if output file is specified
     if output_file:
@@ -248,7 +264,8 @@ def financialdatasets_facts_main(  # noqa: C901
     pretty: bool = False,
     output_file: Optional[str] = None,
     max_retries: int = 5,
-    pause_seconds: float = 0.3,
+    pause_seconds: float = 0.35,
+    show_progress: bool = True,
 ) -> int:
     """Get company facts from the Financial Datasets API.
 
@@ -258,9 +275,10 @@ def financialdatasets_facts_main(  # noqa: C901
         input_file: Path to a file (JSONL or Parquet) with records containing 'ticker', 'symbol', or 'cik' field
         api_key: API key for Financial Datasets
         pretty: Whether to format JSON output with indentation (only used for stdout output)
-        output_file: File to write results to (if None, print to stdout)
+        output_file: File to write results to (only used when processing multiple companies, default: data/financialdatasets.jsonl)
         max_retries: Maximum number of retries for rate-limited requests (429 status code). Defaults to 5.
-        pause_seconds: Number of seconds to pause between API requests to prevent rate limiting. Defaults to 0.3.
+        pause_seconds: Number of seconds to pause between API requests to prevent rate limiting. Defaults to 0.35.
+        show_progress: Whether to display a progress bar when processing multiple companies. Defaults to True.
 
     Returns:
         0 on success, 1 on failure
@@ -275,7 +293,7 @@ def financialdatasets_facts_main(  # noqa: C901
             result = api.get_company_facts(ticker, cik)
 
             # Write or print the result
-            if output_file:
+            if output_file is not None:
                 os.makedirs(os.path.dirname(os.path.abspath(output_file)), exist_ok=True)
                 with open(output_file, "w") as f:
                     f.write(json.dumps(result) + "\n")
@@ -311,7 +329,7 @@ def financialdatasets_facts_main(  # noqa: C901
                     return 1
 
                 logger.info(f"Processing {len(companies)} companies from {input_file}")
-                process_batch_companies(api, companies, output_file)
+                process_batch_companies(api, companies, output_file, show_progress=show_progress)
 
             except ValueError as e:
                 logger.error(f"Error reading input file: {e}")
