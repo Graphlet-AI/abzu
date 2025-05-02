@@ -169,9 +169,9 @@ def crawl():
 )
 def crawl_semianalysis(url, output_path, pages, batch_size, concurrent_requests):
     """Crawl SemiAnalysis website."""
-    from abzu.cli.crawl import crawl_main
+    from abzu.crawl import crawl_semianalysis
 
-    return crawl_main(
+    return crawl_semianalysis(
         url=url,
         output_path=output_path,
         pages=pages,
@@ -287,6 +287,15 @@ def facts(
         pause_seconds=pause_seconds,
         show_progress=not no_progress,
     )
+
+
+@cli.command()
+def steps():
+    """Print the steps required to run the complete data pipeline."""
+    from abzu.steps import print_pipeline_steps
+
+    print_pipeline_steps()
+    return 0
 
 
 def main() -> int:
