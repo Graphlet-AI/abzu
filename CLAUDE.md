@@ -34,7 +34,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Documentation: Use Sphinx for documentation, include docstrings in all public functions/classes
 - Code style: Follow PEP 8 for Python code style, use flake8 for linting
 
-## Claude Code Style
+## Claude Logic
 
 - Command Line Interfaces - at the end of your coding tasks, please alter the 'abzu' CLI to accommodate the changes.
 - Separate logic from the CLI - separate the logic under `abzu` and sub-modules from the command line interface (CLI) code in `abzu.cli`. The CLI should only handle input/output from/to the user and should not contain any business logic. For example the module for `abzu process kg` should be in `abzu.kg.*` and not in `abzu.cli.api`. Similarly, the module for `abzu process articles` should be in `abzu.articles.*` and not in `abzu.cli.api`.
@@ -44,3 +44,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Isort - fix isort errors without being asked and without my verification.
 - Mypy - fix mypy errors without being asked and without my verification.
 - Pre-commit - fix pre-commit errors without being asked and without my verification.
+- New Modules - create a folder for a new module without being asked and without my verification.
+- __init__.py - add these files to new module directories without being asked and without my verification.
+- Edit Multiple Files at Once - if you need to edit multiple files for a single TODO operation, do so in a single step. Do not create multiple steps for the same task.
+
+## Alerts
+
+- BEEP when you are done with something and prompt me, the user in your UI. I need to hear that you're done because I do more than one thing at once.

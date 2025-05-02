@@ -24,7 +24,8 @@
             "Bash(ls:*)",
             "Bash(poetry add:*)",
             "Bash(poetry install:*)",
-            "Bash(poetry update:*)"
+            "Bash(poetry update:*)",
+            "Bash(touch *__init__.py"
         ],
         "deny": [
             "Bash(pip install:*)"
