@@ -18,7 +18,7 @@ abzu = "abzu.cli.click_cli:main"
 [tool.poetry.dependencies]
 python = "3.12.*"
 scrapy = "^2.12.0"
-baml-py = "^0.85.0"
+baml-py = "^0.86.1"
 pyspark = "^3.5.5"
 python-dateutil = "^2.9.0.post0"
 pydantic = "^2.11.3"
@@ -51,6 +51,7 @@ jupyter = "^1.1.1"
 nbdime = "^4.0.2"
 types-requests = "^2.32.0.20250328"
 flake8-pyproject = "^1.2.3"
+poetry-types = "^0.6.0"
 
 [build-system]
 requires = ["poetry-core"]
