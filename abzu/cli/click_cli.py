@@ -193,7 +193,7 @@ def financialdatasets():
     "-f",
     "--file",
     "input_file",
-    help="Path to JSONL file with records containing 'ticker' or 'cik' field",
+    help="Path to JSONL or Parquet file with records containing 'ticker', 'symbol', or 'cik' field",
 )
 @click.option(
     "-k",
@@ -209,9 +209,28 @@ def financialdatasets():
 @click.option(
     "-o", "--output", "output_file", help="Output file path (if not provided, prints to stdout)"
 )
+@click.option(
+    "-r",
+    "--retries",
+    "max_retries",
+    type=int,
+    default=5,
+    help="Maximum number of retries for rate-limited requests (429 status code). Defaults to 5.",
+)
+@click.option(
+    "--pause",
+    "pause_seconds",
+    type=float,
+    default=0.3,
+    help="Number of seconds to pause between API requests (defaults to 0.3 seconds).",
+)
 @click.pass_context
-def facts(ctx, ticker, cik, input_file, api_key, pretty, output_file):
-    """Get company facts from Financial Datasets API."""
+def facts(ctx, ticker, cik, input_file, api_key, pretty, output_file, max_retries, pause_seconds):
+    """Get company facts from Financial Datasets API.
+
+    Uses exponential backoff retry for rate-limited requests (HTTP 429 status code).
+    Pauses between API requests to prevent rate limiting.
+    """
     # Display help if no required parameters are provided
     if not ticker and not cik and not input_file:
         click.echo(ctx.get_help())
@@ -226,6 +245,8 @@ def facts(ctx, ticker, cik, input_file, api_key, pretty, output_file):
         api_key=api_key,
         pretty=pretty,
         output_file=output_file,
+        max_retries=max_retries,
+        pause_seconds=pause_seconds,
     )
 
 

@@ -3,10 +3,14 @@
 import json
 import logging
 import os
+import pathlib
+import time
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Dict, Iterator, List, Optional
 
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 # Configure logging
 logging.basicConfig(
@@ -20,12 +24,18 @@ class FinancialDatasetsAPI:
 
     BASE_URL = "https://api.financialdatasets.ai"
 
-    def __init__(self, api_key: Optional[str] = None):
-        """Initialize the API client.
+    def __init__(
+        self, api_key: Optional[str] = None, max_retries: int = 5, pause_seconds: float = 0.3
+    ):
+        """Initialize the API client with retry capabilities.
 
         Args:
             api_key: API key for Financial Datasets. If None, will attempt to read from
                      FINANCIAL_DATASETS_API_KEY environment variable.
+            max_retries: Maximum number of retries for rate-limited requests (429 status code).
+                         Defaults to 5.
+            pause_seconds: Number of seconds to pause between API requests to prevent rate limiting.
+                           Defaults to 0.3 seconds.
         """
         self.api_key = api_key or os.environ.get("FINANCIAL_DATASETS_API_KEY")
         if not self.api_key:
@@ -35,11 +45,33 @@ class FinancialDatasetsAPI:
             )
 
         self.headers = {"X-API-KEY": self.api_key}
+        self.pause_seconds = pause_seconds
+
+        # Configure session with retry capabilities
+        self.session = requests.Session()
+
+        # Configure retry strategy
+        retry_strategy = Retry(
+            total=max_retries,
+            status_forcelist=[429],  # Only retry on 429 Too Many Requests
+            allowed_methods=["GET"],  # Only retry GET requests
+            backoff_factor=1,  # Exponential backoff: 1, 2, 4, 8, 16 seconds
+            respect_retry_after_header=True,  # Honor Retry-After header
+            raise_on_status=True,  # Raise exception on status codes in status_forcelist
+        )
+
+        # Mount the adapter to the session
+        adapter = HTTPAdapter(max_retries=retry_strategy)
+        self.session.mount("https://", adapter)
+        self.session.mount("http://", adapter)
 
     def get_company_facts(
         self, ticker: Optional[str] = None, cik: Optional[str] = None
     ) -> Dict[str, Any]:
-        """Get company facts from the Financial Datasets API.
+        """Get company facts from the Financial Datasets API with rate limiting.
+
+        This method uses exponential backoff retry for rate-limited requests (HTTP 429 status code).
+        It will retry up to the configured maximum number of retries before failing.
 
         Args:
             ticker: Company ticker symbol (optional if cik is provided)
@@ -50,7 +82,7 @@ class FinancialDatasetsAPI:
 
         Raises:
             ValueError: If neither ticker nor cik is provided
-            requests.RequestException: If the API request fails
+            requests.RequestException: If the API request fails after all retries
         """
         if not ticker and not cik:
             raise ValueError("Either ticker or cik parameter is required")
@@ -64,12 +96,22 @@ class FinancialDatasetsAPI:
         url = f"{self.BASE_URL}/company/facts"
 
         try:
-            response: requests.Response = requests.get(url, headers=self.headers, params=params)
+            # Add a pause before making the request to prevent rate limiting
+            if self.pause_seconds > 0:
+                logger.debug(f"Pausing for {self.pause_seconds} seconds before API request")
+                time.sleep(self.pause_seconds)
+
+            # Use session with retry configuration instead of direct requests.get
+            response = self.session.get(url, headers=self.headers, params=params)
             response.raise_for_status()
             return response.json()  # type: ignore
+        except requests.exceptions.RetryError as e:
+            logger.error(f"API request failed after multiple retries: {e}")
+            raise
         except requests.RequestException as e:
             logger.error(f"API request failed: {e}")
-            logger.error(f"Response: {response.text}")
+            if hasattr(e, "response") and e.response is not None:
+                logger.error(f"Response: {e.response.text}")
             raise
 
 
@@ -90,6 +132,62 @@ def read_jsonl(file_path: str) -> Iterator[Dict[str, Any]]:
                     yield json.loads(line)
                 except json.JSONDecodeError:
                     logger.warning(f"Skipping invalid JSON line: {line}")
+
+
+def read_parquet(file_path: str) -> Iterator[Dict[str, Any]]:
+    """Read a Parquet file and yield each row as a dictionary.
+
+    Args:
+        file_path: Path to the Parquet file
+
+    Yields:
+        Each row as a dictionary
+
+    Raises:
+        ImportError: If pyarrow or pandas is not installed
+    """
+    try:
+        import pandas as pd
+    except ImportError:
+        logger.error(
+            "pandas package is required to read Parquet files. Install with: pip install pandas pyarrow"
+        )
+        raise
+
+    try:
+        # Read the parquet file into a pandas DataFrame
+        df = pd.read_parquet(file_path)
+
+        # Convert DataFrame to dictionaries
+        for record in df.to_dict(orient="records"):
+            yield {str(k): v for k, v in record.items()}
+    except Exception as e:
+        logger.error(f"Error reading Parquet file: {e}")
+        raise
+
+
+def read_data_file(file_path: str) -> Iterator[Dict[str, Any]]:
+    """Read a data file (JSONL or Parquet) based on file extension.
+
+    Args:
+        file_path: Path to the data file
+
+    Yields:
+        Each record as a dictionary
+
+    Raises:
+        ValueError: If file format is not supported
+    """
+    file_ext = pathlib.Path(file_path).suffix.lower()
+
+    if file_ext in (".jsonl", ".json"):
+        yield from read_jsonl(file_path)
+    elif file_ext == ".parquet":
+        yield from read_parquet(file_path)
+    else:
+        raise ValueError(
+            f"Unsupported file format: {file_ext}. Supported formats: .jsonl, .json, .parquet"
+        )
 
 
 def process_batch_companies(
@@ -149,16 +247,20 @@ def financialdatasets_facts_main(  # noqa: C901
     api_key: Optional[str] = None,
     pretty: bool = False,
     output_file: Optional[str] = None,
+    max_retries: int = 5,
+    pause_seconds: float = 0.3,
 ) -> int:
     """Get company facts from the Financial Datasets API.
 
     Args:
         ticker: Company ticker symbol
         cik: Central Index Key
-        input_file: Path to a JSONL file with records containing 'ticker' or 'cik' field
+        input_file: Path to a file (JSONL or Parquet) with records containing 'ticker', 'symbol', or 'cik' field
         api_key: API key for Financial Datasets
         pretty: Whether to format JSON output with indentation (only used for stdout output)
         output_file: File to write results to (if None, print to stdout)
+        max_retries: Maximum number of retries for rate-limited requests (429 status code). Defaults to 5.
+        pause_seconds: Number of seconds to pause between API requests to prevent rate limiting. Defaults to 0.3.
 
     Returns:
         0 on success, 1 on failure
@@ -166,7 +268,7 @@ def financialdatasets_facts_main(  # noqa: C901
     try:
         # The validation is now handled by the click command
 
-        api = FinancialDatasetsAPI(api_key)
+        api = FinancialDatasetsAPI(api_key, max_retries=max_retries, pause_seconds=pause_seconds)
 
         # Case 1: Process a single company using ticker/cik
         if not input_file:
@@ -185,26 +287,35 @@ def financialdatasets_facts_main(  # noqa: C901
                 else:
                     print(json.dumps(result))
 
-        # Case 2: Process companies from an input file
+        # Case 2: Process companies from an input file (JSONL or Parquet)
         else:
             if not os.path.exists(input_file):
                 logger.error(f"Input file does not exist: {input_file}")
                 return 1
 
-            # Read companies from JSONL file
-            companies: List[Dict[str, Any | None]] = []
-            for record in read_jsonl(input_file):
-                ticker_val = record.get("ticker")
-                cik_val = record.get("cik")
-                if ticker_val or cik_val:
-                    companies.append({"ticker": ticker_val, "cik": cik_val})
+            # Detect file format and read records accordingly
+            try:
+                # Read companies from data file
+                companies: List[Dict[str, Any | None]] = []
+                for record in read_data_file(input_file):
+                    # Check for ticker/symbol and cik fields
+                    ticker_val = record.get("ticker") or record.get("symbol")
+                    cik_val = record.get("cik")
+                    if ticker_val or cik_val:
+                        companies.append({"ticker": ticker_val, "cik": cik_val})
 
-            if not companies:
-                logger.error(f"No valid records with 'ticker' or 'cik' found in {input_file}")
+                if not companies:
+                    logger.error(
+                        f"No valid records with 'ticker', 'symbol', or 'cik' found in {input_file}"
+                    )
+                    return 1
+
+                logger.info(f"Processing {len(companies)} companies from {input_file}")
+                process_batch_companies(api, companies, output_file)
+
+            except ValueError as e:
+                logger.error(f"Error reading input file: {e}")
                 return 1
-
-            logger.info(f"Processing {len(companies)} companies from {input_file}")
-            process_batch_companies(api, companies, output_file)
 
         return 0
     except Exception as e:
