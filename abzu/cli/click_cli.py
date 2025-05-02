@@ -54,7 +54,7 @@ def articles():
 )
 def process_semianalysis(input_file, output_file, batch_size):
     """Process SemiAnalysis articles through LLM extraction pipeline."""
-    from abzu.cli.process_articles import process_main
+    from abzu.articles.processor import process_main
 
     return process_main(
         input_file=input_file,
@@ -93,7 +93,7 @@ def kg():
 )
 def raw(input_file, output_dir, partitions):
     """Extract raw knowledge graph from processed articles."""
-    from abzu.cli.process_kg import process_raw_kg
+    from abzu.kg.processor import process_raw_kg
 
     return process_raw_kg(
         input_file=input_file,
@@ -126,7 +126,7 @@ def raw(input_file, output_dir, partitions):
 )
 def refine(input_dir, output_dir, partitions):
     """Refine knowledge graph by creating bidirectional relationships."""
-    from abzu.cli.process_kg import process_refine_kg
+    from abzu.kg.processor import process_refine_kg
 
     return process_refine_kg(
         input_dir=input_dir,
@@ -231,8 +231,8 @@ def financialdatasets():
     "--pause",
     "pause_seconds",
     type=float,
-    default=0.35,
-    help="Number of seconds to pause between API requests (defaults to 0.35 seconds).",
+    default=0.5,
+    help="Number of seconds to pause between API requests (defaults to 0.5 seconds).",
 )
 @click.option(
     "--no-progress",
@@ -267,7 +267,7 @@ def facts(
         click.echo(ctx.get_help())
         return 0
 
-    from abzu.cli.api import financialdatasets_facts_main
+    from abzu.api.financialdatasets import financialdatasets_facts_main
 
     # Handle special case for stdout output
     if output_file == "-":

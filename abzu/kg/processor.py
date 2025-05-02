@@ -7,12 +7,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-
-# Check if PySpark is installed
-def is_pyspark_installed():
-    return importlib.util.find_spec("pyspark") is not None
-
-
 # Configure logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -20,17 +14,34 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+# Check if PySpark is installed
+def is_pyspark_installed() -> bool:
+    """Check if PySpark is installed.
+
+    Returns:
+        True if PySpark is installed, False otherwise
+    """
+    return importlib.util.find_spec("pyspark") is not None
+
+
 def run_spark_script(
     script_path: str,
     args: list,
     description: str,
 ) -> int:
-    """Run a PySpark script with the given arguments."""
+    """Run a PySpark script with the given arguments.
+
+    Args:
+        script_path: Path to the PySpark script
+        args: List of arguments to pass to the script
+        description: Description of the script for logging
+
+    Returns:
+        0 on success, 1 on failure
+    """
     # Check if PySpark is installed
     if not is_pyspark_installed():
-        logger.error("PySpark is not installed. Please install it with:")
-        logger.error("  pip install pyspark")
-        logger.error("  or")
+        logger.error("PySpark is not installed. Please install it with poetry:")
         logger.error("  poetry add pyspark")
         return 1
 
@@ -103,7 +114,7 @@ def run_spark_script(
 
             # Provide more helpful information
             logger.error("\nTroubleshooting steps:")
-            logger.error("1. Ensure PySpark is installed: pip install pyspark")
+            logger.error("1. Ensure PySpark is installed: poetry add pyspark")
             logger.error("2. Check if Java is installed: java -version")
             logger.error("3. Try running the script directly: python " + script_path)
             logger.error("4. Ensure you have at least 4GB of RAM available")
@@ -130,6 +141,9 @@ def process_raw_kg(
         input_file: Path to the input JSONL file with processed articles
         output_dir: Directory to store the knowledge graph
         partitions: Number of Spark partitions to use
+
+    Returns:
+        0 on success, 1 on failure
     """
     # Construct the command to run the build_graph.py script
     script_path = str(Path(__file__).parents[1] / "spark" / "build_graph.py")
@@ -162,6 +176,9 @@ def process_refine_kg(
         input_dir: Path to the directory with raw knowledge graph
         output_dir: Directory to store the refined knowledge graph
         partitions: Number of Spark partitions to use
+
+    Returns:
+        0 on success, 1 on failure
     """
     # Construct the path to the refine_kg.py script
     script_path = str(Path(__file__).parents[1] / "spark" / "refine_kg.py")
@@ -177,14 +194,3 @@ def process_refine_kg(
     ]
 
     return run_spark_script(script_path, args, "Knowledge graph refinement")
-
-
-def main() -> int:
-    """Command line interface for process_kg."""
-    logger.error("This module should not be called directly.")
-    logger.error("Please use 'abzu process kg [raw|refine]' instead.")
-    return 1
-
-
-if __name__ == "__main__":
-    sys.exit(main())

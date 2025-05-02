@@ -187,7 +187,7 @@ def main(args: Optional[List[str]] = None) -> int:  # noqa: C901
     # Execute command
     if parsed_args.command == "process":
         if parsed_args.subcommand == "articles":
-            from abzu.cli.process_articles import process_main
+            from abzu.articles.processor import process_main
 
             return process_main(
                 input_file=parsed_args.input,
@@ -196,7 +196,7 @@ def main(args: Optional[List[str]] = None) -> int:  # noqa: C901
             )
         elif parsed_args.subcommand == "kg":
             # Import here to avoid loading Spark when not needed
-            from abzu.cli.process_kg import process_raw_kg, process_refine_kg
+            from abzu.kg.processor import process_raw_kg, process_refine_kg
 
             if not hasattr(parsed_args, "kg_subcommand") or not parsed_args.kg_subcommand:
                 kg_cmd.print_help()
@@ -228,9 +228,9 @@ def main(args: Optional[List[str]] = None) -> int:  # noqa: C901
             return 1
 
         if parsed_args.crawl_subcommand == "semianalysis":
-            from abzu.cli.crawl import crawl_main
+            from abzu.crawl import crawl_semianalysis
 
-            return crawl_main(
+            return crawl_semianalysis(
                 url=parsed_args.url,
                 output_path=parsed_args.output,
                 pages=parsed_args.pages,
@@ -256,7 +256,7 @@ def main(args: Optional[List[str]] = None) -> int:  # noqa: C901
                 return 1
 
             if parsed_args.financialdatasets_subcommand == "facts":
-                from abzu.cli.api import financialdatasets_facts_main
+                from abzu.api.financialdatasets import financialdatasets_facts_main
 
                 return financialdatasets_facts_main(
                     ticker=parsed_args.ticker,

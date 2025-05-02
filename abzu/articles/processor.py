@@ -1,8 +1,8 @@
-#!/usr/bin/env python3
+"""Article processing module for Abzu."""
+
 import asyncio
 import logging
 import os
-import sys
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -19,7 +19,14 @@ logger = logging.getLogger(__name__)
 
 
 def load_articles(file_path: str) -> List[Dict[str, Any]]:
-    """Load articles from a JSONL file and deduplicate them."""
+    """Load articles from a JSONL file and deduplicate them.
+
+    Args:
+        file_path: Path to the JSONL file containing articles
+
+    Returns:
+        List of deduplicated article dictionaries
+    """
     logger.info(f"Loading articles from {file_path}")
     articles = load_jsonl(file_path)
     logger.info(f"Loaded {len(articles)} articles")
@@ -34,7 +41,14 @@ def load_articles(file_path: str) -> List[Dict[str, Any]]:
 
 
 async def process_article_async(article: Dict[str, Any]) -> Optional[IndustryArticle]:
-    """Process an article using BAML asynchronously."""
+    """Process an article using BAML asynchronously.
+
+    Args:
+        article: Dictionary containing article data
+
+    Returns:
+        Processed IndustryArticle object or None if processing failed
+    """
     article_text = article.get("content", "")
 
     if not article_text:
@@ -48,6 +62,9 @@ async def process_article_async(article: Dict[str, Any]) -> Optional[IndustryArt
         result.collected_at = article.get("collected_at", None)
         result.posted_at = article.get("posted_at", None)
 
+        # Pass through the article URL
+        result.article_url = article.get("url", None)
+
         logger.info(f"Processed article: {article.get('title', 'unknown')}")
         return result
     except Exception as e:
@@ -58,7 +75,14 @@ async def process_article_async(article: Dict[str, Any]) -> Optional[IndustryArt
 async def process_batch(
     batch: List[Dict[str, Any]],
 ) -> List[Optional[IndustryArticle | BaseException]]:
-    """Process a batch of articles concurrently."""
+    """Process a batch of articles concurrently.
+
+    Args:
+        batch: List of article dictionaries to process
+
+    Returns:
+        List of processed articles or exceptions
+    """
     logger.info(f"Processing batch of {len(batch)} articles")
     start_time = time.time()
 
@@ -84,7 +108,12 @@ async def process_batch(
 
 
 def save_results(results: List[Optional[IndustryArticle]], output_path: str) -> None:
-    """Save processed results to a JSONL file."""
+    """Save processed results to a JSONL file.
+
+    Args:
+        results: List of processed IndustryArticle objects
+        output_path: Path to write the results
+    """
     valid_results = [r.model_dump() for r in results if r is not None]
 
     if save_jsonl(valid_results, output_path, create_backup=True):
@@ -98,7 +127,13 @@ def save_results(results: List[Optional[IndustryArticle]], output_path: str) -> 
 async def process_articles_async(
     articles: List[Dict[str, Any]], output_file: str, batch_size: int
 ) -> None:
-    """Process all articles in batches asynchronously."""
+    """Process all articles in batches asynchronously.
+
+    Args:
+        articles: List of article dictionaries
+        output_file: Path to write results
+        batch_size: Number of articles to process in each batch
+    """
     # Process in batches
     all_results: list[Optional[IndustryArticle | BaseException]] = []
     for i in range(0, len(articles), batch_size):
@@ -118,7 +153,16 @@ async def async_main(
     output_file: str = "data/processed_semianalysis.jsonl",
     batch_size: int = 5,
 ) -> int:
-    """Async main function."""
+    """Async main function for article processing.
+
+    Args:
+        input_file: Path to input JSONL file
+        output_file: Path to output JSONL file
+        batch_size: Number of articles to process in each batch
+
+    Returns:
+        0 on success, 1 on failure
+    """
     # Check for required environment variables
     if not os.environ.get("GEMINI_API_KEY"):
         logger.error("GEMINI_API_KEY environment variable is not set")
@@ -145,14 +189,14 @@ def process_main(
     output_file: str = "data/processed_semianalysis.jsonl",
     batch_size: int = 5,
 ) -> int:
-    """Process articles main function."""
+    """Process articles main function.
+
+    Args:
+        input_file: Path to input JSONL file
+        output_file: Path to output JSONL file
+        batch_size: Number of articles to process in each batch
+
+    Returns:
+        0 on success, 1 on failure
+    """
     return asyncio.run(async_main(input_file, output_file, batch_size))
-
-
-def main() -> int:
-    """Command line interface for process_articles."""
-    return process_main()
-
-
-if __name__ == "__main__":
-    sys.exit(main())

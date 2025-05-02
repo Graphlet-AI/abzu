@@ -1,3 +1,7 @@
+"""Crawl articles from the web for processing."""
+
+import logging
+import os
 import time
 from datetime import datetime
 from pathlib import Path
@@ -13,6 +17,12 @@ from tqdm import tqdm
 from twisted.internet import defer, reactor
 
 from abzu.utils import append_jsonl, build_crawled_url_index
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 DEFAULT_PATH = "data/semianalysis.jsonl"
 
@@ -198,38 +208,104 @@ def run_batch_crawl(
     return process_sequentially(urls)
 
 
+def crawl_semianalysis(
+    url: Optional[str] = None,
+    output_path: str = DEFAULT_PATH,
+    pages: int = 24,
+    batch_size: int = 1,
+    concurrent_requests: int = 1,
+) -> int:
+    """Crawl articles from SemiAnalysis website in batch mode.
+
+    Args:
+        url: Optional specific URL to crawl
+        output_path: Path to save crawled articles
+        pages: Number of archive pages to crawl
+        batch_size: Number of URLs to process in each batch
+        concurrent_requests: Number of concurrent requests per spider
+
+    Returns:
+        0 on success, 1 on failure
+    """
+    try:
+        # Ensure the data directory exists
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
+        # If a specific URL is provided, crawl only that URL in a single batch
+        if url:
+            logger.info(f"Crawling URL: {url}")
+            urls = [url]
+        else:
+            # Otherwise, get the archive pages
+            logger.info(f"Preparing to crawl {pages} archive pages in batches of {batch_size}")
+            urls = list(
+                reversed(
+                    [f"https://semianalysis.com/archives/page/{n}/" for n in range(1, pages + 1)]
+                )
+            )
+
+        total_urls = len(urls)
+
+        # Create progress bar for total pages to crawl
+        progress = tqdm(
+            total=total_urls,
+            desc="Crawling pages",
+            unit="page",
+            position=0,
+            leave=True,
+            colour="green",
+            bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} pages [ETA: {remaining}]",
+        )
+
+        # Build an index of already crawled URLs
+        logger.info(f"Building index of previously crawled URLs from {output_path}")
+        crawled_urls = build_crawled_url_index(output_path)
+        logger.info(f"Found {len(crawled_urls)} previously crawled URLs")
+
+        # Process URLs in batches
+        batches = [urls[i : i + batch_size] for i in range(0, total_urls, batch_size)]
+        logger.info(
+            f"Processing {total_urls} URLs in {len(batches)} batches of up to {batch_size} URLs each"
+        )
+
+        @defer.inlineCallbacks
+        def process_batches():
+            start_time = time.time()
+            for i, batch in enumerate(batches):
+                batch_desc = f"Batch {i + 1}/{len(batches)}"
+                progress.set_description(batch_desc)
+                # Process this batch with our progress bar and crawled URLs index
+                yield run_batch_crawl(
+                    batch,
+                    output_path,
+                    concurrent_requests,
+                    progress_bar=progress,
+                    crawled_urls=crawled_urls,
+                )
+
+            # All done!
+            elapsed = time.time() - start_time
+            progress.close()
+            logger.info(f"All batches completed in {elapsed:.2f} seconds")
+            logger.info(f"Data saved to {output_path}")
+            reactor.stop()
+
+        # Start the process
+        process_batches()
+        # Blocks until reactor.stop() is called
+        # Add cast to Any to help mypy understand this method exists
+        cast(Any, reactor).run()
+
+        return 0
+    except Exception as e:
+        logger.error(f"Error during crawling: {e}")
+        logger.exception("Full exception details:")
+        return 1
+
+
 def main(batch_size: int = 1, concurrent_requests: int = 1):
     """Run crawlers in batches."""
-    configure_logging()
-
-    # Get all archive URLs
-    archive_urls = list(
-        reversed([f"https://semianalysis.com/archives/page/{n}/" for n in range(1, 24)])
-    )
-    total_urls = len(archive_urls)
-
-    # Process URLs in batches
-    batches = [archive_urls[i : i + batch_size] for i in range(0, total_urls, batch_size)]
-    print(f"Processing {total_urls} URLs in {len(batches)} batches of up to {batch_size} URLs each")
-
-    @defer.inlineCallbacks
-    def process_batches():
-        start_time = datetime.now()
-        for i, batch in enumerate(batches):
-            print(f"Starting batch {i + 1}/{len(batches)} with {len(batch)} URLs")
-            # Process this batch
-            yield run_batch_crawl(batch, DEFAULT_PATH, concurrent_requests)
-            print(f"Completed batch {i + 1}/{len(batches)}")
-
-        # All done!
-        elapsed = (datetime.now() - start_time).total_seconds()
-        print(f"All batches completed in {elapsed:.2f} seconds")
-        reactor.stop()
-
-    # Start the process
-    process_batches()
-    # Add cast to Any to help mypy understand this method exists
-    cast(Any, reactor).run()  # Blocks until reactor.stop() is called.
+    return crawl_semianalysis(batch_size=batch_size, concurrent_requests=concurrent_requests)
 
 
 if __name__ == "__main__":
