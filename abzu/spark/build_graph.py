@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 def build_knowledge_graph(
-    input_path: str = "data/processed_articles.jsonl",
+    input_path: str = "data/processed_semianalysis.jsonl",
     output_path: str = "data/knowledge_graph",
     partitions: int = 4,
 ) -> None:
@@ -168,7 +168,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Build knowledge graph from processed articles")
     parser.add_argument(
         "--input",
-        default="data/processed_articles.jsonl",
+        default="data/processed_semianalysis.jsonl",
         help="Input processed articles JSONL file",
     )
     parser.add_argument(

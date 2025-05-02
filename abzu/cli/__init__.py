@@ -35,8 +35,8 @@ def main(args: Optional[List[str]] = None) -> int:  # noqa: C901
     articles_cmd.add_argument(
         "-o",
         "--output",
-        default="data/processed_articles.jsonl",
-        help="Output JSONL file path (default: data/processed_articles.jsonl)",
+        default="data/processed_semianalysis.jsonl",
+        help="Output JSONL file path (default: data/processed_semianalysis.jsonl)",
     )
     articles_cmd.add_argument(
         "-b",
@@ -59,8 +59,8 @@ def main(args: Optional[List[str]] = None) -> int:  # noqa: C901
     kg_raw_cmd.add_argument(
         "-i",
         "--input",
-        default="data/processed_articles.jsonl",
-        help="Input processed articles JSONL file (default: data/processed_articles.jsonl)",
+        default="data/processed_semianalysis.jsonl",
+        help="Input processed articles JSONL file (default: data/processed_semianalysis.jsonl)",
     )
     kg_raw_cmd.add_argument(
         "-o",

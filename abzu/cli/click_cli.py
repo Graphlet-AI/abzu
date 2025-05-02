@@ -36,8 +36,8 @@ def process():
     "-o",
     "--output",
     "output_file",
-    default="data/processed_articles.jsonl",
-    help="Output JSONL file path (default: data/processed_articles.jsonl)",
+    default="data/processed_semianalysis.jsonl",
+    help="Output JSONL file path (default: data/processed_semianalysis.jsonl)",
 )
 @click.option(
     "-b",
@@ -68,8 +68,8 @@ def kg():
     "-i",
     "--input",
     "input_file",
-    default="data/processed_articles.jsonl",
-    help="Input processed articles JSONL file (default: data/processed_articles.jsonl)",
+    default="data/processed_semianalysis.jsonl",
+    help="Input processed articles JSONL file (default: data/processed_semianalysis.jsonl)",
 )
 @click.option(
     "-o",

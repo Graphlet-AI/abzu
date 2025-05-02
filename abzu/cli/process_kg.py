@@ -117,7 +117,7 @@ def run_spark_script(
 
 
 def process_raw_kg(
-    input_file: str = "data/processed_articles.jsonl",
+    input_file: str = "data/processed_semianalysis.jsonl",
     output_dir: str = "data/knowledge_graph",
     partitions: int = 4,
 ) -> int:
