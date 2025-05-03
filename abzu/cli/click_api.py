@@ -4,7 +4,10 @@ import logging
 
 import click
 
-from abzu.api.financialdatasets import financialdatasets_facts_main
+from abzu.api.financialdatasets import (
+    financialdatasets_facts_main,
+    financialdatasets_tickers_main,
+)
 
 # Configure logging
 logging.basicConfig(
@@ -101,6 +104,54 @@ def facts(
         max_retries=max_retries,
         pause_seconds=pause_seconds,
         show_progress=not no_progress,
+    )
+
+
+@financialdatasets_cli.command()
+@click.option(
+    "-k",
+    "--api-key",
+    help="API key for Financial Datasets (defaults to FINANCIAL_DATASETS_API_KEY env var)",
+)
+@click.option(
+    "-o",
+    "--output",
+    "output_file",
+    default="data/financialdatasets/tickers.json",
+    help="Output file path (default: data/financialdatasets/tickers.json)",
+)
+@click.option(
+    "-p",
+    "--pretty",
+    is_flag=True,
+    help="Format JSON output with indentation",
+)
+@click.option(
+    "-r",
+    "--retries",
+    "max_retries",
+    type=int,
+    default=5,
+    help="Maximum number of retries for rate-limited requests (429 status code). Defaults to 5.",
+)
+def tickers(
+    api_key,
+    output_file,
+    pretty,
+    max_retries,
+):
+    """Get all available tickers from Financial Datasets API.
+
+    Retrieves a list of all available ticker symbols and their associated company information
+    from the Financial Datasets API and stores them in a JSON file.
+
+    Output is written to the specified file path (default: data/financialdatasets/tickers.json)
+    """
+    return financialdatasets_tickers_main(
+        api_key=api_key,
+        output_file=output_file,
+        pretty=pretty,
+        max_retries=max_retries,
     )
 
 
