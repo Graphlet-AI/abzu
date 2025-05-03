@@ -50,4 +50,4 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Alerts
 
-- BEEP when you are done with something and prompt me, the user in your UI. I need to hear that you're done because I do more than one thing at once.
+- BEEP when you are done with something and prompt me, the user in your UI. I need to hear that you're done because I do more than one thing at once. Use the comand `echo -ne '\007'` to beep.
