@@ -4,3 +4,4 @@ dist
 .ipynb_checkpoints
 nohup.out
 .claude/settings.local.json
+.mcp.json
