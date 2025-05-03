@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "applescript-mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "@peakmojo/applescript-mcp"
+      ],
+      "env": {}
+    }
+  }
+}
