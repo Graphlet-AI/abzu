@@ -15,7 +15,7 @@ Options:
 Description:
 This script parses the RSS feed, captures each entry's feed-provided <content> or <summary>,
 then downloads the full article text of each entry URL (via <article> or <p> scraping),
-and writes title, url, published, feed_content, and full_content into JSONL.
+and writes title, url, posted_at, feed_content, content, and collected_at into JSONL.
 
 Cookie Handling:
 - If --cookie is provided, parses and uses those cookies.
@@ -23,6 +23,7 @@ Cookie Handling:
 """
 
 import argparse
+import datetime
 import json
 
 import browsercookie
@@ -55,7 +56,6 @@ def build_session(user_agent, cookie_string=None, bypass_cf=False):
         # auto-load from browser cookie jar
         try:
             jar = browsercookie.chrome()
-            # iterate through jar and set into session.cookies
             for cookie in jar:
                 session.cookies.set(
                     cookie.name,
@@ -88,8 +88,8 @@ def parse_rss_and_save(rss_url, output_file, session):
     """
     Parses the RSS feed (decoding bytes safely), then for each entry:
       - grabs feed_content (entry.content or entry.summary)
-      - downloads full_content via extract_text_from_url
-      - writes a JSON line with title, url, published, feed_content, full_content
+      - downloads content via extract_text_from_url
+      - writes a JSON line with title, url, posted_at, feed_content, content, collected_at
     """
     try:
         resp = session.get(rss_url, timeout=15)
@@ -124,17 +124,21 @@ def parse_rss_and_save(rss_url, output_file, session):
 
             # full article text extraction
             try:
-                full_content = extract_text_from_url(session, link)
+                content = extract_text_from_url(session, link)
             except Exception as e:
-                full_content = ""
+                content = ""
                 print(f"Warning: Failed full extract from {link}: {e}")
+
+            # timestamp of collection
+            collected_at = datetime.datetime.utcnow().isoformat() + "Z"
 
             record = {
                 "title": title,
                 "url": link,
-                "published": published,
+                "posted_at": published,
                 "feed_content": feed_content,
-                "full_content": full_content,
+                "content": content,
+                "collected_at": collected_at,
             }
             f.write(json.dumps(record, ensure_ascii=False) + "\n")
             count += 1
