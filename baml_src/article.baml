@@ -6,7 +6,7 @@ class IndustryArticle {
   title string
   @description("Title of the article")
 
-  article_url string
+  url string
   @description("URL of the article")
 
   collected_at string?
