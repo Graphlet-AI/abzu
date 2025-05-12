@@ -65,7 +65,7 @@ async def process_article_async(
         result.posted_at = article.get("posted_at", None)
 
         # Pass through the article URL
-        result.article_url = article.get("url", None)
+        result.url = article.get("url", None)
 
         logger.info(f"Processed article: {article.get('title', 'unknown')}")
         return result
