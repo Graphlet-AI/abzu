@@ -15,6 +15,7 @@ def get_pipeline_steps() -> List[str]:
         List of command strings representing the pipeline steps.
     """
     return [
+        "baml-cli generate",
         "abzu crawl semianalysis",
         "abzu process articles semianalysis",
         "abzu process kg raw",
