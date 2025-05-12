@@ -1,0 +1,23 @@
+{
+    "mcpServers": {
+        "applescript-mcp": {
+            "type": "stdio",
+            "command": "npx",
+            "args": [
+                "@peakmojo/applescript-mcp"
+            ],
+            "env": { }
+        },
+        "kuzu": {
+            "command": "docker",
+            "args": [
+                "run",
+                "-v",
+                "{Absolute path to weave project}/data/kuzu/db:/database",
+                "--rm",
+                "-i",
+                "kuzudb/mcp-server"
+            ]
+        }
+    }
+}

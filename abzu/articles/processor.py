@@ -5,7 +5,7 @@ import logging
 import os
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 from abzu.baml_client.async_client import b as async_b
 from abzu.baml_client.types import IndustryArticle
@@ -18,7 +18,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def load_articles(file_path: str) -> List[Dict[str, Any]]:
+def load_articles(file_path: str) -> list[Dict[str, Any]]:
     """Load articles from a JSONL file and deduplicate them.
 
     Args:
@@ -40,7 +40,9 @@ def load_articles(file_path: str) -> List[Dict[str, Any]]:
     return deduped_articles
 
 
-async def process_article_async(article: Dict[str, Any]) -> Optional[IndustryArticle]:
+async def process_article_async(
+    article: Dict[str, Any],
+) -> IndustryArticle | BaseException | None:
     """Process an article using BAML asynchronously.
 
     Args:
@@ -73,8 +75,8 @@ async def process_article_async(article: Dict[str, Any]) -> Optional[IndustryArt
 
 
 async def process_batch(
-    batch: List[Dict[str, Any]],
-) -> List[Optional[IndustryArticle | BaseException]]:
+    batch: list[Dict[str, Any]],
+) -> list[IndustryArticle | BaseException | None]:
     """Process a batch of articles concurrently.
 
     Args:
@@ -93,7 +95,7 @@ async def process_batch(
     results = await asyncio.gather(*tasks, return_exceptions=True)
 
     # Handle any exceptions
-    processed_results: list[Optional[IndustryArticle | BaseException]] = []
+    processed_results: list[IndustryArticle | BaseException | None] = []
     for i, result in enumerate(results):
         if isinstance(result, Exception):
             logger.error(f"Error processing article: {result}")
@@ -107,14 +109,14 @@ async def process_batch(
     return processed_results
 
 
-def save_results(results: List[Optional[IndustryArticle]], output_path: str) -> None:
+def save_results(results: list[IndustryArticle | BaseException | None], output_path: str) -> None:
     """Save processed results to a JSONL file.
 
     Args:
         results: List of processed IndustryArticle objects
         output_path: Path to write the results
     """
-    valid_results = [r.model_dump() for r in results if r is not None]
+    valid_results = [r.model_dump() for r in results if r is not None]  # type: ignore
 
     if save_jsonl(valid_results, output_path, create_backup=True):
         logger.info(f"Saved {len(valid_results)} processed articles to {output_path}")
@@ -125,7 +127,7 @@ def save_results(results: List[Optional[IndustryArticle]], output_path: str) -> 
 
 
 async def process_articles_async(
-    articles: List[Dict[str, Any]], output_file: str, batch_size: int
+    articles: list[Dict[str, Any]], output_file: str, batch_size: int
 ) -> None:
     """Process all articles in batches asynchronously.
 
@@ -135,7 +137,7 @@ async def process_articles_async(
         batch_size: Number of articles to process in each batch
     """
     # Process in batches
-    all_results: list[Optional[IndustryArticle | BaseException]] = []
+    all_results: list[IndustryArticle | BaseException | None] = []
     for i in range(0, len(articles), batch_size):
         batch = articles[i : i + batch_size]
         logger.info(
@@ -145,7 +147,7 @@ async def process_articles_async(
         all_results.extend(batch_results)
 
     # Save all results
-    save_results(all_results, output_file)  # type: ignore
+    save_results(all_results, output_file)
 
 
 async def async_main(

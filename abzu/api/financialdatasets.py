@@ -115,6 +115,35 @@ class FinancialDatasetsAPI:
                 logger.error(f"Response: {e.response.text}")
             raise
 
+    def get_tickers(self) -> Dict[str, Any]:
+        """Get all available tickers from the Financial Datasets API.
+
+        This method retrieves a list of all available ticker symbols and their associated
+        company information from the Financial Datasets API.
+
+        Returns:
+            Dictionary containing ticker symbols and company information
+
+        Raises:
+            requests.exceptions.RetryError: If the API request fails after multiple retries
+            requests.RequestException: If the API request fails
+        """
+        url = f"{self.BASE_URL}/company/facts/tickers"
+
+        try:
+            # Use session with retry configuration
+            response = self.session.get(url, headers=self.headers)
+            response.raise_for_status()
+            return response.json()  # type: ignore
+        except requests.exceptions.RetryError as e:
+            logger.error(f"API request for tickers failed after multiple retries: {e}")
+            raise
+        except requests.RequestException as e:
+            logger.error(f"API request for tickers failed: {e}")
+            if hasattr(e, "response") and e.response is not None:
+                logger.error(f"Response: {e.response.text}")
+            raise
+
 
 def read_jsonl(file_path: str) -> Iterator[Dict[str, Any]]:
     """Read a JSON Lines file and yield each line as a parsed JSON object.
@@ -338,4 +367,49 @@ def financialdatasets_facts_main(  # noqa: C901
         return 0
     except Exception as e:
         logger.error(f"Error retrieving company facts: {e}")
+        return 1
+
+
+def financialdatasets_tickers_main(
+    api_key: Optional[str] = None,
+    output_file: str = "data/financialdatasets/tickers.json",
+    pretty: bool = False,
+    max_retries: int = 5,
+) -> int:
+    """Get all available tickers from the Financial Datasets API.
+
+    This function retrieves all ticker symbols from the Financial Datasets API
+    and stores them in a JSON file.
+
+    Args:
+        api_key: API key for Financial Datasets
+        output_file: Path to the output file (default: data/financialdatasets/tickers.json)
+        pretty: Whether to format JSON output with indentation
+        max_retries: Maximum number of retries for rate-limited requests. Defaults to 5.
+
+    Returns:
+        0 on success, 1 on failure
+    """
+    try:
+        api = FinancialDatasetsAPI(api_key, max_retries=max_retries, pause_seconds=0)
+
+        # Get all tickers from the API
+        logger.info("Retrieving all tickers from Financial Datasets API")
+        result = api.get_tickers()
+
+        # Ensure the output directory exists
+        os.makedirs(os.path.dirname(os.path.abspath(output_file)), exist_ok=True)
+
+        # Write the result to the output file
+        logger.info(f"Writing tickers to {output_file}")
+        with open(output_file, "w") as f:
+            if pretty:
+                json.dump(result, f, indent=2)
+            else:
+                json.dump(result, f)
+
+        logger.info(f"Successfully wrote tickers data to {output_file}")
+        return 0
+    except Exception as e:
+        logger.error(f"Error retrieving tickers: {e}")
         return 1
