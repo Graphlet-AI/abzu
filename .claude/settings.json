@@ -4,6 +4,8 @@
             "Bash(git status:*)",
             "Bash(git diff:*)",
             "Bash(git log:*)",
+            "Bash(git add:*)",
+            "Bash(git grep:*)",
             "Bash(poetry update:*)",
             "Bash(pip show:*)",
             "Bash(pip freeze:*)",
@@ -22,10 +24,15 @@
             "Bash(poetry run pytest:*)",
             "Bash(poetry run pytest tests/)",
             "Bash(ls:*)",
+            "Bash(cat:*)",
+            "Bash(grep:*)",
+            "Bash(pwd:*)",
+            "Bash(cd:*)",
+            "Bash(mkdir:*)",
             "Bash(poetry add:*)",
             "Bash(poetry install:*)",
             "Bash(poetry update:*)",
-            "Bash(touch *__init__.py"
+            "Bash(touch *__init__.py)"
         ],
         "deny": [
             "Bash(pip install:*)"
