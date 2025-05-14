@@ -2,6 +2,8 @@
 
 A Knowledge Graph Bloomberg Terminal™ + Waters of wisdom... knowledge graph of silicon.
 
+<center><img src="images/Akka-Seal-Enki-Abzu.jpg" width="500px" alt="The Akka Seal showing Enki with the Abzu flowing out from him."/></center>
+
 ## Abzu Steps
 
 The `abzu steps` command that installs via `poetry install` will describe the steps required to build the knowledge graph.
