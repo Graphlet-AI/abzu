@@ -4,9 +4,11 @@ import json
 import logging
 import os
 import pathlib
+import re
 import time
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any, Dict, Iterator, List, Optional
+from datetime import date, datetime
+from typing import Any, Dict, Iterator, List, Optional, Union
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -65,6 +67,102 @@ class FinancialDatasetsAPI:
         adapter = HTTPAdapter(max_retries=retry_strategy)
         self.session.mount("https://", adapter)
         self.session.mount("http://", adapter)
+
+    def get_historical_prices(
+        self,
+        ticker: str,
+        start_date: Union[str, date, datetime],
+        end_date: Union[str, date, datetime],
+        interval: str = "day",
+        interval_multiplier: int = 1,
+    ) -> Dict[str, Any]:
+        """Get historical price data for a ticker.
+
+        This method retrieves historical price data for a specific ticker symbol at the
+        specified time interval within the required start and end date range.
+
+        Args:
+            ticker: The ticker symbol (e.g., 'AAPL' for Apple)
+            start_date: The start date for the price data. Can be a string in YYYY-MM-DD format,
+                       a datetime object, or a date object.
+            end_date: The end date for the price data. Can be a string in YYYY-MM-DD format,
+                     a datetime object, or a date object.
+            interval: The time interval for the price data. Possible values are
+                     'second', 'minute', 'day', 'week', 'month', 'year'.
+                     Defaults to 'day'.
+            interval_multiplier: The multiplier for the interval (e.g., 5 for every 5 minutes).
+                                 Defaults to 1.
+
+        Returns:
+            Dictionary containing historical price data with 'prices' key
+
+        Raises:
+            ValueError: If ticker is not provided or interval is invalid
+            requests.RequestException: If the API request fails after all retries
+        """
+        if not ticker:
+            raise ValueError("Ticker parameter is required")
+
+        if not start_date:
+            raise ValueError("Start date parameter is required")
+
+        if not end_date:
+            raise ValueError("End date parameter is required")
+
+        valid_intervals = {"second", "minute", "day", "week", "month", "year"}
+        if interval not in valid_intervals:
+            raise ValueError(f"Invalid interval: {interval}. Must be one of {valid_intervals}")
+
+        # Format and validate dates
+        if isinstance(start_date, (date, datetime)):
+            formatted_start_date = start_date.strftime("%Y-%m-%d")
+        else:
+            # Validate ISO date format (YYYY-MM-DD)
+            if not isinstance(start_date, str) or not re.match(r"^\d{4}-\d{2}-\d{2}$", start_date):
+                raise ValueError(
+                    "Start date must be in ISO format (YYYY-MM-DD), a date object, or a datetime object"
+                )
+            formatted_start_date = start_date
+
+        if isinstance(end_date, (date, datetime)):
+            formatted_end_date = end_date.strftime("%Y-%m-%d")
+        else:
+            # Validate ISO date format (YYYY-MM-DD)
+            if not isinstance(end_date, str) or not re.match(r"^\d{4}-\d{2}-\d{2}$", end_date):
+                raise ValueError(
+                    "End date must be in ISO format (YYYY-MM-DD), a date object, or a datetime object"
+                )
+            formatted_end_date = end_date
+
+        # Create parameter dictionary with explicit string values for type compatibility
+        params = {
+            "ticker": str(ticker),
+            "interval": str(interval),
+            "interval_multiplier": str(interval_multiplier),
+            "start_date": str(formatted_start_date),
+            "end_date": str(formatted_end_date),
+        }
+
+        url = f"{self.BASE_URL}/prices/"
+
+        try:
+            # Add a pause before making the request to prevent rate limiting
+            if self.pause_seconds > 0:
+                logger.debug(f"Pausing for {self.pause_seconds} seconds before API request")
+                time.sleep(self.pause_seconds)
+
+            # Use session with retry configuration
+            response = self.session.get(url, headers=self.headers, params=params)
+            response.raise_for_status()
+            return response.json()  # type: ignore
+        except requests.exceptions.RetryError as e:
+            logger.error(f"API request for prices failed after multiple retries: {e}")
+            raise
+        except requests.RequestException as e:
+            logger.error(f"API request for prices failed: {e}")
+            if hasattr(e, "response") and e.response is not None:
+                logger.error(f"Response: {e.response.text}")
+            raise
 
     def get_company_facts(
         self, ticker: Optional[str] = None, cik: Optional[str] = None
@@ -367,6 +465,80 @@ def financialdatasets_facts_main(  # noqa: C901
         return 0
     except Exception as e:
         logger.error(f"Error retrieving company facts: {e}")
+        return 1
+
+
+def financialdatasets_price_main(
+    ticker: str,
+    start_date: str,
+    end_date: str,
+    interval: str = "day",
+    interval_multiplier: int = 1,
+    api_key: Optional[str] = None,
+    output_file: Optional[str] = None,
+    pretty: bool = False,
+    max_retries: int = 5,
+    pause_seconds: float = 0.5,
+) -> int:
+    """Get historical price data for a ticker from the Financial Datasets API.
+
+    This function retrieves historical price data for a specific ticker symbol
+    at the specified time interval within a date range and saves it to a file or prints it to stdout.
+
+    Args:
+        ticker: The ticker symbol (e.g., 'AAPL' for Apple)
+        start_date: The start date for the price data in ISO format (YYYY-MM-DD)
+        end_date: The end date for the price data in ISO format (YYYY-MM-DD)
+        interval: The time interval for the price data. Possible values are
+                 'second', 'minute', 'day', 'week', 'month', 'year'.
+                 Defaults to 'day'.
+        interval_multiplier: The multiplier for the interval (e.g., 5 for every 5 minutes).
+                             Defaults to 1.
+        api_key: API key for Financial Datasets. If None, will attempt to read from
+                 FINANCIAL_DATASETS_API_KEY environment variable.
+        output_file: File to write results to. If None, results are printed to stdout.
+        pretty: Whether to format JSON output with indentation
+        max_retries: Maximum number of retries for rate-limited requests. Defaults to 5.
+        pause_seconds: Number of seconds to pause between API requests. Defaults to 0.5.
+
+    Returns:
+        0 on success, 1 on failure
+    """
+    try:
+        api = FinancialDatasetsAPI(api_key, max_retries=max_retries, pause_seconds=pause_seconds)
+
+        # Get historical price data
+        logger.info(f"Retrieving price data for {ticker} from {start_date} to {end_date}")
+        result = api.get_historical_prices(
+            ticker=ticker,
+            start_date=start_date,
+            end_date=end_date,
+            interval=interval,
+            interval_multiplier=interval_multiplier,
+        )
+
+        # Write or print the result
+        if output_file:
+            # Ensure the output directory exists
+            os.makedirs(os.path.dirname(os.path.abspath(output_file)), exist_ok=True)
+
+            logger.info(f"Writing price data to {output_file}")
+            with open(output_file, "w") as f:
+                if pretty:
+                    json.dump(result, f, indent=2)
+                else:
+                    json.dump(result, f)
+            logger.info(f"Successfully wrote price data to {output_file}")
+        else:
+            # Print to stdout with or without indentation
+            if pretty:
+                print(json.dumps(result, indent=2))
+            else:
+                print(json.dumps(result))
+
+        return 0
+    except Exception as e:
+        logger.error(f"Error retrieving price data: {e}")
         return 1
 
 
