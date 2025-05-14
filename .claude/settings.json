@@ -26,13 +26,15 @@
             "Bash(ls:*)",
             "Bash(cat:*)",
             "Bash(grep:*)",
+            "Bash(grep -n:*)",
             "Bash(pwd:*)",
             "Bash(cd:*)",
             "Bash(mkdir:*)",
             "Bash(poetry add:*)",
             "Bash(poetry install:*)",
             "Bash(poetry update:*)",
-            "Bash(touch *__init__.py)"
+            "Bash(touch *__init__.py)",
+            "Bash(echo -ne '\007')"
         ],
         "deny": [
             "Bash(pip install:*)"
