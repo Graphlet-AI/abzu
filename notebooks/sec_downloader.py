@@ -86,7 +86,7 @@ if __name__ == "__main__":
     cik = get_cik_from_ticker(ticker)
     print(f"{ticker} → CIK {cik}")
 
-    filings = list_recent_filings(cik, form_type="10-K", count=2)
+    filings = list_recent_filings(cik, form_type="10-K", count=10)
     for f in filings:
         print(f"Downloading 10-K filed on {f['date']}…")
         html = download_filing(cik, f["acc"], f["doc"])
