@@ -19,6 +19,7 @@
             "Bash(poetry run mypy *)",
             "Bash(poetry run mypy:*)",
             "Bash(poetry run black:*)",
+            "Bash(poetry run black --check .)",
             "Bash(poetry run isort:*)",
             "Bash(poetry run flake8:*)",
             "Bash(poetry run pytest:*)",
@@ -38,11 +39,12 @@
             "Bash(poetry install:*)",
             "Bash(poetry update:*)",
             "Bash(touch *__init__.py)",
-            "Bash(echo -ne '\007')",
+            "Bash(echo -ne:*)",
             "Write(file_path:*/__init__.py)",
             "Write(*/__init__.py)",
             "Write(__init__.py)",
-            "Bash(abzu:*)"
+            "Bash(abzu:*)",
+            "WebFetch(domain:*.readthedocs.io)"
         ],
         "deny": [
             "Bash(pip install:*)"
