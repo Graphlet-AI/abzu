@@ -39,6 +39,8 @@ kuzu = "^0.9.0"
 feedparser = "^6.0.11"
 browsercookie = "^0.8.1"
 cloudscraper = "^1.2.71"
+discord-py = "^2.5.2"
+pydantic-ai = "^0.2.4"
 
 [tool.poetry.group.dev.dependencies]
 flake8 = "^7.2.0"
