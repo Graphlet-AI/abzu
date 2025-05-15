@@ -769,6 +769,92 @@ def financialdatasets_metrics_main(
         return 1
 
 
+def financialdatasets_price_multiple_main(
+    tickers: List[str],
+    start_date: str,
+    end_date: str,
+    interval: str = "day",
+    interval_multiplier: int = 1,
+    api_key: Optional[str] = None,
+    output_file: Optional[str] = None,
+    pretty: bool = False,
+    max_retries: int = 5,
+    pause_seconds: float = 0.5,
+    max_workers: int = 5,
+    show_progress: bool = True,
+) -> int:
+    """Get historical price data for multiple tickers from the Financial Datasets API.
+
+    This function retrieves historical price data for multiple ticker symbols at the
+    specified time interval within a date range and saves it to a file or prints it to stdout.
+    Requests are executed in parallel for better performance.
+
+    Args:
+        tickers: List of ticker symbols (e.g., ['AAPL', 'MSFT', 'GOOG'])
+        start_date: The start date for the price data in ISO format (YYYY-MM-DD)
+        end_date: The end date for the price data in ISO format (YYYY-MM-DD)
+        interval: The time interval for the price data. Possible values are
+                 'second', 'minute', 'day', 'week', 'month', 'year'.
+                 Defaults to 'day'.
+        interval_multiplier: The multiplier for the interval (e.g., 5 for every 5 minutes).
+                             Defaults to 1.
+        api_key: API key for Financial Datasets. If None, will attempt to read from
+                 FINANCIAL_DATASETS_API_KEY environment variable.
+        output_file: File to write results to. If None, results are printed to stdout.
+        pretty: Whether to format JSON output with indentation
+        max_retries: Maximum number of retries for rate-limited requests. Defaults to 5.
+        pause_seconds: Number of seconds to pause between API requests. Defaults to 0.5.
+        max_workers: Maximum number of parallel workers for API requests. Defaults to 5.
+        show_progress: Whether to display a progress bar. Defaults to True.
+
+    Returns:
+        0 on success, 1 on failure
+    """
+    try:
+        api = FinancialDatasetsAPI(api_key, max_retries=max_retries, pause_seconds=pause_seconds)
+
+        # Get historical price data for all tickers
+        ticker_count = len(tickers)
+        logger.info(
+            f"Retrieving price data for {ticker_count} tickers from {start_date} to {end_date}"
+        )
+
+        # Execute parallel API requests for all tickers
+        result = api.get_multiple_prices(
+            tickers=tickers,
+            start_date=start_date,
+            end_date=end_date,
+            interval=interval,
+            interval_multiplier=interval_multiplier,
+            max_workers=max_workers,
+            show_progress=show_progress,
+        )
+
+        # Write or print the result
+        if output_file:
+            # Ensure the output directory exists
+            os.makedirs(os.path.dirname(os.path.abspath(output_file)), exist_ok=True)
+
+            logger.info(f"Writing price data for {ticker_count} tickers to {output_file}")
+            with open(output_file, "w") as f:
+                if pretty:
+                    json.dump(result, f, indent=2)
+                else:
+                    json.dump(result, f)
+            logger.info(f"Successfully wrote price data to {output_file}")
+        else:
+            # Print to stdout with or without indentation
+            if pretty:
+                print(json.dumps(result, indent=2))
+            else:
+                print(json.dumps(result))
+
+        return 0
+    except Exception as e:
+        logger.error(f"Error retrieving price data for multiple tickers: {e}")
+        return 1
+
+
 def financialdatasets_tickers_main(
     api_key: Optional[str] = None,
     output_file: str = "data/financialdatasets/tickers.json",

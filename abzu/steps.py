@@ -19,7 +19,12 @@ def get_pipeline_steps() -> List[str]:
         "abzu crawl semianalysis",
         "abzu process articles semianalysis",
         "abzu process kg raw",
-        "abzu api financialdatasets --file data/knowledge_graph/tickers.parquet",
+        # Get financial data for companies extracted from knowledge graph
+        "abzu api financialdatasets facts --file data/knowledge_graph/tickers.parquet",
+        # Get financial metrics for key companies
+        "abzu api financialdatasets metrics -t NVDA -t AMD -t INTC -P annual -l 5",
+        # Get historical price data for key companies
+        "abzu api financialdatasets price-multiple -t NVDA -t AMD -t INTC -s 2023-01-01 -e 2023-12-31 -i day -o data/financialdatasets/chip_prices.json",
         "abzu process kg refine",
     ]
 
