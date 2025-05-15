@@ -34,6 +34,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Documentation: Use Sphinx for documentation, include docstrings in all public functions/classes
 - Code style: Follow PEP 8 for Python code style, use flake8 for linting
 - Mypy: Use mypy for type checking, run mypy before committing code. Configure it in `pyproject.toml`, not `mypy.ini`.
+- Pre-commit: Use pre-commit for linting and formatting, configure it in `.pre-commit-config.yaml`
+- Git: Use git for version control, commit often with clear messages, use branches for new features/bug fixes
+- Poetry: Use poetry for dependency management and packaging, configure it in `pyproject.toml`
+- discord.py package - always use selective imports for `discord` - YES `from discord import x` - NO `import discord`
 
 ## Claude Logic
 
