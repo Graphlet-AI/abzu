@@ -48,6 +48,8 @@
         "abzu/crawl.py",
         "abzu/cli/process_kg.py",
         "scripts/build_graph.py",
-        "abzu/cli/crawl.py"
+        "abzu/cli/crawl.py",
+        "abzu/cli/click_cli.py",
+        "abzu/cli/click_api.py"
     ]
 }
