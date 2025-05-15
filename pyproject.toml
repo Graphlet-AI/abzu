@@ -90,6 +90,11 @@ warn_redundant_casts = true
 warn_unused_ignores = true
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = "abzu.baml_client"
+ignore_errors = true
+ignore_missing_imports = true
+
 [tool.flake8]
 max-line-length = 100
 ignore = ["E203", "E266", "E501", "W503", "C901"]
