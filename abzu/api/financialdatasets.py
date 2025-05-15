@@ -242,6 +242,164 @@ class FinancialDatasetsAPI:
                 logger.error(f"Response: {e.response.text}")
             raise
 
+    def get_multiple_prices(
+        self,
+        tickers: List[str],
+        start_date: Union[str, date, datetime],
+        end_date: Union[str, date, datetime],
+        interval: str = "day",
+        interval_multiplier: int = 1,
+        max_workers: int = 5,
+        show_progress: bool = True,
+    ) -> Dict[str, Dict[str, Any]]:
+        """Get historical price data for multiple tickers in parallel.
+
+        This method retrieves historical price data for multiple ticker symbols at the
+        specified time interval within the required start and end date range.
+        Requests are executed in parallel using ThreadPoolExecutor.
+
+        Args:
+            tickers: List of ticker symbols (e.g., ['AAPL', 'MSFT', 'GOOG'])
+            start_date: The start date for the price data. Can be a string in YYYY-MM-DD format,
+                      a datetime object, or a date object.
+            end_date: The end date for the price data. Can be a string in YYYY-MM-DD format,
+                     a datetime object, or a date object.
+            interval: The time interval for the price data. Possible values are
+                     'second', 'minute', 'day', 'week', 'month', 'year'.
+                     Defaults to 'day'.
+            interval_multiplier: The multiplier for the interval (e.g., 5 for every 5 minutes).
+                                Defaults to 1.
+            max_workers: Maximum number of parallel workers for API requests. Defaults to 5.
+            show_progress: Whether to display a progress bar. Defaults to True.
+
+        Returns:
+            Dictionary mapping ticker symbols to their respective price data
+
+        Raises:
+            ValueError: If tickers list is empty, or interval is invalid
+        """
+        if not tickers:
+            raise ValueError("Tickers list cannot be empty")
+
+        # Format dates once for all requests
+        if isinstance(start_date, (date, datetime)):
+            formatted_start_date = start_date.strftime("%Y-%m-%d")
+        else:
+            # Validate ISO date format (YYYY-MM-DD)
+            if not isinstance(start_date, str) or not re.match(r"^\d{4}-\d{2}-\d{2}$", start_date):
+                raise ValueError(
+                    "Start date must be in ISO format (YYYY-MM-DD), a date object, or a datetime object"
+                )
+            formatted_start_date = start_date
+
+        if isinstance(end_date, (date, datetime)):
+            formatted_end_date = end_date.strftime("%Y-%m-%d")
+        else:
+            # Validate ISO date format (YYYY-MM-DD)
+            if not isinstance(end_date, str) or not re.match(r"^\d{4}-\d{2}-\d{2}$", end_date):
+                raise ValueError(
+                    "End date must be in ISO format (YYYY-MM-DD), a date object, or a datetime object"
+                )
+            formatted_end_date = end_date
+
+        valid_intervals = {"second", "minute", "day", "week", "month", "year"}
+        if interval not in valid_intervals:
+            raise ValueError(f"Invalid interval: {interval}. Must be one of {valid_intervals}")
+
+        # Function to get price data for a single ticker
+        def get_ticker_prices(ticker: str) -> tuple[str, Dict[str, Any]]:
+            try:
+                result = self.get_historical_prices(
+                    ticker=ticker,
+                    start_date=formatted_start_date,
+                    end_date=formatted_end_date,
+                    interval=interval,
+                    interval_multiplier=interval_multiplier,
+                )
+                return ticker, result
+            except Exception as e:
+                logger.error(f"Error retrieving price data for {ticker}: {e}")
+                return ticker, {"error": str(e)}
+
+        results: Dict[str, Dict[str, Any]] = {}
+
+        # Process tickers in parallel using ThreadPoolExecutor
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = {executor.submit(get_ticker_prices, ticker): ticker for ticker in tickers}
+
+            # Use tqdm to show progress if requested
+            if show_progress:
+                completed_futures = tqdm(
+                    futures, total=len(futures), desc="Retrieving price data", unit="ticker"
+                )
+            else:
+                completed_futures = futures
+
+            for future in completed_futures:
+                try:
+                    ticker, result = future.result()
+                    results[ticker] = result
+                except Exception as e:
+                    # This exception is from the future itself, not the API call
+                    ticker = futures[future]
+                    logger.error(f"Unhandled exception for ticker {ticker}: {e}")
+                    results[ticker] = {"error": str(e)}
+
+        return results
+
+    def get_financial_metrics(
+        self, ticker: str, period: str = "annual", limit: int = 30
+    ) -> Dict[str, Any]:
+        """Get financial metrics for a ticker from the Financial Datasets API.
+
+        This method retrieves financial metrics for a specific ticker symbol with
+        the specified period and limit.
+
+        Args:
+            ticker: The ticker symbol (e.g., 'AAPL' for Apple)
+            period: The period for financial metrics. Possible values are
+                   'annual', 'quarterly', or 'ttm' (trailing twelve months).
+                   Defaults to 'annual'.
+            limit: Number of periods to return. Defaults to 30.
+
+        Returns:
+            Dictionary containing financial metrics
+
+        Raises:
+            ValueError: If ticker is not provided or period is invalid
+            requests.RequestException: If the API request fails after all retries
+        """
+        if not ticker:
+            raise ValueError("Ticker parameter is required")
+
+        valid_periods = {"annual", "quarterly", "ttm"}
+        if period not in valid_periods:
+            raise ValueError(f"Invalid period: {period}. Must be one of {valid_periods}")
+
+        # Create parameter dictionary with explicit string values for type compatibility
+        params = {"ticker": str(ticker), "period": str(period), "limit": str(limit)}
+
+        url = f"{self.BASE_URL}/financial-metrics"
+
+        try:
+            # Add a pause before making the request to prevent rate limiting
+            if self.pause_seconds > 0:
+                logger.debug(f"Pausing for {self.pause_seconds} seconds before API request")
+                time.sleep(self.pause_seconds)
+
+            # Use session with retry configuration
+            response = self.session.get(url, headers=self.headers, params=params)
+            response.raise_for_status()
+            return response.json()  # type: ignore
+        except requests.exceptions.RetryError as e:
+            logger.error(f"API request for financial metrics failed after multiple retries: {e}")
+            raise
+        except requests.RequestException as e:
+            logger.error(f"API request for financial metrics failed: {e}")
+            if hasattr(e, "response") and e.response is not None:
+                logger.error(f"Response: {e.response.text}")
+            raise
+
 
 def read_jsonl(file_path: str) -> Iterator[Dict[str, Any]]:
     """Read a JSON Lines file and yield each line as a parsed JSON object.
@@ -539,6 +697,75 @@ def financialdatasets_price_main(
         return 0
     except Exception as e:
         logger.error(f"Error retrieving price data: {e}")
+        return 1
+
+
+def financialdatasets_metrics_main(
+    ticker: str,
+    period: str = "annual",
+    limit: int = 30,
+    api_key: Optional[str] = None,
+    output_file: Optional[str] = None,
+    pretty: bool = False,
+    max_retries: int = 5,
+    pause_seconds: float = 0.5,
+) -> int:
+    """Get financial metrics for a ticker from the Financial Datasets API.
+
+    This function retrieves financial metrics for a specific ticker symbol with
+    the specified period and limit, and saves it to a file or prints it to stdout.
+
+    Args:
+        ticker: The ticker symbol (e.g., 'AAPL' for Apple)
+        period: The period for financial metrics. Possible values are
+                'annual', 'quarterly', or 'ttm' (trailing twelve months).
+                Defaults to 'annual'.
+        limit: Number of periods to return. Defaults to 30.
+        api_key: API key for Financial Datasets. If None, will attempt to read from
+                FINANCIAL_DATASETS_API_KEY environment variable.
+        output_file: File to write results to. If None, results are printed to stdout.
+        pretty: Whether to format JSON output with indentation
+        max_retries: Maximum number of retries for rate-limited requests. Defaults to 5.
+        pause_seconds: Number of seconds to pause between API requests. Defaults to 0.5.
+
+    Returns:
+        0 on success, 1 on failure
+    """
+    try:
+        api = FinancialDatasetsAPI(api_key, max_retries=max_retries, pause_seconds=pause_seconds)
+
+        # Get financial metrics
+        logger.info(
+            f"Retrieving financial metrics for {ticker} with period={period}, limit={limit}"
+        )
+        result = api.get_financial_metrics(
+            ticker=ticker,
+            period=period,
+            limit=limit,
+        )
+
+        # Write or print the result
+        if output_file:
+            # Ensure the output directory exists
+            os.makedirs(os.path.dirname(os.path.abspath(output_file)), exist_ok=True)
+
+            logger.info(f"Writing financial metrics to {output_file}")
+            with open(output_file, "w") as f:
+                if pretty:
+                    json.dump(result, f, indent=2)
+                else:
+                    json.dump(result, f)
+            logger.info(f"Successfully wrote financial metrics to {output_file}")
+        else:
+            # Print to stdout with or without indentation
+            if pretty:
+                print(json.dumps(result, indent=2))
+            else:
+                print(json.dumps(result))
+
+        return 0
+    except Exception as e:
+        logger.error(f"Error retrieving financial metrics: {e}")
         return 1
 
 
