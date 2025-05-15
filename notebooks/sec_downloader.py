@@ -1,23 +1,24 @@
 #!/usr/bin/env python3
-# SEC XBRL Data Extractor
-
-import json
+# SEC XBRL Data Extractor - Revised
 
 # Standard library imports
+import json
 import os
+import re
 import time
-from datetime import datetime
-from typing import Any, Dict, List
+import traceback
+from datetime import datetime  # timedelta was unused
+from typing import Any, Dict, List, Optional, cast  # Tuple was unused
 
 # Third-party library imports
 import requests
-from bs4 import BeautifulSoup, Tag
-from lxml import etree
+from bs4 import BeautifulSoup  # Tag was unused
+from lxml import etree  # mypy: Unused "type: ignore" comment removed
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 # Constants
-USER_AGENT = "Your Name <youremail@example.com>"
+USER_AGENT = "Your Name <youremail@example.com>"  # PLEASE REPLACE
 HEADERS = {"User-Agent": USER_AGENT}
 TICKER_URL = "https://www.sec.gov/include/ticker.txt"
 BASE_JSON_URL = "https://data.sec.gov/submissions/CIK{cik:0>10}.json"
@@ -27,7 +28,7 @@ COMPANY_CONCEPT_URL = (
     "https://data.sec.gov/api/xbrl/companyconcept/CIK{cik:0>10}/us-gaap/{concept}.json"
 )
 
-# ——— robust session with retries ———
+# --- Robust session with retries ---
 session = requests.Session()
 retries = Retry(
     total=5,
@@ -36,1291 +37,1225 @@ retries = Retry(
 )
 session.mount("https://", HTTPAdapter(max_retries=retries))
 
+# --- Centralized Concept Mapping ---
+# This map defines the concepts we want to extract and the possible XBRL tags.
+# The keys are our internal, standardized names for financial concepts.
+# The values are lists of XBRL tags (us-gaap or dei) that could represent that concept.
+CONCEPT_MAP: Dict[str, List[str]] = {
+    "EntityRegistrantName": ["dei:EntityRegistrantName"],
+    "DocumentType": ["dei:DocumentType"],
+    "DocumentPeriodEndDate": [
+        "dei:DocumentPeriodEndDate",
+        "us-gaap:DocumentPeriodEndDate",
+        "us-gaap:BalanceSheetDate",
+    ],
+    "Assets": ["us-gaap:Assets"],
+    "AssetsCurrent": ["us-gaap:AssetsCurrent"],
+    "CashAndCashEquivalents": ["us-gaap:CashAndCashEquivalentsAtCarryingValue"],
+    "Liabilities": ["us-gaap:Liabilities"],
+    "LiabilitiesCurrent": ["us-gaap:LiabilitiesCurrent"],
+    "Equity": [
+        "us-gaap:StockholdersEquity",
+        "us-gaap:StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest",
+        "us-gaap:PartnersCapital",
+    ],
+    "Revenue": [
+        "us-gaap:Revenues",
+        "us-gaap:Revenue",
+        "us-gaap:SalesRevenueNet",
+        "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+    ],
+    "CostOfRevenue": ["us-gaap:CostOfRevenue", "us-gaap:CostOfGoodsAndServicesSold"],
+    "GrossProfit": ["us-gaap:GrossProfit"],
+    "OperatingExpenses": ["us-gaap:OperatingExpenses"],
+    "OperatingIncomeLoss": ["us-gaap:OperatingIncomeLoss"],
+    "NetIncomeLoss": [
+        "us-gaap:NetIncomeLoss",
+        "us-gaap:ProfitLoss",
+        "us-gaap:IncomeLossFromContinuingOperations",
+    ],
+    "EPSBasic": ["us-gaap:EarningsPerShareBasic"],
+    "EPSDiluted": ["us-gaap:EarningsPerShareDiluted"],
+    "CashFlowOperating": ["us-gaap:NetCashProvidedByUsedInOperatingActivities"],
+    "CashFlowInvesting": ["us-gaap:NetCashProvidedByUsedInInvestingActivities"],
+    "CashFlowFinancing": ["us-gaap:NetCashProvidedByUsedInFinancingActivities"],
+    "CapEx": [
+        "us-gaap:PaymentsToAcquirePropertyPlantAndEquipment",
+        "us-gaap:CapitalExpenditures",
+        "us-gaap:PurchaseOfPropertyPlantAndEquipment",
+    ],
+}
+
+
+# --- Helper Functions ---
+def parse_date_flexible(date_str: Optional[str]) -> Optional[datetime]:
+    """
+    Parses a date string from various common formats into a datetime object.
+    Returns None if parsing fails or input is None.
+    """
+    if not date_str:
+        return None
+    # Order matters: try more specific formats first if ambiguity exists,
+    # but for these common ones, this order should be fine.
+    for fmt in ("%Y-%m-%d", "%m/%d/%Y", "%b %d, %Y", "%B %d, %Y"):
+        try:
+            return datetime.strptime(date_str, fmt)
+        except ValueError:
+            continue
+    # print(f"Warning: Could not parse date string: {date_str}") # Optional: for debugging
+    return None
+
 
 def get_cik_from_ticker(ticker: str) -> str:
-    """Convert a stock ticker to a CIK number."""
+    """
+    Converts a stock ticker symbol to its corresponding CIK number using the SEC's ticker file.
+    Raises KeyError if the ticker is not found.
+    """
+    print(f"Fetching CIK for ticker: {ticker} from {TICKER_URL}")
     resp = session.get(TICKER_URL, headers=HEADERS)
-    resp.raise_for_status()
+    resp.raise_for_status()  # Raises an HTTPError for bad responses (4XX or 5XX)
     for line in resp.text.splitlines():
-        sym, cik = line.split("\t")
+        sym, cik_str = line.split("\t")
         if sym.lower() == ticker.lower():
-            return cik
-    raise KeyError(f"Ticker {ticker} not found")
+            print(f"Found CIK: {cik_str} for ticker: {ticker}")
+            return cik_str  # CIK is returned as a string, potentially with leading zeros
+    raise KeyError(f"Ticker {ticker} not found in SEC ticker list.")
 
 
-def fetch_company_index(cik: str) -> Any:
-    """Fetch the company submission index from SEC."""
-    url = BASE_JSON_URL.format(cik=cik)
+def fetch_company_index(cik: str) -> Dict[str, Any]:
+    """
+    Fetches the company submission index JSON from the SEC for a given CIK.
+    This index contains metadata about all filings for the company.
+    """
+    url = BASE_JSON_URL.format(cik=cik)  # CIK should be zero-padded to 10 digits if not already
+    print(f"Fetching company index for CIK {cik} from: {url}")
     resp = session.get(url, headers=HEADERS)
     resp.raise_for_status()
-    return resp.json()
+    return cast(Dict[str, Any], resp.json())  # Cast to satisfy mypy
 
 
-def list_recent_filings(cik: str, form_type: str = "10-Q", count: int = 3) -> list:
-    """List recent filings of a specific form type."""
+def list_recent_filings(cik: str, form_type: str = "10-Q", count: int = 3) -> List[Dict[str, Any]]:
+    """
+    Lists recent filings of a specific form type (e.g., "10-Q") for a given CIK.
+    Returns a list of dictionaries, each containing details of a filing.
+    """
+    print(f"Listing recent {form_type} filings for CIK {cik}, count={count}")
     idx = fetch_company_index(cik)
-    recent = idx["filings"]["recent"]
+    recent_filings_data = idx.get("filings", {}).get("recent", {})
 
-    # now pull out accession, primaryDocument, form, date
-    entries = zip(
-        recent["accessionNumber"], recent["primaryDocument"], recent["form"], recent["filingDate"]
+    # Extract data for each relevant field
+    accession_numbers = recent_filings_data.get("accessionNumber", [])
+    primary_documents = recent_filings_data.get("primaryDocument", [])
+    forms = recent_filings_data.get("form", [])
+    filing_dates_str = recent_filings_data.get("filingDate", [])
+
+    output_filings = []
+    # Iterate safely up to the minimum length of the available data arrays
+    num_entries = min(
+        len(accession_numbers), len(primary_documents), len(forms), len(filing_dates_str)
     )
 
-    out = []
-    for acc, doc, form, date in entries:
+    for i in range(num_entries):
+        acc = accession_numbers[i]
+        doc = primary_documents[i]
+        form = forms[i]
+        date_str = filing_dates_str[i]
+
         if form == form_type:
-            out.append(
-                {"acc": acc.replace("-", ""), "acc_with_dashes": acc, "doc": doc, "date": date}
+            output_filings.append(
+                {
+                    "acc": acc.replace("-", ""),  # Accession number without dashes
+                    "acc_with_dashes": acc,  # Accession number with dashes
+                    "doc": doc,  # Primary document name (e.g., d430073d10q.htm)
+                    "date": date_str,  # Filing date as string (YYYY-MM-DD)
+                    "filing_date_obj": parse_date_flexible(date_str),  # Parsed datetime object
+                }
             )
-            if len(out) >= count:
+            if len(output_filings) >= count:
                 break
-    return out
+    print(f"Found {len(output_filings)} recent {form_type} filings.")
+    return output_filings
 
 
-def get_xbrl_files(cik: str, accession: str) -> List[Dict[str, str]]:
-    """Find XBRL files associated with a specific filing."""
-    # Format the URL to the filing directory
+def get_xbrl_files(cik: str, accession: str) -> List[Dict[str, Any]]:  # Return type changed
+    """
+    Finds XBRL-related files (XML, XBRL) associated with a specific filing.
+    It tries to use the JSON index first, then falls back to HTML parsing of the directory.
+    """
     acc_no_dashes = accession.replace("-", "")
-    url = f"{BASE_ARCHIVES_URL}/edgar/data/{int(cik)}/{acc_no_dashes}/"
+    # Construct the base URL for the filing's directory on SEC Edgar
+    filing_dir_url = f"{BASE_ARCHIVES_URL}/edgar/data/{int(cik)}/{acc_no_dashes}/"
+    print(f"Searching for XBRL files in directory: {filing_dir_url}")
 
-    print(f"Searching for XBRL files in: {url}")
+    xbrl_files: List[Dict[str, Any]] = []  # Type changed to Any for values
+    json_index_url = f"{filing_dir_url}index.json"  # Modern filings have a JSON index
 
-    # Get the index file
-    index_url = f"{url}/index.json"
     try:
-        resp = session.get(index_url, headers=HEADERS)
+        # Attempt to fetch and parse the JSON index
+        resp = session.get(json_index_url, headers=HEADERS)
         resp.raise_for_status()
         index_data = resp.json()
+        print(f"Successfully fetched JSON index: {json_index_url}")
 
-        # Extract file info from index
-        xbrl_files = []
         for file_entry in index_data.get("directory", {}).get("item", []):
             name = file_entry.get("name", "")
-            # Exclude calculation, definition, label, and presentation linkbases
-            if not name.startswith("R") and name.endswith((".xml", ".xbrl")):
+            # Filter for XML/XBRL files, excluding common linkbase roles and FilingSummary
+            if (
+                name.endswith((".xml", ".xbrl"))
+                and not name.startswith("R")
+                and not any(
+                    suffix in name.lower()
+                    for suffix in ["_cal.", "_def.", "_lab.", "_pre.", "filingsummary.xml"]
+                )
+            ):
+                # Heuristic to identify instance documents: often end with _htm.xml or contain '-'
+                is_instance = "_htm.xml" in name.lower() or (
+                    "-" in name
+                    and "." in name
+                    and not any(
+                        s in name.lower() for s in ["xsd", "_lab.", "_pre.", "_def.", "_cal."]
+                    )
+                )
                 xbrl_files.append(
                     {
                         "name": name,
-                        "url": f"{url}/{name}",
+                        "url": f"{filing_dir_url}{name}",
                         "type": "xml" if name.endswith(".xml") else "xbrl",
-                        "is_instance": not any(
-                            suffix in name.lower()
-                            for suffix in ["_cal.", "_def.", "_lab.", "_pre."]
-                        ),
+                        "is_instance": is_instance,  # Boolean value
                     }
                 )
-        return xbrl_files
-    except requests.RequestException as e:
-        print(f"JSON index not available: {str(e)}")
-        # Fallback to HTML parsing if JSON index not available
-        resp = session.get(url, headers=HEADERS)
-        resp.raise_for_status()
-        soup = BeautifulSoup(resp.text, "html.parser")
+    except (requests.RequestException, json.JSONDecodeError) as e:
+        # Fallback to HTML parsing if JSON index is unavailable or invalid
+        print(
+            f"JSON index not available or failed to parse ({e}), falling back to HTML directory parsing for: {filing_dir_url}"
+        )
+        try:
+            resp = session.get(filing_dir_url, headers=HEADERS)
+            resp.raise_for_status()
+            soup = BeautifulSoup(resp.text, "html.parser")
+            for link in soup.find_all("a", href=True):
+                name = link.text.strip()
+                if (
+                    name.endswith((".xml", ".xbrl"))
+                    and not name.startswith("R")
+                    and not any(
+                        suffix in name.lower()
+                        for suffix in ["_cal.", "_def.", "_lab.", "_pre.", "filingsummary.xml"]
+                    )
+                ):
+                    is_instance = "_htm.xml" in name.lower() or (
+                        "-" in name
+                        and "." in name
+                        and not any(
+                            s in name.lower() for s in ["xsd", "_lab.", "_pre.", "_def.", "_cal."]
+                        )
+                    )
+                    xbrl_files.append(
+                        {
+                            "name": name,
+                            "url": f"{filing_dir_url}{name}",  # Construct full URL
+                            "type": "xml" if name.endswith(".xml") else "xbrl",
+                            "is_instance": is_instance,  # Boolean value
+                        }
+                    )
+        except requests.RequestException as html_e:
+            print(f"Error fetching HTML directory {filing_dir_url}: {html_e}")
 
-        xbrl_files = []
-        for link in soup.find_all("a"):
-            name = link.text.strip()
-            # Exclude calculation, definition, label, and presentation linkbases
-            if not name.startswith("R") and name.endswith((".xml", ".xbrl")):
-                xbrl_files.append(
-                    {
-                        "name": name,
-                        "url": f"{url}/{name}",
-                        "type": "xml" if name.endswith(".xml") else "xbrl",
-                        "is_instance": not any(
-                            suffix in name.lower()
-                            for suffix in ["_cal.", "_def.", "_lab.", "_pre."]
-                        ),
-                    }
-                )
-        return xbrl_files
+    # Sort files to prioritize likely instance documents
+    xbrl_files.sort(
+        key=lambda x: (not x["is_instance"], not x["name"].endswith("_htm.xml"), x["name"])
+    )
+    print(
+        f"Found {len(xbrl_files)} potential XBRL-related files. Top candidates: {[f['name'] for f in xbrl_files[:3]]}"
+    )
+    return xbrl_files
 
 
-def download_xbrl_file(file_info: Dict[str, str], save_dir: str = "xbrl_files") -> str:
-    """Download an XBRL file and save it locally."""
+def download_file(url: str, save_dir: str, file_name: str) -> str:
+    """General utility to download a file and save it locally."""
     os.makedirs(save_dir, exist_ok=True)
-    url = file_info["url"]
-    file_name = file_info["name"]
+    # Sanitize file_name to prevent directory traversal or invalid characters
+    safe_file_name = re.sub(r"[^\w\.\-]", "_", file_name)
+    local_path = os.path.join(save_dir, safe_file_name)
 
-    print(f"Downloading {url}")
-
-    # Create a unique filename
-    local_path = os.path.join(save_dir, file_name)
-
-    # Download the file
+    print(f"Downloading {url} to {local_path}")
     resp = session.get(url, headers=HEADERS)
     resp.raise_for_status()
-
     with open(local_path, "wb") as f:
         f.write(resp.content)
-
-    time.sleep(1)  # Respect SEC rate limits
+    time.sleep(
+        0.2
+    )  # Respect SEC rate limits (slightly reduced for potentially multiple small files)
     return local_path
 
 
 def download_html_filing(
     cik: str, accession: str, primary_doc: str, save_dir: str = "filings"
 ) -> str:
-    """Download the HTML version of a filing."""
-    os.makedirs(save_dir, exist_ok=True)
+    """Downloads the primary HTML document of a filing."""
     path = f"/edgar/data/{int(cik)}/{accession.replace('-', '')}/{primary_doc}"
     url = f"{BASE_ARCHIVES_URL}{path}"
-
-    print(f"Downloading HTML filing: {url}")
-
-    # Download the file
-    resp = session.get(url, headers=HEADERS)
-    resp.raise_for_status()
-
-    # Save to disk
-    fn = os.path.join(save_dir, f"{cik}_{accession.replace('-', '')}.html")
-    with open(fn, "wb") as f:
-        f.write(resp.content)
-
-    time.sleep(1)  # Respect SEC rate limits
-    return fn
+    return download_file(url, save_dir, f"{cik}_{accession.replace('-', '')}_{primary_doc}")
 
 
-def parse_xbrl_instance(file_path: str) -> Dict[str, Any]:
+def download_xbrl_file(file_info: Dict[str, str], save_dir: str = "xbrl_files") -> str:
+    """Downloads a specific XBRL-related file."""
+    return download_file(file_info["url"], save_dir, file_info["name"])
+
+
+def parse_xbrl_instance(file_path: str, filing_date_obj: datetime) -> Dict[str, Any]:
     """
-    Parse an XBRL instance file and extract key financial data.
-    Returns a dictionary of concept names mapped to their values.
+    Parses an XBRL instance file to extract contexts and facts based on CONCEPT_MAP.
     """
     print(f"Parsing XBRL file: {file_path}")
-
-    # Read the file content
-    with open(file_path, "rb") as f:
-        content = f.read()
-
-    # Check if file is empty or too small
-    if len(content) < 100:
-        return {"error": "File is empty or too small to be valid XBRL"}
-
-    # Check if this is a FilingSummary.xml, which is not an XBRL instance
-    if "FilingSummary" in file_path and b"<FilingSummary>" in content[:1000]:
-        return {"error": "FilingSummary.xml is not an XBRL instance document"}
-
-    # Print first 500 bytes for debugging
-    content_preview = content[:500].decode("utf-8", errors="replace")
-    print(f"File content preview: {content_preview}")
-
     try:
-        # Parse the XML file
-        parser = etree.XMLParser(huge_tree=True, recover=True)
+        # Use lxml.etree for robust XML parsing
+        parser = etree.XMLParser(huge_tree=True, recover=True, no_network=True)
         tree = etree.parse(file_path, parser)
         root = tree.getroot()
 
-        # Identify all namespaces used in the file
-        nsmap = root.nsmap
-        print(f"Detected namespaces: {nsmap}")
+        # Consolidate namespaces, handling default namespace by assigning a prefix like 'def'
+        nsmap = {k if k is not None else "def": v for k, v in root.nsmap.items()}
 
-        # Create a namespace map that doesn't include the default namespace (None key)
-        # This is needed because XPath doesn't support default namespaces
-        xpath_nsmap = {k: v for k, v in nsmap.items() if k is not None}
+        contexts: Dict[str, Dict[str, Any]] = {}
+        # XPath to find all context elements regardless of their specific namespace prefix
+        for context_elem in root.xpath("//*[local-name()='context']"):
+            context_id = context_elem.get("id")
+            if not context_id:
+                continue
 
-        # Add xbrli namespace if not present but we have the default namespace pointing to XBRL
-        if "xbrli" not in xpath_nsmap and None in nsmap and "xbrl.org/2003/instance" in nsmap[None]:
-            xpath_nsmap["xbrli"] = nsmap[None]
+            period_info: Dict[str, str] = {}
+            # Find period element within the current context
+            period_elem = context_elem.find(".//*[local-name()='period']")
+            if period_elem is not None:
+                instant = period_elem.findtext(".//*[local-name()='instant']")
+                startDate = period_elem.findtext(".//*[local-name()='startDate']")
+                endDate = period_elem.findtext(".//*[local-name()='endDate']")
+                if instant:
+                    period_info["instant"] = instant.strip()
+                if startDate:
+                    period_info["startDate"] = startDate.strip()
+                if endDate:
+                    period_info["endDate"] = endDate.strip()
 
-        # Extract the context elements using safer approach
-        contexts = {}
+            dimensions: Dict[str, str] = {}
+            # Find segment element for dimensional information
+            segment_elem = context_elem.find(".//*[local-name()='segment']")
+            if segment_elem is not None:
+                for member in segment_elem.xpath(".//*[local-name()='explicitMember']"):
+                    dim = member.get("dimension")
+                    val = member.text
+                    if dim and val:
+                        dimensions[dim.strip()] = val.strip()
+            contexts[context_id] = {"period": period_info, "dimensions": dimensions}
 
-        # First try with explicit xbrli namespace
-        if "xbrli" in xpath_nsmap:
-            try:
-                context_elements = root.xpath("//xbrli:context", namespaces=xpath_nsmap)
-                print(f"Found {len(context_elements)} contexts with xbrli namespace")
-            except Exception as e:
-                print(f"Error finding contexts with xbrli namespace: {str(e)}")
-                context_elements = []
-        else:
-            context_elements = []
+        if not contexts:
+            return {"error": "No contexts found in XBRL document."}
+        print(f"Found {len(contexts)} contexts in XBRL.")
 
-        # If that fails, try finding contexts by local name
-        if not context_elements:
-            try:
-                # Try finding all elements with local name "context"
-                context_elements = root.xpath("//*[local-name()='context']")
-                print(f"Found {len(context_elements)} contexts using local-name")
-            except Exception as e:
-                print(f"Error finding contexts with local-name: {str(e)}")
-                context_elements = []
-
-        for context in context_elements:
-            context_id = context.get("id")
-            if context_id:
-                # Get period information using local-name() approach
-                period_elem = None
-                try:
-                    period_elems = context.xpath(".//*[local-name()='period']")
-                    if period_elems:
-                        period_elem = period_elems[0]
-                except Exception as e:
-                    print(f"Error finding period element: {str(e)}")
-
-                if period_elem is not None:
-                    instant = None
-                    start_date = None
-                    end_date = None
-
-                    try:
-                        instant_elems = period_elem.xpath(".//*[local-name()='instant']")
-                        if instant_elems and instant_elems[0].text:
-                            instant = instant_elems[0].text
-                    except Exception:
-                        pass
-
-                    try:
-                        start_date_elems = period_elem.xpath(".//*[local-name()='startDate']")
-                        if start_date_elems and start_date_elems[0].text:
-                            start_date = start_date_elems[0].text
-                    except Exception:
-                        pass
-
-                    try:
-                        end_date_elems = period_elem.xpath(".//*[local-name()='endDate']")
-                        if end_date_elems and end_date_elems[0].text:
-                            end_date = end_date_elems[0].text
-                    except Exception:
-                        pass
-
-                    period_info = {}
-                    if instant:
-                        period_info["instant"] = instant
-                    if start_date:
-                        period_info["startDate"] = start_date
-                    if end_date:
-                        period_info["endDate"] = end_date
-
-                    # Check for segment/dimension information
-                    dimensions = {}
-                    try:
-                        segment_elems = context.xpath(".//*[local-name()='segment']")
-                        if segment_elems:
-                            segment = segment_elems[0]
-                            for dim in segment.xpath(".//*[local-name()='explicitMember']"):
-                                dimension = dim.get("dimension")
-                                value = dim.text
-                                if dimension and value:
-                                    dimensions[dimension] = value
-                    except Exception:
-                        pass
-
-                    contexts[context_id] = {"period": period_info, "dimensions": dimensions}
-
-        # Count contexts for debugging
-        print(f"Found {len(contexts)} contexts")
-
-        if len(contexts) == 0:
-            return {"error": "No contexts found in the XBRL document"}
-
-        # Extract facts (data points)
         facts: Dict[str, List[Dict[str, Any]]] = {}
-        fact_count = 0
+        raw_fact_count = 0
+        # Iterate through our defined concepts and their corresponding XBRL tags
+        for concept_key, xbrl_tags_for_concept in CONCEPT_MAP.items():
+            for xbrl_tag in xbrl_tags_for_concept:
+                ns_prefix, local_name = xbrl_tag.split(":")
 
-        # Get all elements to search for facts
-        all_elements = []
+                elements: List[Any]  # Declare type for elements
+                # Construct XPath query using the namespace prefix found in the document
+                xpath_query = f"//{ns_prefix}:{local_name}"
+                # If the prefix isn't in the doc's nsmap but 'def' (default) is, try that
+                if (
+                    ns_prefix not in nsmap
+                    and "def" in nsmap
+                    and nsmap["def"] == nsmap.get(ns_prefix)
+                ):
+                    elements = root.xpath(f"//def:{local_name}", namespaces=nsmap)
+                elif ns_prefix not in nsmap:
+                    elements = root.xpath(f"//*[local-name()='{local_name}']")
+                else:
+                    elements = root.xpath(xpath_query, namespaces=nsmap)
 
-        try:
-            # First try to get all elements
-            all_elements = root.xpath("//*")
-            print(f"Found {len(all_elements)} total elements in the document")
-        except Exception as e:
-            print(f"Error getting all elements: {str(e)}")
-            return {"error": f"Failed to extract elements: {str(e)}"}
-
-        # Process each element to find facts
-        for elem in all_elements:
-            # Check if this element has a namespace
-            elem_tag = elem.tag
-            if "}" in elem_tag:
-                ns_uri, local_name = elem_tag.split("}", 1)
-                ns_uri = ns_uri[1:]  # Remove the opening '{'
-
-                # Find the prefix for this namespace URI
-                prefix = None
-                for pre, uri in nsmap.items():
-                    if uri == ns_uri and pre is not None:
-                        prefix = pre
-                        break
-
-                if prefix and prefix.lower() in ["us-gaap", "dei", "ifrs"]:
-                    # This is a financial concept
-                    concept = f"{prefix}:{local_name}"
+                for elem in elements:
+                    raw_fact_count += 1
                     context_ref = elem.get("contextRef")
                     unit_ref = elem.get("unitRef")
                     decimals = elem.get("decimals")
-                    value = elem.text
+                    value_str = elem.text
 
-                    if value and context_ref and context_ref in contexts:
-                        # Clean and convert value if numeric
+                    if value_str and context_ref and context_ref in contexts:
+                        value: Any = None
                         try:
-                            if value.strip():
-                                numeric_value = float(value)
-                            else:
-                                numeric_value = None
+                            # Attempt to convert to float, handling potential errors
+                            value = float(value_str.strip())
                         except ValueError:
-                            numeric_value = value
+                            value = (
+                                value_str.strip()
+                            )  # Keep as string if not floatable (e.g., for text facts)
 
-                        # Create a unique key for this fact
-                        fact_key = concept
+                        if concept_key not in facts:
+                            facts[concept_key] = []
 
-                        # Store the fact with its context
-                        if fact_key not in facts:
-                            facts[fact_key] = []
-
-                        facts[fact_key].append(
+                        facts[concept_key].append(
                             {
-                                "value": numeric_value,
-                                "context": contexts[context_ref],
+                                "value": value,
+                                "context_id": context_ref,  # Store context ID for later linking
                                 "unit": unit_ref,
                                 "decimals": decimals,
+                                "xbrl_tag": xbrl_tag,  # Store which specific XBRL tag this fact came from
                             }
                         )
-                        fact_count += 1
 
-        print(f"Extracted {fact_count} facts across {len(facts)} concepts")
-
-        if fact_count == 0:
-            # This might not be an instance document, but a linkbase
-            print("No facts found. This may be a linkbase file, not an XBRL instance document.")
-            return {"error": "No facts found in file - likely not an XBRL instance document"}
+        print(
+            f"Processed {raw_fact_count} raw fact elements, mapped to {len(facts)} distinct concepts."
+        )
+        if not facts:
+            return {"error": "No facts matching CONCEPT_MAP were found in XBRL."}
 
         return {"contexts": contexts, "facts": facts}
 
+    except etree.XMLSyntaxError as e:
+        print(f"XML Syntax Error parsing XBRL {file_path}: {str(e)}")
+        return {"error": f"XML Syntax Error: {str(e)}"}
     except Exception as e:
-        print(f"Exception parsing XBRL: {str(e)}")
-        import traceback
-
+        print(f"Generic exception parsing XBRL {file_path}: {str(e)}")
         traceback.print_exc()
         return {"error": f"Failed to parse XBRL: {str(e)}"}
 
 
-def get_quarterly_facts(
-    facts: Dict[str, List[Dict[str, Any]]], quarter_end_date: str
+def find_best_quarter_end_date(
+    xbrl_data: Dict[str, Any], filing_date_obj: datetime
+) -> Optional[str]:
+    """
+    Determines the most relevant quarter end date from parsed XBRL data.
+    Prioritizes 'DocumentPeriodEndDate' facts and validates against the filing date.
+    """
+    if "error" in xbrl_data or "facts" not in xbrl_data or "contexts" not in xbrl_data:
+        print("Cannot determine quarter end date: XBRL data is invalid or incomplete.")
+        return None
+
+    potential_dates: set[str] = set()
+
+    # 1. Try 'DocumentPeriodEndDate' facts first
+    doc_period_end_facts = xbrl_data["facts"].get("DocumentPeriodEndDate", [])
+    for fact in doc_period_end_facts:
+        if isinstance(fact.get("value"), str):
+            date_val_str = fact["value"]
+            dt_obj = parse_date_flexible(date_val_str)
+            # Validate: date must be before filing date and reasonably close (e.g., within 150 days)
+            if dt_obj and dt_obj < filing_date_obj and (filing_date_obj - dt_obj).days <= 150:
+                potential_dates.add(date_val_str)
+
+    # 2. If not found or not suitable, infer from context end dates of major financial facts
+    if not potential_dates:
+        print(
+            "No direct 'DocumentPeriodEndDate' fact found or suitable. Inferring from other key facts."
+        )
+        key_concepts_for_date_inference = ["Assets", "NetIncomeLoss", "Revenue"]
+        for concept_key in key_concepts_for_date_inference:
+            if concept_key in xbrl_data["facts"]:
+                for fact in xbrl_data["facts"][concept_key]:
+                    context = xbrl_data["contexts"].get(fact["context_id"], {})
+                    period = context.get("period", {})
+                    # Prefer 'endDate' for durations, 'instant' for point-in-time
+                    end_date_str = period.get("endDate") or period.get("instant")
+                    if end_date_str:
+                        dt_obj = parse_date_flexible(end_date_str)
+                        if (
+                            dt_obj
+                            and dt_obj < filing_date_obj
+                            and (filing_date_obj - dt_obj).days <= 150
+                        ):
+                            potential_dates.add(end_date_str)
+
+    if not potential_dates:
+        print("Could not determine a reliable recent quarter_end_date from XBRL contexts.")
+        return None
+
+    # Sort potential dates and pick the latest valid one
+    # Ensure dates are valid datetime objects for sorting before converting back to string
+    valid_datetime_objects = [
+        d for d in [parse_date_flexible(s) for s in potential_dates] if d is not None
+    ]
+    if not valid_datetime_objects:
+        print("No valid datetime objects found from potential dates.")
+        return None
+
+    sorted_dates_obj = sorted(valid_datetime_objects, reverse=True)
+
+    if sorted_dates_obj:
+        best_date_str = sorted_dates_obj[0].strftime("%Y-%m-%d")
+        print(f"Determined best quarter_end_date from XBRL: {best_date_str}")
+        return best_date_str
+    print("No suitable quarter end dates found after sorting.")
+    return None
+
+
+def extract_relevant_facts_for_period(
+    xbrl_data: Dict[str, Any], target_quarter_end_date: str
 ) -> Dict[str, Any]:
     """
-    Extract facts that match a specific quarter end date.
-
-    Args:
-        facts: Dictionary of facts from parse_xbrl_instance
-        quarter_end_date: ISO format date string (YYYY-MM-DD)
-
-    Returns:
-        Dictionary of concepts with their values for the specified quarter
+    Extracts facts that match the target_quarter_end_date.
+    Prioritizes facts with no dimensions (assumed to be consolidated/primary figures).
     """
-    quarterly_data: Dict[str, Any] = {}
-
-    for concept, fact_list in facts.items():
-        for fact in fact_list:
-            # Check for end date in context period
-            period = fact.get("context", {}).get("period", {})
-            context_end_date = period.get("endDate") or period.get("instant")
-
-            # If this fact is for our target quarter
-            if context_end_date == quarter_end_date:
-                # Skip if it has dimensions (we want the primary items)
-                dimensions = fact.get("context", {}).get("dimensions", {})
-                if not dimensions:
-                    quarterly_data[concept] = {"value": fact["value"], "unit": fact["unit"]}
-
-    return quarterly_data
-
-
-def extract_financial_statements(xbrl_data: Dict[str, Any], filing_date: str) -> Dict[str, Any]:
-    """
-    Extract key financial statements from XBRL data.
-
-    Args:
-        xbrl_data: Dictionary from parse_xbrl_instance
-        filing_date: The filing date in ISO format (YYYY-MM-DD)
-
-    Returns:
-        Dictionary with balance sheet, income statement, and cash flow data
-    """
-    # Check if we have an error
-    if "error" in xbrl_data:
-        return {"error": xbrl_data["error"]}
-
-    # Check if we have facts
-    if not xbrl_data.get("facts"):
-        return {"error": "No facts found in XBRL data"}
-
-    # Find the most recent quarter end date
-    quarter_end_dates = set()
-
-    # Look for key date indicators in different ways
-    date_indicators = [
-        "dei:DocumentPeriodEndDate",
-        "us-gaap:DocumentPeriodEndDate",
-        "us-gaap:BalanceSheetDate",
-        "us-gaap:StatementOfIncomeAndComprehensiveIncomeStatementPeriodYearToDateEndDate",
-    ]
-
-    # First try to get document period end date directly
-    for indicator in date_indicators:
-        if indicator in xbrl_data["facts"]:
-            for fact in xbrl_data["facts"][indicator]:
-                if fact.get("value"):
-                    if isinstance(fact["value"], str):
-                        quarter_end_dates.add(fact["value"])
-                    else:
-                        # Try to get it from context
-                        period = fact.get("context", {}).get("period", {})
-                        end_date = period.get("endDate") or period.get("instant")
-                        if end_date:
-                            quarter_end_dates.add(end_date)
-
-    # If no direct date indicators, try inferring from contexts of common financial concepts
-    if not quarter_end_dates:
-        print("No direct date indicators found, inferring from contexts...")
-        for concept_name in xbrl_data["facts"]:
-            if any(
-                item in concept_name.lower()
-                for item in ["revenue", "assets", "liabilities", "netincome"]
-            ):
-                for fact in xbrl_data["facts"][concept_name]:
-                    period = fact.get("context", {}).get("period", {})
-                    end_date = period.get("endDate")
-                    if end_date and end_date < filing_date:  # Ensure it's before filing date
-                        quarter_end_dates.add(end_date)
-
-    print(f"Possible quarter end dates: {quarter_end_dates}")
-
-    # Use the most recent quarter end date
-    if quarter_end_dates:
-        quarter_end_date = max(quarter_end_dates)
-        print(f"Selected quarter end date: {quarter_end_date}")
-    else:
-        # Fallback strategy if no clear quarter end date
-        return {"error": "Could not determine quarter end date"}
-
-    # Extract facts for this quarter
-    quarterly_facts = get_quarterly_facts(xbrl_data["facts"], quarter_end_date)
-
-    if not quarterly_facts:
-        print("No quarterly facts found, trying context-based selection...")
-        # Try using shortest period that includes the quarter end date
-        contexts_by_length = []
-        for concept, fact_list in xbrl_data["facts"].items():
-            if concept.lower().startswith(("us-gaap:", "ifrs:")):
-                for fact in fact_list:
-                    period = fact.get("context", {}).get("period", {})
-                    start_date = period.get("startDate")
-                    end_date = period.get("endDate") or period.get("instant")
-
-                    if end_date and start_date:
-                        # Calculate period length
-                        try:
-                            end = datetime.fromisoformat(end_date)
-                            start = datetime.fromisoformat(start_date)
-                            length = (end - start).days
-
-                            # If period includes our target date and is less than a year
-                            if end_date == quarter_end_date and length <= 365:
-                                contexts_by_length.append((length, fact))
-                        except Exception as e:
-                            print(f"Error calculating period length: {e}")
-
-        # Sort by period length
-        contexts_by_length.sort()
-
-        # Extract facts from the shortest contexts
-        if contexts_by_length:
-            # Get the shortest period length
-            min_length = contexts_by_length[0][0]
-
-            # Get all facts with this period length
-            for length, fact in contexts_by_length:
-                if length == min_length:
-                    concept = None
-                    for c, facts in xbrl_data["facts"].items():
-                        if fact in facts:
-                            concept = c
-                            break
-
-                    if concept:
-                        quarterly_facts[concept] = {"value": fact["value"], "unit": fact["unit"]}
-
-    # Organize data into financial statements
-    balance_sheet = {}
-    income_statement = {}
-    cash_flow = {}
-
-    # Common financial statement items to extract - expand this list as needed
-    bs_items = [
-        "us-gaap:Assets",
-        "us-gaap:AssetsCurrent",
-        "us-gaap:CashAndCashEquivalentsAtCarryingValue",
-        "us-gaap:Liabilities",
-        "us-gaap:LiabilitiesCurrent",
-        "us-gaap:StockholdersEquity",
-        "us-gaap:AccountsReceivableNetCurrent",
-        "us-gaap:Inventory",
-        "us-gaap:PropertyPlantAndEquipmentNet",
-        "us-gaap:IntangibleAssetsNetExcludingGoodwill",
-        "us-gaap:Goodwill",
-        "us-gaap:LongTermDebt",
-        "us-gaap:RetainedEarnings",
-    ]
-
-    is_items = [
-        "us-gaap:Revenues",
-        "us-gaap:Revenue",
-        "us-gaap:SalesRevenueNet",
-        "us-gaap:CostOfRevenue",
-        "us-gaap:GrossProfit",
-        "us-gaap:OperatingExpenses",
-        "us-gaap:OperatingIncomeLoss",
-        "us-gaap:IncomeTaxExpenseBenefit",
-        "us-gaap:NetIncomeLoss",
-        "us-gaap:EarningsPerShareBasic",
-        "us-gaap:EarningsPerShareDiluted",
-    ]
-
-    cf_items = [
-        "us-gaap:NetCashProvidedByUsedInOperatingActivities",
-        "us-gaap:NetCashProvidedByUsedInInvestingActivities",
-        "us-gaap:NetCashProvidedByUsedInFinancingActivities",
-        "us-gaap:CashAndCashEquivalentsPeriodIncreaseDecrease",
-    ]
-
-    # Extract balance sheet items
-    for item in bs_items:
-        if item in quarterly_facts:
-            balance_sheet[item.split(":")[-1]] = quarterly_facts[item]
-
-    # Extract income statement items
-    for item in is_items:
-        if item in quarterly_facts:
-            income_statement[item.split(":")[-1]] = quarterly_facts[item]
-
-    # Extract cash flow items
-    for item in cf_items:
-        if item in quarterly_facts:
-            cash_flow[item.split(":")[-1]] = quarterly_facts[item]
-
-    # Look for additional items with related names
-    for concept in quarterly_facts:
-        concept_name = concept.lower()
-
-        # Check for potential balance sheet items
-        if any(
-            term in concept_name
-            for term in [
-                "asset",
-                "liability",
-                "equity",
-                "debt",
-                "receivable",
-                "inventory",
-                "payable",
-            ]
-        ):
-            if concept not in bs_items:
-                balance_sheet[concept.split(":")[-1]] = quarterly_facts[concept]
-
-        # Check for potential income statement items
-        elif any(
-            term in concept_name
-            for term in ["revenue", "income", "earning", "profit", "expense", "cost", "tax", "eps"]
-        ):
-            if concept not in is_items:
-                income_statement[concept.split(":")[-1]] = quarterly_facts[concept]
-
-        # Check for potential cash flow items
-        elif any(term in concept_name for term in ["cash", "financing", "investing", "operating"]):
-            if concept not in cf_items:
-                cash_flow[concept.split(":")[-1]] = quarterly_facts[concept]
-
-    return {
-        "quarter_end_date": quarter_end_date,
-        "balance_sheet": balance_sheet,
-        "income_statement": income_statement,
-        "cash_flow": cash_flow,
-        "fact_count": len(quarterly_facts),
-    }
-
-
-def get_facts_from_sec_api(cik: str) -> Dict[str, Any]:
-    """
-    Get company facts directly from the SEC's API.
-    This is an alternative approach that uses the SEC's structured data API.
-
-    Args:
-        cik: Company CIK number
-
-    Returns:
-        Dictionary with company facts data
-    """
-    url = FACT_URL.format(cik=cik.zfill(10))
-    print(f"Fetching facts from SEC API: {url}")
-    try:
-        resp = session.get(url, headers=HEADERS)
-        resp.raise_for_status()
-        result: Dict[str, Any] = resp.json()
-        return result
-    except requests.RequestException as e:
-        print(f"Error fetching facts from SEC API: {str(e)}")
-        error_dict: Dict[str, Any] = {"error": f"Failed to fetch facts: {str(e)}"}
-        return error_dict
-
-
-def extract_from_facts(facts_data: Dict[str, Any], concept_list: List[str]) -> Dict[str, Any]:
-    """
-    Extract data for a specific concept from the SEC Facts API response.
-
-    Args:
-        facts_data: The response from the SEC Facts API
-        concept_list: List of concept names to try (will use first one found)
-
-    Returns:
-        Dictionary with quarterly values
-    """
-    # Check for errors in facts_data
-    if "error" in facts_data:
+    if "error" in xbrl_data or not target_quarter_end_date:
         return {
-            "concept": concept_list[0] if concept_list else "unknown",
-            "error": facts_data["error"],
-            "quarterly_data": [],
+            "error": xbrl_data.get("error", "Missing target_quarter_end_date or invalid XBRL data.")
         }
 
-    # Print the available concepts for debugging
-    if "facts" in facts_data and "us-gaap" in facts_data["facts"]:
-        available_concepts = list(facts_data["facts"]["us-gaap"].keys())
-        print(
-            f"Available US-GAAP concepts ({len(available_concepts)}): {available_concepts[:10]}..."
-        )
-    else:
-        print("No US-GAAP concepts found in facts data")
-        if "facts" in facts_data:
-            print(f"Available fact categories: {list(facts_data['facts'].keys())}")
+    output_facts: Dict[str, Dict[str, Any]] = {}
+    contexts = xbrl_data.get("contexts", {})
 
-    # Try each concept in the list
-    for concept in concept_list:
-        # Check if this concept exists in the facts
-        if (
-            "facts" in facts_data
-            and "us-gaap" in facts_data["facts"]
-            and concept in facts_data["facts"]["us-gaap"]
-        ):
-            concept_data = facts_data["facts"]["us-gaap"][concept]
-
-            # Get the units (usually USD)
-            units = list(concept_data.get("units", {}).keys())
-            if not units:
+    for concept_key, fact_list in xbrl_data.get("facts", {}).items():
+        best_fact_for_concept: Optional[Dict[str, Any]] = None
+        for fact_data in fact_list:
+            context_id = fact_data["context_id"]
+            context = contexts.get(context_id)
+            if not context:
                 continue
 
-            unit = units[0]  # Usually 'USD'
-            values = concept_data["units"][unit]
+            period = context.get("period", {})
+            fact_date_str = period.get("endDate") or period.get("instant")
 
-            # Filter for 10-Q filings and sort by end date (most recent first)
-            quarterly_values = [v for v in values if v.get("form") == "10-Q"]
-            quarterly_values.sort(key=lambda x: x.get("end", ""), reverse=True)
+            if fact_date_str == target_quarter_end_date:
+                # If this fact matches the target date
+                current_fact_details = {
+                    "value": fact_data["value"],
+                    "unit": fact_data["unit"],
+                    "xbrl_tag": fact_data["xbrl_tag"],
+                }
+                # Prioritize facts with no dimensions (consolidated figures)
+                if not context.get("dimensions"):
+                    best_fact_for_concept = current_fact_details
+                    break  # Found the best (non-dimensional) fact for this concept and period
+                elif best_fact_for_concept is None:
+                    # If no non-dimensional fact found yet, take the first dimensional one encountered
+                    best_fact_for_concept = current_fact_details
 
-            # Format into our standard output
-            quarterly_data = []
-            for i, value in enumerate(quarterly_values[:4]):  # Get up to 4 quarters
-                quarterly_data.append(
-                    {
-                        "end_date": value.get("end"),
-                        "value": value.get("val"),
-                        "filing_date": value.get("filed"),
-                    }
-                )
+        if best_fact_for_concept:
+            output_facts[concept_key] = best_fact_for_concept
 
-                # Calculate quarter-over-quarter changes
-                if i > 0 and quarterly_data[i - 1]["value"] and quarterly_data[i]["value"]:
-                    current = quarterly_data[i - 1]["value"]
-                    previous = quarterly_data[i]["value"]
-
-                    if previous != 0:
-                        pct_change = ((current - previous) / abs(previous)) * 100
-                        quarterly_data[i - 1]["pct_change_from_previous"] = pct_change
-
-            return {"concept": concept, "quarterly_data": quarterly_data}
-
-    # Search for similar concepts using pattern matching
-    if "facts" in facts_data and "us-gaap" in facts_data["facts"]:
-        # Define pattern matches based on the concept we're looking for
-        patterns: Dict[str, List[str]] = {
-            "us-gaap:Revenues": ["revenue", "sales", "turnover"],
-            "us-gaap:Revenue": ["revenue", "sales", "turnover"],
-            "us-gaap:NetIncomeLoss": ["netincome", "earnings", "profit", "loss"],
-            "us-gaap:Assets": ["totalasset", "asset"],
-            "us-gaap:Liabilities": ["totalliabilit", "liabilit"],
-            "us-gaap:StockholdersEquity": ["equity", "stockholder"],
-        }
-
-        # Find which pattern to use based on the requested concepts
-        search_patterns = []
-        for concept in concept_list:
-            if concept in patterns:
-                search_patterns.extend(patterns[concept])
-
-        if search_patterns:
-            # Look for any concepts matching these patterns
-            for concept in facts_data["facts"]["us-gaap"].keys():
-                concept_lower = concept.lower()
-                if any(pattern in concept_lower for pattern in search_patterns):
-                    print(f"Found similar concept: {concept}")
-                    # Try to extract data from this concept
-                    result = extract_from_facts(facts_data, [concept])
-                    if result.get("quarterly_data"):
-                        result["original_concept_requested"] = (
-                            concept_list[0] if concept_list else "unknown"
-                        )
-                        return result
-
-    # If we get here, none of the concepts were found
-    return {
-        "concept": concept_list[0] if concept_list else "unknown",
-        "error": "Concept not found in SEC Facts data",
-        "quarterly_data": [],
-    }
+    if not output_facts:
+        print(
+            f"No facts extracted for target period {target_quarter_end_date}. This might be okay if the period had no data for mapped concepts."
+        )
+    return output_facts
 
 
-def get_concept_data(cik: str, concept: str) -> Dict[str, Any]:
+def get_data_from_sec_api(
+    cik: str,
+    api_type: str,
+    concept_name_map: Optional[Dict[str, List[str]]] = None,
+    min_filing_year: int = 0,
+) -> Dict[str, Any]:
     """
-    Get data for a specific concept from the SEC's API.
-
-    Args:
-        cik: Company CIK number
-        concept: US GAAP concept name (e.g., "Assets", "Revenue")
-
-    Returns:
-        JSON data for the concept across time periods
+    Fetches and processes data from SEC's CompanyFacts or CompanyConcept API.
+    - api_type: "facts" or "concept".
+    - concept_name_map: For "concept" API, maps our internal concept name to a list of SEC concept names.
+                      For "facts" API, uses CONCEPT_MAP by default.
+    - min_filing_year: Minimum filing year for facts to be considered recent (e.g., 2023).
     """
-    # Try different variations of the concept name
-    concept_variations = [
-        concept,
-        concept.lower(),
-        concept.upper(),
-        "Revenues" if concept == "Revenue" else concept,
-        "Revenue" if concept == "Revenues" else concept,
-        "NetIncomeLoss" if concept in ["NetIncome", "Income", "Earnings"] else concept,
-        "Assets" if concept == "TotalAssets" else concept,
-        "Liabilities" if concept == "TotalLiabilities" else concept,
-    ]
+    results: Dict[str, Any] = {"data": {}, "errors": [], "metadata": {}}
+    current_year = datetime.now().year
+    if not min_filing_year:  # Default to last 2 full years + current year
+        min_filing_year = current_year - 2
 
-    # Make the request with each variation until one works
-    for concept_var in concept_variations:
-        url = COMPANY_CONCEPT_URL.format(cik=cik.zfill(10), concept=concept_var)
-        print(f"Trying SEC API with concept: {concept_var}")
+    # Determine which map to use for concepts
+    active_concept_map = (
+        concept_name_map if api_type == "concept" and concept_name_map else CONCEPT_MAP
+    )
+
+    if api_type == "facts":
+        url = FACT_URL.format(cik=cik.zfill(10))  # Ensure CIK is 10 digits, zero-padded
+        print(f"Fetching from SEC CompanyFacts API: {url}")
         try:
             resp = session.get(url, headers=HEADERS)
             resp.raise_for_status()
-            result: Dict[str, Any] = resp.json()
-            return result
+            api_data = resp.json()
         except requests.RequestException as e:
-            print(f"Error fetching concept {concept_var}: {str(e)}")
+            results["errors"].append(f"CompanyFacts API request failed: {e}")
+            return results
+        except json.JSONDecodeError as e:
+            results["errors"].append(f"CompanyFacts API JSON decode failed: {e}")
+            return results
 
-    # If we get here, none of the variations worked
-    print(f"Could not find data for concept {concept} or its variations")
+        results["metadata"]["entityName"] = api_data.get("entityName")
+        results["metadata"]["cik"] = api_data.get("cik")
 
-    # Return an empty structure
-    error_dict: Dict[str, Any] = {
-        "cik": cik,
-        "concept": concept,
-        "units": {},
-        "error": "Concept not found in SEC data",
-    }
-    return error_dict
+        for our_concept, xbrl_tags in active_concept_map.items():
+            found_concept_data = False
+            for xbrl_tag in xbrl_tags:  # Try each XBRL tag for our concept
+                # Extract the base concept name (e.g., "Assets" from "us-gaap:Assets")
+                gaap_concept_name = xbrl_tag.split(":")[-1]
+                concept_data_block = (
+                    api_data.get("facts", {}).get("us-gaap", {}).get(gaap_concept_name)
+                )
+
+                if concept_data_block and "units" in concept_data_block:
+                    for unit, values_list in concept_data_block.get("units", {}).items():
+                        # Filter for 10-Q forms, recent filing dates, and sort by end date (most recent first)
+                        quarterly_values_temp = []
+                        for v_item in values_list:
+                            if v_item.get("form") == "10-Q":
+                                filed_date_obj = parse_date_flexible(v_item.get("filed"))
+                                if filed_date_obj and filed_date_obj.year >= min_filing_year:
+                                    quarterly_values_temp.append(v_item)
+                        quarterly_values = quarterly_values_temp
+                        quarterly_values.sort(key=lambda x: x.get("end", ""), reverse=True)
+
+                        if quarterly_values:
+                            latest_q_fact = quarterly_values[0]  # Get the most recent one
+                            results["data"][our_concept] = {
+                                "value": latest_q_fact.get("val"),
+                                "unit": unit,
+                                "endDate": latest_q_fact.get("end"),
+                                "filingDate": latest_q_fact.get("filed"),
+                                "xbrl_tag": xbrl_tag,  # Store which tag provided this data
+                            }
+                            # Attempt to set a document period end date from a major concept if not already set
+                            if (
+                                our_concept in ["Assets", "Revenue", "NetIncomeLoss"]
+                                and not results["metadata"].get("documentPeriodEndDate")
+                                and latest_q_fact.get("end")
+                            ):
+                                results["metadata"]["documentPeriodEndDate"] = latest_q_fact.get(
+                                    "end"
+                                )
+                            found_concept_data = True
+                            break  # Found data for this xbrl_tag, move to next our_concept
+                    if found_concept_data:
+                        break  # Found data for our_concept, move to next our_concept
+            if not found_concept_data:
+                results["data"][our_concept] = None  # Explicitly mark as None if no data found
+
+    elif (
+        api_type == "concept" and concept_name_map
+    ):  # Ensure concept_name_map is provided for 'concept' type
+        for our_concept, sec_concept_list in concept_name_map.items():
+            found_concept_data_api = False
+            for (
+                sec_concept_name
+            ) in (
+                sec_concept_list
+            ):  # e.g., "Revenues" or "PaymentsToAcquirePropertyPlantAndEquipment"
+                url = COMPANY_CONCEPT_URL.format(cik=cik.zfill(10), concept=sec_concept_name)
+                print(
+                    f"Fetching from SEC CompanyConcept API for '{our_concept}' (using '{sec_concept_name}'): {url}"
+                )
+                try:
+                    resp = session.get(url, headers=HEADERS)
+                    resp.raise_for_status()
+                    api_data = resp.json()
+                except requests.RequestException as e:
+                    print(f"CompanyConcept API for '{sec_concept_name}' failed: {e}")
+                    continue  # Try next SEC concept name in the list
+                except json.JSONDecodeError as e:
+                    print(f"CompanyConcept API JSON decode for '{sec_concept_name}' failed: {e}")
+                    continue
+
+                if "units" in api_data:  # Check if the API returned any data for this concept
+                    for unit, values_list in api_data.get("units", {}).items():
+                        quarterly_values_temp = []
+                        for v_item in values_list:
+                            if v_item.get("form") == "10-Q":
+                                filed_date_obj = parse_date_flexible(v_item.get("filed"))
+                                if filed_date_obj and filed_date_obj.year >= min_filing_year:
+                                    quarterly_values_temp.append(v_item)
+                        quarterly_values = quarterly_values_temp
+                        quarterly_values.sort(key=lambda x: x.get("end", ""), reverse=True)
+
+                        if quarterly_values:
+                            latest_q_fact = quarterly_values[0]
+                            results["data"][our_concept] = {
+                                "value": latest_q_fact.get("val"),
+                                "unit": unit,
+                                "endDate": latest_q_fact.get("end"),
+                                "filingDate": latest_q_fact.get("filed"),
+                                "xbrl_tag": f"us-gaap:{sec_concept_name}",  # Reconstruct an approximate tag
+                            }
+                            if (
+                                our_concept in ["Assets", "Revenue", "NetIncomeLoss"]
+                                and not results["metadata"].get("documentPeriodEndDate")
+                                and latest_q_fact.get("end")
+                            ):
+                                results["metadata"]["documentPeriodEndDate"] = latest_q_fact.get(
+                                    "end"
+                                )
+                            found_concept_data_api = True
+                            break  # Found data for this unit, move to next our_concept
+                    if found_concept_data_api:
+                        break  # Found data for this sec_concept_name, move to next our_concept
+            if not found_concept_data_api:
+                results["data"][our_concept] = None
+    else:
+        results["errors"].append(
+            f"Invalid API type ('{api_type}') or missing concept_name_map for type 'concept'."
+        )
+
+    return results
 
 
-def compare_quarterly_trends(cik: str, concept: str, quarters: int = 4) -> Dict[str, Any]:
+def extract_from_html(html_path: str, filing_date_obj: datetime) -> Dict[str, Any]:
     """
-    Compare a specific financial concept across multiple quarters.
-
-    Args:
-        cik: Company CIK number
-        concept: US GAAP concept name (e.g., "Revenue", "NetIncomeLoss")
-        quarters: Number of quarters to analyze
-
-    Returns:
-        Dictionary with quarterly values and percentage changes
+    Extracts basic financial data from an HTML filing as a last resort.
+    This is highly heuristic and less reliable than XBRL or API methods.
     """
-    data = get_concept_data(cik, concept)
+    print(f"Attempting to extract data from HTML (last resort): {html_path}")
+    # Initialize all mapped concepts to None for this HTML extraction attempt
+    financial_data: Dict[str, Any] = {key: None for key in CONCEPT_MAP.keys()}
+    financial_data["source_method"] = "html_extraction_WARN"  # Mark as HTML sourced with a warning
 
-    # Extract quarterly data points
-    quarterly_data = []
+    try:
+        with open(html_path, "rb") as f:  # Open in binary read mode
+            soup = BeautifulSoup(f, "html.parser")
+    except Exception as e:
+        print(f"Error reading or parsing HTML file {html_path}: {e}")
+        financial_data["error_html_parsing"] = str(e)
+        return financial_data
 
-    # Check if data was found
-    if "error" in data:
-        return {"concept": concept, "error": data["error"], "quarterly_data": []}
+    # 1. Try to find DocumentPeriodEndDate from HTML content
+    possible_dates: List[datetime] = []
+    # Regex to find common date phrases and then extract dates
+    date_text_patterns = re.compile(
+        r"(period end|as of|ended|for the quarter ended|for the three months ended)", re.I
+    )
+    date_value_patterns = re.compile(
+        r"\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{1,2},\s+\d{4}\b"  # Month D, YYYY
+        r"|\b\d{1,2}/\d{1,2}/\d{2,4}\b"  # M/D/YY or M/D/YYYY
+        r"|\b\d{4}-\d{2}-\d{2}\b"  # YYYY-MM-DD
+    )
 
-    # Get available units
-    units = list(data.get("units", {}).keys())[0] if data.get("units") else None
-
-    if units and units in data["units"]:
-        facts = data["units"][units]
-
-        # Filter for 10-Q filings
-        quarterly_facts = [f for f in facts if f.get("form") == "10-Q"]
-
-        # Sort by end date, most recent first
-        quarterly_facts.sort(key=lambda x: x.get("end", ""), reverse=True)
-
-        # Extract the requested number of quarters
-        for i, fact in enumerate(quarterly_facts[:quarters]):
-            quarterly_data.append(
-                {
-                    "end_date": fact.get("end"),
-                    "value": fact.get("val"),
-                    "filing_date": fact.get("filed"),
-                }
+    # Search all text nodes for date-related phrases
+    text_nodes = soup.find_all(string=True)
+    for node in text_nodes:
+        node_text = str(node).strip()
+        if date_text_patterns.search(node_text):
+            # If a date phrase is found, search for actual date values in the vicinity (parent element)
+            parent_context_text = (
+                node.parent.get_text(separator=" ", strip=True) if node.parent else node_text
             )
+            date_matches = date_value_patterns.findall(parent_context_text)
+            for date_str_match in date_matches:
+                dt_obj = parse_date_flexible(date_str_match)
+                # Validate: date must be before filing date and reasonably close
+                if (
+                    dt_obj and dt_obj < filing_date_obj and (filing_date_obj - dt_obj).days <= 180
+                ):  # Slightly wider window for HTML
+                    possible_dates.append(dt_obj)
 
-        # Calculate quarter-over-quarter changes
-        for i in range(1, len(quarterly_data)):
-            current = quarterly_data[i - 1]["value"]
-            previous = quarterly_data[i]["value"]
+    if possible_dates:
+        best_date_obj = max(possible_dates)  # Get the latest valid date found
+        financial_data["DocumentPeriodEndDate"] = best_date_obj.strftime("%Y-%m-%d")
+        print(
+            f"HTML: Determined DocumentPeriodEndDate (approx): {financial_data['DocumentPeriodEndDate']}"
+        )
+    else:
+        print("HTML: Could not reliably determine DocumentPeriodEndDate from text.")
 
-            if previous and previous != 0:
-                pct_change = ((current - previous) / abs(previous)) * 100
-                quarterly_data[i - 1]["pct_change_from_previous"] = pct_change
-
-    return {"concept": concept, "quarterly_data": quarterly_data}
-
-
-def extract_from_html(html_path: str) -> Dict[str, Any]:
-    """Extract basic financial data from the HTML filing."""
-    print(f"Extracting data from HTML filing: {html_path}")
-
-    with open(html_path, "rb") as f:
-        soup = BeautifulSoup(f, "html.parser")
-
-    # Find tables in the document
-    tables = soup.find_all("table")
-    print(f"Found {len(tables)} tables in the document")
-
-    # Financial data to extract
-    financial_data: Dict[str, Any] = {
-        "revenue": None,
-        "net_income": None,
-        "total_assets": None,
-        "total_liabilities": None,
-        "stockholders_equity": None,
-    }
-
-    # Keywords to identify relevant tables and rows
-    keywords: Dict[str, List[str]] = {
-        "revenue": ["revenue", "net sales", "total revenue", "total net revenue"],
-        "net_income": ["net income", "net earnings", "net profit", "net loss"],
-        "total_assets": ["total assets", "assets total"],
-        "total_liabilities": ["total liabilities", "liabilities total"],
-        "stockholders_equity": [
+    # 2. Try to find other financial values using keywords in tables
+    html_keywords_map: Dict[str, List[str]] = {
+        "Revenue": ["revenue", "net sales", "total net sales", "total revenues"],
+        "NetIncomeLoss": [
+            "net income",
+            "net earnings",
+            "net (loss) income",
+            "net loss attributable",
+            "net income attributable",
+        ],
+        "Assets": ["total assets"],
+        "Liabilities": ["total liabilities"],
+        "Equity": [
             "total stockholders' equity",
-            "stockholders' equity",
+            "total equity",
             "shareholders' equity",
+            "total deficit",
+        ],
+        "CapEx": [
+            "capital expenditure",
+            "payments for property",
+            "additions to property",
+            "purchase of property",
         ],
     }
 
-    # Extract values from tables
-    for table_elem in tables:
-        # Ensure we're dealing with a Tag object for type safety
-        if not isinstance(table_elem, Tag):
-            continue
+    tables = soup.find_all("table")  # Removed type: ignore [attr-defined]
+    print(f"HTML: Found {len(tables)} tables to scan.")
+    for table_idx, table in enumerate(tables):
+        # Check for "in thousands" or "in millions" in table headers or nearby text
+        multiplier = 1
+        # Look in a limited region around the table for unit indicators
+        table_context_text = ""
+        # Iterate a few parents up or siblings back to find unit text
+        current_element_for_context: Any = table
+        for _ in range(3):  # Check up to 3 levels of parents
+            if current_element_for_context and current_element_for_context.parent:
+                table_context_text += current_element_for_context.parent.get_text(
+                    separator=" ", strip=True
+                ).lower()
+                current_element_for_context = current_element_for_context.parent
+            else:
+                break
 
-        # Check table headers or caption for financial statement indicators
-        table_text = table_elem.get_text().lower()
+        if not table_context_text:  # If parent search failed, just use table's own text
+            table_context_text = table.get_text(separator=" ", strip=True).lower()
 
-        if any(
-            stmt in table_text
-            for stmt in ["income statement", "statement of operations", "statement of income"]
+        if (
+            "in thousands" in table_context_text
+            and "in millions" not in table_context_text
+            and "in billions" not in table_context_text
         ):
-            print("Found potential income statement")
-            parse_table_for_values(table_elem, keywords, financial_data, ["revenue", "net_income"])
+            multiplier = 1000
+        elif "in millions" in table_context_text and "in billions" not in table_context_text:
+            multiplier = 1000000
+        elif "in billions" in table_context_text:
+            multiplier = 1000000000
+        if multiplier > 1:
+            print(f"HTML Table {table_idx}: Detected multiplier {multiplier}")
 
-        elif any(
-            stmt in table_text for stmt in ["balance sheet", "statement of financial position"]
-        ):
-            print("Found potential balance sheet")
-            parse_table_for_values(
-                table_elem,
-                keywords,
-                financial_data,
-                ["total_assets", "total_liabilities", "stockholders_equity"],
-            )
+        for row in table.find_all("tr"):
+            cells = row.find_all(["th", "td"])
+            if len(cells) < 2:  # Need at least a label and a value cell
+                continue
 
-    return financial_data
+            row_label = cells[0].get_text(strip=True).lower()
+            # Try to get value from the last few cells, preferring the rightmost numeric one
+            numeric_value: Optional[float] = None
+            for cell_idx in range(len(cells) - 1, 0, -1):  # Iterate backwards from last cell
+                row_value_text = cells[cell_idx].get_text(strip=True)
+                # Clean value: remove currency, commas; handle parentheses for negatives
+                cleaned_value_text = row_value_text.replace("$", "").replace(",", "")
+                if "(" in cleaned_value_text and ")" in cleaned_value_text:
+                    cleaned_value_text = "-" + cleaned_value_text.replace("(", "").replace(")", "")
 
-
-def parse_table_for_values(
-    table: Tag,
-    keywords: Dict[str, List[str]],
-    financial_data: Dict[str, Any],
-    target_items: List[str],
-) -> Dict[str, Any]:
-    """Parse a table for specific financial values."""
-    rows = table.find_all("tr")
-
-    for row_elem in rows:
-        # Ensure we're dealing with a Tag object for type safety
-        if not isinstance(row_elem, Tag):
-            continue
-
-        # Get all cells in the row
-        cells = row_elem.find_all(["td", "th"])
-        if not cells or len(cells) < 2:
-            continue
-
-        # Get the text of the first cell (usually the label)
-        row_label = cells[0].get_text().strip().lower()
-
-        # Check if this row contains data we're looking for
-        for item in target_items:
-            if financial_data[item] is not None:
-                continue  # Already found this item
-
-            # Check if the row label matches any of our keywords for this item
-            if any(keyword in row_label for keyword in keywords[item]):
-                # Get the value from the last cell (usually the most recent period)
-                value_cell = cells[-1].get_text().strip()
-
-                # Try to convert to a number
+                if not cleaned_value_text or cleaned_value_text in [
+                    "—",
+                    "-",
+                ]:  # Skip if empty or just a dash
+                    continue
                 try:
-                    # Remove currency symbols, commas, and other non-numeric characters
-                    value_text = "".join(c for c in value_cell if c.isdigit() or c in ".-")
-                    value = float(value_text)
-                    financial_data[item] = value
-                    print(f"Found {item}: {value}")
+                    numeric_value = float(cleaned_value_text) * multiplier
+                    break  # Found a numeric value
                 except ValueError:
-                    print(f"Could not convert value for {item}: {value_cell}")
+                    continue  # Not a floatable value in this cell
 
+            if numeric_value is not None:
+                for concept_key, keywords_list in html_keywords_map.items():
+                    if financial_data.get(concept_key) is None:  # Only if not already found by HTML
+                        for kw in keywords_list:
+                            # Use regex for more flexible keyword matching (e.g., whole word)
+                            if re.search(r"\b" + re.escape(kw) + r"\b", row_label, re.IGNORECASE):
+                                financial_data[concept_key] = {
+                                    "value": numeric_value,
+                                    "unit": "USD_HTML_ESTIMATE",
+                                    "xbrl_tag": "N/A_HTML",
+                                }
+                                print(
+                                    f"HTML: Found {concept_key} ('{kw}' in '{row_label}'): {numeric_value}"
+                                )
+                                break  # Keyword found for this concept, move to next concept_key
+                    if (
+                        financial_data.get(concept_key) is not None and kw in keywords_list
+                    ):  # break outer loop if concept filled
+                        break
     return financial_data
 
 
 def process_10q_filing(ticker: str, filing_idx: int = 0) -> Dict[str, Any]:
     """
-    Process a 10-Q filing and extract financial data using XBRL.
-
-    Args:
-        ticker: Stock ticker symbol
-        filing_idx: Index of the filing to process (0 = most recent)
-
-    Returns:
-        Dictionary with extracted financial data
+    Main orchestrator to process a 10-Q filing.
+    It tries multiple methods: SEC APIs, XBRL parsing, and HTML parsing as a fallback.
     """
     try:
-        # Get CIK from ticker
         cik = get_cik_from_ticker(ticker)
-        print(f"{ticker} → CIK {cik}")
+        print(f"\n=== Processing {ticker} (CIK: {cik}), Filing Index: {filing_idx} ===")
 
-        # Get recent 10-Q filings
-        filings = list_recent_filings(cik, form_type="10-Q", count=5)
-
+        filings = list_recent_filings(cik, form_type="10-Q", count=filing_idx + 1)
         if not filings or filing_idx >= len(filings):
-            return {"error": f"No 10-Q filing found at index {filing_idx}"}
-
-        filing = filings[filing_idx]
-        print(f"Processing 10-Q filed on {filing['date']}...")
-
-        # Try to get data directly from the SEC Facts API first
-        print("Trying SEC Facts API...")
-        try:
-            facts_data = get_facts_from_sec_api(cik)
-
-            # Check if we got useful data
-            if facts_data and "facts" in facts_data and isinstance(facts_data["facts"], dict):
-                print("Successfully retrieved data from SEC Facts API")
-
-                # Extract ticker from facts
-                ticker_from_facts = facts_data.get("entityName", "").split(" ")[0]
-
-                # Process the data to extract quarterly information
-                facts_results = {
-                    "method": "sec_facts_api",
-                    "ticker": ticker_from_facts or ticker,
-                    "cik": cik,
-                    "filing_date": filing["date"],
-                    "accession_number": filing["acc_with_dashes"],
-                    "revenue": extract_from_facts(
-                        facts_data,
-                        ["us-gaap:Revenues", "us-gaap:Revenue", "us-gaap:SalesRevenueNet"],
-                    ),
-                    "net_income": extract_from_facts(
-                        facts_data,
-                        ["us-gaap:NetIncomeLoss", "us-gaap:ProfitLoss", "us-gaap:NetIncome"],
-                    ),
-                    "assets": extract_from_facts(
-                        facts_data, ["us-gaap:Assets", "us-gaap:AssetsCurrent"]
-                    ),
-                    "liabilities": extract_from_facts(
-                        facts_data, ["us-gaap:Liabilities", "us-gaap:LiabilitiesCurrent"]
-                    ),
-                    "stockholders_equity": extract_from_facts(
-                        facts_data,
-                        [
-                            "us-gaap:StockholdersEquity",
-                            "us-gaap:StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest",
-                        ],
-                    ),
-                }
-
-                # Check if we found any data
-                found_data = False
-                for key in [
-                    "revenue",
-                    "net_income",
-                    "assets",
-                    "liabilities",
-                    "stockholders_equity",
-                ]:
-                    if facts_results[key].get("quarterly_data"):
-                        found_data = True
-                        break
-
-                if found_data:
-                    return facts_results
-                else:
-                    print("No quarterly data found in Facts API, trying another method...")
-            else:
-                print("No useful data found in Facts API response")
-
-        except Exception as e:
-            print(f"Error with SEC Facts API: {str(e)}, trying XBRL files...")
-
-        # If SEC Facts API didn't work, try the XBRL files
-        # Find XBRL files for this filing
-        xbrl_files = get_xbrl_files(cik, filing["acc_with_dashes"])
-
-        if not xbrl_files:
-            print("No XBRL files found, trying Company Concept API instead...")
-            try:
-                concept_results = {
-                    "method": "sec_concept_api",
-                    "filing_date": filing["date"],
-                    "revenue": compare_quarterly_trends(cik, "Revenue"),
-                    "net_income": compare_quarterly_trends(cik, "NetIncomeLoss"),
-                    "assets": compare_quarterly_trends(cik, "Assets"),
-                    "liabilities": compare_quarterly_trends(cik, "Liabilities"),
-                    "stockholders_equity": compare_quarterly_trends(cik, "StockholdersEquity"),
-                }
-
-                # Check if we found any data
-                found_data = False
-                for key in [
-                    "revenue",
-                    "net_income",
-                    "assets",
-                    "liabilities",
-                    "stockholders_equity",
-                ]:
-                    if concept_results[key].get("quarterly_data"):
-                        found_data = True
-                        break
-
-                if found_data:
-                    return concept_results
-                else:
-                    print("No quarterly data found in Concept API, trying HTML extraction...")
-            except Exception as e:
-                print(f"Error with Company Concept API: {str(e)}")
-        else:
-            # Print found files for debugging
-            print(f"Found {len(xbrl_files)} XBRL-related files:")
-            for i, f in enumerate(xbrl_files):
-                print(f"  {i + 1}. {f['name']} (Instance: {f.get('is_instance', False)})")
-
-            # Find the main instance document - prioritize ones marked as instance docs
-            instance_docs = [f for f in xbrl_files if f.get("is_instance", False)]
-
-            # If no instance docs found by flag, try to find by filename pattern
-            if not instance_docs:
-                print("No files marked as instance documents, trying filename patterns...")
-                instance_docs = [
-                    f
-                    for f in xbrl_files
-                    if any(pattern in f["name"].lower() for pattern in ["instance", "-", "_"])
-                    and not any(
-                        suffix in f["name"].lower()
-                        for suffix in ["_cal.", "_def.", "_lab.", "_pre."]
-                    )
-                ]
-
-            # If still no instance docs found, use any .xml or .xbrl file
-            if not instance_docs:
-                print("No instance documents found by pattern, trying any XML/XBRL file...")
-                instance_docs = xbrl_files
-
-            # Try each potential instance document until we find one with facts
-            xbrl_results: Dict[str, Any] = {
-                "error": "No valid XBRL instance document found with financial facts"
+            return {
+                "error": f"No 10-Q filing found at index {filing_idx} for {ticker}",
+                "ticker": ticker,
+                "cik": cik,
             }
 
-            for doc in instance_docs:
-                print(f"Trying file: {doc['name']}")
+        filing_info = filings[filing_idx]
+        filing_date_str = filing_info["date"]
+        filing_date_obj = filing_info["filing_date_obj"]
+        accession_no = filing_info["acc_with_dashes"]
+        primary_doc_name = filing_info["doc"]
 
-                # Download and parse the XBRL file
-                file_path = download_xbrl_file(doc)
-                print(f"Downloaded XBRL file: {file_path}")
+        if not filing_date_obj:  # Should not happen if list_recent_filings works
+            return {
+                "error": f"Could not parse filing date for {accession_no}",
+                "ticker": ticker,
+                "cik": cik,
+            }
 
-                # Parse the XBRL data
-                xbrl_data = parse_xbrl_instance(file_path)
+        print(
+            f"Target Filing: Accession# {accession_no}, Filed: {filing_date_str}, Primary Doc: {primary_doc_name}"
+        )
 
-                # Check if we got an error
-                if "error" in xbrl_data:
-                    print(f"Error in file {doc['name']}: {xbrl_data['error']}")
-                    continue
+        final_results: Dict[str, Any] = {
+            "ticker": ticker,
+            "cik": cik,
+            "filing_date": filing_date_str,
+            "accession_number": accession_no,
+            "source_method": "N/A",
+            "financial_data": {
+                key: None for key in CONCEPT_MAP.keys()
+            },  # Initialize all concepts to None
+            "errors": [],
+        }
 
-                # Check if we have facts
-                if not xbrl_data.get("facts"):
-                    print(f"No facts found in {doc['name']}")
-                    continue
+        # --- Method 1: SEC CompanyFacts API ---
+        print("\n--- Attempt 1: SEC CompanyFacts API ---")
+        api_facts_result = get_data_from_sec_api(
+            cik, "facts", min_filing_year=filing_date_obj.year - 2
+        )  # Look back ~2 years from filing year
 
-                # Extract financial statements
-                financial_data = extract_financial_statements(xbrl_data, filing["date"])
+        if not api_facts_result.get("errors") and api_facts_result.get("data"):
+            api_doc_end_date_str = api_facts_result.get("metadata", {}).get("documentPeriodEndDate")
+            api_doc_end_date_obj = parse_date_flexible(api_doc_end_date_str)
 
-                # If we have some financial data, we're good
-                if financial_data and "error" not in financial_data:
-                    # Add filing metadata
-                    xbrl_results = {
-                        "method": "xbrl_file",
-                        "ticker": ticker,
-                        "cik": cik,
-                        "filing_date": filing["date"],
-                        "accession_number": filing["acc_with_dashes"],
-                        "financial_data": financial_data,
-                        "source_file": doc["name"],
-                    }
-                    break
-
-            if "error" not in xbrl_results:
-                return xbrl_results
+            # Validate API's period end date against the actual filing date
+            if (
+                api_doc_end_date_obj
+                and api_doc_end_date_obj < filing_date_obj
+                and (filing_date_obj - api_doc_end_date_obj).days <= 150
+            ):  # Period end date is reasonably close
+                final_results["source_method"] = "sec_company_facts_api"
+                final_results["financial_data"]["DocumentPeriodEndDate"] = api_doc_end_date_str
+                populated_count = 0
+                for concept, data_val in api_facts_result["data"].items():
+                    if data_val:
+                        final_results["financial_data"][concept] = data_val
+                        populated_count += 1
+                print(
+                    f"CompanyFacts API: Successfully extracted {populated_count} concepts for period ending {api_doc_end_date_str}."
+                )
+                # If key data points are found, we might consider this sufficient
+                key_items_found = sum(
+                    1
+                    for k in ["Revenue", "NetIncomeLoss", "Assets", "CapEx"]
+                    if final_results["financial_data"].get(k)
+                )
+                if key_items_found >= 3:  # If we found 3 of the 4 main items
+                    print("CompanyFacts API provided sufficient key data. Finalizing.")
+                    return final_results
+                else:
+                    print(
+                        f"CompanyFacts API data was sparse ({key_items_found} key items). Will try other methods."
+                    )
             else:
-                print("Could not extract data from XBRL files, trying HTML extraction...")
+                final_results["errors"].append(
+                    f"CompanyFacts API DocumentPeriodEndDate ({api_doc_end_date_str}) not suitable for filing {filing_date_str}."
+                )
+                print(
+                    f"CompanyFacts API DocumentPeriodEndDate ({api_doc_end_date_str}) not suitable for filing {filing_date_str}."
+                )
+        else:
+            final_results["errors"].extend(
+                api_facts_result.get("errors", ["Unknown error with CompanyFacts API."])
+            )
+            print(
+                f"CompanyFacts API failed or returned no data. Errors: {api_facts_result.get('errors')}"
+            )
 
-        # If all else fails, try HTML extraction
-        print("Trying HTML filing extraction as last resort...")
-        try:
-            # Download the HTML filing
-            html_path = download_html_filing(cik, filing["acc_with_dashes"], filing["doc"])
+        # --- Method 2: XBRL File Parsing ---
+        print("\n--- Attempt 2: XBRL File Parsing ---")
+        xbrl_files_list = get_xbrl_files(cik, accession_no)
+        if not xbrl_files_list:
+            final_results["errors"].append("No XBRL files found for parsing.")
+            print("No XBRL files found to parse.")
+        else:
+            parsed_xbrl_data: Optional[Dict[str, Any]] = None
+            target_xbrl_doc_end_date: Optional[str] = None
+            best_xbrl_file_source_name: Optional[str] = None
 
-            # Extract data from the HTML
-            html_data = extract_from_html(html_path)
+            for xbrl_file_info in xbrl_files_list:  # Already sorted by likelihood of being instance
+                print(
+                    f"Attempting to parse XBRL file: {xbrl_file_info['name']} (Marked as instance: {xbrl_file_info.get('is_instance', False)})"
+                )
+                # Define save directory for XBRL files to avoid clutter
+                xbrl_save_dir = os.path.join("xbrl_files", cik, accession_no.replace("-", ""))
+                file_path = download_xbrl_file(xbrl_file_info, save_dir=xbrl_save_dir)
 
-            # Check if we found any useful data
-            if any(value is not None for value in html_data.values()):
-                return {
-                    "method": "html_extraction",
-                    "ticker": ticker,
-                    "cik": cik,
-                    "filing_date": filing["date"],
-                    "accession_number": filing["acc_with_dashes"],
-                    "financial_data": html_data,
-                    "source_file": html_path,
-                }
+                _current_parsed_data = parse_xbrl_instance(file_path, filing_date_obj)
+                if "error" not in _current_parsed_data and _current_parsed_data.get("facts"):
+                    _current_doc_end_date = find_best_quarter_end_date(
+                        _current_parsed_data, filing_date_obj
+                    )
+                    if _current_doc_end_date:
+                        # This XBRL file yielded a valid period end date
+                        parsed_xbrl_data = _current_parsed_data
+                        target_xbrl_doc_end_date = _current_doc_end_date
+                        best_xbrl_file_source_name = xbrl_file_info["name"]
+                        print(
+                            f"Successfully parsed XBRL and found valid period: {target_xbrl_doc_end_date} from {best_xbrl_file_source_name}"
+                        )
+                        break  # Found a good XBRL file and its period, stop searching
+                    else:
+                        print(
+                            f"Parsed {xbrl_file_info['name']}, but could not determine a valid recent period end date."
+                        )
+                else:
+                    print(
+                        f"Failed to parse or find facts in {xbrl_file_info['name']}. Error: {_current_parsed_data.get('error')}"
+                    )
+
+            if parsed_xbrl_data and target_xbrl_doc_end_date:
+                xbrl_extracted_facts = extract_relevant_facts_for_period(
+                    parsed_xbrl_data, target_xbrl_doc_end_date
+                )
+                if "error" not in xbrl_extracted_facts and xbrl_extracted_facts:
+                    # Merge XBRL data, potentially overwriting API data if XBRL is deemed more direct for the filing
+                    final_results["source_method"] = (
+                        f"xbrl_file_parsing ({best_xbrl_file_source_name})"
+                    )
+                    final_results["financial_data"][
+                        "DocumentPeriodEndDate"
+                    ] = target_xbrl_doc_end_date
+                    populated_count = 0
+                    for concept, data_val in xbrl_extracted_facts.items():
+                        if data_val:
+                            final_results["financial_data"][concept] = data_val
+                            populated_count += 1
+                    print(
+                        f"XBRL Parsing: Successfully extracted {populated_count} concepts for period ending {target_xbrl_doc_end_date}."
+                    )
+                    # Check if XBRL provided enough key data
+                    key_items_found_xbrl = sum(
+                        1
+                        for k in ["Revenue", "NetIncomeLoss", "Assets", "CapEx"]
+                        if final_results["financial_data"].get(k)
+                    )
+                    if key_items_found_xbrl >= 3:
+                        print("XBRL parsing provided sufficient key data. Finalizing.")
+                        return final_results
+                    else:
+                        print(
+                            f"XBRL data was sparse ({key_items_found_xbrl} key items). May fall back to HTML if needed."
+                        )
+                else:
+                    error_msg = f"Failed to extract relevant facts for period {target_xbrl_doc_end_date} from parsed XBRL. Error: {xbrl_extracted_facts.get('error')}"
+                    final_results["errors"].append(error_msg)
+                    print(error_msg)
             else:
-                return {"error": "Could not extract financial data using any method"}
-        except Exception as e:
-            print(f"Error with HTML extraction: {str(e)}")
-            return {"error": f"Failed to extract data: {str(e)}"}
+                final_results["errors"].append(
+                    "Could not find/parse a suitable XBRL instance document or determine its period."
+                )
+                print("XBRL Parsing: No suitable instance document found or period determined.")
 
+        # --- Method 3: HTML Filing Extraction (Last Resort or Supplement) ---
+        # Only run if primary methods didn't yield enough, or to fill gaps.
+        should_try_html = True
+        if final_results["source_method"] != "N/A":
+            key_items_from_primary = sum(
+                1
+                for k in ["Revenue", "NetIncomeLoss", "Assets", "CapEx"]
+                if final_results["financial_data"].get(k)
+            )
+            if key_items_from_primary >= 2:  # If we already have 2+ key items, maybe skip HTML
+                print(
+                    "\nPrimary methods yielded some key data. Skipping HTML unless gaps are large."
+                )
+                # should_try_html = False # Uncomment to be less reliant on HTML
+
+        if should_try_html:
+            print("\n--- Attempt 3: HTML Filing Extraction (Fallback/Supplement) ---")
+            try:
+                html_save_dir = os.path.join("filings", cik, accession_no.replace("-", ""))
+                html_path = download_html_filing(
+                    cik, accession_no, primary_doc_name, save_dir=html_save_dir
+                )
+                html_extracted_data = extract_from_html(html_path, filing_date_obj)
+
+                html_doc_end_date_str = html_extracted_data.get("DocumentPeriodEndDate")
+
+                # If HTML found a date and no other method established one, or if HTML's date is better
+                if (
+                    html_doc_end_date_str
+                    and final_results["financial_data"].get("DocumentPeriodEndDate") is None
+                ):
+                    final_results["financial_data"]["DocumentPeriodEndDate"] = html_doc_end_date_str
+                    if final_results["source_method"] == "N/A":  # If no method worked yet
+                        final_results["source_method"] = "html_extraction_WARN (primary)"
+                    print(f"HTML: Set DocumentPeriodEndDate to {html_doc_end_date_str}")
+
+                # Fill in missing data from HTML if other methods didn't find it
+                html_filled_count = 0
+                for concept, html_val in html_extracted_data.items():
+                    if (
+                        concept
+                        not in ["source_method", "error_html_parsing", "DocumentPeriodEndDate"]
+                        and html_val
+                        and final_results["financial_data"].get(concept) is None
+                    ):
+                        final_results["financial_data"][concept] = html_val
+                        html_filled_count += 1
+
+                if html_filled_count > 0:
+                    print(f"HTML: Supplemented {html_filled_count} missing concepts.")
+                    if not final_results["source_method"].startswith(
+                        "html_extraction_WARN (primary)"
+                    ):
+                        if final_results["source_method"] == "N/A":
+                            final_results["source_method"] = "html_extraction_WARN (supplement)"
+                        elif "WARN" not in final_results["source_method"]:
+                            final_results[
+                                "source_method"
+                            ] += " +html_supplement_WARN"  # Added space
+
+                if "error_html_parsing" in html_extracted_data:
+                    final_results["errors"].append(
+                        f"HTML parsing error: {html_extracted_data['error_html_parsing']}"
+                    )
+
+            except Exception as e:
+                error_msg = f"HTML processing failed: {str(e)}"
+                final_results["errors"].append(error_msg)
+                print(error_msg)
+                traceback.print_exc()
+
+        if final_results["source_method"] == "N/A":
+            final_results["errors"].append(
+                "Failed to extract significant data using any reliable method."
+            )
+            print("CRITICAL: Failed to extract significant data using any method.")
+
+        return final_results
+
+    except KeyError as e:  # e.g. Ticker not found
+        print(f"KeyError during processing for {ticker}: {str(e)}")
+        return {"error": str(e), "ticker": ticker}
+    except requests.exceptions.RequestException as e:
+        print(f"Network error during processing for {ticker}: {str(e)}")
+        return {"error": f"Network error: {str(e)}", "ticker": ticker}
     except Exception as e:
-        print(f"Error processing filing: {str(e)}")
-        import traceback
-
+        print(f"Unexpected critical error processing {ticker}: {str(e)}")
         traceback.print_exc()
-        return {"error": str(e)}
+        return {"error": f"Unexpected critical error: {str(e)}", "ticker": ticker}
 
 
 def save_results_to_json(data: Dict[str, Any], output_file: str = "10q_data.json"):
-    """Save extracted data to a JSON file."""
+    """Saves the extracted data dictionary to a JSON file."""
+    # Ensure the output directory exists
+    output_dir = os.path.dirname(output_file)
+    if output_dir and not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
     with open(output_file, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2)
-    print(f"Results saved to {output_file}")
+        # Use default=str to handle any non-serializable objects like datetime
+        json.dump(data, f, indent=2, default=str)
+    print(f"Results successfully saved to {output_file}")
 
 
 def display_financial_summary(results: Dict[str, Any]):
-    """Print a summary of the extracted financial data."""
-    if "error" in results:
+    """Prints a formatted summary of the extracted financial data."""
+
+    ticker = results.get("ticker", "N/A")
+    if "error" in results and not results.get(
+        "financial_data"
+    ):  # Critical error before data structure init
+        print(f"\n--- Error Summary for {ticker} ---")
         print(f"Error: {results['error']}")
         return
 
-    print(f"\nData Source: {results['method']}")
+    print(f"\n--- Financial Summary for {ticker} ---")
+    print(f"CIK: {results.get('cik', 'N/A')}")
+    print(f"Filing Date: {results.get('filing_date', 'N/A')}")
+    print(f"Accession Number: {results.get('accession_number', 'N/A')}")
+    print(f"Data Source Method(s): {results.get('source_method', 'N/A')}")
 
-    if results["method"] == "xbrl_file":
-        financial_data = results.get("financial_data", {})
-        print(f"Quarter End Date: {financial_data.get('quarter_end_date')}")
+    financial_data = results.get("financial_data", {})
+    doc_period_end_val = financial_data.get("DocumentPeriodEndDate")
 
-        print("\nBalance Sheet Highlights:")
-        for key, value in financial_data.get("balance_sheet", {}).items():
-            print(f"  {key}: {value.get('value'):,.2f} {value.get('unit')}")
-
-        print("\nIncome Statement Highlights:")
-        for key, value in financial_data.get("income_statement", {}).items():
-            print(f"  {key}: {value.get('value'):,.2f} {value.get('unit')}")
-
-        print("\nCash Flow Highlights:")
-        for key, value in financial_data.get("cash_flow", {}).items():
-            print(f"  {key}: {value.get('value'):,.2f} {value.get('unit')}")
-
-    elif results["method"] in ["sec_facts_api", "sec_concept_api"]:
-        # Display revenue data
-        if "revenue" in results and results["revenue"].get("quarterly_data"):
-            print("\nQuarterly Revenue Trend:")
-            for quarter in results["revenue"]["quarterly_data"]:
-                change = quarter.get("pct_change_from_previous")
-                change_str = f" ({change:.2f}% from previous)" if change is not None else ""
-                print(f"  {quarter.get('end_date')}: {quarter.get('value'):,.2f}{change_str}")
-
-        # Display net income data
-        if "net_income" in results and results["net_income"].get("quarterly_data"):
-            print("\nQuarterly Net Income Trend:")
-            for quarter in results["net_income"]["quarterly_data"]:
-                change = quarter.get("pct_change_from_previous")
-                change_str = f" ({change:.2f}% from previous)" if change is not None else ""
-                print(f"  {quarter.get('end_date')}: {quarter.get('value'):,.2f}{change_str}")
-
-        # Display assets data if available
-        if "assets" in results and results["assets"].get("quarterly_data"):
-            print("\nTotal Assets:")
-            for quarter in results["assets"]["quarterly_data"]:
-                print(f"  {quarter.get('end_date')}: {quarter.get('value'):,.2f}")
-
-        # Display liabilities data if available
-        if "liabilities" in results and results["liabilities"].get("quarterly_data"):
-            print("\nTotal Liabilities:")
-            for quarter in results["liabilities"]["quarterly_data"]:
-                print(f"  {quarter.get('end_date')}: {quarter.get('value'):,.2f}")
-
-        # Display stockholders' equity data if available
-        if "stockholders_equity" in results and results["stockholders_equity"].get(
-            "quarterly_data"
-        ):
-            print("\nStockholders' Equity:")
-            for quarter in results["stockholders_equity"]["quarterly_data"]:
-                print(f"  {quarter.get('end_date')}: {quarter.get('value'):,.2f}")
-
-    elif results["method"] == "html_extraction":
-        print("\nExtracted from HTML filing:")
-        financial_data = results.get("financial_data", {})
-
-        if financial_data.get("revenue") is not None:
-            print(f"  Revenue: {financial_data['revenue']:,.2f}")
-        if financial_data.get("net_income") is not None:
-            print(f"  Net Income: {financial_data['net_income']:,.2f}")
-        if financial_data.get("total_assets") is not None:
-            print(f"  Total Assets: {financial_data['total_assets']:,.2f}")
-        if financial_data.get("total_liabilities") is not None:
-            print(f"  Total Liabilities: {financial_data['total_liabilities']:,.2f}")
-        if financial_data.get("stockholders_equity") is not None:
-            print(f"  Stockholders' Equity: {financial_data['stockholders_equity']:,.2f}")
-
+    # Handle DocumentPeriodEndDate which might be a string or a dict from API/XBRL
+    if isinstance(doc_period_end_val, dict) and "value" in doc_period_end_val:
+        print(f"Document Period End Date: {doc_period_end_val['value']}")
+    elif isinstance(doc_period_end_val, str):
+        print(f"Document Period End Date: {doc_period_end_val}")
     else:
-        print("Unknown data format")
+        # Corrected f-string: removed f if no placeholder
+        print("Document Period End Date: Not reliably determined or N/A")
+
+    if results.get("errors"):
+        print("\nEncountered Errors/Warnings:")
+        for err_idx, err in enumerate(results["errors"][:5]):  # Print first 5 errors/warnings
+            print(f"  - {err_idx + 1}: {err}")  # Added space around +
+        if len(results["errors"]) > 5:
+            print(f"  ... and {len(results['errors']) - 5} more.")
+
+    print("\nKey Financial Data Points:")
+    # Iterate through CONCEPT_MAP to display in a consistent order
+    for concept_key in CONCEPT_MAP.keys():
+        if concept_key == "DocumentPeriodEndDate":
+            continue  # Already handled
+
+        data_item = financial_data.get(concept_key)
+
+        if data_item and isinstance(data_item, dict):  # Fact structure from API or XBRL
+            value = data_item.get("value", "N/A")
+            unit = data_item.get("unit", "")
+            xbrl_tag_info = (
+                f"(Source Tag: {data_item.get('xbrl_tag', 'N/A')})"
+                if data_item.get("xbrl_tag")
+                else ""
+            )
+
+            value_str = str(value)  # Default to string
+            if isinstance(value, (int, float)):
+                try:  # Format numeric values nicely
+                    value_str = (
+                        f"${value:,.0f}" if unit and "USD" in str(unit).upper() else f"{value:,.0f}"
+                    )
+                except (ValueError, TypeError):
+                    pass  # Keep as string if formatting fails
+
+            print(f"  {concept_key:<25}: {value_str:<15} {unit:<10} {xbrl_tag_info}")
+        elif (
+            data_item is None and concept_key != "source_method"
+        ):  # Explicitly show None for unpopulated mapped concepts
+            print(f"  {concept_key:<25}: None")
+        # Else: data_item might be a simple string (e.g. from HTML DocumentPeriodEndDate, already handled) or other non-dict type
 
 
+# --- Main Execution Block ---
 if __name__ == "__main__":
-    # Example usage
-    ticker = "AAPL"  # Change to any ticker you want
+    # --- Configuration ---
+    # ticker_to_process = "AAPL"   # Example: Apple Inc.
+    ticker_to_process = "MSFT"  # Example: Microsoft Corp.
+    # ticker_to_process = "GOOGL" # Example: Alphabet Inc. (Google)
+    # ticker_to_process = "AMZN"  # Example: Amazon.com Inc.
+    # ticker_to_process = "TSLA" # Example: Tesla Inc.
 
-    # Process the most recent 10-Q
-    results = process_10q_filing(ticker)
+    # Index of the filing to process (0 = most recent 10-Q, 1 = second most recent, etc.)
+    filing_index_to_process = 0
 
-    # Save results to JSON
-    save_results_to_json(results, f"{ticker}_10q_data.json")
+    # --- Execution ---
+    print(
+        f"--- Starting SEC Data Extraction for Ticker: {ticker_to_process}, Filing Index: {filing_index_to_process} ---"
+    )
 
-    # Display a summary of the extracted data
-    display_financial_summary(results)
+    # Ensure USER_AGENT is set
+    if USER_AGENT == "Your Name <youremail@example.com>":
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        print("!!! CRITICAL WARNING: Please update the USER_AGENT in the script with     !!!")
+        print("!!! your actual name and email address before running.                    !!!")
+        print("!!! This is required by the SEC for responsible EDGAR access.             !!!")
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        # exit(1) # Optionally, uncomment to force exit if USER_AGENT is not set.
+
+    extraction_results = process_10q_filing(ticker_to_process, filing_idx=filing_index_to_process)
+
+    # --- Output ---
+    output_directory = "extracted_sec_data"  # Store results in a sub-directory
+    # Create a filename that includes the ticker and accession number for uniqueness
+    accession_num_for_file = extraction_results.get("accession_number", "UNKNOWN_ACC").replace(
+        "-", ""
+    )
+    output_filename = f"{ticker_to_process}_{accession_num_for_file}_10q_data.json"
+
+    save_results_to_json(extraction_results, os.path.join(output_directory, output_filename))
+
+    display_financial_summary(extraction_results)
+
+    print(f"\n--- Extraction process finished for {ticker_to_process} ---")
