@@ -5,6 +5,8 @@ import sys
 
 import click
 
+from abzu.cli.chat_cli import chat
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -16,6 +18,10 @@ logger = logging.getLogger(__name__)
 def cli():
     """Abzu - Industry knowledge extraction."""
     pass
+
+
+# Attach the chat CLI
+cli.add_command(chat)
 
 
 @cli.group()

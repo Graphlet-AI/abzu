@@ -16,7 +16,11 @@ def get_pipeline_steps() -> List[str]:
     """
     return [
         "baml-cli generate",
+        # Option 1: Crawl SemiAnalysis.com for articles
         "abzu crawl semianalysis",
+        # Option 2: Run Discord bot to monitor channels for articles
+        "# abzu chat start",
+        # Process the collected articles
         "abzu process articles semianalysis",
         "abzu process kg raw",
         # Get financial data for companies extracted from knowledge graph

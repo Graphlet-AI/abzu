@@ -103,3 +103,7 @@ extend-ignore = ["E203", "E266", "E501", "W503", "C901"]
 [[tool.mypy.overrides]]
 module = "abzu.baml_client.*"
 ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "discord.*"
+ignore_missing_imports = true
