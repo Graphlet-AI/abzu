@@ -92,7 +92,7 @@ baml-cli generate
 baml-cli test
 
 # To extract BAML types from SemiAnalysis.com articles
-abzu process articles
+abzu process articles semianalysis
 
 # Extract each vertex / edge into its own Parquet
 abzu process kg raw
