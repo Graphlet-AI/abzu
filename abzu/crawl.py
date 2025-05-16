@@ -170,7 +170,15 @@ def run_batch_crawl(
     progress_bar: Optional[tqdm] = None,
     crawled_urls: Optional[Set[str]] = None,
 ):
-    """Run crawlers sequentially, one at a time."""
+    """Run crawlers sequentially with configurable concurrency.
+
+    Args:
+        urls: List of archive pages to crawl.
+        output_path: File to write crawled articles.
+        concurrent_requests: Number of concurrent requests per spider.
+        progress_bar: Progress bar instance for reporting progress.
+        crawled_urls: Optional set of URLs already processed.
+    """
     global _progress_bar
     _progress_bar = progress_bar
 
@@ -181,9 +189,9 @@ def run_batch_crawl(
 
     configure_logging()
     settings = get_project_settings()
-    # Set settings to enforce sequential processing
-    settings.set("CONCURRENT_REQUESTS", 1)
-    settings.set("CONCURRENT_REQUESTS_PER_DOMAIN", 1)
+    # Configure concurrency for the spider
+    settings.set("CONCURRENT_REQUESTS", concurrent_requests)
+    settings.set("CONCURRENT_REQUESTS_PER_DOMAIN", concurrent_requests)
     settings.set("DOWNLOAD_DELAY", 0.5)  # Minimum delay between requests
     settings.set("LOG_LEVEL", "INFO")
 
