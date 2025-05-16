@@ -175,6 +175,9 @@ class URLMonitorBot(commands.Bot):
 class BotRunner:
     """Helper class to run the Discord bot."""
 
+    # Discord permissions value for the bot (read messages, send messages, embed links, etc.)
+    PERMISSIONS = 377957895232
+
     def __init__(
         self,
         application_id: Optional[str] = None,
@@ -211,16 +214,34 @@ class BotRunner:
             raise ValueError(
                 "Discord bot token is required. Set the DISCORD_BOT_TOKEN environment variable."
             )
-        if not self.token.isalnum():
-            raise ValueError(
-                "Discord bot token must be alphanumeric. Check your DISCORD_BOT_TOKEN environment variable."
-            )
 
         self.command_prefix = command_prefix
         self.specific_channels = specific_channels
         self.ignored_domains = ignored_domains
         self.on_url_found_callback = on_url_found_callback
         self.bot = None
+
+    def get_auth_url(self, redirect_uri: Optional[str] = None) -> str:
+        """Generate the OAuth2 authorization URL for adding the bot to servers.
+
+        Args:
+            redirect_uri: Optional redirect URI after authorization.
+
+        Returns:
+            URL string for authorizing the bot.
+        """
+        base_url = "https://discord.com/api/oauth2/authorize"
+        query_params = {
+            "client_id": self.application_id,
+            "permissions": self.PERMISSIONS,
+            "scope": "bot",
+        }
+
+        if redirect_uri:
+            query_params["redirect_uri"] = redirect_uri
+
+        query_string = "&".join(f"{k}={v}" for k, v in query_params.items())
+        return f"{base_url}?{query_string}"
 
     async def start(self):
         """Start the Discord bot."""
