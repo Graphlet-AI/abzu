@@ -22,7 +22,7 @@ conda create -n abzu python=3.12 -y
 conda activate abzu
 
 # Virtualenv
-pthon -m venv venv
+python -m venv venv
 source venv/bin/activate
 ```
 
@@ -80,7 +80,7 @@ abzu crawl
 
 ## Information Extraction
 
-Run the information extracton via the [VSCode Plugin](https://marketplace.visualstudio.com/items?itemName=Boundary.baml-extension):
+Run the information extraction via the [VSCode Plugin](https://marketplace.visualstudio.com/items?itemName=Boundary.baml-extension):
 
 ```bash
 # Setup Gemini key
@@ -119,7 +119,7 @@ abzu process kg refine
 }
 ```
 
-### FinancialDatasets.ai Company FActs
+### FinancialDatasets.ai Company Facts
 
 ```json
 {
