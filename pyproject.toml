@@ -16,6 +16,7 @@ process-articles = "abzu.cli.process_articles:main"
 abzu = "abzu.cli.click_cli:main"
 
 [tool.poetry.dependencies]
+
 python = "3.12.*"
 scrapy = "^2.12.0"
 baml-py = "^0.86.1"
@@ -39,9 +40,9 @@ kuzu = "^0.9.0"
 feedparser = "^6.0.11"
 browsercookie = "^0.8.1"
 cloudscraper = "^1.2.71"
-discord-py = "^2.5.2"
 pydantic-ai = "^0.2.4"
 pynacl = "^1.5.0"
+discord-py = "^2.5.2"
 
 [tool.poetry.group.dev.dependencies]
 flake8 = "^7.2.0"
@@ -59,6 +60,7 @@ nbdime = "^4.0.2"
 types-requests = "^2.32.0.20250328"
 flake8-pyproject = "^1.2.3"
 poetry-types = "^0.6.0"
+types-beautifulsoup4 = "^4.12.0.20250204"
 
 [build-system]
 requires = ["poetry-core"]
