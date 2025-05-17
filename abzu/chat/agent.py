@@ -197,17 +197,6 @@ class DiscordAgent:
             processed_article = cast(IndustryArticle, processed_result)
             self.article_storage.save_processed_article(processed_article)
 
-            # Send a confirmation message
-            summary = f"Successfully processed URL: {url}\n"
-            summary += f"Title: {processed_article.title}\n"
-            if processed_article.companies:
-                company_names = [c.name for c in processed_article.companies]
-                summary += f"Companies: {', '.join(company_names[:5])}"
-                if len(company_names) > 5:
-                    summary += f" and {len(company_names) - 5} more"
-
-            await message.channel.send(summary)
-
             logger.info(f"Successfully processed URL: {url}")
 
         except Exception as e:
