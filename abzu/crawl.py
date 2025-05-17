@@ -98,9 +98,18 @@ class ArticleCrawler(scrapy.Spider):
         print(f"Crawling article: {response.url}")
         title = response.css("title::text").get() or "untitled"
         text_fragments: list[str] = response.css("div.entry-content *::text").getall()
-        posted_at: datetime = dateutil.parser.parse(
-            str(response.css('meta[property="article:published_time"]::attr(content)').get())
-        )
+
+        posted_at_str = response.css('meta[property="article:published_time"]::attr(content)').get()
+        if posted_at_str:
+            try:
+                posted_at = dateutil.parser.parse(posted_at_str)
+            except (ValueError, TypeError) as e:
+                logger.warning(f"Failed to parse posted_at for {response.url}: {e}")
+                posted_at = datetime.now()
+        else:
+            logger.warning(f"No posted_at metadata found for {response.url}")
+            posted_at = datetime.now()
+
         content: str = " ".join(text_fragments).strip()
         self.save(
             {
