@@ -777,7 +777,9 @@ def extract_from_html(html_path: str, filing_date_obj: datetime) -> Dict[str, An
         ],
     }
 
-    tables = soup.find_all("table")  # Removed type: ignore [attr-defined]
+
+    tables = soup.find_all("table")
+
     print(f"HTML: Found {len(tables)} tables to scan.")
     for table_idx, table in enumerate(tables):
         # Check for "in thousands" or "in millions" in table headers or nearby text
