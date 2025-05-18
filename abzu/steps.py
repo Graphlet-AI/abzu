@@ -21,6 +21,7 @@ def get_pipeline_steps() -> List[str]:
         "abzu process kg raw",
         "abzu api financialdatasets --file data/knowledge_graph/tickers.parquet",
         "abzu process kg refine",
+        "abzu api sec download",
     ]
 
 
