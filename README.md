@@ -102,6 +102,9 @@ abzu api financialdatasets --file data/knowledge_graph/tickers.parquet
 
 # Create a combined vertex / edge list
 abzu process kg refine
+
+# Download SEC filings for all tickers
+abzu api sec download
 ```
 
 ## Dataflow + KG Schemas

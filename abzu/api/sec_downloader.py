@@ -11,10 +11,10 @@ from datetime import datetime  # timedelta was unused
 from typing import Any, Dict, List, Optional, cast  # Tuple was unused
 
 # Third-party library imports
-import requests
+import requests  # type: ignore
 from bs4 import BeautifulSoup  # Tag was unused
-from lxml import etree  # mypy: Unused "type: ignore" comment removed
-from requests.adapters import HTTPAdapter
+from lxml import etree
+from requests.adapters import HTTPAdapter  # type: ignore
 from urllib3.util.retry import Retry
 
 # Constants
@@ -118,7 +118,7 @@ def get_cik_from_ticker(ticker: str) -> str:
         sym, cik_str = line.split("\t")
         if sym.lower() == ticker.lower():
             print(f"Found CIK: {cik_str} for ticker: {ticker}")
-            return cik_str  # CIK is returned as a string, potentially with leading zeros
+            return str(cik_str)  # CIK is returned as a string, potentially with leading zeros
     raise KeyError(f"Ticker {ticker} not found in SEC ticker list.")
 
 
@@ -1218,44 +1218,32 @@ def display_financial_summary(results: Dict[str, Any]):
         # Else: data_item might be a simple string (e.g. from HTML DocumentPeriodEndDate, already handled) or other non-dict type
 
 
-# --- Main Execution Block ---
+def process_all_tickers(
+    tickers_file: str = "data/refined_knowledge_graph/tickers.parquet",
+    output_dir: str = "data/tickers",
+    filing_index: int = 0,
+) -> None:
+    """Process 10-Q filings for all tickers in a Parquet file."""
+
+    from pathlib import Path
+
+    import pandas as pd
+
+    df = pd.read_parquet(tickers_file)
+    tickers = df["symbol"].dropna().unique()
+
+    Path(output_dir).mkdir(parents=True, exist_ok=True)
+
+    for ticker in tickers:
+        print(f"Processing ticker: {ticker}")
+        result = process_10q_filing(ticker, filing_idx=filing_index)
+
+        accession = result.get("accession_number", "UNKNOWN_ACC").replace("-", "")
+        fname = f"{ticker}_{accession}_10q_data.json"
+        save_results_to_json(result, os.path.join(output_dir, fname))
+
+        display_financial_summary(result)
+
+
 if __name__ == "__main__":
-    # --- Configuration ---
-    # ticker_to_process = "AAPL"   # Example: Apple Inc.
-    ticker_to_process = "MSFT"  # Example: Microsoft Corp.
-    # ticker_to_process = "GOOGL" # Example: Alphabet Inc. (Google)
-    # ticker_to_process = "AMZN"  # Example: Amazon.com Inc.
-    # ticker_to_process = "TSLA" # Example: Tesla Inc.
-
-    # Index of the filing to process (0 = most recent 10-Q, 1 = second most recent, etc.)
-    filing_index_to_process = 0
-
-    # --- Execution ---
-    print(
-        f"--- Starting SEC Data Extraction for Ticker: {ticker_to_process}, Filing Index: {filing_index_to_process} ---"
-    )
-
-    # Ensure USER_AGENT is set
-    if USER_AGENT == "Your Name <youremail@example.com>":
-        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-        print("!!! CRITICAL WARNING: Please update the USER_AGENT in the script with     !!!")
-        print("!!! your actual name and email address before running.                    !!!")
-        print("!!! This is required by the SEC for responsible EDGAR access.             !!!")
-        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-        # exit(1) # Optionally, uncomment to force exit if USER_AGENT is not set.
-
-    extraction_results = process_10q_filing(ticker_to_process, filing_idx=filing_index_to_process)
-
-    # --- Output ---
-    output_directory = "extracted_sec_data"  # Store results in a sub-directory
-    # Create a filename that includes the ticker and accession number for uniqueness
-    accession_num_for_file = extraction_results.get("accession_number", "UNKNOWN_ACC").replace(
-        "-", ""
-    )
-    output_filename = f"{ticker_to_process}_{accession_num_for_file}_10q_data.json"
-
-    save_results_to_json(extraction_results, os.path.join(output_directory, output_filename))
-
-    display_financial_summary(extraction_results)
-
-    print(f"\n--- Extraction process finished for {ticker_to_process} ---")
+    process_all_tickers()
