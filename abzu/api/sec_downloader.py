@@ -11,10 +11,10 @@ from datetime import datetime  # timedelta was unused
 from typing import Any, Dict, List, Optional, cast  # Tuple was unused
 
 # Third-party library imports
-import requests  # type: ignore
+import requests
 from bs4 import BeautifulSoup  # Tag was unused
 from lxml import etree  # mypy: Unused "type: ignore" comment removed
-from requests.adapters import HTTPAdapter  # type: ignore
+from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 # Constants
