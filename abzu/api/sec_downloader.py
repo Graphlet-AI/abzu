@@ -10,7 +10,7 @@ import traceback
 from datetime import datetime  # timedelta was unused
 from typing import Any, Dict, List, Optional, cast  # Tuple was unused
 
-# Third-party library imports
+
 import requests
 from bs4 import BeautifulSoup  # Tag was unused
 from lxml import etree  # mypy: Unused "type: ignore" comment removed
