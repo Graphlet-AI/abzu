@@ -10,7 +10,6 @@ import traceback
 from datetime import datetime  # timedelta was unused
 from typing import Any, Dict, List, Optional, cast  # Tuple was unused
 
-
 import requests
 from bs4 import BeautifulSoup  # Tag was unused
 from lxml import etree  # mypy: Unused "type: ignore" comment removed
@@ -776,7 +775,6 @@ def extract_from_html(html_path: str, filing_date_obj: datetime) -> Dict[str, An
             "purchase of property",
         ],
     }
-
 
     tables = soup.find_all("table")
 
