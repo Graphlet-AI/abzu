@@ -17,6 +17,7 @@ def get_pipeline_steps() -> List[str]:
     return [
         "baml-cli generate",
         "abzu crawl semianalysis",
+        "abzu crawl theinformation",
         "abzu process articles semianalysis",
         "abzu process kg raw",
         "abzu api financialdatasets --file data/knowledge_graph/tickers.parquet",
