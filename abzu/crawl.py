@@ -14,9 +14,13 @@ from scrapy.http.response import Response
 from scrapy.utils.log import configure_logging
 from scrapy.utils.project import get_project_settings
 from tqdm import tqdm
-from twisted.internet import defer, reactor
+from twisted.internet import asyncioreactor, defer
 
-from abzu.utils import append_jsonl, build_crawled_url_index
+# Install the AsyncIO reactor before importing or using the reactor
+asyncioreactor.install()
+from twisted.internet import reactor  # noqa: E402
+
+from abzu.utils import append_jsonl, build_crawled_url_index  # noqa: E402
 
 # Configure logging
 logging.basicConfig(
@@ -68,41 +72,108 @@ class ArticleCrawler(scrapy.Spider):
     def parse(self, response: Response) -> Iterator[scrapy.Request]:
         """Parse the archive page and follow links to individual articles."""
         # Print the archive page being crawled
-        print(f"Parsing archive page: {response.url}")
+        logger.info(f"Parsing archive page: {response.url}")
+
+        # Log the response status to help with debugging
+        logger.info(f"Response status: {response.status}")
+
         # Find all article links - adjust selector based on actual HTML structure
-        article_links = response.css("a::attr(href)").getall()
+        # Use a more specific selector for SemiAnalysis articles
+        if "semianalysis.com" in response.url:
+            article_links = response.css("article h2 a::attr(href)").getall()
+            if not article_links:
+                # Fallback to a more general selector
+                article_links = response.css("a::attr(href)").getall()
+                logger.warning(
+                    f"Using fallback selector for {response.url}. Found {len(article_links)} links."
+                )
+        else:
+            article_links = response.css("a::attr(href)").getall()
+
         found_articles = 0
         new_articles = 0
         skipped_articles = 0
+
+        # Log the number of links found
+        logger.info(f"Found {len(article_links)} total links on page {response.url}")
+
         for link in article_links:
             absolute_url = response.urljoin(link)
-            if absolute_url.startswith("https://semianalysis.com/20"):
+
+            # Check if the URL matches the pattern for a SemiAnalysis article
+            is_article = False
+            if "semianalysis.com" in response.url and (
+                absolute_url.startswith("https://semianalysis.com/20")
+                or "/blog/" in absolute_url
+                or "/article/" in absolute_url
+            ):
+                is_article = True
+
+            if is_article:
                 found_articles += 1
                 # Check if URL has already been crawled
                 if absolute_url in self.crawled_urls:
                     skipped_articles += 1
                     self.__class__._skipped_articles += 1
-                    print(f"Skipping already crawled URL: {absolute_url}")
+                    logger.info(f"Skipping already crawled URL: {absolute_url}")
                 else:
                     new_articles += 1
-                    yield scrapy.Request(absolute_url, callback=self.parse_article)
+                    logger.info(f"Queuing new article URL: {absolute_url}")
+                    yield scrapy.Request(
+                        absolute_url, callback=self.parse_article, errback=self.handle_error
+                    )
 
-        print(
+        logger.info(
             f"Found {found_articles} articles on page: {response.url} "
             f"(new: {new_articles}, skipped: {skipped_articles})"
         )
 
+    def handle_error(self, failure):
+        """Handle request failures."""
+        logger.error(f"Request failed: {failure.request.url}")
+        logger.error(f"Error: {failure.value}")
+        return None
+
     def parse_article(self, response: Response) -> None:
         """Parse and save individual article content."""
-        # Print the URL being crawled
-        print(f"Crawling article: {response.url}")
-        title = response.css("title::text").get() or "untitled"
-        text_fragments: list[str] = response.css("div.entry-content *::text").getall()
+        # Log the URL being crawled
+        logger.info(f"Crawling article: {response.url}")
 
-        posted_at_str = response.css('meta[property="article:published_time"]::attr(content)').get()
+        # Log the response status for debugging
+        logger.info(f"Article response status: {response.status}")
+
+        # Extract the title
+        title = response.css("title::text").get() or "untitled"
+        logger.info(f"Article title: {title}")
+
+        # Try different selectors for content based on the site structure
+        if "semianalysis.com" in response.url:
+            # First try the main content selector
+            text_fragments = response.css("div.entry-content *::text, article *::text").getall()
+            if not text_fragments:
+                # Fallback to a more general selector
+                text_fragments = response.css("article *::text, .post-content *::text").getall()
+                if not text_fragments:
+                    # Last resort selector
+                    text_fragments = response.css("body *::text").getall()
+                    logger.warning(f"Using last resort selector for {response.url}")
+        else:
+            text_fragments = response.css("div.entry-content *::text").getall()
+
+        # Log the number of text fragments found
+        logger.info(f"Found {len(text_fragments)} text fragments in the article")
+
+        # Try various selectors for the publication date
+        posted_at_str = (
+            response.css('meta[property="article:published_time"]::attr(content)').get()
+            or response.css("time::attr(datetime)").get()
+            or response.css('meta[name="pubdate"]::attr(content)').get()
+        )
+
         if posted_at_str:
             try:
                 posted_at = dateutil.parser.parse(posted_at_str)
+                logger.info(f"Extracted publication date: {posted_at}")
             except (ValueError, TypeError) as e:
                 logger.warning(f"Failed to parse posted_at for {response.url}: {e}")
                 posted_at = datetime.now()
@@ -110,7 +181,14 @@ class ArticleCrawler(scrapy.Spider):
             logger.warning(f"No posted_at metadata found for {response.url}")
             posted_at = datetime.now()
 
+        # Join the text fragments into a single content string
         content: str = " ".join(text_fragments).strip()
+
+        # Log a snippet of the content for debugging
+        content_preview = content[:200] + "..." if len(content) > 200 else content
+        logger.info(f"Content preview: {content_preview}")
+
+        # Save the article
         self.save(
             {
                 "url": response.url,
@@ -204,6 +282,9 @@ def run_batch_crawl(
     settings.set("DOWNLOAD_DELAY", 0.5)  # Minimum delay between requests
     settings.set("LOG_LEVEL", "INFO")
 
+    # Make sure we're using the AsyncIO reactor that we installed
+    settings.set("TWISTED_REACTOR", "twisted.internet.asyncioreactor.AsyncioSelectorReactor")
+
     runner = CrawlerRunner(settings)
 
     # Define a function to process URLs one at a time
@@ -244,6 +325,10 @@ def crawl_semianalysis(
     Returns:
         0 on success, 1 on failure
     """
+    # Track if we've already installed the reactor
+    reactor_running = False
+    progress = None
+
     try:
         # Ensure the data directory exists
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
@@ -287,30 +372,67 @@ def crawl_semianalysis(
 
         @defer.inlineCallbacks
         def process_batches():
-            start_time = time.time()
-            for i, batch in enumerate(batches):
-                batch_desc = f"Batch {i + 1}/{len(batches)}"
-                progress.set_description(batch_desc)
-                # Process this batch with our progress bar and crawled URLs index
-                yield run_batch_crawl(
-                    batch,
-                    output_path,
-                    concurrent_requests,
-                    progress_bar=progress,
-                    crawled_urls=crawled_urls,
-                )
+            try:
+                start_time = time.time()
+                for i, batch in enumerate(batches):
+                    batch_desc = f"Batch {i + 1}/{len(batches)}"
+                    if progress:
+                        progress.set_description(batch_desc)
+                    # Process this batch with our progress bar and crawled URLs index
+                    yield run_batch_crawl(
+                        batch,
+                        output_path,
+                        concurrent_requests,
+                        progress_bar=progress,
+                        crawled_urls=crawled_urls,
+                    )
 
-            # All done!
-            elapsed = time.time() - start_time
-            progress.close()
-            logger.info(f"All batches completed in {elapsed:.2f} seconds")
-            logger.info(f"Data saved to {output_path}")
-            reactor.stop()
+                # All done!
+                elapsed = time.time() - start_time
+                if progress:
+                    progress.close()
+                logger.info(f"All batches completed in {elapsed:.2f} seconds")
+                logger.info(f"Data saved to {output_path}")
+            except Exception as e:
+                logger.error(f"Error during batch processing: {e}")
+                logger.exception("Full exception details:")
+            finally:
+                # Always stop the reactor when we're done, even if there was an error
+                # Type annotations for reactor should be cast to Any
+                # to address the mypy error about missing attributes
+                if cast(Any, reactor).running:
+                    cast(Any, reactor).stop()
+
+        # Set up signal handlers to gracefully exit on interrupt
+        import signal
+
+        def signal_handler(sig, frame):
+            logger.info("Received interrupt signal, shutting down gracefully...")
+            if progress:
+                progress.close()
+            if cast(Any, reactor).running:
+                cast(Any, reactor).stop()
+
+        # Register signal handlers
+        signal.signal(signal.SIGINT, signal_handler)
+        signal.signal(signal.SIGTERM, signal_handler)
+
+        # Set up a timeout to prevent indefinite hanging
+        def timeout_handler():
+            logger.warning("Crawler timed out after 300 seconds, shutting down...")
+            if progress:
+                progress.close()
+            if cast(Any, reactor).running:
+                cast(Any, reactor).stop()
+
+        # Schedule the timeout (5 minutes)
+        cast(Any, reactor).callLater(300, timeout_handler)
 
         # Start the process
         process_batches()
+
         # Blocks until reactor.stop() is called
-        # Add cast to Any to help mypy understand this method exists
+        reactor_running = True
         cast(Any, reactor).run()
 
         return 0
@@ -318,6 +440,17 @@ def crawl_semianalysis(
         logger.error(f"Error during crawling: {e}")
         logger.exception("Full exception details:")
         return 1
+    finally:
+        # Final cleanup
+        if progress:
+            progress.close()
+
+        # Make absolutely sure the reactor is stopped
+        if reactor_running and cast(Any, reactor).running:
+            try:
+                cast(Any, reactor).stop()
+            except Exception:
+                pass
 
 
 def main(batch_size: int = 1, concurrent_requests: int = 1):
