@@ -3,6 +3,7 @@
 import click
 
 from abzu.cli.process.articles.semianalysis import process_semianalysis
+from abzu.cli.process.articles.theinformation import process_theinformation
 
 
 @click.group()
@@ -12,3 +13,4 @@ def articles():
 
 
 articles.add_command(process_semianalysis, name="semianalysis")
+articles.add_command(process_theinformation, name="theinformation")

@@ -35,10 +35,10 @@ TEST_COMMANDS = [
     (
         "process articles --help",
         [
-            "Usage: cli process articles [OPTIONS]",
-            "--input",
-            "--output",
-            "--batch-size",
+            "Usage: cli process articles [OPTIONS] COMMAND [ARGS]...",
+            "Commands:",
+            "  semianalysis",
+            "  theinformation",
         ],
     ),
     (

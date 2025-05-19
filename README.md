@@ -102,6 +102,8 @@ baml-cli test
 
 # To extract BAML types from SemiAnalysis.com articles
 abzu process articles semianalysis
+# To extract BAML types from TheInformation.com articles
+abzu process articles theinformation
 
 # Extract each vertex / edge into its own Parquet
 abzu process kg raw

@@ -8,8 +8,8 @@ import click
     "-i",
     "--input",
     "input_file",
-    default="data/processed_semianalysis.jsonl",
-    help="Input processed articles JSONL file (default: data/processed_semianalysis.jsonl)",
+    default="data/processed_semianalysis.jsonl,data/processed_theinformation.jsonl",
+    help="Comma-separated input processed articles JSONL files",
 )
 @click.option(
     "-o",
