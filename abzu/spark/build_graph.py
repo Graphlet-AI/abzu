@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame, SparkSession
+from pyspark.sql import types as T
 
 # Configure logging
 logging.basicConfig(
@@ -98,7 +99,15 @@ def build_knowledge_graph(
     )
 
     # Select all fields from the ticker struct
-    tickers_df = tickers_raw_df.select("ticker.*")
+    ticker_field = tickers_raw_df.schema["ticker"]
+    if isinstance(ticker_field.dataType, T.StructType):
+        tickers_df = tickers_raw_df.select("ticker.*")
+    else:
+        tickers_df = tickers_raw_df.select(
+            F.lit(None).cast(T.StringType()).alias("name"),
+            F.col("ticker").cast(T.StringType()).alias("symbol"),
+            F.lit(None).cast(T.StringType()).alias("exchange"),
+        )
     tickers_df = tickers_df.dropDuplicates(["symbol"])
     logger.info(f"Extracted {tickers_df.count():,} unique ticker symbols")
 
