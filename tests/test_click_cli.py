@@ -1,5 +1,5 @@
-from click.testing import CliRunner
 import pytest
+from click.testing import CliRunner
 
 from abzu.cli.click_cli import cli
 
@@ -13,6 +13,14 @@ TEST_COMMANDS = [
             "  api",
             "  crawl",
             "  process",
+        ],
+    ),
+    (
+        "api --help",
+        [
+            "Commands:",
+            "  financialdatasets",
+            "  sec",
         ],
     ),
     (
@@ -43,6 +51,15 @@ TEST_COMMANDS = [
             "--api-key",
             "--pretty",
             "--output",
+        ],
+    ),
+    (
+        "api sec download --help",
+        [
+            "Usage: cli api sec download [OPTIONS]",
+            "--input",
+            "--output",
+            "--filing-index",
         ],
     ),
 ]

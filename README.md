@@ -72,11 +72,20 @@ baml-cli generate
 
 ## Crawl
 
-Crawl SemiAnalysis.com via:
+Crawl SemiAnalysis.com or TheInformation.com:
 
 ```bash
-abzu crawl
+# SemiAnalysis
+abzu crawl semianalysis
+
+# TheInformation (requires login cookies)
+abzu crawl theinformation
 ```
+
+To scrape TheInformation you must be signed into the site in your browser so the
+command can load your session cookies. Alternatively pass `--cookie "name=value;"`
+to the command.
+The crawler fetches from `https://www.theinformation.com/feed` by default.
 
 ## Information Extraction
 
@@ -102,6 +111,9 @@ abzu api financialdatasets --file data/knowledge_graph/tickers.parquet
 
 # Create a combined vertex / edge list
 abzu process kg refine
+
+# Download SEC filings for all tickers
+abzu api sec download
 ```
 
 ## Dataflow + KG Schemas
