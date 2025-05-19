@@ -29,8 +29,13 @@ def build_knowledge_graph(
     )
 
     # Read pre-processed articles
-    logger.info(f"Reading processed articles from {input_path} ...")
-    processed_df: DataFrame = spark.read.json(input_path)
+    if "," in input_path:
+        input_paths = [path.strip() for path in input_path.split(",") if path.strip()]
+    else:
+        input_paths = [input_path]
+
+    logger.info(f"Reading processed articles from {input_paths} ...")
+    processed_df: DataFrame = spark.read.json(input_paths)
     logger.info(f"Loaded {processed_df.count():,} processed articles")
 
     # Show a sample record
