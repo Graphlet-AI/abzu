@@ -1,5 +1,6 @@
 """Crawl articles from the web for processing."""
 
+# currently stuck.
 import logging
 import os
 import time
