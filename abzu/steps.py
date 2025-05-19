@@ -24,6 +24,7 @@ def get_pipeline_steps() -> List[str]:
         "abzu crawl theinformation",
         # Process the collected articles
         "abzu process articles semianalysis",
+        "abzu process articles theinformation",
         # Build a separate node / edge list parquet file for each type of node / edge
         "abzu process kg raw",
         # Get financial data for companies extracted from knowledge graph
