@@ -36,7 +36,7 @@ def articles():
     pass
 
 
-@articles.command(name="semianalysis")
+@articles.command(name="semianalysis", context_settings={"show_default": True})
 @click.option(
     "-i",
     "--input",
@@ -75,7 +75,7 @@ def kg():
     pass
 
 
-@kg.command()
+@kg.command(context_settings={"show_default": True})
 @click.option(
     "-i",
     "--input",
@@ -108,7 +108,7 @@ def raw(input_file, output_dir, partitions):
     )
 
 
-@kg.command()
+@kg.command(context_settings={"show_default": True})
 @click.option(
     "-i",
     "--input",
@@ -147,7 +147,7 @@ def crawl():
     pass
 
 
-@crawl.command(name="semianalysis")
+@crawl.command(name="semianalysis", context_settings={"show_default": True})
 @click.option(
     "-u", "--url", help="URL to start crawling from (defaults to predefined archive URLs)"
 )
@@ -198,7 +198,7 @@ def financialdatasets():
     pass
 
 
-@financialdatasets.command()
+@financialdatasets.command(context_settings={"show_default": True})
 @click.option("-t", "--ticker", help="Company ticker symbol (e.g., AAPL)")
 @click.option("-c", "--cik", help="Company Central Index Key (e.g., 0000320193)")
 @click.option(
@@ -295,7 +295,7 @@ def facts(
     )
 
 
-@financialdatasets.command()
+@financialdatasets.command(context_settings={"show_default": True})
 @click.option(
     "-t", "--ticker", required=True, help="Ticker symbol to get price data for (e.g., AAPL)"
 )
@@ -391,7 +391,7 @@ def price(
     )
 
 
-@financialdatasets.command()
+@financialdatasets.command(context_settings={"show_default": True})
 @click.option(
     "-t", "--ticker", required=True, help="Ticker symbol to get financial metrics for (e.g., AAPL)"
 )
@@ -468,7 +468,7 @@ def metrics(
     )
 
 
-@financialdatasets.command(name="price-multiple")
+@financialdatasets.command(name="price-multiple", context_settings={"show_default": True})
 @click.option(
     "-t",
     "--ticker",
@@ -586,7 +586,7 @@ def price_multiple(
     )
 
 
-@financialdatasets.command()
+@financialdatasets.command(context_settings={"show_default": True})
 @click.option(
     "-k",
     "--api-key",
@@ -636,7 +636,7 @@ def tickers(
     )
 
 
-@cli.command()
+@cli.command(context_settings={"show_default": True})
 def steps():
     """Print the steps required to run the complete data pipeline."""
     from abzu.steps import print_pipeline_steps

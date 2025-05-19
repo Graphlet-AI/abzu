@@ -23,7 +23,7 @@ def chat():
     pass
 
 
-@chat.command()
+@click.command(context_settings={"show_default": True})
 @click.option(
     "-t",
     "--token",
@@ -160,7 +160,7 @@ def start(
     return 0
 
 
-@chat.command()
+@chat.command(context_settings={"show_default": True})
 @click.option(
     "-t",
     "--token",
@@ -215,7 +215,7 @@ def key(token: Optional[str]):
     return loop.run_until_complete(verify_token())
 
 
-@chat.command()
+@chat.command(context_settings={"show_default": True})
 @click.option(
     "-a",
     "--app-id",

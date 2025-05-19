@@ -22,7 +22,7 @@ def financialdatasets_cli():
     pass
 
 
-@financialdatasets_cli.command()
+@financialdatasets_cli.command(context_settings={"show_default": True})
 @click.option("-t", "--ticker", help="Company ticker symbol (e.g., AAPL)")
 @click.option("-c", "--cik", help="Company Central Index Key (e.g., 0000320193)")
 @click.option(
@@ -107,7 +107,7 @@ def facts(
     )
 
 
-@financialdatasets_cli.command()
+@financialdatasets_cli.command(context_settings={"show_default": True})
 @click.option(
     "-k",
     "--api-key",
