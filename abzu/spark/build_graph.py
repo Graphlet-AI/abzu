@@ -112,16 +112,26 @@ def build_knowledge_graph(
     logger.info(f"Extracted {tickers_df.count():,} unique ticker symbols")
 
     # Create company relationships
-    # Company-Ticker relationships
     logger.info("Creating company-ticker relationships ...")
-    company_ticker_df = (
-        companies_df.filter("ticker IS NOT NULL")
-        .select(
-            F.col("name").alias("company_name"),
-            F.col("ticker.symbol").alias("ticker_symbol"),
+    company_ticker_schema = companies_df.schema["ticker"]
+    if isinstance(company_ticker_schema.dataType, T.StructType):
+        company_ticker_df = (
+            companies_df.filter(F.col("ticker").isNotNull())
+            .select(
+                F.col("name").alias("company_name"),
+                F.col("ticker.symbol").alias("ticker_symbol"),
+            )
+            .dropDuplicates()
         )
-        .dropDuplicates()
-    )
+    else:
+        company_ticker_df = (
+            companies_df.filter(F.col("ticker").isNotNull())
+            .select(
+                F.col("name").alias("company_name"),
+                F.col("ticker").cast(T.StringType()).alias("ticker_symbol"),
+            )
+            .dropDuplicates()
+        )
 
     # Product-Company relationships
     logger.info("Creating product-company relationships ...")
