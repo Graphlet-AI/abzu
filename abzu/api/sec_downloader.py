@@ -975,7 +975,9 @@ def process_10q_filing(ticker: str, filing_idx: int = 0) -> Dict[str, Any]:
                     f"Attempting to parse XBRL file: {xbrl_file_info['name']} (Marked as instance: {xbrl_file_info.get('is_instance', False)})"
                 )
                 # Define save directory for XBRL files to avoid clutter
-                xbrl_save_dir = os.path.join("xbrl_files", cik, accession_no.replace("-", ""))
+                xbrl_save_dir = os.path.join(
+                    "data/sec/xbrl_files", cik, accession_no.replace("-", "")
+                )
                 file_path = download_xbrl_file(xbrl_file_info, save_dir=xbrl_save_dir)
 
                 _current_parsed_data = parse_xbrl_instance(file_path, filing_date_obj)
@@ -1062,7 +1064,9 @@ def process_10q_filing(ticker: str, filing_idx: int = 0) -> Dict[str, Any]:
         if should_try_html:
             print("\n--- Attempt 3: HTML Filing Extraction (Fallback/Supplement) ---")
             try:
-                html_save_dir = os.path.join("filings", cik, accession_no.replace("-", ""))
+                html_save_dir = os.path.join(
+                    "data/sec/html_filings", cik, accession_no.replace("-", "")
+                )
                 html_path = download_html_filing(
                     cik, accession_no, primary_doc_name, save_dir=html_save_dir
                 )
