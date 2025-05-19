@@ -104,9 +104,11 @@ baml-cli test
 abzu process articles semianalysis
 # To extract BAML types from TheInformation.com articles
 abzu process articles theinformation
+# Processed articles are saved in data/processed_theinformation.jsonl
 
 # Extract each vertex / edge into its own Parquet
 abzu process kg raw
+# Uses data/processed_semianalysis.jsonl and data/processed_theinformation.jsonl
 
 # To enrich with FinancialDatasets.ai company facts TODO: make this the default path
 abzu api financialdatasets --file data/knowledge_graph/tickers.parquet
