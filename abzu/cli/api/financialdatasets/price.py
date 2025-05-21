@@ -124,6 +124,13 @@ def price(
         read_data_file,
     )
 
+    # Handle mutually exclusive options
+    if ticker and input_file:
+        logger.error(
+            "Cannot use both -t/--ticker and -f/--input-file together. Please use only one."
+        )
+        return 1
+
     # Validate that either ticker or input_file is provided
     if not ticker and not input_file:
         # Use default input file path if neither is specified
@@ -143,7 +150,7 @@ def price(
     pause_seconds = 0.5
 
     # Single ticker mode
-    if ticker and not input_file:
+    if ticker:
         return financialdatasets_price_main(
             ticker=ticker,
             start_date=start_date,
@@ -172,13 +179,10 @@ def price(
             ticker_list: List[str] = []
 
             for record in read_data_file(input_file):
+                # Check for ticker or symbol fields
                 ticker_val = record.get("ticker") or record.get("symbol")
                 if ticker_val and ticker_val not in ticker_list:
                     ticker_list.append(ticker_val)
-
-            # Also add the ticker from command line if provided
-            if ticker and ticker not in ticker_list:
-                ticker_list.append(ticker)
 
             logger.info(f"Found {len(ticker_list)} unique tickers")
 
