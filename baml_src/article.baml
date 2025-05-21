@@ -131,7 +131,7 @@ class Customer {
 
 function ExtractIndustryArticle(article_text: string) -> IndustryArticle {
   // see clients.baml
-  client CustomO3Mini // CustomGeminiFallback
+  client CustomGeminiFallback
 
   // The prompt uses Jinja syntax. Change the models or this text and watch the prompt preview change!
   prompt #"
