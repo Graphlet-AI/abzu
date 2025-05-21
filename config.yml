@@ -1,0 +1,42 @@
+base_dir: "data"
+
+crawl:
+  semianalysis:
+    output: "${base_dir}/semianalysis.jsonl"
+
+  theinformation:
+    output: "${base_dir}/theinformation.jsonl"
+
+process:
+  articles:
+    semianalysis:
+      input: "${base_dir}/semianalysis.jsonl"
+      output: "${base_dir}/processed_semianalysis.jsonl"
+
+    theinformation:
+      input: "${base_dir}/theinformation.jsonl"
+      output: "${base_dir}/processed_theinformation.jsonl"
+
+  kg:
+    raw:
+      input:
+        - "${base_dir}/processed_semianalysis.jsonl"
+        - "${base_dir}/processed_theinformation.jsonl"
+      output: "${base_dir}/knowledge_graph"
+
+    refine:
+      input: "${base_dir}/knowledge_graph"
+      output: "${base_dir}/refined_knowledge_graph"
+
+chat:
+  start:
+    raw_articles: "${base_dir}/chat/raw_articles.jsonl"
+    processed_articles: "${base_dir}/chat/processed_articles.jsonl"
+
+api:
+  sec:
+    download:
+      tickers_file: "${base_dir}/knowledge_graph/tickers.parquet"
+      output_dir: "${base_dir}/tickers"
+      xbrl_files: "${base_dir}/sec/xbrl_files"
+      html_filings: "${base_dir}/sec/html_filings"
