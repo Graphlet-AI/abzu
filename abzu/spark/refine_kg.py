@@ -7,6 +7,8 @@ from pathlib import Path
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame, SparkSession
 
+from abzu.config import config
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -15,8 +17,8 @@ logger = logging.getLogger(__name__)
 
 
 def refine_knowledge_graph(
-    input_path: str = "data/knowledge_graph",
-    output_path: str = "data/refined_knowledge_graph",
+    input_path: str = config.get("process.kg.refine.input"),
+    output_path: str = config.get("process.kg.refine.output"),
     partitions: int = 4,
 ) -> None:
     """
@@ -173,12 +175,12 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--input",
-        default="data/knowledge_graph",
+        default=config.get("process.kg.refine.input"),
         help="Input directory with raw knowledge graph parquet files",
     )
     parser.add_argument(
         "--output",
-        default="data/refined_knowledge_graph",
+        default=config.get("process.kg.refine.output"),
         help="Output directory for refined knowledge graph",
     )
     parser.add_argument(
