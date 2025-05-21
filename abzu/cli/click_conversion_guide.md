@@ -28,6 +28,16 @@ This document serves as a guide for converting the existing argparse-based CLI t
 
 ## Conversion Steps
 
+0. **Use Application Config**
+
+    ```python
+    # Import singular config object
+    from abzu.config import config
+
+    # Use config object in your commands
+    config.get("process.articles.semianalysis.input")
+    ```
+
 1. **Create Basic Command Structure**
 
    ```python
@@ -46,7 +56,7 @@ This document serves as a guide for converting the existing argparse-based CLI t
        pass
    
    @process.command()
-   @click.option("-i", "--input", default="data/semianalysis.jsonl", help="Input JSONL file path")
+   @click.option("-i", "--input", default=config.get("process.articles.semianalysis.input"), help="Input JSONL file path")
    def articles(input):
        """Process articles."""
        # Implementation
@@ -74,12 +84,17 @@ process_subparsers = process_cmd.add_subparsers(dest="subcommand", help="Process
 
 # Articles subcommand
 articles_cmd = process_subparsers.add_parser("articles", help="Process articles")
-articles_cmd.add_argument("-i", "--input", default="data/semianalysis.jsonl")
+articles_cmd.add_argument("-i", "--input", default=config.get("process.articles.semianalysis.input"))
 ```
 
 ### After (Click)
 
 ```python
+import click
+
+from abzu.config import config
+
+
 @click.group()
 def cli():
     """Abzu - Industry knowledge extraction."""
@@ -91,8 +106,8 @@ def process():
     pass
 
 @process.command()
-@click.option("-i", "--input", default="data/semianalysis.jsonl", 
-              help="Input JSONL file path (default: data/semianalysis.jsonl)")
+@click.option("-i", "--input", default=config.get("process.articles.semianalysis.input"), 
+              help=f"Input JSONL file path (default: {config.get("process.articles.semianalysis.input")})")
 def articles(input):
     """Process articles."""
     from abzu.cli.process_articles import process_main
