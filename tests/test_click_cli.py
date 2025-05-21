@@ -13,6 +13,7 @@ TEST_COMMANDS = [
             "  api",
             "  crawl",
             "  process",
+            "  dump",
         ],
     ),
     (
@@ -60,6 +61,13 @@ TEST_COMMANDS = [
             "--input",
             "--output",
             "--filing-index",
+        ],
+    ),
+    (
+        "dump returns --help",
+        [
+            "Usage: cli dump returns [OPTIONS]",
+            "--file",
         ],
     ),
 ]

@@ -32,7 +32,9 @@ def get_pipeline_steps() -> List[str]:
         # Get financial metrics for key companies
         "abzu api financialdatasets metrics -t NVDA -t AMD -t INTC -P annual -l 5",
         # Get historical price data for all tickers extracted from the knowledge graph
-        "abzu api financialdatasets price -f data/knowledge_graph/tickers.parquet -s 2023-01-01 -e 2023-12-31 -i day -o data/financialdatasets/all_prices.json",
+        "abzu api financialdatasets price -f data/knowledge_graph/tickers.parquet -s 2025-01-01 -e 2025-12-31 -i day -o data/financialdatasets/all_prices.json",
+        # Summarize best performing stocks
+        "abzu dump returns -f data/financialdatasets/all_prices.json",
         # Download SEC filings for companies
         "abzu api sec download",
         # Build a single node / edge list in GraphFrames format
