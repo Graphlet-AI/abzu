@@ -101,11 +101,11 @@ class Product {
   name string
   @description("Name of the company's product")
 
-  manufacturer Company
-  @description("Name of the company that makes the product")
-
   description string
   @description("Description of the product. What does it do? What is it used for?")
+
+  manufacturer Company
+  @description("Name of the company that makes the product")
 }
 
 class Technology {
