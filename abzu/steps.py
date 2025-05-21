@@ -16,10 +16,10 @@ def get_pipeline_steps() -> List[str]:
     """
     return [
         "baml-cli generate",
-        # Crawl semianalysis.com for articles
-        "abzu crawl semianalysis",
         # Run Discord bot to monitor channels for articles
         "abzu chat start",
+        # Crawl semianalysis.com for articles
+        "abzu crawl semianalysis",
         # Crawl theinformation.com for articles
         "abzu crawl theinformation",
         # Process the collected articles
@@ -31,8 +31,8 @@ def get_pipeline_steps() -> List[str]:
         "abzu api financialdatasets facts --file data/knowledge_graph/tickers.parquet",
         # Get financial metrics for key companies
         "abzu api financialdatasets metrics -t NVDA -t AMD -t INTC -P annual -l 5",
-        # Get historical price data for key companies
-        "abzu api financialdatasets price-multiple -t NVDA -t AMD -t INTC -s 2023-01-01 -e 2023-12-31 -i day -o data/financialdatasets/chip_prices.json",
+        # Get historical price data for all tickers extracted from the knowledge graph
+        "abzu api financialdatasets price -f data/knowledge_graph/tickers.parquet -s 2023-01-01 -e 2023-12-31 -i day -o data/financialdatasets/all_prices.json",
         # Download SEC filings for companies
         "abzu api sec download",
         # Build a single node / edge list in GraphFrames format

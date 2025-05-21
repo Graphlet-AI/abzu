@@ -6,3 +6,5 @@ nohup.out
 .claude/settings.local.json
 .mcp.json
 subs
+data/semianalysis.jsonl
+data/processed_semianalysis.jsonl

@@ -27,7 +27,7 @@ import click
 @click.option("--bypass-cf", is_flag=True, help="Use cloudscraper to bypass Cloudflare")
 def theinformation(output_file, cookie, user_agent, bypass_cf):
     """Crawl TheInformation RSS feed."""
-    from abzu.information import crawl_theinformation
+    from abzu.crawl.information import crawl_theinformation
 
     return crawl_theinformation(
         output_file=output_file,
