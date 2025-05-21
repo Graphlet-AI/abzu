@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from abzu.baml_client.types import IndustryArticle
+from abzu.config import config
 
 # Configure logging
 logging.basicConfig(
@@ -21,15 +22,15 @@ class ArticleStorage:
 
     def __init__(
         self,
-        raw_articles_path: str = "data/chat/raw_articles.jsonl",
-        processed_articles_path: str = "data/chat/processed_articles.jsonl",
+        raw_articles_path: str = config.get("chat.start.raw_articles"),
+        processed_articles_path: str = config.get("chat.start.processed_articles"),
         create_dirs: bool = True,
     ):
         """Initialize the storage.
 
         Args:
-            raw_articles_path: Path to store raw article data. Defaults to "data/chat/raw_articles.jsonl".
-            processed_articles_path: Path to store processed article data. Defaults to "data/chat/processed_articles.jsonl".
+            raw_articles_path: Path to store raw article data. Defaults to 'config.get("chat.start.raw_articles")'.
+            processed_articles_path: Path to store processed article data. Defaults to 'config.get("chat.start.processed_articles")'.
             create_dirs: Whether to create directories if they don't exist. Defaults to True.
         """
         self.raw_articles_path = raw_articles_path
