@@ -9,6 +9,9 @@ class IndustryArticle {
   url string?
   @description("URL of the article")
 
+  source NewsSource?
+  @description("Source of the article. This is the news source that published the article.")
+
   collected_at string?
   @description("Date the article was collected, in ISO-8601 format")
   
@@ -44,6 +47,9 @@ class IndustryArticle {
 
   deals Deal[]?
   @description("Commercial deals mentioned in the article: sales, acquisitions or investments.")
+
+  cited_sources NewsSource[]?
+  @description("News sources mentioned in the article. This is a news source that was quoted or linked to. This is not the source of the article.")
 }
 
 class Author {
@@ -177,9 +183,9 @@ class Investor {
 }
 
 enum DealType {
-  Sale
-  Acquisition
-  Investment
+  Sale @description("Sale of a product or technology")
+  Acquisition @description("Acquisition of a company")
+  Investment @description("Investment in a company or country")
 }
 
 class Deal {
@@ -212,6 +218,17 @@ class Deal {
 
   date string
   @description("Date of the deal in ISO-8601 format")
+
+  quarter string?
+  @description("Actual or projected quarter of the deal in ISO-8601 format. This is the quarter of the year when the deal took place or will take place.")
+}
+
+class NewsSource {
+  name string
+  @description("Name of the news source. Newspaper, magazine, blog, etc.")
+
+  url string?
+  @description("URL of the web page of the news source")
 }
 
 function ExtractIndustryArticle(article_text: string) -> IndustryArticle {
