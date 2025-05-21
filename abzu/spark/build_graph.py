@@ -72,7 +72,16 @@ def build_knowledge_graph(
 
     # We need to handle nested structures carefully
     # For deduplication, create name columns
-    products_df = products_df.withColumn("company_name", F.col("company.name"))
+    # Handle schema variations where the company field may be named "company" or
+    # "manufacturer". If neither is present, create a null column so downstream
+    # processing does not fail.
+    if "company" in products_df.columns:
+        products_df = products_df.withColumn("company_name", F.col("company.name"))
+    elif "manufacturer" in products_df.columns:
+        products_df = products_df.withColumn("company_name", F.col("manufacturer.name"))
+    else:
+        products_df = products_df.withColumn("company_name", F.lit(None).cast(T.StringType()))
+
     products_df = products_df.dropDuplicates(["name", "company_name"])
     logger.info(f"Extracted {products_df.count():,} unique products")
 
