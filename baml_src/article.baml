@@ -126,6 +126,12 @@ class Partnership {
   dst_company Company
   @description("Second company in partnership")
 
+  value int
+  @description("Value of the partnership in currency. This is the amount of money that will flow through the partnership. This is not the valuation of the company.")
+
+  currency string
+  @description("Currency of the value of a partnership. ISO 4217 3-letter currency code")
+
   description string
   @description("Description of the partnership. What is its purpose?")
 }
@@ -137,8 +143,20 @@ class Customer {
   dst_company Company
   @description("Buying company")
 
+  value int
+  @description("Value of the buyer's account in currency to the selling company. This is a valuation of the relationship.")
+
+  currency string
+  @description("Currency of the customer relationship's transactions. ISO 4217 3-letter currency code")
+
+  technologies Technology[]?
+  @description("Technologies involved in the customer relationship. This is a technology that was bought or sold.")
+
+  products Product[]?
+  @description("Products involved in the customer relationship. This is a product that was bought, licensed or sold.")
+
   description string
-  @description("Description of the customer relationship")
+  @description("Description of the customer relationship: what is bought or sold? How much?")
 }
 
 class Investor {
