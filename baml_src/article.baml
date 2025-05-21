@@ -27,11 +27,23 @@ class IndustryArticle {
   tickers Ticker[]?
   @description("Ticker symbols of the companies mentioned in the article")
 
+  partnerships Partnership[]?
+  @description("Partnerships mentioned in the article")
+
+  customers Customer[]?
+  @description("Customer relationships mentioned in the article")
+
+  investors Investor[]?
+  @description("Investor relationships mentioned in the article")
+
   products Product[]?
   @description("Products mentioned in the article")
 
   technologies Technology[]?
   @description("Technologies mentioned in the article. Technologies does not include products")
+
+  deals Deal[]?
+  @description("Commercial deals mentioned in the article: sales, acquisitions or investments.")
 }
 
 class Author {
@@ -89,7 +101,7 @@ class Product {
   name string
   @description("Name of the company's product")
 
-  company Company
+  manufacturer Company
   @description("Name of the company that makes the product")
 
   description string
@@ -129,6 +141,61 @@ class Customer {
   @description("Description of the customer relationship")
 }
 
+class Investor {
+  src_company Company
+  @description("Company making the investment")
+
+  dst_company Company
+  @description("Company receiving the investment")
+
+  amount int
+  @description("Amount of the investment in currency. This is the amount of money that changed hands in the investment. This is not the valuation of the company.")
+
+  currency string
+  @description("Currency of the investment amount. ISO 4217 3-letter currency code")
+
+  description string
+  @description("Description of the investment")
+}
+
+enum DealType {
+  Sale
+  Acquisition
+  Investment
+}
+
+class Deal {
+  src_company Company
+  @description("Source company in the deal. This is the company that sold a product or technology (Sale type), acquired another company (Acquisition type) or made an investment (Investment type).")
+
+  dst_company Company
+  @description("Target company in the deal. This is the company that bought a product or technology (Sale type), the company that was acquired (Acquisition type) or received investment (Investment type).")
+
+  type DealType
+  @description("Type of the deal: Sale, Acquisition or Investment. No partnerships.")
+
+  description string
+  @description("Description of the deal. What was bought, sold or invested in and by who? For how much money in which currency?")
+
+  amount int
+  @description("Amount of the deal in currency. This is the amount of money that changed hands in the deal. This is not the valuation of the company.")
+
+  currency string
+  @description("Currency of the investment amount. ISO 4217 3-letter currency code")
+
+  country string?
+  @description("Country of the deal. This is the country where the deal took place. This the country of the dst_company in a Sale, Acqusition or Investment.")
+
+  date string
+  @description("Date of the deal in ISO-8601 format")
+
+  technologies Technology[]?
+  @description("Technologies involved in the deal. This is the technology that was sold, acquired or invested in.")
+
+  products Product[]?
+  @description("Products involved in the deal. This is the product that was sold, acquired or invested in.")
+}
+
 function ExtractIndustryArticle(article_text: string) -> IndustryArticle {
   // see clients.baml
   client CustomGeminiFallback
@@ -149,7 +216,7 @@ function ExtractIndustryArticle(article_text: string) -> IndustryArticle {
   "#
 }
 
-test Test1 {
+test SemiAnalysisTest {
   functions [ExtractIndustryArticle]
   args {
     article_text #"
@@ -235,4 +302,35 @@ There is one big downside though, which is that hyperscalers have to design, ver
 The total price the customer pays differs a lot as components get pulled out of Nvidia’s margin stacking, onto ODMs. ODM’s revenue is impacted, and most importantly, Nvidia’s gross margin shifts through the year as well. Below we will show these impacts.
     "#
   }
+}
+
+test DealTest {
+  functions [ExtractIndustryArticle]
+  args {
+    article_text #"
+Title: Nvidia to spend $500B to manufacture AI chips in US
+
+The chipmaker will work with TSMC, Foxconn, Amkor and others to produce its Blackwell chip and other AI infrastructure in Arizona and Texas.
+
+Nvidia President and CEO Jensen Huang speaks about the future of artificial intelligence at the Bipartisan Policy Center on Sept. 27, 2024, in Washington, D.C. The company now plans to produce AI chips in the U.S. for the first time.
+
+Nvidia will manufacture some of its artificial intelligence chips in the United States for the first time, the company announced last week.
+
+The chipmaker, which previously produced most of its chips in Taiwan, plans to invest up to $500 billion worth of AI infrastructure in the U.S. over the next four years. Nvidia will partner with contract manufacturers Taiwan Semiconductor Manufacturing Co., Foxconn, Wistron, Amkor and Silicon Precision Industries to build more than a million square feet of production space, and claims the investment will create hundreds of thousands of jobs. 
+
+TSMC has already has begun producing Nvidia’s lauded Blackwell chip at its Arizona factory. Nvidia is partnering with Amkor and SPIL on packaging and testing operations in Arizona. Amkor announced plans in December 2023 to build a $2 billion packaging facility in the state.
+
+Nvidia also is partnering with contract electronics manufacturer Foxconn in Houston and Taiwan-based Wistron in Dallas to build two supercomputer manufacturing plants. Production at both sites is expected to ramp up over the next 12 to 15 months, according to Nvidia.
+
+The chipmaking giant has been teasing additional U.S. investments in recent weeks. Last month, CEO Jensen Huang told the Financial Times that the company planned to invest hundreds of billions of dollars in U.S. manufacturing over the next four years.
+
+“The engines of the world’s AI infrastructure are being built in the United States for the first time,” Huang said in a statement. “Adding American manufacturing helps us better meet the incredible and growing demand for AI chips and supercomputers, strengthens our supply chain and boosts our resiliency.”
+
+The announcement comes as the Trump administration is pushing hard for companies to increase U.S. manufacturing through its tariff regime.
+
+Electronics makers received relief earlier this month, when President Donald Trump announced tariff exemptions for some electronics products, including smartphones, flat panel display modules and a broader list of electronic integrated circuits. The products will fall under a list of 20 harmonized tariff codes that qualify as “semiconductors.”
+
+Electronics manufacturers have made a flurry of investment announcements since Trump took office. TSMC announced plans last month to invest $100 billion in U.S. manufacturing, including building multiple chip factories in Arizona. And Apple, which regularly contracts with Foxconn to produce iPhones and other goods in China, unveiled plans in February to invest $500 billion in U.S. manufacturing.
+        "#
+    }
 }
