@@ -118,6 +118,8 @@ abzu dump returns -f data/financialdatasets/all_prices.json
 
 # Create a combined vertex / edge list
 abzu process kg refine
+abzu dump products -f data/refined_knowledge_graph/products.parquet
+# Products are listed sorted by company name
 
 # Download SEC filings for all tickers
 abzu api sec download
