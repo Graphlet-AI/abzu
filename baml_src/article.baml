@@ -211,10 +211,10 @@ class Deal {
   @description("Amount of the deal in currency. This is the amount of money that changed hands in the deal. This is not the valuation of the company. Expand millions, billions or trillions to whole figures.")
 
   currency string
-  @description("Currency of the investment amount. ISO 4217 3-letter currency code")
+  @description("Currency of the deal amount. ISO 4217 3-letter currency code")
 
   country string?
-  @description("Country of the deal. This is the country where the deal took place. This may be the country of any dst_company in a Sale, Acqusition or Investment.")
+  @description("Country of the deal. This is the country where the deal took place. This may be the country of any dst_company in a Sale, Acquisition or Investment.")
 
   date string
   @description("Date of the deal in ISO-8601 format")
