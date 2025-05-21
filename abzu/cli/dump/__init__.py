@@ -2,6 +2,7 @@
 
 import click
 
+from abzu.cli.dump.products import products
 from abzu.cli.dump.returns import returns
 
 
@@ -12,3 +13,4 @@ def dump() -> None:
 
 
 dump.add_command(returns)
+dump.add_command(products)

@@ -39,6 +39,8 @@ def get_pipeline_steps() -> List[str]:
         "abzu api sec download",
         # Build a single node / edge list in GraphFrames format
         "abzu process kg refine",
+        # List all products found in the refined knowledge graph
+        "abzu dump products -f data/refined_knowledge_graph/products.parquet",
     ]
 
 
