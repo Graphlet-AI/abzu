@@ -168,8 +168,14 @@ class Deal {
   src_company Company
   @description("Source company in the deal. This is the company that sold a product or technology (Sale type), acquired another company (Acquisition type) or made an investment (Investment type).")
 
-  dst_company Company
-  @description("Target company in the deal. This is the company that bought a product or technology (Sale type), the company that was acquired (Acquisition type) or received investment (Investment type).")
+  dst_company Company?
+  @description("Target company in the deal. This is the company that bought a product or technology (Sale type), the company that was acquired (Acquisition type) or received investment (Investment type). Some investments don't have recipients if they relate only to a location.")
+
+  technologies Technology[]?
+  @description("Technologies involved in the deal. This is the technology that was sold, acquired or invested in.")
+
+  products Product[]?
+  @description("Products involved in the deal. This is the product that was sold, acquired or invested in.")
 
   type DealType
   @description("Type of the deal: Sale, Acquisition or Investment. No partnerships.")
@@ -178,22 +184,16 @@ class Deal {
   @description("Description of the deal. What was bought, sold or invested in and by who? For how much money in which currency?")
 
   amount int
-  @description("Amount of the deal in currency. This is the amount of money that changed hands in the deal. This is not the valuation of the company.")
+  @description("Amount of the deal in currency. This is the amount of money that changed hands in the deal. This is not the valuation of the company. Expand millions, billions or trillions to whole figures.")
 
   currency string
   @description("Currency of the investment amount. ISO 4217 3-letter currency code")
 
   country string?
-  @description("Country of the deal. This is the country where the deal took place. This the country of the dst_company in a Sale, Acqusition or Investment.")
+  @description("Country of the deal. This is the country where the deal took place. This may be the country of any dst_company in a Sale, Acqusition or Investment.")
 
   date string
   @description("Date of the deal in ISO-8601 format")
-
-  technologies Technology[]?
-  @description("Technologies involved in the deal. This is the technology that was sold, acquired or invested in.")
-
-  products Product[]?
-  @description("Products involved in the deal. This is the product that was sold, acquired or invested in.")
 }
 
 function ExtractIndustryArticle(article_text: string) -> IndustryArticle {
