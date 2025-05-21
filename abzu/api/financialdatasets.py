@@ -769,6 +769,113 @@ def financialdatasets_metrics_main(
         return 1
 
 
+def financialdatasets_metrics_multiple_main(
+    tickers: List[str],
+    period: str = "annual",
+    limit: int = 30,
+    api_key: Optional[str] = None,
+    output_file: Optional[str] = None,
+    pretty: bool = False,
+    max_retries: int = 5,
+    pause_seconds: float = 0.5,
+    max_workers: int = 5,
+    show_progress: bool = True,
+) -> int:
+    """Get financial metrics for multiple tickers from the Financial Datasets API.
+
+    This function retrieves financial metrics for multiple ticker symbols with
+    the specified period and limit, and saves the combined results to a file.
+    Requests are executed in parallel for better performance.
+
+    Args:
+        tickers: List of ticker symbols (e.g., ['AAPL', 'MSFT', 'GOOG'])
+        period: The period for financial metrics. Possible values are
+               'annual', 'quarterly', or 'ttm' (trailing twelve months).
+               Defaults to 'annual'.
+        limit: Number of periods to return. Defaults to 30.
+        api_key: API key for Financial Datasets. If None, will attempt to read from
+                FINANCIAL_DATASETS_API_KEY environment variable.
+        output_file: File to write results to. If None, results are printed to stdout.
+        pretty: Whether to format JSON output with indentation
+        max_retries: Maximum number of retries for rate-limited requests. Defaults to 5.
+        pause_seconds: Number of seconds to pause between API requests. Defaults to 0.5.
+        max_workers: Maximum number of parallel workers for API requests. Defaults to 5.
+        show_progress: Whether to display a progress bar. Defaults to True.
+
+    Returns:
+        0 on success, 1 on failure
+    """
+    try:
+        api = FinancialDatasetsAPI(api_key, max_retries=max_retries, pause_seconds=pause_seconds)
+
+        # Get metrics for all tickers
+        ticker_count = len(tickers)
+        logger.info(
+            f"Retrieving financial metrics for {ticker_count} tickers with period={period}, limit={limit}"
+        )
+
+        # Function to get metrics for a single ticker
+        def get_ticker_metrics(ticker: str) -> tuple[str, Dict[str, Any]]:
+            try:
+                result = api.get_financial_metrics(
+                    ticker=ticker,
+                    period=period,
+                    limit=limit,
+                )
+                return ticker, result
+            except Exception as e:
+                logger.error(f"Error retrieving metrics for {ticker}: {e}")
+                return ticker, {"error": str(e)}
+
+        results: Dict[str, Dict[str, Any]] = {}
+
+        # Process tickers in parallel using ThreadPoolExecutor
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = {executor.submit(get_ticker_metrics, ticker): ticker for ticker in tickers}
+
+            # Use tqdm to show progress if requested
+            if show_progress:
+                completed_futures = tqdm(
+                    futures, total=len(futures), desc="Retrieving financial metrics", unit="ticker"
+                )
+            else:
+                completed_futures = futures
+
+            for future in completed_futures:
+                try:
+                    ticker, result = future.result()
+                    results[ticker] = result
+                except Exception as e:
+                    # This exception is from the future itself, not the API call
+                    ticker = futures[future]
+                    logger.error(f"Unhandled exception for ticker {ticker}: {e}")
+                    results[ticker] = {"error": str(e)}
+
+        # Write or print the result
+        if output_file:
+            # Ensure the output directory exists
+            os.makedirs(os.path.dirname(os.path.abspath(output_file)), exist_ok=True)
+
+            logger.info(f"Writing financial metrics for {ticker_count} tickers to {output_file}")
+            with open(output_file, "w") as f:
+                if pretty:
+                    json.dump(results, f, indent=2)
+                else:
+                    json.dump(results, f)
+            logger.info(f"Successfully wrote financial metrics to {output_file}")
+        else:
+            # Print to stdout with or without indentation
+            if pretty:
+                print(json.dumps(results, indent=2))
+            else:
+                print(json.dumps(results))
+
+        return 0
+    except Exception as e:
+        logger.error(f"Error retrieving financial metrics for multiple tickers: {e}")
+        return 1
+
+
 def financialdatasets_price_multiple_main(
     tickers: List[str],
     start_date: str,
