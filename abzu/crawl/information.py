@@ -31,6 +31,7 @@ def build_session(
     bypass_cf: bool = False,
 ) -> requests.Session:
     """Create a requests session optionally using Cloudflare bypass and cookies."""
+    session: requests.Session
     if bypass_cf:
         session = cloudscraper.create_scraper(browser={"custom": user_agent})
     else:
@@ -62,11 +63,20 @@ def build_session(
 
 def extract_text_from_url(session: requests.Session, url: str) -> str:
     """Fetch a URL and return extracted article text."""
+    from typing import cast
+
+    from bs4 import Tag
+
     resp = session.get(url, timeout=15)
     resp.raise_for_status()
     soup = BeautifulSoup(resp.content, "html.parser")
     article = soup.find("article")
-    paragraphs = article.find_all("p") if article else soup.find_all("p")
+    # Handle the case where article might be None
+    if article is not None:
+        # Cast to Tag to satisfy type checker
+        paragraphs = cast(Tag, article).find_all("p")
+    else:
+        paragraphs = soup.find_all("p")
     return " ".join(p.get_text(strip=True) for p in paragraphs)
 
 
