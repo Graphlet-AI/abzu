@@ -2,14 +2,16 @@
 
 import click
 
+from abzu.config import config
+
 
 @click.command(name="theinformation")
 @click.option(
     "-o",
     "--output",
     "output_file",
-    default="data/theinformation.jsonl",
-    help="Output JSONL file path (default: data/theinformation.jsonl)",
+    default=config.get("crawl.theinformation.output"),
+    help=f"Output JSONL file path (default: {config.get('crawl.theinformation.output')})",
 )
 @click.option(
     "--cookie",

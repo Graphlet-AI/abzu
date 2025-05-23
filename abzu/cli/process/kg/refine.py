@@ -2,21 +2,23 @@
 
 import click
 
+from abzu.config import config
+
 
 @click.command(context_settings={"show_default": True})
 @click.option(
     "-i",
     "--input",
     "input_dir",
-    default="data/knowledge_graph",
-    help="Input directory with raw knowledge graph (default: data/knowledge_graph)",
+    default=config.get("process.kg.refine.input"),
+    help=f"Input directory with raw knowledge graph (default: {config.get('process.kg.refine.input')})",
 )
 @click.option(
     "-o",
     "--output",
     "output_dir",
-    default="data/refined_knowledge_graph",
-    help="Output directory for refined knowledge graph (default: data/refined_knowledge_graph)",
+    default=config.get("process.kg.refine.output"),
+    help=f"Output directory for refined knowledge graph (default: {config.get('process.kg.refine.output')})",
 )
 @click.option(
     "-p",

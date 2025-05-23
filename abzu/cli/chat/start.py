@@ -7,6 +7,8 @@ from typing import List, Optional
 
 import click
 
+from abzu.config import config
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -43,13 +45,13 @@ logger = logging.getLogger(__name__)
 )
 @click.option(
     "--raw-path",
-    default="data/chat/raw_articles.jsonl",
-    help="Path to store raw articles (default: data/chat/raw_articles.jsonl)",
+    default=config.get("chat.start.raw_articles"),
+    help=f"Path to store raw articles (default: {config.get('chat.start.raw_articles')})",
 )
 @click.option(
     "--processed-path",
-    default="data/chat/processed_articles.jsonl",
-    help="Path to store processed articles (default: data/chat/processed_articles.jsonl)",
+    default=config.get("chat.start.processed_articles"),
+    help=f"Path to store processed articles (default: {config.get('chat.start.processed_articles')})",
 )
 @click.option(
     "-r",
@@ -103,7 +105,7 @@ def start(
         return 1
 
     # Create agent config
-    config = {
+    agent_config = {
         "discord_token": token,
         "command_prefix": prefix,
         "specific_channels": list(channels) if channels else None,
@@ -121,7 +123,7 @@ def start(
     try:
         # Create and start the agent
         loop = asyncio.get_event_loop()
-        agent = loop.run_until_complete(start_agent(config))
+        agent = loop.run_until_complete(start_agent(agent_config))
 
         # Run until interrupted
         logger.info("Chat agent is running. Press Ctrl+C to stop.")

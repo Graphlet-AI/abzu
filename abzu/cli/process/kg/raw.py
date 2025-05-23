@@ -2,21 +2,23 @@
 
 import click
 
+from abzu.config import config
+
 
 @click.command(context_settings={"show_default": True})
 @click.option(
     "-i",
     "--input",
     "input_file",
-    default="data/processed_semianalysis.jsonl,data/processed_theinformation.jsonl",
+    default=config.get("process.kg.raw.input"),
     help="Comma-separated input processed articles JSONL files",
 )
 @click.option(
     "-o",
     "--output",
     "output_dir",
-    default="data/knowledge_graph",
-    help="Output directory for knowledge graph (default: data/knowledge_graph)",
+    default=config.get("process.kg.raw.output"),
+    help=f"Output directory for knowledge graph (default: {config.get('process.kg.raw.output')})",
 )
 @click.option(
     "-p",
