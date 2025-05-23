@@ -7,8 +7,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-from abzu.config import config
-
 # Configure logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -130,8 +128,8 @@ def run_spark_script(
 
 
 def process_raw_kg(
-    input_file: str = config.get("process.kg.raw.input"),
-    output_dir: str = config.get("process.kg.raw.output"),
+    input_file: str = ("data/processed_semianalysis.jsonl,data/processed_theinformation.jsonl"),
+    output_dir: str = "data/knowledge_graph",
     partitions: int = 4,
 ) -> int:
     """Process articles into a raw knowledge graph.
@@ -164,8 +162,8 @@ def process_raw_kg(
 
 
 def process_refine_kg(
-    input_dir: str = config.get("process.kg.refine.input"),
-    output_dir: str = config.get("process.kg.refine.output"),
+    input_dir: str = "data/knowledge_graph",
+    output_dir: str = "data/refined_knowledge_graph",
     partitions: int = 4,
 ) -> int:
     """Refine the knowledge graph by creating bidirectional relationships.

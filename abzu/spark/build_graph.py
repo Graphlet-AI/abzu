@@ -7,8 +7,6 @@ import pyspark.sql.functions as F
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql import types as T
 
-from abzu.config import config
-
 # Configure logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -17,8 +15,8 @@ logger = logging.getLogger(__name__)
 
 
 def build_knowledge_graph(
-    input_path: str = config.get("process.kg.raw.input"),
-    output_path: str = config.get("process.kg.raw.output"),
+    input_path: str = ("data/processed_semianalysis.jsonl,data/processed_theinformation.jsonl"),
+    output_path: str = "data/knowledge_graph",
     partitions: int = 4,
 ) -> None:
     """Build a knowledge graph from pre-processed articles."""
@@ -203,13 +201,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Build knowledge graph from processed articles")
     parser.add_argument(
         "--input",
-        default=config.get("process.kg.raw.input"),
+        default="data/processed_semianalysis.jsonl,data/processed_theinformation.jsonl",
         help="Comma-separated input processed articles JSONL files",
     )
     parser.add_argument(
-        "--output",
-        default=config.get("process.kg.raw.output"),
-        help="Output directory for knowledge graph",
+        "--output", default="data/knowledge_graph", help="Output directory for knowledge graph"
     )
     parser.add_argument(
         "--partitions", type=int, default=4, help="Number of partitions for parallel processing"

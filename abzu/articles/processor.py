@@ -9,7 +9,6 @@ from typing import Any, Dict
 
 from abzu.baml_client.async_client import b as async_b
 from abzu.baml_client.types import IndustryArticle
-from abzu.config import config
 from abzu.utils import load_jsonl, save_jsonl
 
 # Configure logging
@@ -152,8 +151,8 @@ async def process_articles_async(
 
 
 async def async_main(
-    input_file: str = config.get("process.articles.semianalysis.input"),
-    output_file: str = config.get("process.articles.semianalysis.output"),
+    input_file: str = "data/semianalysis.jsonl",
+    output_file: str = "data/processed_semianalysis.jsonl",
     batch_size: int = 5,
 ) -> int:
     """Async main function for article processing.
@@ -188,8 +187,8 @@ async def async_main(
 
 
 def process_main(
-    input_file: str = config.get("process.articles.semianalysis.input"),
-    output_file: str = config.get("process.articles.semianalysis.output"),
+    input_file: str = "data/semianalysis.jsonl",
+    output_file: str = "data/processed_semianalysis.jsonl",
     batch_size: int = 5,
 ) -> int:
     """Process articles main function.
@@ -202,5 +201,4 @@ def process_main(
     Returns:
         0 on success, 1 on failure
     """
-    return asyncio.run(async_main(input_file, output_file, batch_size))
     return asyncio.run(async_main(input_file, output_file, batch_size))
