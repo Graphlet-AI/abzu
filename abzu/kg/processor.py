@@ -128,7 +128,7 @@ def run_spark_script(
 
 
 def process_raw_kg(
-    input_file: str = "data/processed_semianalysis.jsonl",
+    input_file: str = ("data/processed_semianalysis.jsonl,data/processed_theinformation.jsonl"),
     output_dir: str = "data/knowledge_graph",
     partitions: int = 4,
 ) -> int:
@@ -138,7 +138,7 @@ def process_raw_kg(
     which uses PySpark to build a knowledge graph from the processed articles.
 
     Args:
-        input_file: Path to the input JSONL file with processed articles
+        input_file: Comma-separated paths to the input JSONL files with processed articles
         output_dir: Directory to store the knowledge graph
         partitions: Number of Spark partitions to use
 

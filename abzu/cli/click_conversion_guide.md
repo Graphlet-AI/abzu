@@ -7,6 +7,7 @@ This document serves as a guide for converting the existing argparse-based CLI t
 1. **Decorator-based Command Pattern**
    - Use `@click.command()` and `@click.group()` decorators
    - Replace manual subparser creation with nested command groups
+   - All commands should be configured to display the default values of arguments via `command(context_settings={"show_default": True})`
 
 2. **Option and Argument Handling**
    - Replace `add_argument()` with `@click.option()` and `@click.argument()`

@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame, SparkSession
+from pyspark.sql import types as T
 
 # Configure logging
 logging.basicConfig(
@@ -14,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 def build_knowledge_graph(
-    input_path: str = "data/processed_semianalysis.jsonl",
+    input_path: str = ("data/processed_semianalysis.jsonl,data/processed_theinformation.jsonl"),
     output_path: str = "data/knowledge_graph",
     partitions: int = 4,
 ) -> None:
@@ -29,8 +30,13 @@ def build_knowledge_graph(
     )
 
     # Read pre-processed articles
-    logger.info(f"Reading processed articles from {input_path} ...")
-    processed_df: DataFrame = spark.read.json(input_path)
+    if "," in input_path:
+        input_paths = [path.strip() for path in input_path.split(",") if path.strip()]
+    else:
+        input_paths = [input_path]
+
+    logger.info(f"Reading processed articles from {input_paths} ...")
+    processed_df: DataFrame = spark.read.json(input_paths)
     logger.info(f"Loaded {processed_df.count():,} processed articles")
 
     # Show a sample record
@@ -66,7 +72,16 @@ def build_knowledge_graph(
 
     # We need to handle nested structures carefully
     # For deduplication, create name columns
-    products_df = products_df.withColumn("company_name", F.col("company.name"))
+    # Handle schema variations where the company field may be named "company" or
+    # "manufacturer". If neither is present, create a null column so downstream
+    # processing does not fail.
+    if "company" in products_df.columns:
+        products_df = products_df.withColumn("company_name", F.col("company.name"))
+    elif "manufacturer" in products_df.columns:
+        products_df = products_df.withColumn("company_name", F.col("manufacturer.name"))
+    else:
+        products_df = products_df.withColumn("company_name", F.lit(None).cast(T.StringType()))
+
     products_df = products_df.dropDuplicates(["name", "company_name"])
     logger.info(f"Extracted {products_df.count():,} unique products")
 
@@ -93,21 +108,39 @@ def build_knowledge_graph(
     )
 
     # Select all fields from the ticker struct
-    tickers_df = tickers_raw_df.select("ticker.*")
+    ticker_field = tickers_raw_df.schema["ticker"]
+    if isinstance(ticker_field.dataType, T.StructType):
+        tickers_df = tickers_raw_df.select("ticker.*")
+    else:
+        tickers_df = tickers_raw_df.select(
+            F.lit(None).cast(T.StringType()).alias("name"),
+            F.col("ticker").cast(T.StringType()).alias("symbol"),
+            F.lit(None).cast(T.StringType()).alias("exchange"),
+        )
     tickers_df = tickers_df.dropDuplicates(["symbol"])
     logger.info(f"Extracted {tickers_df.count():,} unique ticker symbols")
 
     # Create company relationships
-    # Company-Ticker relationships
     logger.info("Creating company-ticker relationships ...")
-    company_ticker_df = (
-        companies_df.filter("ticker IS NOT NULL")
-        .select(
-            F.col("name").alias("company_name"),
-            F.col("ticker.symbol").alias("ticker_symbol"),
+    company_ticker_schema = companies_df.schema["ticker"]
+    if isinstance(company_ticker_schema.dataType, T.StructType):
+        company_ticker_df = (
+            companies_df.filter(F.col("ticker").isNotNull())
+            .select(
+                F.col("name").alias("company_name"),
+                F.col("ticker.symbol").alias("ticker_symbol"),
+            )
+            .dropDuplicates()
         )
-        .dropDuplicates()
-    )
+    else:
+        company_ticker_df = (
+            companies_df.filter(F.col("ticker").isNotNull())
+            .select(
+                F.col("name").alias("company_name"),
+                F.col("ticker").cast(T.StringType()).alias("ticker_symbol"),
+            )
+            .dropDuplicates()
+        )
 
     # Product-Company relationships
     logger.info("Creating product-company relationships ...")
@@ -168,8 +201,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Build knowledge graph from processed articles")
     parser.add_argument(
         "--input",
-        default="data/processed_semianalysis.jsonl",
-        help="Input processed articles JSONL file",
+        default="data/processed_semianalysis.jsonl,data/processed_theinformation.jsonl",
+        help="Comma-separated input processed articles JSONL files",
     )
     parser.add_argument(
         "--output", default="data/knowledge_graph", help="Output directory for knowledge graph"

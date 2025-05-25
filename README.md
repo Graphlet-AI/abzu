@@ -22,7 +22,7 @@ conda create -n abzu python=3.12 -y
 conda activate abzu
 
 # Virtualenv
-pthon -m venv venv
+python -m venv venv
 source venv/bin/activate
 ```
 
@@ -72,15 +72,24 @@ baml-cli generate
 
 ## Crawl
 
-Crawl SemiAnalysis.com via:
+Crawl SemiAnalysis.com or TheInformation.com:
 
 ```bash
-abzu crawl
+# SemiAnalysis
+abzu crawl semianalysis
+
+# TheInformation (requires login cookies)
+abzu crawl theinformation
 ```
+
+To scrape TheInformation you must be signed into the site in your browser so the
+command can load your session cookies. Alternatively pass `--cookie "name=value;"`
+to the command.
+The crawler fetches from `https://www.theinformation.com/feed` by default.
 
 ## Information Extraction
 
-Run the information extracton via the [VSCode Plugin](https://marketplace.visualstudio.com/items?itemName=Boundary.baml-extension):
+Run the information extraction via the [VSCode Plugin](https://marketplace.visualstudio.com/items?itemName=Boundary.baml-extension):
 
 ```bash
 # Setup Gemini key
@@ -92,16 +101,28 @@ baml-cli generate
 baml-cli test
 
 # To extract BAML types from SemiAnalysis.com articles
-abzu process articles
+abzu process articles semianalysis
+# To extract BAML types from TheInformation.com articles
+abzu process articles theinformation
+# Processed articles are saved in data/processed_theinformation.jsonl
 
 # Extract each vertex / edge into its own Parquet
 abzu process kg raw
+# Uses data/processed_semianalysis.jsonl and data/processed_theinformation.jsonl
 
 # To enrich with FinancialDatasets.ai company facts TODO: make this the default path
 abzu api financialdatasets --file data/knowledge_graph/tickers.parquet
+# Get historical price data for all tickers and show the best performers
+abzu api financialdatasets price -f data/knowledge_graph/tickers.parquet -s 2025-01-01 -e 2025-12-31 -i day -o data/financialdatasets/all_prices.json
+abzu dump returns -f data/financialdatasets/all_prices.json
 
 # Create a combined vertex / edge list
 abzu process kg refine
+abzu dump products -f data/refined_knowledge_graph/products.parquet
+# Products are listed sorted by company name
+
+# Download SEC filings for all tickers
+abzu api sec download
 ```
 
 ## Dataflow + KG Schemas
@@ -119,7 +140,7 @@ abzu process kg refine
 }
 ```
 
-### FinancialDatasets.ai Company FActs
+### FinancialDatasets.ai Company Facts
 
 ```json
 {

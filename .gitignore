@@ -5,3 +5,8 @@ dist
 nohup.out
 .claude/settings.local.json
 .mcp.json
+subs
+data/semianalysis.jsonl
+data/processed_semianalysis.jsonl
+data/theinformation.jsonl
+data/processed_theinformation.json

@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Codex when working with code in this repository.
 
 ## Commands
 
@@ -20,7 +20,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Formatter: black with isort (profile=black)
 - Types: Always use type annotations, warn on any return
 - Imports: Use absolute imports, organize imports to be PEP compliant with isort (profile=black)
-- Error handling: Use mdecific exception types with logging
+- Error handling: Use specific exception types with logging
 - Naming: snake_case for variables/functions, CamelCase for classes
 - BAML: Use for LLM-related code, regenerate client with `baml-cli generate`
 - Whitespaces: leave no trailing whitespaces, use 4 spaces for indentation, leave no whitespace on blank lines
@@ -39,7 +39,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Poetry: Use poetry for dependency management and packaging, configure it in `pyproject.toml`
 - discord.py package - always use selective imports for `discord` - YES `from discord import x` - NO `import discord`
 
-## Claude Logic
+## Codex Logic
 
 - Command Line Interfaces - at the end of your coding tasks, please alter the 'abzu' CLI to accommodate the changes.
 - Separate logic from the CLI - separate the logic under `abzu` and sub-modules from the command line interface (CLI) code in `abzu.cli`. The CLI should only handle input/output from/to the user and should not contain any business logic. For example the module for `abzu process kg` should be in `abzu.kg.*` and not in `abzu.cli.api`. Similarly, the module for `abzu process articles` should be in `abzu.articles.*` and not in `abzu.cli.api`.
@@ -59,11 +59,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - __init__.py - add these files to new module directories without being asked and without my verification.
 - Edit Multiple Files at Once - if you need to edit multiple files for a single TODO operation, do so in a single step. Do not create multiple steps for the same task.
 - `abzu steps` Command - Add new steps in the data pipeline to the `abzu steps` command. This command is used to run the data pipeline in a specific order. The steps should be added in the order they are executed in the pipeline. If you aren't sure about the order, ask me.
-- Git - Keep commit messsages straightforward and to the point - do not put extraneous details, simply summarize the work performed. Do not put anything in commit messages other than a description of the code changes. Do not put "Generated with [Claude Code](https://claude.ai/code)" or anything else relating to Claude or Anthropic.
+- Git - Keep commit messsages straightforward and to the point - do not put extraneous details, simply summarize the work performed. Do not put anything in commit messages other than a description of the code changes. Do not put "Generated with Codex" or anything else relating to Codex or OpenAI.
 - Git Log - use the `git log` command to view the commit history to understand the context or recent changes to the codebase. This will help you understand the project better and make informed decisions when writing code.
 - Do not use 'rm' to remove files - use `git rm` to remove files from the repository. This will ensure that the files are removed from the git history as well.
 
 ## Alerts
 
-- BEEP when you are done with something and prompt me, the user in your UI. I need to hear that you're done because I do more than one thing at once. Use the comand `echo -ne '\007'` to beep.
+- BEEP when you are done with something and prompt me, the user in your UI. I need to hear that you're done because I do more than one thing at once. Use the command `echo -ne '\007'` to beep.
 - Use the applescript-mcp server to send me a message when you are done with something. Say "Done with task X" where X is the task you are done with. Alternatively, use the command `osascript -e 'tell application "System Events" to display dialog "Done with task X"'` to send me a message.
