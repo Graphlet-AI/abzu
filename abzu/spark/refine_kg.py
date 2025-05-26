@@ -165,30 +165,3 @@ def refine_knowledge_graph(
     logger.info("Knowledge graph refinement complete!")
     logger.info(f"- Total entities: {vertices_df.count():,}")
     logger.info(f"- Total relationships: {edge_df.count():,}")
-
-
-if __name__ == "__main__":
-    import argparse
-
-    parser = argparse.ArgumentParser(
-        description="Refine knowledge graph with bidirectional relationships"
-    )
-    parser.add_argument(
-        "--input",
-        default=config.get("process.kg.refine.input"),
-        help="Input directory with raw knowledge graph parquet files",
-    )
-    parser.add_argument(
-        "--output",
-        default=config.get("process.kg.refine.output"),
-        help="Output directory for refined knowledge graph",
-    )
-    parser.add_argument(
-        "--partitions",
-        type=int,
-        default=4,
-        help="Number of partitions for parallel processing",
-    )
-
-    args = parser.parse_args()
-    refine_knowledge_graph(args.input, args.output, args.partitions)

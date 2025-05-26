@@ -12,7 +12,9 @@ from abzu.config import config
     "-f",
     "--file",
     "input_file",
-    help="Path to JSONL or Parquet file with records containing 'ticker', 'symbol', or 'cik' field",
+    type=click.Path(exists=True, file_okay=True, dir_okay=True),
+    flag_value=config.get("api.financialdatasets.facts.input"),
+    help="Path to JSONL or Parquet file with records containing 'ticker', 'symbol', or 'cik' field. Use as flag to use default file from config.",
 )
 @click.option(
     "-k",
@@ -76,6 +78,15 @@ def facts(
     - When using --ticker or --cik (single company): Always outputs to stdout
     - When using --file (multiple companies): Outputs to file specified by --output
     """
+    # Validate mutually exclusive options
+    single_company_opts = [ticker, cik]
+    single_company_count = sum(1 for opt in single_company_opts if opt)
+
+    if input_file and single_company_count > 0:
+        raise click.UsageError(
+            "Cannot use --file with --ticker or --cik. Choose either file processing or single company lookup."
+        )
+
     # Display help if no required parameters are provided
     if not ticker and not cik and not input_file:
         click.echo(ctx.get_help())

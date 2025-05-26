@@ -32,6 +32,8 @@ def build_knowledge_graph(
     )
 
     logger.info(f"Reading processed articles from {input_path} ...")
+    logger.info(f"input_path type: {type(input_path)}")
+    logger.info(f"input_path repr: {repr(input_path)}")
     processed_df: DataFrame = spark.read.json(input_path)
     logger.info(f"Loaded {processed_df.count():,} processed articles")
 
@@ -68,8 +70,8 @@ def build_knowledge_graph(
 
     # We need to handle nested structures carefully
     # For deduplication, create name columns
-    products_df = products_df.withColumn("company_name", F.col("company.name"))
-    products_df = products_df.dropDuplicates(["name", "company_name"])
+    products_df = products_df.withColumn("manufacturer_name", F.col("manufacturer.name"))
+    products_df = products_df.dropDuplicates(["name", "manufacturer_name"])
     logger.info(f"Extracted {products_df.count():,} unique products")
 
     # Extract technologies with company relationships
@@ -133,7 +135,7 @@ def build_knowledge_graph(
     logger.info("Creating product-company relationships ...")
     product_company_df = products_df.select(
         F.col("name").alias("product_name"),
-        F.col("company_name"),
+        F.col("manufacturer_name").alias("company_name"),
     ).dropDuplicates()
 
     # Technology-Company relationships
@@ -180,25 +182,3 @@ def build_knowledge_graph(
     logger.info(f"- Company-Ticker relationships: {company_ticker_df.count():,}")
     logger.info(f"- Product-Company relationships: {product_company_df.count():,}")
     logger.info(f"- Technology-Company relationships: {tech_company_df.count():,}")
-
-
-if __name__ == "__main__":
-    import argparse
-
-    parser = argparse.ArgumentParser(description="Build knowledge graph from processed articles")
-    parser.add_argument(
-        "--input",
-        default=config.get("process.kg.raw.input"),
-        help="Comma-separated input processed articles JSONL files",
-    )
-    parser.add_argument(
-        "--output",
-        default=config.get("process.kg.raw.output"),
-        help="Output directory for knowledge graph",
-    )
-    parser.add_argument(
-        "--partitions", type=int, default=4, help="Number of partitions for parallel processing"
-    )
-
-    args = parser.parse_args()
-    build_knowledge_graph(args.input, args.output, args.partitions)
