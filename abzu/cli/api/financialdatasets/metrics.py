@@ -6,15 +6,18 @@ from typing import List, Optional
 
 import click
 
+from abzu.api.financialdatasets import (
+    financialdatasets_metrics_main,
+    financialdatasets_metrics_multiple_main,
+    read_data_file,
+)
+from abzu.config import config
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
-
-# Default input and output file paths
-DEFAULT_INPUT_PATH = "data/companies.jsonl"
-DEFAULT_OUTPUT_PATH = "data/metrics.json"
 
 
 @click.command(context_settings={"show_default": True})
@@ -22,7 +25,8 @@ DEFAULT_OUTPUT_PATH = "data/metrics.json"
 @click.option(
     "-f",
     "--input-file",
-    help=f"Path to input JSONL or Parquet file with ticker or cik fields (default: {DEFAULT_INPUT_PATH})",
+    default=config.get("api.financialdatasets.metrics.input"),
+    help=f"Path to input JSONL or Parquet file with ticker or cik fields (default: {config.get("api.financialdatasets.metrics.input")})",
 )
 @click.option(
     "-P",
@@ -61,7 +65,7 @@ DEFAULT_OUTPUT_PATH = "data/metrics.json"
     "-o",
     "--output",
     "output_file",
-    help=f"Output file path. If not specified and using input file, defaults to {DEFAULT_OUTPUT_PATH}. Otherwise prints to stdout.",
+    help=f"Output file path. If not specified and using input file, defaults to {config.get('api.financialdatasets.metrics.output')}. Otherwise prints to stdout.",
 )
 @click.option(
     "--no-progress",
@@ -97,12 +101,8 @@ def metrics(
         abzu api financialdatasets metrics -t NVDA -P quarterly -l 5 -p -o data/nvda_metrics.json
         abzu api financialdatasets metrics -f data/knowledge_graph/tickers.parquet -P quarterly -o data/financialdatasets/all_metrics.json
     """.format(
-        DEFAULT_INPUT_PATH, DEFAULT_OUTPUT_PATH
-    )
-    from abzu.api.financialdatasets import (
-        financialdatasets_metrics_main,
-        financialdatasets_metrics_multiple_main,
-        read_data_file,
+        config.get("api.financialdatasets.metrics.input"),
+        config.get("api.financialdatasets.metrics.output"),
     )
 
     # Handle mutually exclusive options
@@ -115,10 +115,11 @@ def metrics(
     # Validate that either ticker or input_file is provided
     if not ticker and not input_file:
         # Use default input file path if neither is specified
-        input_file = DEFAULT_INPUT_PATH
-        logger.info(f"No ticker or input file specified, using default input file: {input_file}")
+        logger.info(
+            f"No ticker or input file specified, using default input file: {config.get("api.financialdatasets.metrics.input")}"
+        )
 
-        if not os.path.exists(input_file):
+        if not os.path.exists(str(input_file)):
             logger.error(f"Default input file does not exist: {input_file}")
             return 1
 
@@ -173,7 +174,7 @@ def metrics(
 
             # Set default output file if not provided when using input file
             if output_file is None:
-                output_file = DEFAULT_OUTPUT_PATH
+                output_file = config.get("api.financialdatasets.metrics.output")
                 logger.info(f"No output file specified, using default: {output_file}")
 
             # Process multiple tickers using the multiple metrics function
@@ -192,4 +193,5 @@ def metrics(
 
         except Exception as e:
             logger.error(f"Error processing input file: {e}")
+            return 1
             return 1

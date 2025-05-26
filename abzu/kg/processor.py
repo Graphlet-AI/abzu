@@ -130,7 +130,7 @@ def run_spark_script(
 
 
 def process_raw_kg(
-    input_file: str = config.get("process.kg.raw.input"),
+    input_file: list[str] = config.get("process.kg.raw.input"),
     output_dir: str = config.get("process.kg.raw.output"),
     partitions: int = 4,
 ) -> int:

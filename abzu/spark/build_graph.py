@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 def build_knowledge_graph(
-    input_path: str = config.get("process.kg.raw.input"),
+    input_path: list[str] = config.get("process.kg.raw.input"),
     output_path: str = config.get("process.kg.raw.output"),
     partitions: int = 4,
 ) -> None:
@@ -31,14 +31,8 @@ def build_knowledge_graph(
         .getOrCreate()
     )
 
-    # Read pre-processed articles
-    if "," in input_path:
-        input_paths = [path.strip() for path in input_path.split(",") if path.strip()]
-    else:
-        input_paths = [input_path]
-
-    logger.info(f"Reading processed articles from {input_paths} ...")
-    processed_df: DataFrame = spark.read.json(input_paths)
+    logger.info(f"Reading processed articles from {input_path} ...")
+    processed_df: DataFrame = spark.read.json(input_path)
     logger.info(f"Loaded {processed_df.count():,} processed articles")
 
     # Show a sample record

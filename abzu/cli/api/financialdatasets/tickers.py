@@ -3,6 +3,7 @@
 import click
 
 from abzu.api.financialdatasets import financialdatasets_tickers_main
+from abzu.config import config
 
 
 @click.command(context_settings={"show_default": True})
@@ -15,8 +16,8 @@ from abzu.api.financialdatasets import financialdatasets_tickers_main
     "-o",
     "--output",
     "output_file",
-    default="data/financialdatasets/tickers.json",
-    help="Output file path (default: data/financialdatasets/tickers.json)",
+    default=config.get("api.financialdatasets.tickers.output"),
+    help=f"Output file path (default: {config.get("api.financialdatasets.tickers.output")})",
 )
 @click.option(
     "-p",
@@ -38,12 +39,12 @@ def tickers(
     pretty,
     max_retries,
 ):
-    """Get all available tickers from Financial Datasets API.
+    f"""Get all available tickers from Financial Datasets API.
 
     Retrieves a list of all available ticker symbols and their associated company information
     from the Financial Datasets API and stores them in a JSON file.
 
-    Output is written to the specified file path (default: data/financialdatasets/tickers.json)
+    Output is written to the specified file path (default: {config.get("api.financialdatasets.tickers.output")}).
     """
     return financialdatasets_tickers_main(
         api_key=api_key,
