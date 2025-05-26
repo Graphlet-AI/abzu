@@ -8,6 +8,8 @@ import sys
 from pathlib import Path
 
 from abzu.config import config
+from abzu.spark.build_graph import build_knowledge_graph
+from abzu.spark.refine_kg import refine_knowledge_graph
 
 # Configure logging
 logging.basicConfig(
@@ -136,31 +138,36 @@ def process_raw_kg(
 ) -> int:
     """Process articles into a raw knowledge graph.
 
-    This function is a wrapper around the abzu/spark/build_graph.py script
-    which uses PySpark to build a knowledge graph from the processed articles.
+    This function calls the build_knowledge_graph function directly.
 
     Args:
-        input_file: Comma-separated paths to the input JSONL files with processed articles
+        input_file: List of paths to the input JSONL files with processed articles
         output_dir: Directory to store the knowledge graph
         partitions: Number of Spark partitions to use
 
     Returns:
         0 on success, 1 on failure
     """
-    # Construct the command to run the build_graph.py script
-    script_path = str(Path(__file__).parents[1] / "spark" / "build_graph.py")
+    # Check if PySpark is installed
+    if not is_pyspark_installed():
+        logger.error("PySpark is not installed. Please install it with poetry:")
+        logger.error("  poetry add pyspark")
+        return 1
 
-    # Build the args list
-    args = [
-        "--input",
-        input_file,
-        "--output",
-        output_dir,
-        "--partitions",
-        str(partitions),
-    ]
+    try:
+        logger.info("Building knowledge graph...")
+        build_knowledge_graph(input_file, output_dir, partitions)
+        logger.info("Knowledge graph build completed successfully")
+        return 0
 
-    return run_spark_script(script_path, args, "Knowledge graph build")
+    except Exception as e:
+        logger.error(f"Knowledge graph build failed: {e}")
+        logger.error("\nTroubleshooting steps:")
+        logger.error("1. Ensure PySpark is installed: poetry add pyspark")
+        logger.error("2. Check if Java is installed: java -version")
+        logger.error("3. Ensure you have at least 4GB of RAM available")
+        logger.error("4. Check for any network issues if using distributed Spark")
+        return 1
 
 
 def process_refine_kg(
@@ -170,9 +177,7 @@ def process_refine_kg(
 ) -> int:
     """Refine the knowledge graph by creating bidirectional relationships.
 
-    This function is a wrapper around the abzu/spark/refine_kg.py script
-    which uses PySpark to refine the knowledge graph by creating bidirectional
-    relationships and a unified edge list.
+    This function calls the refine_knowledge_graph function directly.
 
     Args:
         input_dir: Path to the directory with raw knowledge graph
@@ -182,17 +187,23 @@ def process_refine_kg(
     Returns:
         0 on success, 1 on failure
     """
-    # Construct the path to the refine_kg.py script
-    script_path = str(Path(__file__).parents[1] / "spark" / "refine_kg.py")
+    # Check if PySpark is installed
+    if not is_pyspark_installed():
+        logger.error("PySpark is not installed. Please install it with poetry:")
+        logger.error("  poetry add pyspark")
+        return 1
 
-    # Build the args list
-    args = [
-        "--input",
-        input_dir,
-        "--output",
-        output_dir,
-        "--partitions",
-        str(partitions),
-    ]
+    try:
+        logger.info("Refining knowledge graph...")
+        refine_knowledge_graph(input_dir, output_dir, partitions)
+        logger.info("Knowledge graph refinement completed successfully")
+        return 0
 
-    return run_spark_script(script_path, args, "Knowledge graph refinement")
+    except Exception as e:
+        logger.error(f"Knowledge graph refinement failed: {e}")
+        logger.error("\nTroubleshooting steps:")
+        logger.error("1. Ensure PySpark is installed: poetry add pyspark")
+        logger.error("2. Check if Java is installed: java -version")
+        logger.error("3. Ensure you have at least 4GB of RAM available")
+        logger.error("4. Check for any network issues if using distributed Spark")
+        return 1
