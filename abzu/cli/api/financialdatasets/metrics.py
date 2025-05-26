@@ -24,9 +24,11 @@ logger = logging.getLogger(__name__)
 @click.option("-t", "--ticker", help="Ticker symbol to get financial metrics for (e.g., AAPL)")
 @click.option(
     "-f",
-    "--input-file",
-    default=config.get("api.financialdatasets.metrics.input"),
-    help=f"Path to input JSONL or Parquet file with ticker or cik fields (default: {config.get("api.financialdatasets.metrics.input")})",
+    "--file",
+    "input_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=True),
+    flag_value=config.get("api.financialdatasets.metrics.input"),
+    help="Path to JSONL or Parquet file with records containing 'ticker', 'symbol', or 'cik' field. Use as flag to use default file from config.",
 )
 @click.option(
     "-P",
@@ -107,10 +109,9 @@ def metrics(
 
     # Handle mutually exclusive options
     if ticker and input_file:
-        logger.error(
-            "Cannot use both -t/--ticker and -f/--input-file together. Please use only one."
+        raise click.UsageError(
+            "Cannot use --file with --ticker. Choose either file processing or single ticker lookup."
         )
-        return 1
 
     # Validate that either ticker or input_file is provided
     if not ticker and not input_file:
