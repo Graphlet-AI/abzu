@@ -2,23 +2,21 @@
 
 import click
 
-from abzu.config import config
-
 
 @click.command()
 @click.option(
     "-i",
     "--input",
     "tickers_file",
-    default=config.get("api.sec.download.tickers_file"),
-    help=f"Path to tickers.parquet file (default: {config.get('api.sec.download.tickers_file')})",
+    default="data/refined_knowledge_graph/tickers.parquet",
+    help="Path to tickers.parquet file",
 )
 @click.option(
     "-o",
     "--output",
     "output_dir",
-    default=config.get("api.sec.download.output_dir"),
-    help=f"Directory to store downloaded SEC data (default: {config.get('api.sec.download.output_dir')})",
+    default="data/tickers",
+    help="Directory to store downloaded SEC data",
 )
 @click.option(
     "-f",

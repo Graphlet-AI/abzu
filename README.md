@@ -112,6 +112,9 @@ abzu process kg raw
 
 # To enrich with FinancialDatasets.ai company facts TODO: make this the default path
 abzu api financialdatasets --file data/knowledge_graph/tickers.parquet
+# Get historical price data for all tickers and show the best performers
+abzu api financialdatasets price -f data/knowledge_graph/tickers.parquet -s 2025-01-01 -e 2025-12-31 -i day -o data/financialdatasets/all_prices.json
+abzu dump returns -f data/financialdatasets/all_prices.json
 
 # Get historical price data for tickers
 abzu api financialdatasets price -f -s 2023-01-01 -e 2023-12-31
@@ -120,6 +123,8 @@ abzu api financialdatasets price -t AAPL -s 2023-01-01 -e 2023-12-31
 
 # Create a combined vertex / edge list
 abzu process kg refine
+abzu dump products -f data/refined_knowledge_graph/products.parquet
+# Products are listed sorted by company name
 
 # Download SEC filings for all tickers
 abzu api sec download

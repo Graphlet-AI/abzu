@@ -1,3 +1,4 @@
+import pandas as pd
 import pytest
 from click.testing import CliRunner
 
@@ -13,6 +14,7 @@ TEST_COMMANDS = [
             "  api",
             "  crawl",
             "  process",
+            "  dump",
         ],
     ),
     (
@@ -62,6 +64,20 @@ TEST_COMMANDS = [
             "--filing-index",
         ],
     ),
+    (
+        "dump returns --help",
+        [
+            "Usage: cli dump returns [OPTIONS]",
+            "--file",
+        ],
+    ),
+    (
+        "dump products --help",
+        [
+            "Usage: cli dump products [OPTIONS]",
+            "--file",
+        ],
+    ),
 ]
 
 
@@ -72,3 +88,23 @@ def test_click_cli_help_commands(cmd: str, expected: list[str]) -> None:
     assert result.exit_code == 0, result.output
     for text in expected:
         assert text in result.output
+
+
+def test_dump_products_sorted(tmp_path) -> None:
+    df = pd.DataFrame(
+        [
+            {"company_name": "Beta", "name": "ProdB", "description": "B desc"},
+            {"company_name": "Alpha", "name": "ProdA", "description": "A desc"},
+        ]
+    )
+    file_path = tmp_path / "products.parquet"
+    df.to_parquet(file_path)
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["dump", "products", "-f", str(file_path)])
+
+    assert result.exit_code == 0, result.output
+    lines = [line for line in result.output.strip().split("\n") if line]
+    assert lines[0].startswith("Company")
+    assert "Alpha" in lines[1]
+    assert "Beta" in lines[2]

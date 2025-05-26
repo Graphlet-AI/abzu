@@ -20,7 +20,6 @@ from twisted.internet import asyncioreactor, defer
 asyncioreactor.install()
 from twisted.internet import reactor  # noqa: E402
 
-from abzu.config import config  # noqa: E402
 from abzu.utils import append_jsonl, build_crawled_url_index  # noqa: E402
 
 # Configure logging
@@ -28,6 +27,8 @@ logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
+
+DEFAULT_PATH = "data/semianalysis.jsonl"
 
 
 class ArticleCrawler(scrapy.Spider):
@@ -55,7 +56,7 @@ class ArticleCrawler(scrapy.Spider):
     def __init__(
         self,
         archive_url: str,
-        output_path: str = config.get("crawl.semianalysis.output"),
+        output_path: str = DEFAULT_PATH,
         crawled_urls: Optional[Set[str]] = None,
         *args: Any,
         **kwargs: Any,
@@ -251,7 +252,7 @@ _progress_bar: Optional[tqdm] = None
 # To run batch crawls with async
 def run_batch_crawl(
     urls: List[str],
-    output_path: str = config.get("crawl.semianalysis.output"),
+    output_path: str = DEFAULT_PATH,
     concurrent_requests: int = 1,
     progress_bar: Optional[tqdm] = None,
     crawled_urls: Optional[Set[str]] = None,
@@ -307,7 +308,7 @@ def run_batch_crawl(
 
 def crawl_semianalysis(
     url: Optional[str] = None,
-    output_path: str = config.get("crawl.semianalysis.output"),
+    output_path: str = DEFAULT_PATH,
     pages: int = 24,
     batch_size: int = 1,
     concurrent_requests: int = 1,
