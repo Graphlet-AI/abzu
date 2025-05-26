@@ -6,23 +6,24 @@ from typing import List, Optional
 
 import click
 
+from abzu.config import config
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
-# Default input and output file paths
-DEFAULT_INPUT_PATH = "data/companies.jsonl"
-DEFAULT_OUTPUT_PATH = "data/prices.json"
-
 
 @click.command(context_settings={"show_default": True})
 @click.option("-t", "--ticker", help="Ticker symbol to get price data for (e.g., AAPL)")
 @click.option(
     "-f",
-    "--input-file",
-    help=f"Path to input JSONL or Parquet file with ticker or cik fields (default: {DEFAULT_INPUT_PATH})",
+    "--input",
+    "input_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=True),
+    flag_value=config.get("api.financialdatasets.price.input"),
+    help="Path to JSONL or Parquet file with records containing 'ticker', 'symbol', or 'cik' field. Use as flag to use default file from config.",
 )
 @click.option(
     "-s",
@@ -74,7 +75,7 @@ DEFAULT_OUTPUT_PATH = "data/prices.json"
     "-o",
     "--output",
     "output_file",
-    help=f"Output file path. If not specified and using input file, defaults to {DEFAULT_OUTPUT_PATH}. Otherwise prints to stdout.",
+    help="Output file path. For single ticker: defaults to stdout. For input file: defaults to config value.",
 )
 @click.option(
     "--no-progress",
@@ -99,25 +100,24 @@ def price(
     Retrieves historical stock price data for a ticker symbol or multiple tickers from an input file
     within a date range at the specified time interval.
 
-    Either specify a single ticker with -t/--ticker or provide an input file with -f/--input-file
+    Either specify a single ticker with -t/--ticker or provide an input file with -f/--input
     containing records with 'ticker' or 'symbol' fields.
 
     Required parameters:
-    - Either ticker symbol (-t/--ticker) OR input file (-f/--input-file)
+    - Either ticker symbol (-t/--ticker) OR input file (-f/--input)
     - Start date (-s/--start-date) in YYYY-MM-DD format
     - End date (-e/--end-date) in YYYY-MM-DD format
 
-    Default paths:
-    - Default input file path: {}
-    - Default output file path when using input file: {}
+    Output behavior:
+    - Single ticker mode: outputs to stdout by default (use -o to save to file)
+    - Input file mode: outputs to configured default file (use -o to override)
 
     Examples:
         abzu api financialdatasets price -t AAPL -s 2023-01-01 -e 2023-12-31
         abzu api financialdatasets price -t NVDA -s 2023-01-01 -e 2023-12-31 -i week -p -o data/nvda_prices.json
-        abzu api financialdatasets price -f data/companies.jsonl -s 2023-01-01 -e 2023-12-31
-    """.format(
-        DEFAULT_INPUT_PATH, DEFAULT_OUTPUT_PATH
-    )
+        abzu api financialdatasets price -f data/knowledge_graph/tickers.parquet -s 2023-01-01 -e 2023-12-31
+        abzu api financialdatasets price -f -s 2023-01-01 -e 2023-12-31  # uses default input from config
+    """
     from abzu.api.financialdatasets import (
         financialdatasets_price_main,
         financialdatasets_price_multiple_main,
@@ -126,18 +126,17 @@ def price(
 
     # Handle mutually exclusive options
     if ticker and input_file:
-        logger.error(
-            "Cannot use both -t/--ticker and -f/--input-file together. Please use only one."
+        raise click.UsageError(
+            "Cannot use --input with --ticker. Choose either file processing or single ticker lookup."
         )
-        return 1
 
     # Validate that either ticker or input_file is provided
     if not ticker and not input_file:
         # Use default input file path if neither is specified
-        input_file = DEFAULT_INPUT_PATH
+        input_file = config.get("api.financialdatasets.price.input")
         logger.info(f"No ticker or input file specified, using default input file: {input_file}")
 
-        if not os.path.exists(input_file):
+        if not os.path.exists(str(input_file)):
             logger.error(f"Default input file does not exist: {input_file}")
             return 1
 
@@ -194,7 +193,7 @@ def price(
 
             # Set default output file if not provided when using input file
             if output_file is None:
-                output_file = DEFAULT_OUTPUT_PATH
+                output_file = config.get("api.financialdatasets.price.output")
                 logger.info(f"No output file specified, using default: {output_file}")
 
             return financialdatasets_price_multiple_main(

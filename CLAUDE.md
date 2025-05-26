@@ -38,6 +38,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Git: Use git for version control, commit often with clear messages, use branches for new features/bug fixes. Always test new features in the CLI before you commit them.
 - Poetry: Use poetry for dependency management and packaging, configure it in `pyproject.toml`
 - discord.py package - always use selective imports for `discord` - YES `from discord import x` - NO `import discord`
+- Use `abzu.config.Config` - use the `Config` class from `abzu.config` which has an instance abzu.config.config to access configuration values. Do not hardcode configuration values in the codebase. If you need to add a new configuration value, add it to the `config.yml` file and access it through the `Config` class's instance via `from abzu.config import config` and `config.get(key)`.
+- External strings - we store all strings in `config.yml` and use the abzu.config.config instance to access them. Do not hardcode strings in the codebase. If you need to add a new string, add it to the config.yml file and access it through the Config class's instance via `from abzu.config import config` and `config.get(key)`.
+- Imports - always import up top in PEP8 format. Do not import inside functions or classes. Use absolute imports, not relative imports. Do not use wildcard imports (e.g., `from module import *`). Always import specific classes or functions from modules.
 
 ## Claude Logic
 
@@ -62,6 +65,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Git - Keep commit messsages straightforward and to the point - do not put extraneous details, simply summarize the work performed. Do not put anything in commit messages other than a description of the code changes. Do not put "Generated with [Claude Code](https://claude.ai/code)" or anything else relating to Claude or Anthropic.
 - Git Log - use the `git log` command to view the commit history to understand the context or recent changes to the codebase. This will help you understand the project better and make informed decisions when writing code.
 - Do not use 'rm' to remove files - use `git rm` to remove files from the repository. This will ensure that the files are removed from the git history as well.
+- I repeat, NEVER TALK ABOUT YOURSELF IN COMMIT MESSAGES. Do not put "Generated with [Claude Code](https://claude.ai/code)" or anything else relating to Claude or Anthropic in commit messages. Commit messages should only describe the code changes made, not the tool used to make them.
 
 ## Alerts
 

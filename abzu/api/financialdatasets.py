@@ -560,7 +560,7 @@ def financialdatasets_facts_main(  # noqa: C901
         input_file: Path to a file (JSONL or Parquet) with records containing 'ticker', 'symbol', or 'cik' field
         api_key: API key for Financial Datasets
         pretty: Whether to format JSON output with indentation (only used for stdout output)
-        output_file: File to write results to (only used when processing multiple companies, default: data/financialdatasets.jsonl)
+        output_file: File to write results to (only used when processing multiple companies).
         max_retries: Maximum number of retries for rate-limited requests (429 status code). Defaults to 5.
         pause_seconds: Number of seconds to pause between API requests to prevent rate limiting. Defaults to 0.5.
         show_progress: Whether to display a progress bar when processing multiple companies. Defaults to True.

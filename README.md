@@ -116,6 +116,11 @@ abzu api financialdatasets --file data/knowledge_graph/tickers.parquet
 abzu api financialdatasets price -f data/knowledge_graph/tickers.parquet -s 2025-01-01 -e 2025-12-31 -i day -o data/financialdatasets/all_prices.json
 abzu dump returns -f data/financialdatasets/all_prices.json
 
+# Get historical price data for tickers
+abzu api financialdatasets price -f -s 2023-01-01 -e 2023-12-31
+# Or for a single ticker
+abzu api financialdatasets price -t AAPL -s 2023-01-01 -e 2023-12-31
+
 # Create a combined vertex / edge list
 abzu process kg refine
 abzu dump products -f data/refined_knowledge_graph/products.parquet
@@ -251,4 +256,15 @@ poetry remove <pypi package name>
 ```bash
 # Update libraries to latest and re-read pyproject.toml after edits
 poetry update
+```
+
+## Configuration and External Strings
+
+We store configuration and external strings in the `config.yml` file. These can be loaded via the `abzu.config` module.
+
+```python
+from abzu.config import config
+
+# Access a configuration value
+value = config.get("some_key", "default_value")
 ```

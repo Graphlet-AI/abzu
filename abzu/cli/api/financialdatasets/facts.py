@@ -2,6 +2,8 @@
 
 import click
 
+from abzu.config import config
+
 
 @click.command(context_settings={"show_default": True})
 @click.option("-t", "--ticker", help="Company ticker symbol (e.g., AAPL)")
@@ -10,7 +12,9 @@ import click
     "-f",
     "--file",
     "input_file",
-    help="Path to JSONL or Parquet file with records containing 'ticker', 'symbol', or 'cik' field",
+    type=click.Path(exists=True, file_okay=True, dir_okay=True),
+    flag_value=config.get("api.financialdatasets.facts.input"),
+    help="Path to JSONL or Parquet file with records containing 'ticker', 'symbol', or 'cik' field. Use as flag to use default file from config.",
 )
 @click.option(
     "-k",
@@ -27,8 +31,9 @@ import click
     "-o",
     "--output",
     "output_file",
-    default="data/financialdatasets.jsonl",
-    help="Output file path (only used with --file, default: data/financialdatasets.jsonl). Single company requests with --ticker or --cik always print to stdout.",
+    default=config.get("api.financialdatasets.facts.output"),
+    type=click.Path(exists=False, dir_okay=False),
+    help=f"Output file path (only used with --file, default: {config.get('api.financialdatasets.facts.output')}). Single company requests with --ticker or --cik always print to stdout.",
 )
 @click.option(
     "-r",
@@ -73,6 +78,15 @@ def facts(
     - When using --ticker or --cik (single company): Always outputs to stdout
     - When using --file (multiple companies): Outputs to file specified by --output
     """
+    # Validate mutually exclusive options
+    single_company_opts = [ticker, cik]
+    single_company_count = sum(1 for opt in single_company_opts if opt)
+
+    if input_file and single_company_count > 0:
+        raise click.UsageError(
+            "Cannot use --file with --ticker or --cik. Choose either file processing or single company lookup."
+        )
+
     # Display help if no required parameters are provided
     if not ticker and not cik and not input_file:
         click.echo(ctx.get_help())

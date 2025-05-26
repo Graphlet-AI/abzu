@@ -7,6 +7,8 @@ import pyspark.sql.functions as F
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql import types as T
 
+from abzu.config import config
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -15,8 +17,8 @@ logger = logging.getLogger(__name__)
 
 
 def build_knowledge_graph(
-    input_path: str = ("data/processed_semianalysis.jsonl,data/processed_theinformation.jsonl"),
-    output_path: str = "data/knowledge_graph",
+    input_path: list[str] = config.get("process.kg.raw.input"),
+    output_path: str = config.get("process.kg.raw.output"),
     partitions: int = 4,
 ) -> None:
     """Build a knowledge graph from pre-processed articles."""
@@ -29,14 +31,10 @@ def build_knowledge_graph(
         .getOrCreate()
     )
 
-    # Read pre-processed articles
-    if "," in input_path:
-        input_paths = [path.strip() for path in input_path.split(",") if path.strip()]
-    else:
-        input_paths = [input_path]
-
-    logger.info(f"Reading processed articles from {input_paths} ...")
-    processed_df: DataFrame = spark.read.json(input_paths)
+    logger.info(f"Reading processed articles from {input_path} ...")
+    logger.info(f"input_path type: {type(input_path)}")
+    logger.info(f"input_path repr: {repr(input_path)}")
+    processed_df: DataFrame = spark.read.json(input_path)
     logger.info(f"Loaded {processed_df.count():,} processed articles")
 
     # Show a sample record
@@ -72,17 +70,8 @@ def build_knowledge_graph(
 
     # We need to handle nested structures carefully
     # For deduplication, create name columns
-    # Handle schema variations where the company field may be named "company" or
-    # "manufacturer". If neither is present, create a null column so downstream
-    # processing does not fail.
-    if "company" in products_df.columns:
-        products_df = products_df.withColumn("company_name", F.col("company.name"))
-    elif "manufacturer" in products_df.columns:
-        products_df = products_df.withColumn("company_name", F.col("manufacturer.name"))
-    else:
-        products_df = products_df.withColumn("company_name", F.lit(None).cast(T.StringType()))
-
-    products_df = products_df.dropDuplicates(["name", "company_name"])
+    products_df = products_df.withColumn("manufacturer_name", F.col("manufacturer.name"))
+    products_df = products_df.dropDuplicates(["name", "manufacturer_name"])
     logger.info(f"Extracted {products_df.count():,} unique products")
 
     # Extract technologies with company relationships
@@ -146,7 +135,7 @@ def build_knowledge_graph(
     logger.info("Creating product-company relationships ...")
     product_company_df = products_df.select(
         F.col("name").alias("product_name"),
-        F.col("company_name"),
+        F.col("manufacturer_name").alias("company_name"),
     ).dropDuplicates()
 
     # Technology-Company relationships
@@ -193,23 +182,3 @@ def build_knowledge_graph(
     logger.info(f"- Company-Ticker relationships: {company_ticker_df.count():,}")
     logger.info(f"- Product-Company relationships: {product_company_df.count():,}")
     logger.info(f"- Technology-Company relationships: {tech_company_df.count():,}")
-
-
-if __name__ == "__main__":
-    import argparse
-
-    parser = argparse.ArgumentParser(description="Build knowledge graph from processed articles")
-    parser.add_argument(
-        "--input",
-        default="data/processed_semianalysis.jsonl,data/processed_theinformation.jsonl",
-        help="Comma-separated input processed articles JSONL files",
-    )
-    parser.add_argument(
-        "--output", default="data/knowledge_graph", help="Output directory for knowledge graph"
-    )
-    parser.add_argument(
-        "--partitions", type=int, default=4, help="Number of partitions for parallel processing"
-    )
-
-    args = parser.parse_args()
-    build_knowledge_graph(args.input, args.output, args.partitions)

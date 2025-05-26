@@ -28,13 +28,13 @@ def get_pipeline_steps() -> List[str]:
         # Build a separate node / edge list parquet file for each type of node / edge
         "abzu process kg raw",
         # Get financial data for companies extracted from knowledge graph
-        "abzu api financialdatasets facts --file data/knowledge_graph/tickers.parquet",
+        "abzu api financialdatasets facts --file",
         # Get financial metrics for key companies
-        "abzu api financialdatasets metrics -t NVDA -t AMD -t INTC -P annual -l 5",
+        "abzu api financialdatasets metrics --file -P annual -l 5",
         # Get historical price data for all tickers extracted from the knowledge graph
-        "abzu api financialdatasets price -f data/knowledge_graph/tickers.parquet -s 2025-01-01 -e 2025-12-31 -i day -o data/financialdatasets/all_prices.json",
+        "abzu api financialdatasets price --file -s 2025-01-01 -e <today> -i day",
         # Summarize best performing stocks
-        "abzu dump returns -f data/financialdatasets/all_prices.json",
+        "abzu dump returns -f data/financialdatasets/price.json",
         # Download SEC filings for companies
         "abzu api sec download",
         # Build a single node / edge list in GraphFrames format
