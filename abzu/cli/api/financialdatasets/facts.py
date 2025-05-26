@@ -2,6 +2,8 @@
 
 import click
 
+from abzu.config import config
+
 
 @click.command(context_settings={"show_default": True})
 @click.option("-t", "--ticker", help="Company ticker symbol (e.g., AAPL)")
@@ -27,8 +29,9 @@ import click
     "-o",
     "--output",
     "output_file",
-    default="data/financialdatasets.jsonl",
-    help="Output file path (only used with --file, default: data/financialdatasets.jsonl). Single company requests with --ticker or --cik always print to stdout.",
+    default=config.get("api.financialdatasets.facts.output"),
+    type=click.Path(exists=False, dir_okay=False),
+    help=f"Output file path (only used with --file, default: {config.get('api.financialdatasets.facts.output')}). Single company requests with --ticker or --cik always print to stdout.",
 )
 @click.option(
     "-r",

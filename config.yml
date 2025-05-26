@@ -34,6 +34,11 @@ chat:
     processed_articles: "${base_dir}/chat/processed_articles.jsonl"
 
 api:
+  financialdatasets:
+    facts:
+      input: "${base_dir}/knowledge_graph/c.jsonl"
+      output: "${base_dir}/financialdatasets/facts.jsonl"
+
   sec:
     download:
       tickers_file: "${base_dir}/knowledge_graph/tickers.parquet"
