@@ -38,6 +38,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Git: Use git for version control, commit often with clear messages, use branches for new features/bug fixes. Always test new features in the CLI before you commit them.
 - Poetry: Use poetry for dependency management and packaging, configure it in `pyproject.toml`
 - discord.py package - always use selective imports for `discord` - YES `from discord import x` - NO `import discord`
+- External strings - we store all strings in config.yml and use the abzu.config.Config class to access them. Do not hardcode strings in the codebase. If you need to add a new string, add it to the config.yml file and access it through the Config class's instance via `from abzu.config import config`.
 
 ## Claude Logic
 
