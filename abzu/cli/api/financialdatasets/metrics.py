@@ -195,4 +195,3 @@ def metrics(
         except Exception as e:
             logger.error(f"Error processing input file: {e}")
             return 1
-            return 1
