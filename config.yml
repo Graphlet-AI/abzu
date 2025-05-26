@@ -36,8 +36,16 @@ chat:
 api:
   financialdatasets:
     facts:
-      input: "${base_dir}/knowledge_graph/c.jsonl"
-      output: "${base_dir}/financialdatasets/facts.jsonl"
+      input: "${base_dir}/knowledge_graph/tickers.parquet"
+      output: "${base_dir}/financialdatasets/facts.json"
+    metrics:
+      input: "${base_dir}/knowledge_graph/tickers.parquet"
+      output: "${base_dir}/financialdatasets/metrics.json"
+    price:
+      input: "${base_dir}/knowledge_graph/tickers.parquet"
+      output: "${base_dir}/financialdatasets/price.json"
+    tickers:
+      output: "${base_dir}/financialdatasets/tickers.json"
 
   sec:
     download:
