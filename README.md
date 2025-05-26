@@ -257,3 +257,14 @@ poetry remove <pypi package name>
 # Update libraries to latest and re-read pyproject.toml after edits
 poetry update
 ```
+
+## Configuration and External Strings
+
+We store configuration and external strings in the `config.yml` file. These can be loaded via the `abzu.config` module.
+
+```python
+from abzu.config import config
+
+# Access a configuration value
+value = config.get("some_key", "default_value")
+```
