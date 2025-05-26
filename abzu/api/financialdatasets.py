@@ -28,7 +28,7 @@ class FinancialDatasetsAPI:
     BASE_URL = "https://api.financialdatasets.ai"
 
     def __init__(
-        self, api_key: Optional[str] = None, max_retries: int = 5, pause_seconds: float = 0.5
+        self, api_key: Optional[str] = None, max_retries: int = 5, pause_seconds: float = 0.6
     ):
         """Initialize the API client with retry capabilities.
 
