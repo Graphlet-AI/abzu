@@ -82,6 +82,7 @@ abzu crawl semianalysis
 abzu crawl theinformation
 # Generic RSS feeds from feeds.txt
 abzu crawl rss -f feeds.txt
+# Outputs to the directory configured in `crawl.rss.output_dir`
 ```
 
 To scrape TheInformation you must be signed into the site in your browser so the
