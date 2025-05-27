@@ -107,6 +107,8 @@ baml-cli test
 abzu process articles semianalysis
 # To extract BAML types from TheInformation.com articles
 abzu process articles theinformation
+# To process articles downloaded via feeds.txt
+abzu process rss -f feeds.txt
 # Processed articles are saved in data/processed_theinformation.jsonl
 
 # Extract each vertex / edge into its own Parquet
