@@ -20,7 +20,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Formatter: black with isort (profile=black)
 - Types: Always use type annotations, warn on any return
 - Imports: Use absolute imports, organize imports to be PEP compliant with isort (profile=black)
-- Error handling: Use mdecific exception types with logging
+- Error handling: Use specific exception types with logging
 - Naming: snake_case for variables/functions, CamelCase for classes
 - BAML: Use for LLM-related code, regenerate client with `baml-cli generate`
 - Whitespaces: leave no trailing whitespaces, use 4 spaces for indentation, leave no whitespace on blank lines

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import datetime
-import json
 import logging
 from typing import Optional
 
@@ -12,6 +11,8 @@ import cloudscraper
 import feedparser
 import requests
 from bs4 import BeautifulSoup
+
+from abzu.utils import append_jsonl, build_crawled_url_index
 
 logger = logging.getLogger(__name__)
 
@@ -82,6 +83,10 @@ def extract_text_from_url(session: requests.Session, url: str) -> str:
 
 def parse_rss_and_save(rss_url: str, output_file: str, session: requests.Session) -> None:
     """Parse an RSS feed and write entries with full text to JSONL."""
+    # Build index of already crawled URLs
+    crawled_urls = build_crawled_url_index(output_file)
+    logger.info(f"Found {len(crawled_urls)} previously crawled URLs")
+
     try:
         resp = session.get(rss_url, timeout=15)
         resp.raise_for_status()
@@ -101,37 +106,54 @@ def parse_rss_and_save(rss_url: str, output_file: str, session: requests.Session
         return
 
     count = 0
-    with open(output_file, "w", encoding="utf-8") as f:
-        for entry in entries:
-            title = entry.get("title", "")
-            link = entry.get("link", "")
-            published = entry.get("published", entry.get("updated", ""))
+    skipped = 0
+    backup_created = False
 
-            if getattr(entry, "content", None):
-                feed_content = entry.content[0].value
-            else:
-                feed_content = entry.get("summary", "")
+    for entry in entries:
+        title = entry.get("title", "")
+        link = entry.get("link", "")
+        published = entry.get("published", entry.get("updated", ""))
 
-            try:
-                content = extract_text_from_url(session, link)
-            except Exception as e:  # noqa: BLE001
-                logger.warning("Failed full extract from %s: %s", link, e)
-                content = ""
+        # Skip if URL already crawled
+        if link in crawled_urls:
+            skipped += 1
+            logger.info(f"Skipping already crawled URL: {link}")
+            continue
 
-            collected_at = datetime.datetime.utcnow().isoformat() + "Z"
+        if getattr(entry, "content", None):
+            feed_content = entry.content[0].value
+        else:
+            feed_content = entry.get("summary", "")
 
-            record = {
-                "title": title,
-                "url": link,
-                "posted_at": published,
-                "feed_content": feed_content,
-                "content": content,
-                "collected_at": collected_at,
-            }
-            f.write(json.dumps(record, ensure_ascii=False) + "\n")
+        try:
+            content = extract_text_from_url(session, link)
+        except Exception as e:  # noqa: BLE001
+            logger.warning("Failed full extract from %s: %s", link, e)
+            content = ""
+
+        collected_at = datetime.datetime.utcnow().isoformat() + "Z"
+
+        record = {
+            "title": title,
+            "url": link,
+            "posted_at": published,
+            "feed_content": feed_content,
+            "content": content,
+            "collected_at": collected_at,
+        }
+
+        # Use append_jsonl which handles deduplication and backup
+        # Only create backup on first append
+        if append_jsonl(record, output_file, create_backup=not backup_created):
             count += 1
+            if not backup_created:
+                backup_created = True
+        else:
+            logger.error(f"Failed to save article: {link}")
 
-    logger.info("Wrote %s entries to %s", count, output_file)
+    logger.info(
+        "Processed %s new entries, skipped %s duplicates, saved to %s", count, skipped, output_file
+    )
 
 
 def crawl_theinformation(

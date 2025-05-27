@@ -1,19 +1,20 @@
 import json
 import logging
-from typing import Any, Dict, List
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
-def load_price_data(file_path: str) -> Dict[str, Any]:
+def load_price_data(file_path: str) -> dict[str, Any]:
     """Load price data from a JSON file."""
     with open(file_path, "r", encoding="utf-8") as f:
-        return json.load(f)
+        data: dict[str, Any] = json.load(f)
+        return data
 
 
-def compute_returns(data: Dict[str, Any]) -> List[Dict[str, float]]:
+def compute_returns(data: dict[str, Any]) -> list[dict[str, Any]]:
     """Compute start and end prices along with percentage return."""
-    results: List[Dict[str, float]] = []
+    results: list[dict[str, Any]] = []
     for symbol, record in data.items():
         if not isinstance(record, dict):
             continue
