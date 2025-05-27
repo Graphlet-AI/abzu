@@ -20,6 +20,7 @@ from twisted.internet import asyncioreactor, defer
 asyncioreactor.install()
 from twisted.internet import reactor  # noqa: E402
 
+from abzu.config import config  # noqa: E402
 from abzu.utils import append_jsonl, build_crawled_url_index  # noqa: E402
 
 # Configure logging
@@ -27,8 +28,6 @@ logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
-
-DEFAULT_PATH = "data/semianalysis.jsonl"
 
 
 class ArticleCrawler(scrapy.Spider):
@@ -47,7 +46,7 @@ class ArticleCrawler(scrapy.Spider):
         "AUTOTHROTTLE_START_DELAY": 0.5,
         "AUTOTHROTTLE_MAX_DELAY": 5.0,
         "DOWNLOAD_TIMEOUT": 10,
-        "DOWNLOAD_DELAY": 0.5,  # Enforce a minimum delay of 0.5 seconds between requests
+        "DOWNLOAD_DELAY": 0.7,  # Enforce a minimum delay of 0.7 seconds between requests
         "RANDOMIZE_DOWNLOAD_DELAY": False,  # Don't randomize the delay
         "CONCURRENT_REQUESTS": 1,  # Only one request at a time
         "CONCURRENT_REQUESTS_PER_DOMAIN": 1,  # Only one request per domain at a time
@@ -56,7 +55,7 @@ class ArticleCrawler(scrapy.Spider):
     def __init__(
         self,
         archive_url: str,
-        output_path: str = DEFAULT_PATH,
+        output_path: str = config.get("crawl.semianalysis.output"),
         crawled_urls: Optional[set[str]] = None,
         *args: Any,
         **kwargs: Any,
@@ -252,7 +251,7 @@ _progress_bar: Optional[tqdm] = None
 # To run batch crawls with async
 def run_batch_crawl(
     urls: list[str],
-    output_path: str = DEFAULT_PATH,
+    output_path: str = config.get("crawl.semianalysis.output"),
     concurrent_requests: int = 1,
     progress_bar: Optional[tqdm] = None,
     crawled_urls: Optional[set[str]] = None,
@@ -279,7 +278,7 @@ def run_batch_crawl(
     # Configure concurrency for the spider
     settings.set("CONCURRENT_REQUESTS", concurrent_requests)
     settings.set("CONCURRENT_REQUESTS_PER_DOMAIN", concurrent_requests)
-    settings.set("DOWNLOAD_DELAY", 0.5)  # Minimum delay between requests
+    settings.set("DOWNLOAD_DELAY", 0.7)  # Minimum delay between requests
     settings.set("LOG_LEVEL", "INFO")
 
     # Make sure we're using the AsyncIO reactor that we installed
@@ -300,7 +299,7 @@ def run_batch_crawl(
             if _progress_bar:
                 _progress_bar.update(1)
             # Add a small delay between spiders to ensure complete separation
-            time.sleep(0.5)
+            time.sleep(0.7)
 
     # Return a deferred that fires when all URLs are processed sequentially
     return process_sequentially(urls)
@@ -308,7 +307,7 @@ def run_batch_crawl(
 
 def crawl_semianalysis(
     url: Optional[str] = None,
-    output_path: str = DEFAULT_PATH,
+    output_path: str = config.get("crawl.semianalysis.output"),
     pages: int = 24,
     batch_size: int = 1,
     concurrent_requests: int = 1,
