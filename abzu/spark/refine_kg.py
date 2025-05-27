@@ -8,6 +8,7 @@ import pyspark.sql.functions as F
 from pyspark.sql import DataFrame, SparkSession
 
 from abzu.config import config
+from abzu.spark.config import get_spark_session
 
 # Configure logging
 logging.basicConfig(
@@ -20,6 +21,7 @@ def refine_knowledge_graph(
     input_path: str = config.get("process.kg.refine.input"),
     output_path: str = config.get("process.kg.refine.output"),
     partitions: int = 4,
+    local_mode: bool = None,
 ) -> None:
     """
     Refine the knowledge graph by creating bidirectional relationships and a unified edge list.
@@ -28,15 +30,12 @@ def refine_knowledge_graph(
         input_path: Path to the raw knowledge graph parquet files
         output_path: Path to save the refined knowledge graph
         partitions: Number of Spark partitions to use
+        local_mode: Whether to run in local mode. If None, will be determined by environment
     """
-    # Create SparkSession
-    spark: SparkSession = (
-        SparkSession.builder.appName("refine_knowledge_graph")
-        .config("spark.sql.caseSensitive", True)
-        .config("spark.sql.execution.arrow.pyspark.enabled", "true")
-        .config("spark.driver.memory", "4g")
-        .config("spark.executor.memory", "2g")
-        .getOrCreate()
+    # Create SparkSession with appropriate configuration
+    spark: SparkSession = get_spark_session(
+        app_name="refine_knowledge_graph",
+        local_mode=local_mode,
     )
 
     spark.sparkContext.setCheckpointDir("/tmp/graphframes-checkpoints")

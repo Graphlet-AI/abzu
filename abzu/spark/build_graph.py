@@ -8,6 +8,7 @@ from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql import types as T
 
 from abzu.config import config
+from abzu.spark.config import get_spark_session
 
 # Configure logging
 logging.basicConfig(
@@ -20,15 +21,21 @@ def build_knowledge_graph(
     input_path: list[str] = config.get("process.kg.raw.input"),
     output_path: str = config.get("process.kg.raw.output"),
     partitions: int = 4,
+    local_mode: bool = None,
 ) -> None:
-    """Build a knowledge graph from pre-processed articles."""
-    # Create SparkSession
-    spark: SparkSession = (
-        SparkSession.builder.appName("build_graph")
-        .config("spark.sql.execution.arrow.pyspark.enabled", "true")
-        .config("spark.driver.memory", "4g")
-        .config("spark.executor.memory", "2g")
-        .getOrCreate()
+    """
+    Build a knowledge graph from pre-processed articles.
+    
+    Args:
+        input_path: Path(s) to the input JSON files
+        output_path: Path to save the output parquet files
+        partitions: Number of partitions to use for data processing
+        local_mode: Whether to run in local mode. If None, will be determined by environment
+    """
+    # Create SparkSession with appropriate configuration
+    spark: SparkSession = get_spark_session(
+        app_name="build_graph",
+        local_mode=local_mode,
     )
 
     logger.info(f"Reading processed articles from {input_path} ...")

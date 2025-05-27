@@ -1,0 +1,106 @@
+version: '3'
+
+vars:
+  DOCKER_COMPOSE: docker-compose-wrapper
+
+tasks:
+  setup:
+    desc: Build the Docker container
+    cmds:
+      - '{{.DOCKER_COMPOSE}} build'
+
+  up:
+    desc: Start the development container in the background
+    cmds:
+      - '{{.DOCKER_COMPOSE}} up -d'
+      - task: status
+      - |
+        echo "🚀 Services are running! Here's where to find everything:"
+        echo "📊 Spark UI:"
+        echo "   • Master UI: http://localhost:18080"
+        echo "   • Worker UI: http://localhost:18081"
+        echo "📝 Jupyter Notebook:"
+        echo "   • http://localhost:8888"
+        echo "📁 Data Directory:"
+        echo "   • Local: ./data"
+        echo "   • Container: /app/data"
+        echo "🔧 Development:"
+        echo "   • Shell: task shell"
+        echo "   • Status: task status"
+        echo "   • Stop: task down"
+        echo "📚 Documentation:"
+        echo "   • Command Flows: ./COMMANDS.md"
+        echo "   • README: ./README.md"
+
+  status:
+    desc: Check the status of running services
+    cmds:
+      - '{{.DOCKER_COMPOSE}} ps'
+
+  down:
+    desc: Stop the development container
+    cmds:
+      - '{{.DOCKER_COMPOSE}} down'
+
+  shell:
+    desc: Open a shell in the running container
+    cmds:
+      - '{{.DOCKER_COMPOSE}} exec abzu bash'
+
+  crawl:
+    desc: Run the crawler for a specific source
+    cmds:
+      - '{{.DOCKER_COMPOSE}} run --rm abzu poetry run abzu crawl {{.CLI_ARGS}}'
+    requires:
+      vars: [CLI_ARGS]
+
+  process:
+    desc: Process articles from a specific source
+    cmds:
+      - '{{.DOCKER_COMPOSE}} run --rm abzu poetry run abzu process articles {{.CLI_ARGS}}'
+    requires:
+      vars: [CLI_ARGS]
+
+  kg:
+    desc: Process knowledge graph data
+    cmds:
+      - '{{.DOCKER_COMPOSE}} run --rm abzu poetry run abzu process kg {{.CLI_ARGS}}'
+    requires:
+      vars: [CLI_ARGS]
+
+  api:
+    desc: Run API commands
+    cmds:
+      - '{{.DOCKER_COMPOSE}} run --rm abzu poetry run abzu api {{.CLI_ARGS}}'
+    requires:
+      vars: [CLI_ARGS]
+
+  test:
+    desc: Run tests
+    cmds:
+      - '{{.DOCKER_COMPOSE}} run --rm abzu poetry run pytest {{.CLI_ARGS}}'
+    requires:
+      vars: [CLI_ARGS]
+
+  lint:
+    desc: Run linting checks
+    cmds:
+      - '{{.DOCKER_COMPOSE}} run --rm abzu poetry run flake8 abzu tests'
+      - '{{.DOCKER_COMPOSE}} run --rm abzu poetry run mypy abzu tests'
+
+  format:
+    desc: Format code
+    cmds:
+      - '{{.DOCKER_COMPOSE}} run --rm abzu poetry run black abzu tests'
+      - '{{.DOCKER_COMPOSE}} run --rm abzu poetry run isort abzu tests'
+
+  clean:
+    desc: Clean up Docker resources
+    cmds:
+      - '{{.DOCKER_COMPOSE}} down -v'
+      - docker system prune -f
+
+  help:
+    desc: Show available tasks
+    cmds:
+      - task --list 
