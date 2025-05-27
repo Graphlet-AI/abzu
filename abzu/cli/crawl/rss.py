@@ -2,15 +2,22 @@
 
 import click
 
+from abzu.config import config
+
 
 @click.command(name="rss", context_settings={"show_default": True})
 @click.option(
     "-f",
     "--feeds-file",
-    default="feeds.txt",
+    default=config.get("crawl.rss.feeds_file"),
     help="File containing RSS feeds in source:url format",
 )
-@click.option("-o", "--output-dir", default="data", help="Directory to write JSONL files")
+@click.option(
+    "-o",
+    "--output-dir",
+    default=config.get("crawl.rss.output_dir"),
+    help="Directory to write JSONL files",
+)
 @click.option("--cookie", help="Raw Cookie header string; defaults to browser cookies")
 @click.option(
     "--user-agent",

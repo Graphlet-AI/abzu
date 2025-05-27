@@ -6,6 +6,7 @@ import logging
 from pathlib import Path
 from typing import Optional
 
+from abzu.config import config
 from abzu.crawl.information import (
     DEFAULT_USER_AGENT,
     build_session,
@@ -16,8 +17,8 @@ logger = logging.getLogger(__name__)
 
 
 def crawl_rss(
-    feeds_file: str = "feeds.txt",
-    output_dir: str = "data",
+    feeds_file: str = config.get("crawl.rss.feeds_file"),
+    output_dir: str = config.get("crawl.rss.output_dir"),
     cookie: Optional[str] = None,
     user_agent: str = DEFAULT_USER_AGENT,
     bypass_cf: bool = False,

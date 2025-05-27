@@ -7,6 +7,10 @@ crawl:
   theinformation:
     output: "${base_dir}/theinformation.jsonl"
 
+  rss:
+    feeds_file: "feeds.txt"
+    output_dir: "${base_dir}/rss"
+
 process:
   articles:
     semianalysis:
