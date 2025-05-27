@@ -21,6 +21,11 @@ process:
       input: "${base_dir}/theinformation.jsonl"
       output: "${base_dir}/processed_theinformation.jsonl"
 
+  rss:
+    feeds_file: "${crawl.rss.feeds_file}"
+    input_dir: "${crawl.rss.output_dir}"
+    output_dir: "${base_dir}/rss/processed"
+
   kg:
     raw:
       input:

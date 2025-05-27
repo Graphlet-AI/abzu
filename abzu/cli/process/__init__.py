@@ -4,6 +4,7 @@ import click
 
 from abzu.cli.process.articles import articles
 from abzu.cli.process.kg import kg
+from abzu.cli.process.rss import rss
 
 
 @click.group()
@@ -14,3 +15,4 @@ def process():
 
 process.add_command(articles)
 process.add_command(kg)
+process.add_command(rss)

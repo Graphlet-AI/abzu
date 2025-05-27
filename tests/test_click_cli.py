@@ -32,6 +32,7 @@ TEST_COMMANDS = [
             "Commands:",
             "  articles",
             "  kg",
+            "  rss",
         ],
     ),
     (
@@ -41,6 +42,16 @@ TEST_COMMANDS = [
             "Commands:",
             "  semianalysis",
             "  theinformation",
+        ],
+    ),
+    (
+        "process rss --help",
+        [
+            "Usage: cli process rss [OPTIONS]",
+            "--feeds-file",
+            "--input-dir",
+            "--output-dir",
+            "--batch-size",
         ],
     ),
     (
