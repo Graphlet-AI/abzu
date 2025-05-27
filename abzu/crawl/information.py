@@ -5,6 +5,7 @@ from __future__ import annotations
 import datetime
 import json
 import logging
+import os
 from typing import Optional
 
 import browsercookie
@@ -101,6 +102,11 @@ def parse_rss_and_save(rss_url: str, output_file: str, session: requests.Session
         return
 
     count = 0
+    # Create directory if it doesn't exist
+    output_dir = os.path.dirname(output_file)
+    if output_dir and not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
     with open(output_file, "w", encoding="utf-8") as f:
         for entry in entries:
             title = entry.get("title", "")
