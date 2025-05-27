@@ -5,7 +5,7 @@ import logging
 import os
 import shutil
 from pathlib import Path
-from typing import Any, Dict, List, Set, Union
+from typing import Any, Union
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ def backup_file(file_path: Union[str, Path]) -> bool:
 
 
 def save_jsonl(
-    data: List[Dict[str, Any]], file_path: Union[str, Path], create_backup: bool = True
+    data: list[dict[str, Any]], file_path: Union[str, Path], create_backup: bool = True
 ) -> bool:
     """
     Save data to a JSONL file with backup option.
@@ -68,7 +68,7 @@ def save_jsonl(
 
 
 def append_jsonl(
-    data: Dict[str, Any], file_path: Union[str, Path], create_backup: bool = True
+    data: dict[str, Any], file_path: Union[str, Path], create_backup: bool = True
 ) -> bool:
     """
     Append a record to a JSONL file with backup option.
@@ -123,7 +123,7 @@ def append_jsonl(
         return False
 
 
-def load_jsonl(file_path: Union[str, Path]) -> List[Dict[str, Any]]:
+def load_jsonl(file_path: Union[str, Path]) -> list[dict[str, Any]]:
     """
     Load data from a JSONL file.
 
@@ -154,7 +154,7 @@ def load_jsonl(file_path: Union[str, Path]) -> List[Dict[str, Any]]:
     return data
 
 
-def build_crawled_url_index(file_path: Union[str, Path]) -> Set[str]:
+def build_crawled_url_index(file_path: Union[str, Path]) -> set[str]:
     """
     Read a JSONL file and build an index of already crawled URLs.
 
@@ -165,7 +165,7 @@ def build_crawled_url_index(file_path: Union[str, Path]) -> Set[str]:
         Set of URLs that have already been crawled
     """
     path = Path(file_path)
-    crawled_urls: Set[str] = set()
+    crawled_urls: set[str] = set()
 
     if not path.exists():
         logger.info(f"No existing articles file found at {path}, starting fresh")
@@ -194,7 +194,7 @@ def build_crawled_url_index(file_path: Union[str, Path]) -> Set[str]:
     return crawled_urls
 
 
-def deduplicate_articles(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def deduplicate_articles(data: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """
     Deduplicate articles based on URL.
 
@@ -208,7 +208,7 @@ def deduplicate_articles(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         return []
 
     # Use a dictionary to keep only the latest version of each article by URL
-    unique_articles: Dict[str, Dict[str, Any]] = {}
+    unique_articles: dict[str, dict[str, Any]] = {}
 
     for article in data:
         if "url" in article:

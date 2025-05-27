@@ -5,7 +5,7 @@ import os
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Iterator, List, Optional, Set, cast
+from typing import Any, Iterator, Optional, cast
 
 import dateutil.parser
 import scrapy
@@ -57,7 +57,7 @@ class ArticleCrawler(scrapy.Spider):
         self,
         archive_url: str,
         output_path: str = DEFAULT_PATH,
-        crawled_urls: Optional[Set[str]] = None,
+        crawled_urls: Optional[set[str]] = None,
         *args: Any,
         **kwargs: Any,
     ) -> None:
@@ -251,11 +251,11 @@ _progress_bar: Optional[tqdm] = None
 
 # To run batch crawls with async
 def run_batch_crawl(
-    urls: List[str],
+    urls: list[str],
     output_path: str = DEFAULT_PATH,
     concurrent_requests: int = 1,
     progress_bar: Optional[tqdm] = None,
-    crawled_urls: Optional[Set[str]] = None,
+    crawled_urls: Optional[set[str]] = None,
 ):
     """Run crawlers sequentially with configurable concurrency.
 

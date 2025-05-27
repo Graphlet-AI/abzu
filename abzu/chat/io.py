@@ -5,7 +5,7 @@ import logging
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from abzu.baml_client.types import IndustryArticle
 
@@ -43,7 +43,7 @@ class ArticleStorage:
         for path in [self.raw_articles_path, self.processed_articles_path]:
             os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
 
-    def save_raw_article(self, article: Dict[str, Any]) -> bool:
+    def save_raw_article(self, article: dict[str, Any]) -> bool:
         """Save a raw article to the storage.
 
         Args:
@@ -117,7 +117,7 @@ class ArticleStorage:
             except Exception as e:
                 logger.error(f"Failed to create backup of {file_path}: {e}")
 
-    def load_raw_articles(self, limit: Optional[int] = None) -> List[Dict[str, Any]]:
+    def load_raw_articles(self, limit: Optional[int] = None) -> list[dict[str, Any]]:
         """Load raw articles from storage.
 
         Args:
@@ -128,7 +128,7 @@ class ArticleStorage:
         """
         return self._load_jsonl(self.raw_articles_path, limit)
 
-    def load_processed_articles(self, limit: Optional[int] = None) -> List[Dict[str, Any]]:
+    def load_processed_articles(self, limit: Optional[int] = None) -> list[dict[str, Any]]:
         """Load processed articles from storage.
 
         Args:
@@ -139,7 +139,7 @@ class ArticleStorage:
         """
         return self._load_jsonl(self.processed_articles_path, limit)
 
-    def _load_jsonl(self, file_path: str, limit: Optional[int] = None) -> List[Dict[str, Any]]:
+    def _load_jsonl(self, file_path: str, limit: Optional[int] = None) -> list[dict[str, Any]]:
         """Load JSON Lines file.
 
         Args:

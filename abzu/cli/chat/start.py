@@ -3,7 +3,7 @@
 import asyncio
 import logging
 import os
-from typing import List, Optional
+from typing import Optional
 
 import click
 
@@ -78,8 +78,8 @@ logger = logging.getLogger(__name__)
 def start(
     token: Optional[str],
     prefix: str,
-    channels: List[int],
-    ignore_domains: List[str],
+    channels: list[int],
+    ignore_domains: list[str],
     raw_path: str,
     processed_path: str,
     retries: int,

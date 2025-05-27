@@ -2,7 +2,7 @@
 
 import logging
 import os
-from typing import Any, Dict, Tuple, Union
+from typing import Any, Union
 
 from abzu.baml_client.sync_client import b
 from abzu.baml_client.types import IndustryArticle
@@ -26,7 +26,7 @@ class ArticleProcessor:
                 "BAML article processing may fail."
             )
 
-    def process_article(self, article: Dict[str, Any]) -> Tuple[bool, Union[IndustryArticle, str]]:
+    def process_article(self, article: dict[str, Any]) -> tuple[bool, Union[IndustryArticle, str]]:
         """Process an article using BAML.
 
         Args:

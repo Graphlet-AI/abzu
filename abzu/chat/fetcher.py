@@ -4,7 +4,7 @@ import logging
 import re
 import time
 from datetime import datetime
-from typing import Dict, Optional, Tuple, Union
+from typing import Optional, Union
 
 import cloudscraper
 import requests
@@ -116,7 +116,7 @@ class ContentFetcher:
 
         return None
 
-    def fetch_url(self, url: str) -> Tuple[bool, Union[Dict, str]]:
+    def fetch_url(self, url: str) -> tuple[bool, Union[dict, str]]:
         """Fetch content from a URL with retry capabilities.
 
         Args:

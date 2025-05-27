@@ -2,7 +2,7 @@
 
 import logging
 import os
-from typing import List, Optional
+from typing import Optional
 
 import click
 
@@ -157,7 +157,7 @@ def metrics(
         try:
             # Read ticker/symbol from input file
             logger.info(f"Reading tickers from {input_file}")
-            ticker_list: List[str] = []
+            ticker_list: list[str] = []
 
             for record in read_data_file(input_file):
                 # Check for ticker or symbol fields

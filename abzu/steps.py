@@ -2,16 +2,14 @@
 Module for handling the pipeline steps functionality.
 """
 
-from typing import List
 
-
-def get_pipeline_steps() -> List[str]:
+def get_pipeline_steps() -> list[str]:
     """
     Get the ordered list of steps required to run the complete data pipeline.
 
     Returns
     -------
-    List[str]
+    list[str]
         List of command strings representing the pipeline steps.
     """
     return [

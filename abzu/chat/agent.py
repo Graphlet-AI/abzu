@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Optional, cast
 
 from discord import Message
 from pydantic import BaseModel, Field
@@ -31,10 +31,10 @@ class AgentConfig(BaseModel):
         None, description="Discord bot token. Will use DISCORD_BOT_TOKEN env var if not provided."
     )
     command_prefix: str = Field("!", description="Command prefix for the Discord bot.")
-    specific_channels: Optional[List[int]] = Field(
+    specific_channels: Optional[list[int]] = Field(
         None, description="Specific channel IDs to monitor. If None, all channels are monitored."
     )
-    ignored_domains: Optional[List[str]] = Field(
+    ignored_domains: Optional[list[str]] = Field(
         None, description="Domains to ignore when processing URLs."
     )
     raw_articles_path: str = Field(
@@ -182,7 +182,7 @@ class DiscordAgent:
                 return
 
             # Store the raw article
-            article = cast(Dict[str, Any], result)
+            article = cast(dict[str, Any], result)
             self.article_storage.save_raw_article(article)
 
             # Process the article
@@ -204,7 +204,7 @@ class DiscordAgent:
             await message.channel.send(f"Error processing URL: {url}")
 
 
-async def start_agent(config: Optional[Dict[str, Any]] = None) -> DiscordAgent:
+async def start_agent(config: Optional[dict[str, Any]] = None) -> DiscordAgent:
     """Create and start a DiscordAgent.
 
     Args:

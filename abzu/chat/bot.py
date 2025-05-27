@@ -4,7 +4,7 @@ import asyncio
 import logging
 import os
 import re
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable, Optional
 
 from discord import Intents, Message, TextChannel, errors
 from discord.ext import commands
@@ -23,8 +23,8 @@ class URLMonitorBot(commands.Bot):
         self,
         command_prefix: str = "!",
         intents: Optional[Intents] = None,
-        specific_channels: Optional[List[int]] = None,
-        ignored_domains: Optional[List[str]] = None,
+        specific_channels: Optional[list[int]] = None,
+        ignored_domains: Optional[list[str]] = None,
         on_url_found_callback: Optional[Callable[[str, Message], Any]] = None,
     ):
         """Initialize the Discord bot.
@@ -146,7 +146,7 @@ class URLMonitorBot(commands.Bot):
             for channel in text_channels:
                 logger.info(f"  - #{channel.name} (ID: {channel.id})")
 
-    def extract_urls(self, content: str) -> List[str]:
+    def extract_urls(self, content: str) -> list[str]:
         """Extract URLs from a string.
 
         Args:
@@ -183,8 +183,8 @@ class BotRunner:
         application_id: Optional[str] = None,
         token: Optional[str] = None,
         command_prefix: str = "!",
-        specific_channels: Optional[List[int]] = None,
-        ignored_domains: Optional[List[str]] = None,
+        specific_channels: Optional[list[int]] = None,
+        ignored_domains: Optional[list[str]] = None,
         on_url_found_callback: Optional[Callable[[str, Message], Any]] = None,
     ):
         """Initialize the bot runner.
