@@ -22,6 +22,8 @@ def get_pipeline_steps() -> List[str]:
         "abzu crawl semianalysis",
         # Crawl theinformation.com for articles
         "abzu crawl theinformation",
+        # Crawl generic RSS feeds defined in feeds.txt
+        "abzu crawl rss -f feeds.txt",
         # Process the collected articles
         "abzu process articles semianalysis",
         "abzu process articles theinformation",

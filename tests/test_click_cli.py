@@ -44,6 +44,15 @@ TEST_COMMANDS = [
         ],
     ),
     (
+        "crawl --help",
+        [
+            "Usage: cli crawl [OPTIONS] COMMAND [ARGS]...",
+            "  semianalysis",
+            "  theinformation",
+            "  rss",
+        ],
+    ),
+    (
         "api financialdatasets facts --help",
         [
             "Usage: cli api financialdatasets facts [OPTIONS]",
