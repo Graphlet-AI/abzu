@@ -80,6 +80,8 @@ abzu crawl semianalysis
 
 # TheInformation (requires login cookies)
 abzu crawl theinformation
+# Generic RSS feeds from feeds.txt
+abzu crawl rss -f feeds.txt
 ```
 
 To scrape TheInformation you must be signed into the site in your browser so the
