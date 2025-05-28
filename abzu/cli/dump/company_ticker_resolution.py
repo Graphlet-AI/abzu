@@ -1,4 +1,4 @@
-"""CLI command to display proposed ticker matches."""
+"""CLI command to display and apply ticker matches."""
 
 import click
 
@@ -12,7 +12,10 @@ import click
     help="Path to companies.parquet file",
 )
 def company_ticker_resolution(input_file: str) -> int:
-    """Show proposed tickers for companies missing them."""
+    """Show proposed tickers for companies missing them.
+
+    Any perfect match is written back to the file.
+    """
     from abzu.dump.company_ticker_resolution import dump_company_ticker_resolution_main
 
     return dump_company_ticker_resolution_main(input_file)

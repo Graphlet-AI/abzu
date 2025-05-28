@@ -56,7 +56,10 @@ def _best_match(name: str, sec_map: Dict[str, str]) -> Tuple[str | None, float]:
 
 
 def dump_company_ticker_resolution_main(file_path: str) -> int:
-    """Show proposed tickers for companies missing them."""
+    """Show proposed tickers for companies missing them.
+
+    Any perfect match is written back to ``companies.parquet``.
+    """
     try:
         companies_df = pd.read_parquet(file_path)
     except Exception as e:  # pragma: no cover - load failure
@@ -79,11 +82,28 @@ def dump_company_ticker_resolution_main(file_path: str) -> int:
 
     no_ticker_df = companies_df[~has_ticker]
 
+    if "ticker" not in companies_df.columns:
+        companies_df["ticker"] = pd.NA
+
+    updated = 0
+
     header = f"{'Company':<40}{'Proposed':<15}{'Score':>6}"
     print(header)
-    for _, row in no_ticker_df.iterrows():
+    for idx, row in no_ticker_df.iterrows():
         name = str(row.get("name", ""))
         proposed, score = _best_match(name, sec_map)
         score_pct = f"{score:.2f}"
         print(f"{name:<40}{(proposed or ''):<15}{score_pct:>6}")
+        if proposed and score == 1.0:
+            companies_df.loc[idx, "ticker"] = proposed
+            updated += 1
+
+    if updated:
+        try:
+            companies_df.to_parquet(file_path, index=False)
+        except Exception as e:  # pragma: no cover - write failure
+            logger.error(f"Failed to update companies file {file_path}: {e}")
+            return 1
+        logger.info("Added %d ticker(s) to %s", updated, file_path)
+
     return 0
