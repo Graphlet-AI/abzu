@@ -10,6 +10,7 @@ from abzu.dump.company_ticker_resolution import (
     _best_match,
     _load_sec_companies,
     _normalize,
+    dump_company_ticker_resolution_main,
 )
 from abzu.spark.refine_kg import refine_knowledge_graph
 
@@ -87,3 +88,26 @@ def test_refine_knowledge_graph_enriches_tickers(
     assert symbols == {"BET", "ALP"}
 
     spark.stop()
+
+
+def test_dump_company_ticker_resolution_writes_back(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    companies_df = pd.DataFrame(
+        [
+            {"name": "Alpha Inc"},
+            {"name": "Beta Co", "ticker": "BET"},
+        ]
+    )
+    file_path = tmp_path / "companies.parquet"
+    companies_df.to_parquet(file_path, index=False)
+
+    sec_df = pd.DataFrame([{"title": "Alpha Inc", "ticker": "ALP", "_norm_title": "alpha"}])
+    monkeypatch.setattr("abzu.dump.company_ticker_resolution._load_sec_companies", lambda: sec_df)
+
+    result = dump_company_ticker_resolution_main(str(file_path))
+    assert result == 0
+
+    out_df = pd.read_parquet(file_path)
+    assert out_df.loc[out_df["name"] == "Alpha Inc", "ticker"].iat[0] == "ALP"
+    assert out_df.loc[out_df["name"] == "Beta Co", "ticker"].iat[0] == "BET"
