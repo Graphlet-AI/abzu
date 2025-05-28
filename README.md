@@ -96,7 +96,7 @@ task kg raw
 task kg refine
 
 # Run API commands
-task api financialdatasets --file data/knowledge_graph/tickers.parquet
+task api financialdatasets facts -f
 
 # Run tests
 task test
@@ -408,9 +408,9 @@ environment:
 
 ```bash
 # Docker (in container shell)
-poetry run abzu api financialdatasets --file data/knowledge_graph/tickers.parquet
+poetry run abzu api financialdatasets facts -f
 # Get historical price data for all tickers and show the best performers
-poetry run abzu api financialdatasets price -f data/knowledge_graph/tickers.parquet -s 2025-01-01 -e 2025-12-31 -i day -o data/financialdatasets/all_prices.json
+poetry run abzu api financialdatasets price -f -s 2025-01-01 -e 2025-12-31 -i day -o data/financialdatasets/all_prices.json
 poetry run abzu dump returns -f data/financialdatasets/all_prices.json
 
 # Get historical price data for tickers
@@ -427,7 +427,7 @@ poetry run abzu dump products -f data/refined_knowledge_graph/products.parquet
 poetry run abzu api sec download
 
 # Local
-abzu api financialdatasets --file data/knowledge_graph/tickers.parquet
+abzu api financialdatasets -f
 abzu api financialdatasets price -t AAPL -s 2023-01-01 -e 2023-12-31
 abzu api sec download
 ```
