@@ -421,6 +421,8 @@ poetry run abzu api financialdatasets price -t AAPL -s 2023-01-01 -e 2023-12-31
 # Create a combined vertex / edge list
 poetry run abzu process kg refine
 poetry run abzu dump products -f data/refined_knowledge_graph/products.parquet
+# Review proposed ticker matches for companies without tickers
+poetry run abzu dump company-ticker-resolution -f data/refined_knowledge_graph/companies.parquet
 # Products are listed sorted by company name
 
 # Download SEC filings for all tickers

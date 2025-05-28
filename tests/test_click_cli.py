@@ -98,6 +98,13 @@ TEST_COMMANDS = [
             "--file",
         ],
     ),
+    (
+        "dump company-ticker-resolution --help",
+        [
+            "Usage: cli dump company-ticker-resolution [OPTIONS]",
+            "--file",
+        ],
+    ),
 ]
 
 
