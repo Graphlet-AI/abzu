@@ -3,12 +3,12 @@
 import json
 import logging
 import re
-from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Dict, Tuple
 
 import pandas as pd
 import requests
+from cleanco import basename
 from rapidfuzz import fuzz, process
 
 from abzu.api.sec_downloader import HEADERS
@@ -21,7 +21,8 @@ logger = logging.getLogger(__name__)
 
 def _normalize(name: str) -> str:
     """Normalize company names for comparison."""
-    return re.sub(r"[^a-z0-9]", "", name.lower())
+    base = basename(name)
+    return re.sub(r"[^a-z0-9]", "", base.lower())
 
 
 def _load_sec_companies(cache_path: Path = SEC_COMPANY_TICKERS_CACHE) -> pd.DataFrame:
