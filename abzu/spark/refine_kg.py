@@ -84,9 +84,11 @@ def refine_knowledge_graph(
     for row in missing_companies_df.collect():
         ticker, score = _best_match(row["name"], sec_map)
         if ticker and score == 1.0:
+            logger.info("Discovered perfect match: %s -> %s", row["name"], ticker)
             matches.append((row["name"], ticker))
 
     if matches:
+        logger.info("Adding %d ticker matches from SEC data", len(matches))
         new_company_ticker_df = spark.createDataFrame(matches, ["company_name", "ticker_symbol"])
         company_ticker_df = company_ticker_df.unionByName(new_company_ticker_df)
 
