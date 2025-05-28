@@ -427,7 +427,7 @@ poetry run abzu dump products -f data/refined_knowledge_graph/products.parquet
 poetry run abzu api sec download
 
 # Local
-abzu api financialdatasets -f
+abzu api financialdatasets facts -f
 abzu api financialdatasets price -t AAPL -s 2023-01-01 -e 2023-12-31
 abzu api sec download
 ```
