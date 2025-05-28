@@ -4,7 +4,11 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from abzu.dump.company_ticker_resolution import _best_match, _load_sec_companies
+from abzu.dump.company_ticker_resolution import (
+    _best_match,
+    _load_sec_companies,
+    _normalize,
+)
 
 
 def test_load_sec_companies_from_cache(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -18,14 +22,14 @@ def test_load_sec_companies_from_cache(tmp_path: Path, monkeypatch: pytest.Monke
     monkeypatch.setattr("requests.get", fail_get)
     df = _load_sec_companies(cache)
     assert df.loc[0, "ticker"] == "ALP"
-    assert df.loc[0, "_norm_title"] == "alphainc"
+    assert df.loc[0, "_norm_title"] == "alpha"
 
 
 def test_best_match(tmp_path: Path) -> None:
     data = pd.DataFrame(
         [{"title": "Alpha Inc", "ticker": "ALP"}, {"title": "Beta Co", "ticker": "BET"}]
     )
-    data["_norm_title"] = data["title"].str.lower().str.replace("[^a-z0-9]", "", regex=True)
+    data["_norm_title"] = data["title"].apply(_normalize)
     sec_map = dict(zip(data["_norm_title"], data["ticker"]))
 
     ticker, score = _best_match("Alpha Inc", sec_map)
