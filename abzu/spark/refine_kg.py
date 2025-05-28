@@ -9,6 +9,7 @@ from pyspark.sql import DataFrame, SparkSession
 
 from abzu.config import config
 from abzu.spark.config import get_spark_session
+from abzu.spark.ticker_enrichment import _best_match, load_sec_map
 
 # Configure logging
 logging.basicConfig(
@@ -69,6 +70,34 @@ def refine_knowledge_graph(
     logger.info(f"Loaded {product_company_df.count():,} product-company relationships")
     logger.info(f"Loaded {company_ticker_df.count():,} company-ticker relationships")
     logger.info(f"Loaded {tech_company_df.count():,} technology-company relationships")
+
+    # Enrich companies without tickers using SEC data
+    logger.info("Enriching company tickers from SEC list ...")
+    sec_map = load_sec_map()
+    missing_companies_df = company_df.join(
+        company_ticker_df,
+        company_df.name == company_ticker_df.company_name,
+        "left_anti",
+    ).select("name")
+
+    matches: list[tuple[str, str]] = []
+    for row in missing_companies_df.collect():
+        ticker, score = _best_match(row["name"], sec_map)
+        if ticker and score == 1.0:
+            matches.append((row["name"], ticker))
+
+    if matches:
+        new_company_ticker_df = spark.createDataFrame(matches, ["company_name", "ticker_symbol"])
+        company_ticker_df = company_ticker_df.unionByName(new_company_ticker_df)
+
+        # Ensure tickers have the same schema regardless of column order
+        new_tickers_df = spark.createDataFrame(
+            [(None, t, None) for _, t in matches], schema=ticker_df.schema
+        )
+        ticker_df = ticker_df.unionByName(new_tickers_df).dropDuplicates(["symbol"])
+
+    company_df.write.mode("overwrite").parquet(f"{output_path}/companies.parquet")
+    ticker_df.write.mode("overwrite").parquet(f"{output_path}/tickers.parquet")
 
     # Create bidirectional Company->Product edges
     logger.info("Creating bidirectional company-product relationships...")
@@ -155,10 +184,8 @@ def refine_knowledge_graph(
 
     # Save original entities for reference
     logger.info("Saving original entities for reference...")
-    company_df.write.mode("overwrite").parquet(f"{output_path}/companies.parquet")
     product_df.write.mode("overwrite").parquet(f"{output_path}/products.parquet")
     technology_df.write.mode("overwrite").parquet(f"{output_path}/technologies.parquet")
-    ticker_df.write.mode("overwrite").parquet(f"{output_path}/tickers.parquet")
 
     # Log summary
     logger.info("Knowledge graph refinement complete!")
