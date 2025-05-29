@@ -1,5 +1,4 @@
 import logging
-from typing import Any
 
 import pandas as pd
 
@@ -14,7 +13,11 @@ def dump_products_main(file_path: str) -> int:
         logger.error(f"Failed to read products file {file_path}: {e}")
         return 1
 
-    required_cols = {"company_name", "name", "description"}
+    # Handle both old and new schema
+    if "company_name" not in df.columns and "manufacturer_name" in df.columns:
+        df["company_name"] = df["manufacturer_name"]
+
+    required_cols = {"name", "description"}
     missing = required_cols.difference(df.columns)
     if missing:
         logger.error(f"Missing required columns: {', '.join(sorted(missing))}")
@@ -22,9 +25,19 @@ def dump_products_main(file_path: str) -> int:
 
     header = f"{'Company':<30}{'Product':<30}{'Description'}"
     print(header)
-    sorted_df = df.sort_values("company_name")
+
+    # Use manufacturer_name or company_name for sorting
+    sort_col = "manufacturer_name" if "manufacturer_name" in df.columns else "company_name"
+
+    if sort_col not in df.columns:
+        # If neither column exists, just sort by name
+        sorted_df = df.sort_values("name")
+    else:
+        sorted_df = df.sort_values(sort_col)
+
     for _, row in sorted_df.iterrows():
-        company = row.get("company_name") or ""
+        # Get company name from either manufacturer_name or company_name
+        company = row.get("manufacturer_name") or row.get("company_name") or ""
         product = row.get("name") or ""
         desc = row.get("description") or ""
         print(f"{company:<30}{product:<30}{desc}")
