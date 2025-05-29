@@ -45,10 +45,20 @@ def dump_companies_main(file_path: str) -> int:
         if len(columns_to_show) == 1:
             print(f"{company:<40}")
         elif len(columns_to_show) == 2:
-            ticker = row.get("ticker") or ""
+            ticker_val = row.get("ticker")
+            # Handle ticker as dict, string, or None
+            if isinstance(ticker_val, dict):
+                ticker = ticker_val.get("symbol", "")
+            else:
+                ticker = ticker_val or ""
             print(f"{company:<40}{ticker:<10}")
         else:
-            ticker = row.get("ticker") or ""
+            ticker_val = row.get("ticker")
+            # Handle ticker as dict, string, or None
+            if isinstance(ticker_val, dict):
+                ticker = ticker_val.get("symbol", "")
+            else:
+                ticker = ticker_val or ""
             desc = row.get("description") or ""
             print(f"{company:<40}{ticker:<10}{desc}")
 

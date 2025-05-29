@@ -45,6 +45,8 @@ def get_pipeline_steps() -> List[str]:
         "abzu process kg refine",
         # List all products found in the refined knowledge graph
         "abzu dump products -f data/refined_knowledge_graph/products.parquet",
+        # List all companies found in the refined knowledge graph
+        "abzu dump companies -f data/refined_knowledge_graph/companies.parquet",
     ]
 
 
