@@ -15,6 +15,8 @@ from requests.adapters import HTTPAdapter
 from tqdm import tqdm
 from urllib3.util.retry import Retry
 
+from abzu.config import config
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -964,7 +966,7 @@ def financialdatasets_price_multiple_main(
 
 def financialdatasets_tickers_main(
     api_key: Optional[str] = None,
-    output_file: str = "data/financialdatasets/tickers.json",
+    output_file: str = config.get("api.financialdatasets.tickers.output"),
     pretty: bool = False,
     max_retries: int = 5,
 ) -> int:
