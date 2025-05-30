@@ -13,6 +13,7 @@ import feedparser
 import requests
 from bs4 import BeautifulSoup
 
+from abzu.config import config
 from abzu.utils import append_jsonl, build_crawled_url_index
 
 logger = logging.getLogger(__name__)
@@ -163,7 +164,7 @@ def parse_rss_and_save(rss_url: str, output_file: str, session: requests.Session
 
 
 def crawl_theinformation(
-    output_file: str = "data/theinformation.jsonl",
+    output_file: str = config.get("crawl.theinformation.output"),
     cookie: Optional[str] = None,
     user_agent: str = DEFAULT_USER_AGENT,
     bypass_cf: bool = False,
