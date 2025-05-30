@@ -188,8 +188,8 @@ async def async_main(
 
 
 def process_main(
-    input_file: str = config.get("crawl.semianalysis.input"),
-    output_file: str = config.get("crawl.semianalysis.output"),
+    input_file: str = config.get("process.articles.semianalysis.input"),
+    output_file: str = config.get("process.articles.semianalysis.output"),
     batch_size: int = 5,
 ) -> int:
     """Process articles main function.
