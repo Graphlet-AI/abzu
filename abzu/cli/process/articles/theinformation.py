@@ -11,6 +11,7 @@ from abzu.config import config
     "--input",
     "input_file",
     default=config.get("process.articles.theinformation.input"),
+    type=click.Path(exists=True, dir_okay=True, file_okay=True, path_type=str),
     help="Input JSONL file path",
 )
 @click.option(
@@ -18,6 +19,7 @@ from abzu.config import config
     "--output",
     "output_file",
     default=config.get("process.articles.theinformation.output"),
+    type=click.Path(exists=True, dir_okay=True, file_okay=True, path_type=str),
     help="Output JSONL file path",
 )
 @click.option(
