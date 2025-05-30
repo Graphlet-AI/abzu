@@ -5,7 +5,7 @@ import click
 from abzu.config import config
 
 
-@click.command()
+@click.command(context_settings={"show_default": True})
 @click.option(
     "-i",
     "--input",
