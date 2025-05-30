@@ -4,7 +4,7 @@ import logging
 import os
 from typing import Any, Union
 
-from abzu.baml_client.sync_client import b
+from abzu.baml_client.async_client import b as async_b
 from abzu.baml_client.types import IndustryArticle
 
 # Configure logging
@@ -26,7 +26,9 @@ class ArticleProcessor:
                 "BAML article processing may fail."
             )
 
-    def process_article(self, article: dict[str, Any]) -> tuple[bool, Union[IndustryArticle, str]]:
+    async def process_article(
+        self, article: dict[str, Any]
+    ) -> tuple[bool, Union[IndustryArticle, str]]:
         """Process an article using BAML.
 
         Args:
@@ -47,7 +49,7 @@ class ArticleProcessor:
         try:
             # Process the article using BAML
             logger.info(f"Processing article: {article.get('title', 'unknown')}")
-            result = b.ExtractIndustryArticle(article_text)
+            result = await async_b.ExtractIndustryArticle(article_text)
 
             # Pass through timestamps from the original article
             result.collected_at = article.get("collected_at")

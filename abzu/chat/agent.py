@@ -187,7 +187,7 @@ class DiscordAgent:
             self.article_storage.save_raw_article(article)
 
             # Process the article
-            success, processed_result = self.article_processor.process_article(article)
+            success, processed_result = await self.article_processor.process_article(article)
 
             if not success:
                 logger.error(f"Failed to process article from URL {url}: {processed_result}")
