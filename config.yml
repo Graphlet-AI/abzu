@@ -14,11 +14,11 @@ crawl:
 process:
   articles:
     semianalysis:
-      input: "${base_dir}/semianalysis.jsonl"
+      input: "${crawl.semianalysis.output}"
       output: "${base_dir}/processed_semianalysis.jsonl"
 
     theinformation:
-      input: "${base_dir}/theinformation.jsonl"
+      input: "${crawl.theinformation.output}"
       output: "${base_dir}/processed_theinformation.jsonl"
 
   rss:
@@ -29,12 +29,12 @@ process:
   kg:
     raw:
       input:
-        - "${base_dir}/processed_semianalysis.jsonl"
-        - "${base_dir}/processed_theinformation.jsonl"
+        - "${process.articles.semianalysis.output}"
+        - "${process.articles.theinformation.output}"
       output: "${base_dir}/knowledge_graph"
 
     refine:
-      input: "${base_dir}/knowledge_graph"
+      input: "${process.kg.raw.output}"
       output: "${base_dir}/refined_knowledge_graph"
 
 chat:
@@ -45,20 +45,24 @@ chat:
 api:
   financialdatasets:
     facts:
-      input: "${base_dir}/knowledge_graph/tickers.parquet"
+      input: "${process.kg.raw.output}/tickers.parquet"
       output: "${base_dir}/financialdatasets/facts.json"
     metrics:
-      input: "${base_dir}/knowledge_graph/tickers.parquet"
+      input: "${process.kg.raw.output}/tickers.parquet"
       output: "${base_dir}/financialdatasets/metrics.json"
     price:
-      input: "${base_dir}/knowledge_graph/tickers.parquet"
+      input: "${process.kg.raw.output}/tickers.parquet"
       output: "${base_dir}/financialdatasets/price.json"
     tickers:
       output: "${base_dir}/financialdatasets/tickers.json"
 
   sec:
     download:
-      tickers_file: "${base_dir}/knowledge_graph/tickers.parquet"
-      output_dir: "${base_dir}/tickers"
+      tickers_file: "${process.kg.raw.output}/tickers.parquet"
+      output_dir: "${base_dir}/sec/tickers"
       xbrl_files: "${base_dir}/sec/xbrl_files"
       html_filings: "${base_dir}/sec/html_filings"
+
+  dump:
+    companies:
+      input: "${process.kg.refine.output}/companies.parquet"
