@@ -40,8 +40,6 @@ def build_knowledge_graph(
     )
 
     logger.info(f"Reading processed articles from {input_path} ...")
-    logger.info(f"input_path type: {type(input_path)}")
-    logger.info(f"input_path repr: {repr(input_path)}")
     processed_df: DataFrame = spark.read.json(input_path)
     logger.info(f"Loaded {processed_df.count():,} processed articles")
 
