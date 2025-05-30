@@ -4,7 +4,7 @@ FROM python:3.12-slim
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    POETRY_VERSION=1.7.1 \
+    POETRY_VERSION=2.1.3 \
     POETRY_HOME="/opt/poetry" \
     POETRY_VIRTUALENVS_CREATE=false \
     JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64 \
