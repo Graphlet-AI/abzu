@@ -90,9 +90,9 @@ def process():
     """Processing commands."""
     pass
 
-@process.command()
-@click.option("-i", "--input", default="data/semianalysis.jsonl", 
-              help="Input JSONL file path (default: data/semianalysis.jsonl)")
+@process.command(context_settings={"show_default": True})
+@click.option("-i", "--input", default=config.get("crawl.semianalysis.input"), 
+              help="Input JSONL file path")
 def articles(input):
     """Process articles."""
     from abzu.cli.process_articles import process_main
@@ -118,3 +118,6 @@ def articles(input):
 5. **Prompts and Confirmations**
    - Use `click.prompt()` for user input
    - Use `click.confirm()` for yes/no questions
+
+6. **Default Values**
+   - Use `@click.command(context_settings={"show_default": True})` to show default values in help text
