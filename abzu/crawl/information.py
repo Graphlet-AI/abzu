@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import datetime
 import logging
+import os
 from typing import Optional
 
 import browsercookie
@@ -108,6 +109,11 @@ def parse_rss_and_save(rss_url: str, output_file: str, session: requests.Session
     count = 0
     skipped = 0
     backup_created = False
+
+    # Create directory if it doesn't exist
+    output_dir = os.path.dirname(output_file)
+    if output_dir and not os.path.exists(output_dir):
+        os.makedirs(output_dir)
 
     for entry in entries:
         title = entry.get("title", "")

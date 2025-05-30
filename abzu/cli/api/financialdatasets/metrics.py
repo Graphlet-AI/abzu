@@ -117,7 +117,7 @@ def metrics(
     if not ticker and not input_file:
         # Use default input file path if neither is specified
         logger.info(
-            f"No ticker or input file specified, using default input file: {config.get("api.financialdatasets.metrics.input")}"
+            f"No ticker or input file specified, using default input file: {config.get('api.financialdatasets.metrics.input')}"
         )
 
         if not os.path.exists(str(input_file)):

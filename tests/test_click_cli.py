@@ -32,6 +32,7 @@ TEST_COMMANDS = [
             "Commands:",
             "  articles",
             "  kg",
+            "  rss",
         ],
     ),
     (
@@ -41,6 +42,25 @@ TEST_COMMANDS = [
             "Commands:",
             "  semianalysis",
             "  theinformation",
+        ],
+    ),
+    (
+        "process rss --help",
+        [
+            "Usage: cli process rss [OPTIONS]",
+            "--feeds-file",
+            "--input-dir",
+            "--output-dir",
+            "--batch-size",
+        ],
+    ),
+    (
+        "crawl --help",
+        [
+            "Usage: cli crawl [OPTIONS] COMMAND [ARGS]...",
+            "  semianalysis",
+            "  theinformation",
+            "  rss",
         ],
     ),
     (
@@ -75,6 +95,13 @@ TEST_COMMANDS = [
         "dump products --help",
         [
             "Usage: cli dump products [OPTIONS]",
+            "--file",
+        ],
+    ),
+    (
+        "dump company-ticker-resolution --help",
+        [
+            "Usage: cli dump company-ticker-resolution [OPTIONS]",
             "--file",
         ],
     ),

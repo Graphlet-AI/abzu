@@ -17,7 +17,7 @@ from abzu.config import config
     "--output",
     "output_file",
     default=config.get("api.financialdatasets.tickers.output"),
-    help=f"Output file path (default: {config.get("api.financialdatasets.tickers.output")})",
+    help=f"Output file path (default: {config.get('api.financialdatasets.tickers.output')})",
 )
 @click.option(
     "-p",
