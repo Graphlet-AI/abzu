@@ -81,7 +81,7 @@ class DiscordAgent:
             processed_articles_path=config.get("chat.start.processed_articles"),  # type: ignore
             max_retries=5,
             pause_seconds=0.5,
-            timeout=30,
+            timeout=200,
             use_cloudscraper=False,
         )
 
