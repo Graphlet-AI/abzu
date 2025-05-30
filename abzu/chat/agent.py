@@ -12,6 +12,7 @@ from abzu.chat.bot import BotRunner
 from abzu.chat.fetcher import ContentFetcher
 from abzu.chat.io import ArticleStorage
 from abzu.chat.processor import ArticleProcessor
+from abzu.config import config
 
 # Configure logging
 logging.basicConfig(
@@ -38,11 +39,11 @@ class AgentConfig(BaseModel):
         None, description="Domains to ignore when processing URLs."
     )
     raw_articles_path: str = Field(
-        "data/chat/raw_articles.jsonl",
+        config.get("chat.start.raw_articles"),
         description="Path to store raw articles.",
     )
     processed_articles_path: str = Field(
-        "data/chat/processed_articles.jsonl",
+        config.get("chat.start.processed_articles"),
         description="Path to store processed articles.",
     )
     max_retries: int = Field(5, description="Maximum number of retries for rate-limited requests.")
@@ -76,8 +77,8 @@ class DiscordAgent:
             command_prefix="!",
             specific_channels=None,
             ignored_domains=None,
-            raw_articles_path="data/chat/raw_articles.jsonl",
-            processed_articles_path="data/chat/processed_articles.jsonl",
+            raw_articles_path=config.get("chat.start.raw_articles"),  # type: ignore
+            processed_articles_path=config.get("chat.start.processed_articles"),  # type: ignore
             max_retries=5,
             pause_seconds=0.5,
             timeout=30,
