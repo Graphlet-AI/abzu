@@ -7,6 +7,8 @@ from typing import Optional
 
 import click
 
+from abzu.config import config
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -43,13 +45,15 @@ logger = logging.getLogger(__name__)
 )
 @click.option(
     "--raw-path",
-    default="data/chat/raw_articles.jsonl",
-    help="Path to store raw articles (default: data/chat/raw_articles.jsonl)",
+    default=config.get("chat.start.raw_articles"),
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=str),
+    help="Path to store raw articles",
 )
 @click.option(
     "--processed-path",
-    default="data/chat/processed_articles.jsonl",
-    help="Path to store processed articles (default: data/chat/processed_articles.jsonl)",
+    default=config.get("chat.start.processed_articles"),
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=str),
+    help="Path to store processed articles",
 )
 @click.option(
     "-r",
