@@ -11,6 +11,7 @@ from abzu.config import config
     "--file",
     "input_file",
     default=config.get("dump.products.input"),
+    type=click.Path(exists=True, dir_okay=True, file_okay=True, path_type=str),
     help="Path to Parquet file with product information",
 )
 def products(input_file: str) -> int:
