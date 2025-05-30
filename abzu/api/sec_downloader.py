@@ -8,8 +8,10 @@ import re
 import time
 import traceback
 from datetime import datetime  # timedelta was unused
+from pathlib import Path
 from typing import Any, Optional, cast
 
+import pandas as pd
 import requests
 from bs4 import BeautifulSoup  # Tag was unused
 from lxml import etree  # mypy: Unused "type: ignore" comment removed
@@ -1230,10 +1232,6 @@ def process_all_tickers(
     filing_index: int = 0,
 ) -> None:
     """Process 10-Q filings for all tickers in a Parquet file."""
-
-    from pathlib import Path
-
-    import pandas as pd
 
     df = pd.read_parquet(tickers_file)
     tickers = df["symbol"].dropna().unique()
