@@ -46,7 +46,7 @@ This document serves as a guide for converting the existing argparse-based CLI t
        pass
    
    @process.command()
-   @click.option("-i", "--input", default="data/semianalysis.jsonl", help="Input JSONL file path")
+   @click.option("-i", "--input", default=config.get("crawl.semianalysis.input"), help="Input JSONL file path")
    def articles(input):
        """Process articles."""
        # Implementation
@@ -74,7 +74,8 @@ process_subparsers = process_cmd.add_subparsers(dest="subcommand", help="Process
 
 # Articles subcommand
 articles_cmd = process_subparsers.add_parser("articles", help="Process articles")
-articles_cmd.add_argument("-i", "--input", default="data/semianalysis.jsonl")
+articles_cmd.add_argument("-i", "--input", default=config.get("crawl.semianalysis.input"), 
+                          help="Input JSONL file path")
 ```
 
 ### After (Click)
