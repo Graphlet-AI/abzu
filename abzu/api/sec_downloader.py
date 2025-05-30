@@ -16,6 +16,8 @@ from lxml import etree  # mypy: Unused "type: ignore" comment removed
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
+from abzu.config import config
+
 # Constants
 USER_AGENT = "Your Name <youremail@example.com>"  # PLEASE REPLACE
 HEADERS = {"User-Agent": USER_AGENT}
@@ -976,7 +978,7 @@ def process_10q_filing(ticker: str, filing_idx: int = 0) -> dict[str, Any]:
                 )
                 # Define save directory for XBRL files to avoid clutter
                 xbrl_save_dir = os.path.join(
-                    "data/sec/xbrl_files", cik, accession_no.replace("-", "")
+                    config.get("sec.download.xbrl_files"), cik, accession_no.replace("-", "")
                 )
                 file_path = download_xbrl_file(xbrl_file_info, save_dir=xbrl_save_dir)
 
@@ -1065,7 +1067,7 @@ def process_10q_filing(ticker: str, filing_idx: int = 0) -> dict[str, Any]:
             print("\n--- Attempt 3: HTML Filing Extraction (Fallback/Supplement) ---")
             try:
                 html_save_dir = os.path.join(
-                    "data/sec/html_filings", cik, accession_no.replace("-", "")
+                    config.get("sec.download.html_filings"), cik, accession_no.replace("-", "")
                 )
                 html_path = download_html_filing(
                     cik, accession_no, primary_doc_name, save_dir=html_save_dir
@@ -1223,8 +1225,8 @@ def display_financial_summary(results: dict[str, Any]):
 
 
 def process_all_tickers(
-    tickers_file: str = "data/refined_knowledge_graph/tickers.parquet",
-    output_dir: str = "data/tickers",
+    tickers_file: str = config.get("sec.download.tickers_file"),
+    output_dir: str = config.get("sec.download.output_dir"),
     filing_index: int = 0,
 ) -> None:
     """Process 10-Q filings for all tickers in a Parquet file."""
