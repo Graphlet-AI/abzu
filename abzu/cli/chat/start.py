@@ -46,13 +46,13 @@ logger = logging.getLogger(__name__)
 @click.option(
     "--raw-path",
     default=config.get("chat.start.raw_articles"),
-    type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=str),
+    type=click.Path(file_okay=True, dir_okay=False, path_type=str),
     help="Path to store raw articles",
 )
 @click.option(
     "--processed-path",
     default=config.get("chat.start.processed_articles"),
-    type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=str),
+    type=click.Path(file_okay=True, dir_okay=False, path_type=str),
     help="Path to store processed articles",
 )
 @click.option(
