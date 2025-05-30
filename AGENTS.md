@@ -66,6 +66,7 @@ This file provides guidance to OpenAI Codex when working with code in this repos
 - Git Log - use the `git log` command to view the commit history to understand the context or recent changes to the codebase. This will help you understand the project better and make informed decisions when writing code.
 - Do not use 'rm' to remove files - use `git rm` to remove files from the repository. This will ensure that the files are removed from the git history as well.
 - I repeat, NEVER TALK ABOUT YOURSELF IN COMMIT MESSAGES. Do not put "Generated with [Claude Code](https://claude.ai/code)" or anything else relating to Claude or Anthropic in commit messages. Commit messages should only describe the code changes made, not the tool used to make them.
+- Ask questions before mitigating a simple problem with a complex fix.
 
 ## Alerts
 
