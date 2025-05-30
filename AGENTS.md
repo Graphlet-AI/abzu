@@ -42,7 +42,7 @@ This file provides guidance to OpenAI Codex when working with code in this repos
 - External strings - we store all strings in `config.yml` and use the abzu.config.config instance to access them. Do not hardcode strings in the codebase. If you need to add a new string, add it to the config.yml file and access it through the Config class's instance via `from abzu.config import config` and `config.get(key)`.
 - Imports - always import up top in PEP8 format. Do not import inside functions or classes. Use absolute imports, not relative imports. Do not use wildcard imports (e.g., `from module import *`). Always import specific classes or functions from modules.
 
-## Claude Logic
+## Codex Logic
 
 - Command Line Interfaces - at the end of your coding tasks, please alter the 'abzu' CLI to accommodate the changes.
 - Separate logic from the CLI - separate the logic under `abzu` and sub-modules from the command line interface (CLI) code in `abzu.cli`. The CLI should only handle input/output from/to the user and should not contain any business logic. For example the module for `abzu process kg` should be in `abzu.kg.*` and not in `abzu.cli.api`. Similarly, the module for `abzu process articles` should be in `abzu.articles.*` and not in `abzu.cli.api`.
@@ -62,10 +62,9 @@ This file provides guidance to OpenAI Codex when working with code in this repos
 - __init__.py - add these files to new module directories without being asked and without my verification.
 - Edit Multiple Files at Once - if you need to edit multiple files for a single TODO operation, do so in a single step. Do not create multiple steps for the same task.
 - `abzu steps` Command - Add new steps in the data pipeline to the `abzu steps` command. This command is used to run the data pipeline in a specific order. The steps should be added in the order they are executed in the pipeline. If you aren't sure about the order, ask me.
-- Git - Keep commit messsages straightforward and to the point - do not put extraneous details, simply summarize the work performed. Do not put anything in commit messages other than a description of the code changes. Do not put "Generated with [Claude Code](https://claude.ai/code)" or anything else relating to Claude or Anthropic.
+- Git - Keep commit messsages straightforward and to the point - do not put extraneous details, simply summarize the work performed. Do not put anything in commit messages other than a description of the code changes.
 - Git Log - use the `git log` command to view the commit history to understand the context or recent changes to the codebase. This will help you understand the project better and make informed decisions when writing code.
 - Do not use 'rm' to remove files - use `git rm` to remove files from the repository. This will ensure that the files are removed from the git history as well.
-- I repeat, NEVER TALK ABOUT YOURSELF IN COMMIT MESSAGES. Do not put "Generated with [Claude Code](https://claude.ai/code)" or anything else relating to Claude or Anthropic in commit messages. Commit messages should only describe the code changes made, not the tool used to make them.
 - Ask questions before mitigating a simple problem with a complex fix.
 
 ## Alerts
