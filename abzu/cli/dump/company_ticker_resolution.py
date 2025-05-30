@@ -2,13 +2,15 @@
 
 import click
 
+from abzu.config import config
+
 
 @click.command(context_settings={"show_default": True})
 @click.option(
     "-f",
     "--file",
     "input_file",
-    default="data/refined_knowledge_graph/companies.parquet",
+    default=config.get("dump.companies.input"),
     help="Path to companies.parquet file",
 )
 def company_ticker_resolution(input_file: str) -> int:

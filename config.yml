@@ -63,6 +63,10 @@ api:
       xbrl_files: "${base_dir}/sec/xbrl_files"
       html_filings: "${base_dir}/sec/html_filings"
 
-  dump:
-    companies:
-      input: "${process.kg.refine.output}/companies.parquet"
+dump:
+  companies:
+    input: "${process.kg.refine.output}/companies.parquet"
+  products:
+    input: "${process.kg.refine.output}/products.parquet"
+  returns:
+    input: "${api.financialdatasets.price.output}"
