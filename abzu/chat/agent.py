@@ -48,7 +48,7 @@ class AgentConfig(BaseModel):
     )
     max_retries: int = Field(5, description="Maximum number of retries for rate-limited requests.")
     pause_seconds: float = Field(0.5, description="Number of seconds to pause between requests.")
-    timeout: int = Field(30, description="Request timeout in seconds.")
+    timeout: int = Field(200, description="Request timeout in seconds.")
     use_cloudscraper: bool = Field(
         False, description="Whether to use cloudscraper instead of requests."
     )
