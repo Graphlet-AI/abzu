@@ -70,7 +70,7 @@ logger = logging.getLogger(__name__)
 )
 @click.option(
     "--timeout",
-    default=30,
+    default=200,
     type=int,
     help="Request timeout in seconds (default: 30)",
 )
@@ -134,7 +134,7 @@ def start(
         # We use a simple loop that waits for keyboard interrupt
         while agent._running:
             try:
-                loop.run_until_complete(asyncio.sleep(1.0))
+                loop.run_until_complete(asyncio.sleep(10.0))
             except KeyboardInterrupt:
                 break
 
