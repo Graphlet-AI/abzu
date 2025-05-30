@@ -2,21 +2,23 @@
 
 import click
 
+from abzu.config import config
+
 
 @click.command(context_settings={"show_default": True})
 @click.option(
     "-i",
     "--input",
     "input_file",
-    default="data/theinformation.jsonl",
-    help="Input JSONL file path (default: data/theinformation.jsonl)",
+    default=config.get("process.articles.theinformation.input"),
+    help="Input JSONL file path",
 )
 @click.option(
     "-o",
     "--output",
     "output_file",
-    default="data/processed_theinformation.jsonl",
-    help="Output JSONL file path (default: data/processed_theinformation.jsonl)",
+    default=config.get("process.articles.theinformation.output"),
+    help="Output JSONL file path",
 )
 @click.option(
     "-b",
