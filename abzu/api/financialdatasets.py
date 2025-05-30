@@ -8,12 +8,14 @@ import re
 import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date, datetime
-from typing import Any, Dict, Iterator, List, Optional, Union
+from typing import Any, Iterator, Optional, Union
 
 import requests
 from requests.adapters import HTTPAdapter
 from tqdm import tqdm
 from urllib3.util.retry import Retry
+
+from abzu.config import config
 
 # Configure logging
 logging.basicConfig(
@@ -28,7 +30,7 @@ class FinancialDatasetsAPI:
     BASE_URL = "https://api.financialdatasets.ai"
 
     def __init__(
-        self, api_key: Optional[str] = None, max_retries: int = 5, pause_seconds: float = 0.5
+        self, api_key: Optional[str] = None, max_retries: int = 5, pause_seconds: float = 0.6
     ):
         """Initialize the API client with retry capabilities.
 
@@ -75,7 +77,7 @@ class FinancialDatasetsAPI:
         end_date: Union[str, date, datetime],
         interval: str = "day",
         interval_multiplier: int = 1,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get historical price data for a ticker.
 
         This method retrieves historical price data for a specific ticker symbol at the
@@ -166,7 +168,7 @@ class FinancialDatasetsAPI:
 
     def get_company_facts(
         self, ticker: Optional[str] = None, cik: Optional[str] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get company facts from the Financial Datasets API with rate limiting.
 
         This method uses exponential backoff retry for rate-limited requests (HTTP 429 status code).
@@ -213,7 +215,7 @@ class FinancialDatasetsAPI:
                 logger.error(f"Response: {e.response.text}")
             raise
 
-    def get_tickers(self) -> Dict[str, Any]:
+    def get_tickers(self) -> dict[str, Any]:
         """Get all available tickers from the Financial Datasets API.
 
         This method retrieves a list of all available ticker symbols and their associated
@@ -244,14 +246,14 @@ class FinancialDatasetsAPI:
 
     def get_multiple_prices(
         self,
-        tickers: List[str],
+        tickers: list[str],
         start_date: Union[str, date, datetime],
         end_date: Union[str, date, datetime],
         interval: str = "day",
         interval_multiplier: int = 1,
         max_workers: int = 5,
         show_progress: bool = True,
-    ) -> Dict[str, Dict[str, Any]]:
+    ) -> dict[str, dict[str, Any]]:
         """Get historical price data for multiple tickers in parallel.
 
         This method retrieves historical price data for multiple ticker symbols at the
@@ -307,7 +309,7 @@ class FinancialDatasetsAPI:
             raise ValueError(f"Invalid interval: {interval}. Must be one of {valid_intervals}")
 
         # Function to get price data for a single ticker
-        def get_ticker_prices(ticker: str) -> tuple[str, Dict[str, Any]]:
+        def get_ticker_prices(ticker: str) -> tuple[str, dict[str, Any]]:
             try:
                 result = self.get_historical_prices(
                     ticker=ticker,
@@ -321,7 +323,7 @@ class FinancialDatasetsAPI:
                 logger.error(f"Error retrieving price data for {ticker}: {e}")
                 return ticker, {"error": str(e)}
 
-        results: Dict[str, Dict[str, Any]] = {}
+        results: dict[str, dict[str, Any]] = {}
 
         # Process tickers in parallel using ThreadPoolExecutor
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
@@ -349,7 +351,7 @@ class FinancialDatasetsAPI:
 
     def get_financial_metrics(
         self, ticker: str, period: str = "annual", limit: int = 30
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get financial metrics for a ticker from the Financial Datasets API.
 
         This method retrieves financial metrics for a specific ticker symbol with
@@ -401,7 +403,7 @@ class FinancialDatasetsAPI:
             raise
 
 
-def read_jsonl(file_path: str) -> Iterator[Dict[str, Any]]:
+def read_jsonl(file_path: str) -> Iterator[dict[str, Any]]:
     """Read a JSON Lines file and yield each line as a parsed JSON object.
 
     Args:
@@ -420,7 +422,7 @@ def read_jsonl(file_path: str) -> Iterator[Dict[str, Any]]:
                     logger.warning(f"Skipping invalid JSON line: {line}")
 
 
-def read_parquet(file_path: str) -> Iterator[Dict[str, Any]]:
+def read_parquet(file_path: str) -> Iterator[dict[str, Any]]:
     """Read a Parquet file and yield each row as a dictionary.
 
     Args:
@@ -452,7 +454,7 @@ def read_parquet(file_path: str) -> Iterator[Dict[str, Any]]:
         raise
 
 
-def read_data_file(file_path: str) -> Iterator[Dict[str, Any]]:
+def read_data_file(file_path: str) -> Iterator[dict[str, Any]]:
     """Read a data file (JSONL or Parquet) based on file extension.
 
     Args:
@@ -478,10 +480,10 @@ def read_data_file(file_path: str) -> Iterator[Dict[str, Any]]:
 
 def process_batch_companies(
     api: FinancialDatasetsAPI,
-    companies: List[Dict[str, Any | None]],
+    companies: list[dict[str, Any | None]],
     output_file: Optional[str] = None,
     show_progress: bool = True,
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Process a batch of companies in parallel.
 
     Args:
@@ -497,7 +499,7 @@ def process_batch_companies(
     total_companies = len(companies)
     logger.info(f"Processing {total_companies} companies")
 
-    def process_company(company: Dict[str, str]) -> Dict[str, Any | None]:
+    def process_company(company: dict[str, str]) -> dict[str, Any | None]:
         """Process a single company."""
         ticker = company.get("ticker")
         cik = company.get("cik")
@@ -599,7 +601,7 @@ def financialdatasets_facts_main(  # noqa: C901
             # Detect file format and read records accordingly
             try:
                 # Read companies from data file
-                companies: List[Dict[str, Any | None]] = []
+                companies: list[dict[str, Any | None]] = []
                 for record in read_data_file(input_file):
                     # Check for ticker/symbol and cik fields
                     ticker_val = record.get("ticker") or record.get("symbol")
@@ -770,7 +772,7 @@ def financialdatasets_metrics_main(
 
 
 def financialdatasets_metrics_multiple_main(
-    tickers: List[str],
+    tickers: list[str],
     period: str = "annual",
     limit: int = 30,
     api_key: Optional[str] = None,
@@ -815,7 +817,7 @@ def financialdatasets_metrics_multiple_main(
         )
 
         # Function to get metrics for a single ticker
-        def get_ticker_metrics(ticker: str) -> tuple[str, Dict[str, Any]]:
+        def get_ticker_metrics(ticker: str) -> tuple[str, dict[str, Any]]:
             try:
                 result = api.get_financial_metrics(
                     ticker=ticker,
@@ -827,7 +829,7 @@ def financialdatasets_metrics_multiple_main(
                 logger.error(f"Error retrieving metrics for {ticker}: {e}")
                 return ticker, {"error": str(e)}
 
-        results: Dict[str, Dict[str, Any]] = {}
+        results: dict[str, dict[str, Any]] = {}
 
         # Process tickers in parallel using ThreadPoolExecutor
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
@@ -877,7 +879,7 @@ def financialdatasets_metrics_multiple_main(
 
 
 def financialdatasets_price_multiple_main(
-    tickers: List[str],
+    tickers: list[str],
     start_date: str,
     end_date: str,
     interval: str = "day",
@@ -964,7 +966,7 @@ def financialdatasets_price_multiple_main(
 
 def financialdatasets_tickers_main(
     api_key: Optional[str] = None,
-    output_file: str = "data/financialdatasets/tickers.json",
+    output_file: str = config.get("api.financialdatasets.tickers.output"),
     pretty: bool = False,
     max_retries: int = 5,
 ) -> int:

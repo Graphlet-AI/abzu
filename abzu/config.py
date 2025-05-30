@@ -3,7 +3,7 @@
 import os
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional, Union
 
 import yaml
 
@@ -42,7 +42,7 @@ class Config:
                 config_file = possible_locations[0]  # Default to project root
 
         self.config_file = config_file
-        self._config: Dict[str, Any] = {}
+        self._config: dict[str, Any] = {}
         self.reload()
 
     def reload(self) -> None:
@@ -124,7 +124,7 @@ class Config:
 
         return config
 
-    def get_path(self, key_path: str, default: Optional[str] = None) -> Union[Path, List[Path]]:
+    def get_path(self, key_path: str, default: Optional[str] = None) -> Union[Path, list[Path]]:
         """Get a configuration value as a Path object or list of Path objects.
 
         Parameters
@@ -136,7 +136,7 @@ class Config:
 
         Returns
         -------
-        Union[Path, List[Path]]
+        Union[Path, list[Path]]
             The configuration value as a Path object or list of Path objects
         """
         value = self.get(key_path, default)

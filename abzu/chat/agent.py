@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Optional, cast
 
 from discord import Message
 from pydantic import BaseModel, Field
@@ -12,6 +12,7 @@ from abzu.chat.bot import BotRunner
 from abzu.chat.fetcher import ContentFetcher
 from abzu.chat.io import ArticleStorage
 from abzu.chat.processor import ArticleProcessor
+from abzu.config import config
 
 # Configure logging
 logging.basicConfig(
@@ -31,18 +32,18 @@ class AgentConfig(BaseModel):
         None, description="Discord bot token. Will use DISCORD_BOT_TOKEN env var if not provided."
     )
     command_prefix: str = Field("!", description="Command prefix for the Discord bot.")
-    specific_channels: Optional[List[int]] = Field(
+    specific_channels: Optional[list[int]] = Field(
         None, description="Specific channel IDs to monitor. If None, all channels are monitored."
     )
-    ignored_domains: Optional[List[str]] = Field(
+    ignored_domains: Optional[list[str]] = Field(
         None, description="Domains to ignore when processing URLs."
     )
     raw_articles_path: str = Field(
-        "data/chat/raw_articles.jsonl",
+        config.get("chat.start.raw_articles"),
         description="Path to store raw articles.",
     )
     processed_articles_path: str = Field(
-        "data/chat/processed_articles.jsonl",
+        config.get("chat.start.processed_articles"),
         description="Path to store processed articles.",
     )
     max_retries: int = Field(5, description="Maximum number of retries for rate-limited requests.")
@@ -76,8 +77,8 @@ class DiscordAgent:
             command_prefix="!",
             specific_channels=None,
             ignored_domains=None,
-            raw_articles_path="data/chat/raw_articles.jsonl",
-            processed_articles_path="data/chat/processed_articles.jsonl",
+            raw_articles_path=config.get("chat.start.raw_articles"),  # type: ignore
+            processed_articles_path=config.get("chat.start.processed_articles"),  # type: ignore
             max_retries=5,
             pause_seconds=0.5,
             timeout=30,
@@ -182,7 +183,7 @@ class DiscordAgent:
                 return
 
             # Store the raw article
-            article = cast(Dict[str, Any], result)
+            article = cast(dict[str, Any], result)
             self.article_storage.save_raw_article(article)
 
             # Process the article
@@ -204,7 +205,7 @@ class DiscordAgent:
             await message.channel.send(f"Error processing URL: {url}")
 
 
-async def start_agent(config: Optional[Dict[str, Any]] = None) -> DiscordAgent:
+async def start_agent(config: Optional[dict[str, Any]] = None) -> DiscordAgent:
     """Create and start a DiscordAgent.
 
     Args:

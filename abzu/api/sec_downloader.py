@@ -8,13 +8,17 @@ import re
 import time
 import traceback
 from datetime import datetime  # timedelta was unused
-from typing import Any, Dict, List, Optional, cast  # Tuple was unused
+from pathlib import Path
+from typing import Any, Optional, cast
 
+import pandas as pd
 import requests
 from bs4 import BeautifulSoup  # Tag was unused
 from lxml import etree  # mypy: Unused "type: ignore" comment removed
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
+
+from abzu.config import config
 
 # Constants
 USER_AGENT = "Your Name <youremail@example.com>"  # PLEASE REPLACE
@@ -40,7 +44,7 @@ session.mount("https://", HTTPAdapter(max_retries=retries))
 # This map defines the concepts we want to extract and the possible XBRL tags.
 # The keys are our internal, standardized names for financial concepts.
 # The values are lists of XBRL tags (us-gaap or dei) that could represent that concept.
-CONCEPT_MAP: Dict[str, List[str]] = {
+CONCEPT_MAP: dict[str, list[str]] = {
     "EntityRegistrantName": ["dei:EntityRegistrantName"],
     "DocumentType": ["dei:DocumentType"],
     "DocumentPeriodEndDate": [
@@ -121,7 +125,7 @@ def get_cik_from_ticker(ticker: str) -> str:
     raise KeyError(f"Ticker {ticker} not found in SEC ticker list.")
 
 
-def fetch_company_index(cik: str) -> Dict[str, Any]:
+def fetch_company_index(cik: str) -> dict[str, Any]:
     """
     Fetches the company submission index JSON from the SEC for a given CIK.
     This index contains metadata about all filings for the company.
@@ -130,10 +134,10 @@ def fetch_company_index(cik: str) -> Dict[str, Any]:
     print(f"Fetching company index for CIK {cik} from: {url}")
     resp = session.get(url, headers=HEADERS)
     resp.raise_for_status()
-    return cast(Dict[str, Any], resp.json())  # Cast to satisfy mypy
+    return cast(dict[str, Any], resp.json())  # Cast to satisfy mypy
 
 
-def list_recent_filings(cik: str, form_type: str = "10-Q", count: int = 3) -> List[Dict[str, Any]]:
+def list_recent_filings(cik: str, form_type: str = "10-Q", count: int = 3) -> list[dict[str, Any]]:
     """
     Lists recent filings of a specific form type (e.g., "10-Q") for a given CIK.
     Returns a list of dictionaries, each containing details of a filing.
@@ -176,7 +180,7 @@ def list_recent_filings(cik: str, form_type: str = "10-Q", count: int = 3) -> Li
     return output_filings
 
 
-def get_xbrl_files(cik: str, accession: str) -> List[Dict[str, Any]]:  # Return type changed
+def get_xbrl_files(cik: str, accession: str) -> list[dict[str, Any]]:  # Return type changed
     """
     Finds XBRL-related files (XML, XBRL) associated with a specific filing.
     It tries to use the JSON index first, then falls back to HTML parsing of the directory.
@@ -186,7 +190,7 @@ def get_xbrl_files(cik: str, accession: str) -> List[Dict[str, Any]]:  # Return 
     filing_dir_url = f"{BASE_ARCHIVES_URL}/edgar/data/{int(cik)}/{acc_no_dashes}/"
     print(f"Searching for XBRL files in directory: {filing_dir_url}")
 
-    xbrl_files: List[Dict[str, Any]] = []  # Type changed to Any for values
+    xbrl_files: list[dict[str, Any]] = []  # Type changed to Any for values
     json_index_url = f"{filing_dir_url}index.json"  # Modern filings have a JSON index
 
     try:
@@ -297,12 +301,12 @@ def download_html_filing(
     return download_file(url, save_dir, f"{cik}_{accession.replace('-', '')}_{primary_doc}")
 
 
-def download_xbrl_file(file_info: Dict[str, str], save_dir: str = "xbrl_files") -> str:
+def download_xbrl_file(file_info: dict[str, str], save_dir: str = "xbrl_files") -> str:
     """Downloads a specific XBRL-related file."""
     return download_file(file_info["url"], save_dir, file_info["name"])
 
 
-def parse_xbrl_instance(file_path: str, filing_date_obj: datetime) -> Dict[str, Any]:
+def parse_xbrl_instance(file_path: str, filing_date_obj: datetime) -> dict[str, Any]:
     """
     Parses an XBRL instance file to extract contexts and facts based on CONCEPT_MAP.
     """
@@ -316,14 +320,14 @@ def parse_xbrl_instance(file_path: str, filing_date_obj: datetime) -> Dict[str, 
         # Consolidate namespaces, handling default namespace by assigning a prefix like 'def'
         nsmap = {k if k is not None else "def": v for k, v in root.nsmap.items()}
 
-        contexts: Dict[str, Dict[str, Any]] = {}
+        contexts: dict[str, dict[str, Any]] = {}
         # XPath to find all context elements regardless of their specific namespace prefix
         for context_elem in root.xpath("//*[local-name()='context']"):
             context_id = context_elem.get("id")
             if not context_id:
                 continue
 
-            period_info: Dict[str, str] = {}
+            period_info: dict[str, str] = {}
             # Find period element within the current context
             period_elem = context_elem.find(".//*[local-name()='period']")
             if period_elem is not None:
@@ -337,7 +341,7 @@ def parse_xbrl_instance(file_path: str, filing_date_obj: datetime) -> Dict[str, 
                 if endDate:
                     period_info["endDate"] = endDate.strip()
 
-            dimensions: Dict[str, str] = {}
+            dimensions: dict[str, str] = {}
             # Find segment element for dimensional information
             segment_elem = context_elem.find(".//*[local-name()='segment']")
             if segment_elem is not None:
@@ -352,14 +356,14 @@ def parse_xbrl_instance(file_path: str, filing_date_obj: datetime) -> Dict[str, 
             return {"error": "No contexts found in XBRL document."}
         print(f"Found {len(contexts)} contexts in XBRL.")
 
-        facts: Dict[str, List[Dict[str, Any]]] = {}
+        facts: dict[str, list[dict[str, Any]]] = {}
         raw_fact_count = 0
         # Iterate through our defined concepts and their corresponding XBRL tags
         for concept_key, xbrl_tags_for_concept in CONCEPT_MAP.items():
             for xbrl_tag in xbrl_tags_for_concept:
                 ns_prefix, local_name = xbrl_tag.split(":")
 
-                elements: List[Any]  # Declare type for elements
+                elements: list[Any]  # Declare type for elements
                 # Construct XPath query using the namespace prefix found in the document
                 xpath_query = f"//{ns_prefix}:{local_name}"
                 # If the prefix isn't in the doc's nsmap but 'def' (default) is, try that
@@ -422,7 +426,7 @@ def parse_xbrl_instance(file_path: str, filing_date_obj: datetime) -> Dict[str, 
 
 
 def find_best_quarter_end_date(
-    xbrl_data: Dict[str, Any], filing_date_obj: datetime
+    xbrl_data: dict[str, Any], filing_date_obj: datetime
 ) -> Optional[str]:
     """
     Determines the most relevant quarter end date from parsed XBRL data.
@@ -490,8 +494,8 @@ def find_best_quarter_end_date(
 
 
 def extract_relevant_facts_for_period(
-    xbrl_data: Dict[str, Any], target_quarter_end_date: str
-) -> Dict[str, Any]:
+    xbrl_data: dict[str, Any], target_quarter_end_date: str
+) -> dict[str, Any]:
     """
     Extracts facts that match the target_quarter_end_date.
     Prioritizes facts with no dimensions (assumed to be consolidated/primary figures).
@@ -501,11 +505,11 @@ def extract_relevant_facts_for_period(
             "error": xbrl_data.get("error", "Missing target_quarter_end_date or invalid XBRL data.")
         }
 
-    output_facts: Dict[str, Dict[str, Any]] = {}
+    output_facts: dict[str, dict[str, Any]] = {}
     contexts = xbrl_data.get("contexts", {})
 
     for concept_key, fact_list in xbrl_data.get("facts", {}).items():
-        best_fact_for_concept: Optional[Dict[str, Any]] = None
+        best_fact_for_concept: Optional[dict[str, Any]] = None
         for fact_data in fact_list:
             context_id = fact_data["context_id"]
             context = contexts.get(context_id)
@@ -543,9 +547,9 @@ def extract_relevant_facts_for_period(
 def get_data_from_sec_api(
     cik: str,
     api_type: str,
-    concept_name_map: Optional[Dict[str, List[str]]] = None,
+    concept_name_map: Optional[dict[str, list[str]]] = None,
     min_filing_year: int = 0,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Fetches and processes data from SEC's CompanyFacts or CompanyConcept API.
     - api_type: "facts" or "concept".
@@ -553,7 +557,7 @@ def get_data_from_sec_api(
                       For "facts" API, uses CONCEPT_MAP by default.
     - min_filing_year: Minimum filing year for facts to be considered recent (e.g., 2023).
     """
-    results: Dict[str, Any] = {"data": {}, "errors": [], "metadata": {}}
+    results: dict[str, Any] = {"data": {}, "errors": [], "metadata": {}}
     current_year = datetime.now().year
     if not min_filing_year:  # Default to last 2 full years + current year
         min_filing_year = current_year - 2
@@ -693,14 +697,14 @@ def get_data_from_sec_api(
     return results
 
 
-def extract_from_html(html_path: str, filing_date_obj: datetime) -> Dict[str, Any]:
+def extract_from_html(html_path: str, filing_date_obj: datetime) -> dict[str, Any]:
     """
     Extracts basic financial data from an HTML filing as a last resort.
     This is highly heuristic and less reliable than XBRL or API methods.
     """
     print(f"Attempting to extract data from HTML (last resort): {html_path}")
     # Initialize all mapped concepts to None for this HTML extraction attempt
-    financial_data: Dict[str, Any] = {key: None for key in CONCEPT_MAP.keys()}
+    financial_data: dict[str, Any] = {key: None for key in CONCEPT_MAP.keys()}
     financial_data["source_method"] = "html_extraction_WARN"  # Mark as HTML sourced with a warning
 
     try:
@@ -712,7 +716,7 @@ def extract_from_html(html_path: str, filing_date_obj: datetime) -> Dict[str, An
         return financial_data
 
     # 1. Try to find DocumentPeriodEndDate from HTML content
-    possible_dates: List[datetime] = []
+    possible_dates: list[datetime] = []
     # Regex to find common date phrases and then extract dates
     date_text_patterns = re.compile(
         r"(period end|as of|ended|for the quarter ended|for the three months ended)", re.I
@@ -751,7 +755,7 @@ def extract_from_html(html_path: str, filing_date_obj: datetime) -> Dict[str, An
         print("HTML: Could not reliably determine DocumentPeriodEndDate from text.")
 
     # 2. Try to find other financial values using keywords in tables
-    html_keywords_map: Dict[str, List[str]] = {
+    html_keywords_map: dict[str, list[str]] = {
         "Revenue": ["revenue", "net sales", "total net sales", "total revenues"],
         "NetIncomeLoss": [
             "net income",
@@ -859,7 +863,7 @@ def extract_from_html(html_path: str, filing_date_obj: datetime) -> Dict[str, An
     return financial_data
 
 
-def process_10q_filing(ticker: str, filing_idx: int = 0) -> Dict[str, Any]:
+def process_10q_filing(ticker: str, filing_idx: int = 0) -> dict[str, Any]:
     """
     Main orchestrator to process a 10-Q filing.
     It tries multiple methods: SEC APIs, XBRL parsing, and HTML parsing as a fallback.
@@ -893,7 +897,7 @@ def process_10q_filing(ticker: str, filing_idx: int = 0) -> Dict[str, Any]:
             f"Target Filing: Accession# {accession_no}, Filed: {filing_date_str}, Primary Doc: {primary_doc_name}"
         )
 
-        final_results: Dict[str, Any] = {
+        final_results: dict[str, Any] = {
             "ticker": ticker,
             "cik": cik,
             "filing_date": filing_date_str,
@@ -966,7 +970,7 @@ def process_10q_filing(ticker: str, filing_idx: int = 0) -> Dict[str, Any]:
             final_results["errors"].append("No XBRL files found for parsing.")
             print("No XBRL files found to parse.")
         else:
-            parsed_xbrl_data: Optional[Dict[str, Any]] = None
+            parsed_xbrl_data: Optional[dict[str, Any]] = None
             target_xbrl_doc_end_date: Optional[str] = None
             best_xbrl_file_source_name: Optional[str] = None
 
@@ -976,7 +980,7 @@ def process_10q_filing(ticker: str, filing_idx: int = 0) -> Dict[str, Any]:
                 )
                 # Define save directory for XBRL files to avoid clutter
                 xbrl_save_dir = os.path.join(
-                    "data/sec/xbrl_files", cik, accession_no.replace("-", "")
+                    config.get("sec.download.xbrl_files"), cik, accession_no.replace("-", "")
                 )
                 file_path = download_xbrl_file(xbrl_file_info, save_dir=xbrl_save_dir)
 
@@ -1065,7 +1069,7 @@ def process_10q_filing(ticker: str, filing_idx: int = 0) -> Dict[str, Any]:
             print("\n--- Attempt 3: HTML Filing Extraction (Fallback/Supplement) ---")
             try:
                 html_save_dir = os.path.join(
-                    "data/sec/html_filings", cik, accession_no.replace("-", "")
+                    config.get("sec.download.html_filings"), cik, accession_no.replace("-", "")
                 )
                 html_path = download_html_filing(
                     cik, accession_no, primary_doc_name, save_dir=html_save_dir
@@ -1139,7 +1143,7 @@ def process_10q_filing(ticker: str, filing_idx: int = 0) -> Dict[str, Any]:
         return {"error": f"Unexpected critical error: {str(e)}", "ticker": ticker}
 
 
-def save_results_to_json(data: Dict[str, Any], output_file: str = "10q_data.json"):
+def save_results_to_json(data: dict[str, Any], output_file: str = "10q_data.json"):
     """Saves the extracted data dictionary to a JSON file."""
     # Ensure the output directory exists
     output_dir = os.path.dirname(output_file)
@@ -1152,7 +1156,7 @@ def save_results_to_json(data: Dict[str, Any], output_file: str = "10q_data.json
     print(f"Results successfully saved to {output_file}")
 
 
-def display_financial_summary(results: Dict[str, Any]):
+def display_financial_summary(results: dict[str, Any]):
     """Prints a formatted summary of the extracted financial data."""
 
     ticker = results.get("ticker", "N/A")
@@ -1223,15 +1227,11 @@ def display_financial_summary(results: Dict[str, Any]):
 
 
 def process_all_tickers(
-    tickers_file: str = "data/refined_knowledge_graph/tickers.parquet",
-    output_dir: str = "data/tickers",
+    tickers_file: str = config.get("sec.download.tickers_file"),
+    output_dir: str = config.get("sec.download.output_dir"),
     filing_index: int = 0,
 ) -> None:
     """Process 10-Q filings for all tickers in a Parquet file."""
-
-    from pathlib import Path
-
-    import pandas as pd
 
     df = pd.read_parquet(tickers_file)
     tickers = df["symbol"].dropna().unique()

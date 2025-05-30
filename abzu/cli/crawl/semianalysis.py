@@ -2,6 +2,8 @@
 
 import click
 
+from abzu.config import config
+
 
 @click.command(name="semianalysis", context_settings={"show_default": True})
 @click.option(
@@ -11,8 +13,8 @@ import click
     "-o",
     "--output",
     "output_path",
-    default="data/semianalysis.jsonl",
-    help="Output JSONL file path (default: data/semianalysis.jsonl)",
+    default=config.get("crawl.semianalysis.output"),
+    help="Output JSONL file path",
 )
 @click.option("--pages", type=int, default=24, help="Number of pages to crawl (default: 24)")
 @click.option(

@@ -5,10 +5,11 @@ import logging
 import os
 import time
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 from abzu.baml_client.async_client import b as async_b
 from abzu.baml_client.types import IndustryArticle
+from abzu.config import config
 from abzu.utils import load_jsonl, save_jsonl
 
 # Configure logging
@@ -18,7 +19,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def load_articles(file_path: str) -> list[Dict[str, Any]]:
+def load_articles(file_path: str) -> list[dict[str, Any]]:
     """Load articles from a JSONL file and deduplicate them.
 
     Args:
@@ -41,7 +42,7 @@ def load_articles(file_path: str) -> list[Dict[str, Any]]:
 
 
 async def process_article_async(
-    article: Dict[str, Any],
+    article: dict[str, Any],
 ) -> IndustryArticle | BaseException | None:
     """Process an article using BAML asynchronously.
 
@@ -75,7 +76,7 @@ async def process_article_async(
 
 
 async def process_batch(
-    batch: list[Dict[str, Any]],
+    batch: list[dict[str, Any]],
 ) -> list[IndustryArticle | BaseException | None]:
     """Process a batch of articles concurrently.
 
@@ -127,7 +128,7 @@ def save_results(results: list[IndustryArticle | BaseException | None], output_p
 
 
 async def process_articles_async(
-    articles: list[Dict[str, Any]], output_file: str, batch_size: int
+    articles: list[dict[str, Any]], output_file: str, batch_size: int
 ) -> None:
     """Process all articles in batches asynchronously.
 
@@ -151,8 +152,8 @@ async def process_articles_async(
 
 
 async def async_main(
-    input_file: str = "data/semianalysis.jsonl",
-    output_file: str = "data/processed_semianalysis.jsonl",
+    input_file: str = config.get("process.articles.semianalysis.input"),
+    output_file: str = config.get("process.articles.semianalysis.output"),
     batch_size: int = 5,
 ) -> int:
     """Async main function for article processing.
@@ -187,8 +188,8 @@ async def async_main(
 
 
 def process_main(
-    input_file: str = "data/semianalysis.jsonl",
-    output_file: str = "data/processed_semianalysis.jsonl",
+    input_file: str = config.get("process.articles.semianalysis.input"),
+    output_file: str = config.get("process.articles.semianalysis.output"),
     batch_size: int = 5,
 ) -> int:
     """Process articles main function.

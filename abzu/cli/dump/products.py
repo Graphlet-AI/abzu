@@ -2,13 +2,16 @@
 
 import click
 
+from abzu.config import config
+
 
 @click.command(context_settings={"show_default": True})
 @click.option(
     "-f",
     "--file",
     "input_file",
-    default="data/refined_knowledge_graph/products.parquet",
+    default=config.get("dump.products.input"),
+    type=click.Path(exists=True, dir_okay=True, file_okay=True, path_type=str),
     help="Path to Parquet file with product information",
 )
 def products(input_file: str) -> int:

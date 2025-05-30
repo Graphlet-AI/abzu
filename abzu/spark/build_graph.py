@@ -2,6 +2,7 @@
 """Build a knowledge graph from pre-processed articles."""
 import logging
 from pathlib import Path
+from typing import Optional
 
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame, SparkSession
@@ -21,11 +22,11 @@ def build_knowledge_graph(
     input_path: list[str] = config.get("process.kg.raw.input"),
     output_path: str = config.get("process.kg.raw.output"),
     partitions: int = 4,
-    local_mode: bool = None,
+    local_mode: Optional[bool] = None,
 ) -> None:
     """
     Build a knowledge graph from pre-processed articles.
-    
+
     Args:
         input_path: Path(s) to the input JSON files
         output_path: Path to save the output parquet files

@@ -12,9 +12,7 @@ from cleanco import basename
 from rapidfuzz import fuzz, process
 
 from abzu.api.sec_downloader import HEADERS
-
-SEC_COMPANY_TICKERS_URL = "https://www.sec.gov/files/company_tickers.json"
-SEC_COMPANY_TICKERS_CACHE = Path("data/sec/company_tickers.json")
+from abzu.config import config
 
 logger = logging.getLogger(__name__)
 
@@ -25,13 +23,13 @@ def _normalize(name: str) -> str:
     return re.sub(r"[^a-z0-9]", "", base.lower())
 
 
-def _load_sec_companies(cache_path: Path = SEC_COMPANY_TICKERS_CACHE) -> pd.DataFrame:
+def _load_sec_companies(cache_path: Path = Path(config.get("dump.tickers.cache"))) -> pd.DataFrame:
     """Load SEC company ticker list into a DataFrame with caching."""
     if cache_path.exists():
         with cache_path.open("r") as f:
             data = json.load(f)
     else:
-        resp = requests.get(SEC_COMPANY_TICKERS_URL, headers=HEADERS, timeout=10)
+        resp = requests.get(config.get("dump.tickers.url"), headers=HEADERS, timeout=10)
         resp.raise_for_status()
         data = resp.json()
         cache_path.parent.mkdir(parents=True, exist_ok=True)
@@ -95,7 +93,7 @@ def dump_company_ticker_resolution_main(file_path: str) -> int:
         score_pct = f"{score:.2f}"
         print(f"{name:<40}{(proposed or ''):<15}{score_pct:>6}")
         if proposed and score == 1.0:
-            companies_df.loc[idx, "ticker"] = proposed
+            companies_df.loc[idx, "ticker"] = proposed  # type: ignore
             updated += 1
 
     if updated:

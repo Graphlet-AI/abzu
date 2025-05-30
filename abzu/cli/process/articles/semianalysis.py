@@ -2,21 +2,25 @@
 
 import click
 
+from abzu.config import config
+
 
 @click.command(context_settings={"show_default": True})
 @click.option(
     "-i",
     "--input",
     "input_file",
-    default="data/semianalysis.jsonl",
-    help="Input JSONL file path (default: data/semianalysis.jsonl)",
+    default=config.get("process.articles.semianalysis.input"),
+    type=click.Path(exists=True, dir_okay=False, file_okay=True, path_type=str),
+    help="Input JSONL file path",
 )
 @click.option(
     "-o",
     "--output",
     "output_file",
-    default="data/processed_semianalysis.jsonl",
-    help="Output JSONL file path (default: data/processed_semianalysis.jsonl)",
+    default=config.get("process.articles.semianalysis.output"),
+    type=click.Path(exists=True, dir_okay=False, file_okay=True, path_type=str),
+    help="Output JSONL file path",
 )
 @click.option(
     "-b",

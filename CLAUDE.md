@@ -20,7 +20,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Formatter: black with isort (profile=black)
 - Types: Always use type annotations, warn on any return
 - Imports: Use absolute imports, organize imports to be PEP compliant with isort (profile=black)
-- Error handling: Use mdecific exception types with logging
+- Error handling: Use specific exception types with logging
 - Naming: snake_case for variables/functions, CamelCase for classes
 - BAML: Use for LLM-related code, regenerate client with `baml-cli generate`
 - Whitespaces: leave no trailing whitespaces, use 4 spaces for indentation, leave no whitespace on blank lines
@@ -41,6 +41,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Use `abzu.config.Config` - use the `Config` class from `abzu.config` which has an instance abzu.config.config to access configuration values. Do not hardcode configuration values in the codebase. If you need to add a new configuration value, add it to the `config.yml` file and access it through the `Config` class's instance via `from abzu.config import config` and `config.get(key)`.
 - External strings - we store all strings in `config.yml` and use the abzu.config.config instance to access them. Do not hardcode strings in the codebase. If you need to add a new string, add it to the config.yml file and access it through the Config class's instance via `from abzu.config import config` and `config.get(key)`.
 - Imports - always import up top in PEP8 format. Do not import inside functions or classes. Use absolute imports, not relative imports. Do not use wildcard imports (e.g., `from module import *`). Always import specific classes or functions from modules.
+- Submodules - submodules go under `subs/`. Ignore them completely. Never write to submodules in anything you do.
 
 ## Claude Logic
 
@@ -66,6 +67,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Git Log - use the `git log` command to view the commit history to understand the context or recent changes to the codebase. This will help you understand the project better and make informed decisions when writing code.
 - Do not use 'rm' to remove files - use `git rm` to remove files from the repository. This will ensure that the files are removed from the git history as well.
 - I repeat, NEVER TALK ABOUT YOURSELF IN COMMIT MESSAGES. Do not put "Generated with [Claude Code](https://claude.ai/code)" or anything else relating to Claude or Anthropic in commit messages. Commit messages should only describe the code changes made, not the tool used to make them.
+- Ask questions before mitigating a simple problem with a complex fix.
 
 ## Alerts
 

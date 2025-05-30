@@ -1,4 +1,5 @@
 """Spark configuration module for Abzu."""
+
 import os
 from typing import Optional
 
@@ -13,13 +14,13 @@ def get_spark_session(
 ) -> SparkSession:
     """
     Create a SparkSession with appropriate configuration for local or distributed mode.
-    
+
     Args:
         app_name: Name of the Spark application
         local_mode: Whether to run in local mode. If None, will be determined by environment
         driver_memory: Memory for driver in local mode
         executor_memory: Memory for executor in local mode
-    
+
     Returns:
         Configured SparkSession
     """
@@ -27,17 +28,16 @@ def get_spark_session(
     if local_mode is None:
         # Check if we're running in Docker with distributed setup
         local_mode = not (
-            os.getenv("SPARK_MASTER") is not None 
-            and os.getenv("SPARK_MASTER").startswith("spark://")
+            os.getenv("SPARK_MASTER") is not None
+            and os.getenv("SPARK_MASTER", "").startswith("spark://")
         )
 
     # Start building the SparkSession
     builder = SparkSession.builder.appName(app_name)
 
     # Common configurations for both modes
-    builder = (
-        builder.config("spark.sql.execution.arrow.pyspark.enabled", "true")
-        .config("spark.sql.caseSensitive", "true")
+    builder = builder.config("spark.sql.execution.arrow.pyspark.enabled", "true").config(
+        "spark.sql.caseSensitive", "true"
     )
 
     if local_mode:
@@ -60,4 +60,4 @@ def get_spark_session(
             .master(os.getenv("SPARK_MASTER", "spark://spark-master:7077"))
         )
 
-    return builder.getOrCreate() 
+    return builder.getOrCreate()

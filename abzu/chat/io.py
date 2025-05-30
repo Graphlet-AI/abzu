@@ -5,9 +5,10 @@ import logging
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from abzu.baml_client.types import IndustryArticle
+from abzu.config import config
 
 # Configure logging
 logging.basicConfig(
@@ -21,15 +22,15 @@ class ArticleStorage:
 
     def __init__(
         self,
-        raw_articles_path: str = "data/chat/raw_articles.jsonl",
-        processed_articles_path: str = "data/chat/processed_articles.jsonl",
+        raw_articles_path: str = config.get("chat.start.raw_articles"),
+        processed_articles_path: str = config.get("chat.start.processed_articles"),
         create_dirs: bool = True,
     ):
         """Initialize the storage.
 
         Args:
-            raw_articles_path: Path to store raw article data. Defaults to "data/chat/raw_articles.jsonl".
-            processed_articles_path: Path to store processed article data. Defaults to "data/chat/processed_articles.jsonl".
+            raw_articles_path: Path to store raw article data. Defaults to config value "chat.start.raw_articles".
+            processed_articles_path: Path to store processed article data. Defaults to config value "chat.start.processed_articles".
             create_dirs: Whether to create directories if they don't exist. Defaults to True.
         """
         self.raw_articles_path = raw_articles_path
@@ -43,7 +44,7 @@ class ArticleStorage:
         for path in [self.raw_articles_path, self.processed_articles_path]:
             os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
 
-    def save_raw_article(self, article: Dict[str, Any]) -> bool:
+    def save_raw_article(self, article: dict[str, Any]) -> bool:
         """Save a raw article to the storage.
 
         Args:
@@ -117,7 +118,7 @@ class ArticleStorage:
             except Exception as e:
                 logger.error(f"Failed to create backup of {file_path}: {e}")
 
-    def load_raw_articles(self, limit: Optional[int] = None) -> List[Dict[str, Any]]:
+    def load_raw_articles(self, limit: Optional[int] = None) -> list[dict[str, Any]]:
         """Load raw articles from storage.
 
         Args:
@@ -128,7 +129,7 @@ class ArticleStorage:
         """
         return self._load_jsonl(self.raw_articles_path, limit)
 
-    def load_processed_articles(self, limit: Optional[int] = None) -> List[Dict[str, Any]]:
+    def load_processed_articles(self, limit: Optional[int] = None) -> list[dict[str, Any]]:
         """Load processed articles from storage.
 
         Args:
@@ -139,7 +140,7 @@ class ArticleStorage:
         """
         return self._load_jsonl(self.processed_articles_path, limit)
 
-    def _load_jsonl(self, file_path: str, limit: Optional[int] = None) -> List[Dict[str, Any]]:
+    def _load_jsonl(self, file_path: str, limit: Optional[int] = None) -> list[dict[str, Any]]:
         """Load JSON Lines file.
 
         Args:
