@@ -70,3 +70,6 @@ dump:
     input: "${process.kg.refine.output}/products.parquet"
   returns:
     input: "${api.financialdatasets.price.output}"
+  tickers:
+    url: "https://www.sec.gov/files/company_tickers.json"
+    cache: "data/sec/company_tickers.json"
