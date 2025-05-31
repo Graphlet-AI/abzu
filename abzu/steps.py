@@ -21,12 +21,12 @@ def get_pipeline_steps() -> list[str]:
         # Crawl theinformation.com for articles
         "abzu crawl theinformation",
         # Crawl generic RSS feeds defined in feeds.txt
-        "abzu crawl rss -f feeds.txt",
-        # Process the collected RSS articles
-        "abzu process rss -f feeds.txt",
+        "abzu crawl rss",
         # Process the collected articles
         "abzu process articles semianalysis",
         "abzu process articles theinformation",
+        # Process the collected RSS articles
+        "abzu process rss",
         # Build a separate node / edge list parquet file for each type of node / edge
         "abzu process kg raw",
         # Get financial data for companies extracted from knowledge graph
