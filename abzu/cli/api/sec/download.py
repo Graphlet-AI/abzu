@@ -10,14 +10,14 @@ from abzu.config import config
     "-i",
     "--input",
     "tickers_file",
-    default=config.get("sec.download.tickers_file"),
+    default=config.get("api.sec.download.tickers_file"),
     help="Path to tickers.parquet file",
 )
 @click.option(
     "-o",
     "--output",
     "output_dir",
-    default=config.get("sec.download.output_dir"),
+    default=config.get("api.sec.download.output_dir"),
     help="Directory to store downloaded SEC data",
 )
 @click.option(

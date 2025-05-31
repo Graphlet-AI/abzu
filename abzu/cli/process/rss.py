@@ -10,8 +10,9 @@ from abzu.config import config
 @click.option(
     "-f",
     "--feeds-file",
-    default=config.get("process.rss.feeds_file"),
-    help="feeds.txt file with source:url pairs",
+    type=click.Path(dir_okay=False, file_okay=True, exists=True),
+    default=None,
+    help="Optional feeds.txt file with source:url pairs. If not provided, uses feeds from config.yml",
 )
 @click.option(
     "-i",
@@ -35,7 +36,11 @@ from abzu.config import config
     help="Number of articles to process concurrently",
 )
 def rss(feeds_file, input_dir, output_dir, batch_size):
-    """Process RSS articles through the LLM extraction pipeline."""
+    """Process RSS articles through the LLM extraction pipeline.
+
+    By default, uses feeds defined in config.yml under crawl.rss.feeds.
+    Can optionally use a feeds file for backward compatibility.
+    """
     return process_rss_feeds(
         feeds_file=feeds_file,
         input_dir=input_dir,

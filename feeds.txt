@@ -1,5 +1,0 @@
-wsj-tech:https://feeds.content.dowjones.io/public/rss/RSSWSJD
-wsj-markets:https://feeds.content.dowjones.io/public/rss/RSSMarketsMain
-techcrunch:https://techcrunch.com/feed/
-wired:https://www.wired.com/feed/tag/ai/latest/rss
-nvidia-blog:https://developer.nvidia.com/blog/rss

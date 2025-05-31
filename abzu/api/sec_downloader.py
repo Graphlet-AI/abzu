@@ -1227,8 +1227,8 @@ def display_financial_summary(results: dict[str, Any]):
 
 
 def process_all_tickers(
-    tickers_file: str = config.get("sec.download.tickers_file"),
-    output_dir: str = config.get("sec.download.output_dir"),
+    tickers_file: str = config.get("api.sec.download.tickers_file"),
+    output_dir: str = config.get("api.sec.download.output_dir"),
     filing_index: int = 0,
 ) -> None:
     """Process 10-Q filings for all tickers in a Parquet file."""

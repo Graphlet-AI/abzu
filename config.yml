@@ -8,7 +8,12 @@ crawl:
     output: "${base_dir}/theinformation.jsonl"
 
   rss:
-    feeds_file: "feeds.txt"
+    feeds:
+      wsj-tech: "https://feeds.content.dowjones.io/public/rss/RSSWSJD"
+      wsj-markets: "https://feeds.content.dowjones.io/public/rss/RSSMarketsMain"
+      techcrunch: "https://techcrunch.com/feed/"
+      wired: "https://www.wired.com/feed/tag/ai/latest/rss"
+      nvidia-blog: "https://developer.nvidia.com/blog/rss"
     output_dir: "${base_dir}/rss"
 
 process:
@@ -22,7 +27,6 @@ process:
       output: "${base_dir}/processed_theinformation.jsonl"
 
   rss:
-    feeds_file: "${crawl.rss.feeds_file}"
     input_dir: "${crawl.rss.output_dir}"
     output_dir: "${base_dir}/rss/processed"
 
@@ -31,6 +35,7 @@ process:
       input:
         - "${process.articles.semianalysis.output}"
         - "${process.articles.theinformation.output}"
+        - "${crawl.rss.output_dir}/*.jsonl"
       output: "${base_dir}/knowledge_graph"
 
     refine:
