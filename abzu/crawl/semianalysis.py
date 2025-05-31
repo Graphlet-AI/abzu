@@ -9,6 +9,7 @@ from typing import Any, Iterator, Optional, cast
 
 import dateutil.parser
 import scrapy
+import scrapy.utils.log
 from scrapy.crawler import CrawlerRunner
 from scrapy.http.response import Response
 from scrapy.utils.log import configure_logging
@@ -28,6 +29,9 @@ logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
+
+# Disable Scrapy duplicate logging
+logging.getLogger("scrapy").propagate = False
 
 
 class ArticleCrawler(scrapy.Spider):
@@ -50,6 +54,7 @@ class ArticleCrawler(scrapy.Spider):
         "RANDOMIZE_DOWNLOAD_DELAY": False,  # Don't randomize the delay
         "CONCURRENT_REQUESTS": 1,  # Only one request at a time
         "CONCURRENT_REQUESTS_PER_DOMAIN": 1,  # Only one request per domain at a time
+        "LOG_LEVEL": "INFO",
     }
 
     def __init__(
@@ -74,7 +79,7 @@ class ArticleCrawler(scrapy.Spider):
         logger.info(f"Parsing archive page: {response.url}")
 
         # Log the response status to help with debugging
-        logger.info(f"Response status: {response.status}")
+        logger.debug(f"Response status: {response.status}")
 
         # Find all article links - adjust selector based on actual HTML structure
         # Use a more specific selector for SemiAnalysis articles
@@ -273,13 +278,19 @@ def run_batch_crawl(
         crawled_urls = build_crawled_url_index(output_path)
         print(f"Built index of {len(crawled_urls)} previously crawled URLs")
 
-    configure_logging()
+    # Disable Scrapy's default logging configuration to avoid duplicates
+    configure_logging({"LOG_ENABLED": False})
+
     settings = get_project_settings()
     # Configure concurrency for the spider
     settings.set("CONCURRENT_REQUESTS", concurrent_requests)
     settings.set("CONCURRENT_REQUESTS_PER_DOMAIN", concurrent_requests)
     settings.set("DOWNLOAD_DELAY", 0.7)  # Minimum delay between requests
     settings.set("LOG_LEVEL", "INFO")
+    settings.set("LOG_ENABLED", True)
+
+    # Disable verbose startup logs
+    settings.set("LOG_STDOUT", False)
 
     # Make sure we're using the AsyncIO reactor that we installed
     settings.set("TWISTED_REACTOR", "twisted.internet.asyncioreactor.AsyncioSelectorReactor")
