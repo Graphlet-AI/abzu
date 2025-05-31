@@ -11,9 +11,9 @@ import browsercookie
 import cloudscraper
 import feedparser
 import requests
-from bs4 import BeautifulSoup
 
 from abzu.config import config
+from abzu.html_extractor import HTMLExtractor
 from abzu.utils import append_jsonl, build_crawled_url_index
 
 logger = logging.getLogger(__name__)
@@ -65,22 +65,26 @@ def build_session(
 
 
 def extract_text_from_url(session: requests.Session, url: str) -> str:
-    """Fetch a URL and return extracted article text."""
-    from typing import cast
-
-    from bs4 import Tag
-
+    """Fetch a URL and return extracted article text using HTMLExtractor."""
     resp = session.get(url, timeout=15)
     resp.raise_for_status()
-    soup = BeautifulSoup(resp.content, "html.parser")
-    article = soup.find("article")
-    # Handle the case where article might be None
-    if article is not None:
-        # Cast to Tag to satisfy type checker
-        paragraphs = cast(Tag, article).find_all("p")
-    else:
-        paragraphs = soup.find_all("p")
-    return " ".join(p.get_text(strip=True) for p in paragraphs)
+
+    # Use HTMLExtractor to get clean text
+    html_extractor = HTMLExtractor()
+    extracted_text = html_extractor.extract(resp.text)
+
+    # Log the extraction
+    original_size = len(resp.text)
+    extracted_size = len(extracted_text)
+    reduction_pct = (
+        ((original_size - extracted_size) / original_size * 100) if original_size > 0 else 0
+    )
+    logger.debug(
+        f"Extracted text from {url}: {original_size:,} → {extracted_size:,} chars "
+        f"({reduction_pct:.1f}% reduction)"
+    )
+
+    return extracted_text
 
 
 def parse_rss_and_save(rss_url: str, output_file: str, session: requests.Session) -> None:

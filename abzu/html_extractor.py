@@ -17,8 +17,10 @@ class HTMLExtractor:
     def extract(self, html_content: str) -> str:
         """Extract text content from HTML, preserving structure.
 
+        If the input is plaintext (no HTML tags), returns it unchanged.
+
         Args:
-            html_content: Raw HTML content
+            html_content: Raw HTML content or plaintext
 
         Returns:
             Extracted text content with basic formatting preserved
@@ -26,7 +28,23 @@ class HTMLExtractor:
         try:
             if not html_content:
                 return ""
+
             soup = BeautifulSoup(html_content, "html.parser")
+
+            # Check if this is plaintext by looking for any HTML tags
+            # beyond the minimal wrapper that BeautifulSoup creates
+            all_tags = [tag.name for tag in soup.find_all()]
+            # Remove the wrapper tags that BeautifulSoup adds
+            meaningful_tags = [tag for tag in all_tags if tag not in ["html", "body", "p"]]
+
+            # If no meaningful HTML tags found, treat as plaintext
+            if not meaningful_tags:
+                # Check if the body has any direct text that matches our input
+                body_text = soup.get_text(strip=True)
+                if body_text and body_text.strip() == html_content.strip():
+                    return html_content
+
+            # Continue with HTML extraction if we have actual HTML
 
             # Remove script and style elements
             for script in soup(["script", "style"]):

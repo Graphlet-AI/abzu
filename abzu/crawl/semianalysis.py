@@ -22,6 +22,7 @@ asyncioreactor.install()
 from twisted.internet import reactor  # noqa: E402
 
 from abzu.config import config  # noqa: E402
+from abzu.html_extractor import HTMLExtractor  # noqa: E402
 from abzu.utils import append_jsonl, build_crawled_url_index  # noqa: E402
 
 # Configure logging
@@ -72,6 +73,8 @@ class ArticleCrawler(scrapy.Spider):
         self.articles_processed = 0
         # Set of URLs that have already been crawled
         self.crawled_urls = crawled_urls if crawled_urls is not None else set()
+        # Initialize HTML extractor
+        self.html_extractor = HTMLExtractor()
 
     def parse(self, response: Response) -> Iterator[scrapy.Request]:
         """Parse the archive page and follow links to individual articles."""
@@ -150,23 +153,6 @@ class ArticleCrawler(scrapy.Spider):
         title = response.css("title::text").get() or "untitled"
         logger.info(f"Article title: {title}")
 
-        # Try different selectors for content based on the site structure
-        if "semianalysis.com" in response.url:
-            # First try the main content selector
-            text_fragments = response.css("div.entry-content *::text, article *::text").getall()
-            if not text_fragments:
-                # Fallback to a more general selector
-                text_fragments = response.css("article *::text, .post-content *::text").getall()
-                if not text_fragments:
-                    # Last resort selector
-                    text_fragments = response.css("body *::text").getall()
-                    logger.warning(f"Using last resort selector for {response.url}")
-        else:
-            text_fragments = response.css("div.entry-content *::text").getall()
-
-        # Log the number of text fragments found
-        logger.info(f"Found {len(text_fragments)} text fragments in the article")
-
         # Try various selectors for the publication date
         posted_at_str = (
             response.css('meta[property="article:published_time"]::attr(content)').get()
@@ -185,14 +171,30 @@ class ArticleCrawler(scrapy.Spider):
             logger.warning(f"No posted_at metadata found for {response.url}")
             posted_at = datetime.now()
 
-        # Join the text fragments into a single content string
-        content: str = " ".join(text_fragments).strip()
+        # Get the full HTML content
+        html_content = response.text
+
+        # Extract text using HTMLExtractor
+        extracted_text = self.html_extractor.extract(html_content)
+
+        # Log the extraction result
+        original_size = len(html_content)
+        extracted_size = len(extracted_text)
+        reduction_pct = (
+            ((original_size - extracted_size) / original_size * 100) if original_size > 0 else 0
+        )
+        logger.info(
+            f"Extracted text from HTML: {original_size:,} → {extracted_size:,} chars "
+            f"({reduction_pct:.1f}% reduction)"
+        )
 
         # Log a snippet of the content for debugging
-        content_preview = content[:200] + "..." if len(content) > 200 else content
+        content_preview = (
+            extracted_text[:200] + "..." if len(extracted_text) > 200 else extracted_text
+        )
         logger.info(f"Content preview: {content_preview}")
 
-        # Save the article
+        # Save the article with extracted text
         self.save(
             {
                 "url": response.url,
@@ -200,7 +202,7 @@ class ArticleCrawler(scrapy.Spider):
                 "title": title,
                 "posted_at": posted_at.isoformat(),
                 "collected_at": datetime.now().isoformat(),
-                "content": content,
+                "content": extracted_text,
             }
         )
 

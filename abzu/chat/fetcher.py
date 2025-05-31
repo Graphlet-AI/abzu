@@ -11,6 +11,8 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
+from abzu.html_extractor import HTMLExtractor
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -62,6 +64,9 @@ class ContentFetcher:
         adapter = HTTPAdapter(max_retries=retry_strategy)
         self.session.mount("https://", adapter)
         self.session.mount("http://", adapter)
+
+        # Initialize HTML extractor
+        self.html_extractor = HTMLExtractor()
 
     def extract_title(self, content: str) -> str:
         """Extract the title from HTML content.
@@ -143,10 +148,25 @@ class ContentFetcher:
             response.raise_for_status()
 
             # Get content
-            content = response.text
-            # Extract title and posted date
-            title = self.extract_title(content)
-            posted_at = self.extract_posted_date(content, url)
+            html_content = response.text
+
+            # Extract clean text using HTMLExtractor
+            extracted_text = self.html_extractor.extract(html_content)
+
+            # Log the extraction result
+            original_size = len(html_content)
+            extracted_size = len(extracted_text)
+            reduction_pct = (
+                ((original_size - extracted_size) / original_size * 100) if original_size > 0 else 0
+            )
+            logger.info(
+                f"Extracted text from HTML: {original_size:,} → {extracted_size:,} chars "
+                f"({reduction_pct:.1f}% reduction)"
+            )
+
+            # Extract title and posted date from original HTML
+            title = self.extract_title(html_content)
+            posted_at = self.extract_posted_date(html_content, url)
 
             # Create article dict according to schema in README
             collected_at = datetime.utcnow().isoformat()
@@ -155,7 +175,7 @@ class ContentFetcher:
                 "title": title,
                 "collected_at": collected_at,
                 "posted_at": posted_at,
-                "content": content,
+                "content": extracted_text,  # Store extracted text instead of HTML
             }
 
             logger.info(f"Successfully fetched content from {url}")
