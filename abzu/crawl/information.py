@@ -67,6 +67,8 @@ def build_session(
 def extract_text_from_url(session: requests.Session, url: str) -> str:
     """Fetch a URL and return extracted article text using HTMLExtractor."""
     resp = session.get(url, timeout=15)
+    if resp.status_code != 200:
+        logger.debug(f"Response status code: {resp.status_code} for {url}")
     resp.raise_for_status()
 
     # Use HTMLExtractor to get clean text
@@ -94,10 +96,13 @@ def parse_rss_and_save(rss_url: str, output_file: str, session: requests.Session
     logger.info(f"Found {len(crawled_urls)} previously crawled URLs")
 
     try:
+        logger.info(f"Fetching RSS feed from: {rss_url}")
         resp = session.get(rss_url, timeout=15)
+        if resp.status_code != 200:
+            logger.warning(f"RSS feed response status: {resp.status_code}")
         resp.raise_for_status()
     except Exception as e:  # noqa: BLE001
-        logger.error("Error fetching RSS feed: %s", e)
+        logger.error(f"Error fetching RSS feed from {rss_url}: {e}")
         return
 
     raw = resp.content
@@ -110,6 +115,8 @@ def parse_rss_and_save(rss_url: str, output_file: str, session: requests.Session
     if not entries:
         logger.warning("No entries found in feed: %s", rss_url)
         return
+
+    logger.info(f"Found {len(entries)} entries in RSS feed")
 
     count = 0
     skipped = 0
@@ -128,8 +135,10 @@ def parse_rss_and_save(rss_url: str, output_file: str, session: requests.Session
         # Skip if URL already crawled
         if link in crawled_urls:
             skipped += 1
-            logger.info(f"Skipping already crawled URL: {link}")
+            logger.debug(f"Skipping already crawled URL: {link}")
             continue
+
+        logger.info(f"Crawling: {link}")
 
         if getattr(entry, "content", None):
             feed_content = entry.content[0].value
@@ -138,8 +147,17 @@ def parse_rss_and_save(rss_url: str, output_file: str, session: requests.Session
 
         try:
             content = extract_text_from_url(session, link)
+        except requests.exceptions.HTTPError as e:
+            logger.error(f"HTTP error fetching {link}: {e}")
+            content = ""
+        except requests.exceptions.Timeout as e:
+            logger.error(f"Timeout error fetching {link}: {e}")
+            content = ""
+        except requests.exceptions.ConnectionError as e:
+            logger.error(f"Connection error fetching {link}: {e}")
+            content = ""
         except Exception as e:  # noqa: BLE001
-            logger.warning("Failed full extract from %s: %s", link, e)
+            logger.error(f"Failed to fetch {link}: {type(e).__name__}: {e}")
             content = ""
 
         collected_at = datetime.datetime.utcnow().isoformat() + "Z"
