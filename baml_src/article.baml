@@ -240,7 +240,7 @@ function ExtractIndustryArticle(article_text: string) -> IndustryArticle {
     Parse the following article, perform information extraction to return a structured representation of the data in the schema below. Include only the information that is explicitly stated in the article except in the description fields, where you can give a generic description of an entity. Skip all fields that would be null, unless they are REQUIRED.
 
     {# special macro to print the output instructions. #}
-    {{ ctx.output_format(hoist_classes=["Company", "Product", "Technology", "Partnership", "Customer", "Investor", "Deal", "Product", "Technology",  "NewsSource", "Author", "Ticker"]) }}
+    {{ ctx.output_format(hoist_classes=["Company", "Ticker", "Product", "Technology", "Partnership", "Customer", "Investor", "Deal", "NewsSource", "Author"]) }}
 
     {{ _.role("user") }}
     {{ article_text }}
