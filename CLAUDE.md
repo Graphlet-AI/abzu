@@ -28,6 +28,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Docstrings: Use Numpy style for docstrings, include type hints in docstrings
 - Comments: Use comments to explain complex code, avoid obvious comments
 - Tests: Use pytest for testing, include type hints in test functions, use fixtures for setup/teardown
+- Tests: Don't make a class to contain unit tests. Just write the tests in pytest style.
 - Type hints: Use type hints for all function parameters and return types
 - Type checking: Use mypy for type checking, run mypy before committing code
 - Logging: Use logging for error handling, avoid print statements
