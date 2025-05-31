@@ -22,7 +22,7 @@ def refine_knowledge_graph(
     input_path: str = config.get("process.kg.refine.input"),
     output_path: str = config.get("process.kg.refine.output"),
     partitions: int = 4,
-    local_mode: bool = None,
+    local_mode: bool = True,
 ) -> None:
     """
     Refine the knowledge graph by creating bidirectional relationships and a unified edge list.
@@ -31,7 +31,7 @@ def refine_knowledge_graph(
         input_path: Path to the raw knowledge graph parquet files
         output_path: Path to save the refined knowledge graph
         partitions: Number of Spark partitions to use
-        local_mode: Whether to run in local mode. If None, will be determined by environment
+        local_mode: Whether to run in local mode. Defaults to True.
     """
     # Create SparkSession with appropriate configuration
     spark: SparkSession = get_spark_session(

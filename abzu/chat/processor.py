@@ -6,6 +6,7 @@ from typing import Any, Union
 
 from abzu.baml_client.async_client import b as async_b
 from abzu.baml_client.types import IndustryArticle
+from abzu.html_extractor import HTMLExtractor
 
 # Configure logging
 logging.basicConfig(
@@ -26,6 +27,9 @@ class ArticleProcessor:
                 "BAML article processing may fail."
             )
 
+        # Initialize HTML extractor
+        self.html_extractor = HTMLExtractor()
+
     async def process_article(
         self, article: dict[str, Any]
     ) -> tuple[bool, Union[IndustryArticle, str]]:
@@ -39,14 +43,28 @@ class ArticleProcessor:
                 - Success status (True/False)
                 - Either the processed IndustryArticle (on success) or an error message (on failure)
         """
-        article_text = article.get("content", "")
+        html_content = article.get("content", "")
 
-        if not article_text:
-            error_msg = f"Empty article text for URL: {article.get('url', 'unknown')}"
+        if not html_content:
+            error_msg = f"Empty article content for URL: {article.get('url', 'unknown')}"
             logger.warning(error_msg)
             return False, error_msg
 
         try:
+            # Extract text from HTML to reduce token count
+            article_text = self.html_extractor.extract(html_content)
+
+            # Log the reduction in size
+            original_size = len(html_content)
+            extracted_size = len(article_text)
+            reduction_pct = (
+                ((original_size - extracted_size) / original_size * 100) if original_size > 0 else 0
+            )
+            logger.info(
+                f"Extracted text from HTML for {article.get('title', 'unknown')}: "
+                f"{original_size:,} → {extracted_size:,} chars ({reduction_pct:.1f}% reduction)"
+            )
+
             # Process the article using BAML
             logger.info(f"Processing article: {article.get('title', 'unknown')}")
             result = await async_b.ExtractIndustryArticle(article_text)

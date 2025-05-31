@@ -7,11 +7,7 @@ from pathlib import Path
 from typing import Optional
 
 from abzu.config import config
-from abzu.crawl.information import (
-    DEFAULT_USER_AGENT,
-    build_session,
-    parse_rss_and_save,
-)
+from abzu.crawl.information import DEFAULT_USER_AGENT, build_session, parse_rss_and_save
 
 logger = logging.getLogger(__name__)
 

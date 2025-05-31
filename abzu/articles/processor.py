@@ -10,6 +10,7 @@ from typing import Any
 from abzu.baml_client.async_client import b as async_b
 from abzu.baml_client.types import IndustryArticle
 from abzu.config import config
+from abzu.html_extractor import HTMLExtractor
 from abzu.utils import load_jsonl, save_jsonl
 
 # Configure logging
@@ -43,22 +44,38 @@ def load_articles(file_path: str) -> list[dict[str, Any]]:
 
 async def process_article_async(
     article: dict[str, Any],
+    html_extractor: HTMLExtractor,
 ) -> IndustryArticle | BaseException | None:
     """Process an article using BAML asynchronously.
 
     Args:
         article: Dictionary containing article data
+        html_extractor: HTMLExtractor instance for text extraction
 
     Returns:
         Processed IndustryArticle object or None if processing failed
     """
-    article_text = article.get("content", "")
+    html_content = article.get("content", "")
 
-    if not article_text:
-        logger.warning(f"Empty article text for article: {article.get('id', 'unknown')}")
+    if not html_content:
+        logger.warning(f"Empty article content for article: {article.get('id', 'unknown')}")
         return None
 
     try:
+        # Extract text from HTML to reduce token count
+        article_text = html_extractor.extract(html_content)
+
+        # Log the reduction in size
+        original_size = len(html_content)
+        extracted_size = len(article_text)
+        reduction_pct = (
+            ((original_size - extracted_size) / original_size * 100) if original_size > 0 else 0
+        )
+        logger.info(
+            f"Extracted text from HTML for {article.get('title', 'unknown')}: "
+            f"{original_size:,} → {extracted_size:,} chars ({reduction_pct:.1f}% reduction)"
+        )
+
         result = await async_b.ExtractIndustryArticle(article_text)
 
         # Pass through timestamps from the original article
@@ -77,11 +94,13 @@ async def process_article_async(
 
 async def process_batch(
     batch: list[dict[str, Any]],
+    html_extractor: HTMLExtractor,
 ) -> list[IndustryArticle | BaseException | None]:
     """Process a batch of articles concurrently.
 
     Args:
         batch: List of article dictionaries to process
+        html_extractor: HTMLExtractor instance for text extraction
 
     Returns:
         List of processed articles or exceptions
@@ -90,7 +109,7 @@ async def process_batch(
     start_time = time.time()
 
     # Create task for each article in the batch
-    tasks = [process_article_async(article) for article in batch]
+    tasks = [process_article_async(article, html_extractor) for article in batch]
 
     # Wait for all tasks to complete
     results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -137,6 +156,9 @@ async def process_articles_async(
         output_file: Path to write results
         batch_size: Number of articles to process in each batch
     """
+    # Create HTML extractor instance
+    html_extractor = HTMLExtractor()
+
     # Process in batches
     all_results: list[IndustryArticle | BaseException | None] = []
     for i in range(0, len(articles), batch_size):
@@ -144,7 +166,7 @@ async def process_articles_async(
         logger.info(
             f"Processing batch {i // batch_size + 1}/{(len(articles) + batch_size - 1) // batch_size}"
         )
-        batch_results = await process_batch(batch)
+        batch_results = await process_batch(batch, html_extractor)
         all_results.extend(batch_results)
 
     # Save all results
