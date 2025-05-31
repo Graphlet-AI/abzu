@@ -11,6 +11,13 @@ def extractor():
     return HTMLExtractor()
 
 
+def test_plaintext_extraction(extractor):
+    """Test extraction of plaintext content."""
+    html = "This is just text without HTML tags."
+    result = extractor.extract(html)
+    assert "This is just text without HTML tags." in result
+
+
 def test_simple_html_extraction(extractor):
     """Test extraction of simple HTML content."""
     html = """
