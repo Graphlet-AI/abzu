@@ -24,12 +24,14 @@ The easiest way to get started with Abzu is using Docker and Taskfile. This ensu
 
 ### Prerequisites
 
-#### For Linux:
+#### For Linux
+
 - Docker
 - Docker Compose
 - Bash shell
 
-#### For macOS:
+#### For macOS
+
 - Docker Desktop (includes Docker and Docker Compose)
 - Zsh shell (default on macOS)
 - At least 4GB RAM allocated to Docker Desktop
@@ -37,18 +39,21 @@ The easiest way to get started with Abzu is using Docker and Taskfile. This ensu
 ### Initial Setup
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/Graphlet-AI/abzu.git
 cd abzu
 ```
 
 2. Make the setup script executable and run it:
+
 ```bash
 chmod +x setup.sh
 ./setup.sh
 ```
 
 The setup script will:
+
 - Detect your operating system (Linux or macOS)
 - Check for required dependencies (Docker and Docker Compose)
 - Install the appropriate version of Taskfile for your system
@@ -60,6 +65,7 @@ The setup script will:
    - Or restart your terminal
 
 4. Verify the installation:
+
 ```bash
 task --version
 ```
@@ -117,16 +123,19 @@ task help
 #### Method 2: Using Container Shell
 
 1. Start the services:
+
 ```bash
 task up
 ```
 
 2. Open a shell in the container:
+
 ```bash
 task shell
 ```
 
 3. Inside the container, run commands with Poetry:
+
 ```bash
 # Show help
 poetry run abzu --help
@@ -144,6 +153,7 @@ poetry run abzu process kg raw
 ### Development Environment Features
 
 The Docker setup provides:
+
 - Jupyter Notebook server running on port 8888
 - Live code reloading (changes are reflected immediately)
 - Persistent data storage in the `data` directory
@@ -154,7 +164,7 @@ The Docker setup provides:
 
 If you prefer not to use Docker, you can set up the project directly on your machine.
 
-### Prerequisites
+### Pre-Requisites
 
 1. Python 3.12
 2. Java 11
@@ -163,6 +173,7 @@ If you prefer not to use Docker, you can set up the project directly on your mac
 ### Installation Steps
 
 1. Create a Python environment:
+
 ```bash
 # Option 1: Conda
 conda create -n abzu python=3.12 -y
@@ -174,6 +185,7 @@ source venv/bin/activate
 ```
 
 2. Install Poetry:
+
 ```bash
 # Option 1: Using pipx (recommended)
 # On macOS:
@@ -189,16 +201,19 @@ curl -sSL https://install.python-poetry.org | python3 -
 ```
 
 3. Install dependencies:
+
 ```bash
 poetry install
 ```
 
 4. Install pre-commit checks:
+
 ```bash
 pre-commit install
 ```
 
 5. Generate BAML client:
+
 ```bash
 baml-cli test
 baml-cli generate
@@ -227,6 +242,7 @@ abzu process kg raw
 The application supports two Spark processing modes:
 
 1. **Local Mode (Default)**
+
    - Runs Spark in a single JVM on your machine
    - Best for:
      - Development and testing
@@ -238,6 +254,7 @@ The application supports two Spark processing modes:
      - No additional services required
 
 2. **Distributed Mode (Docker only)**
+
    - Runs Spark across multiple containers using Bitnami Spark images
    - Best for:
      - Production environments
@@ -248,18 +265,20 @@ The application supports two Spark processing modes:
      - Web UI monitoring (ports 18080, 18081)
      - Fault tolerance
    - Configuration:
-     - Master UI: http://localhost:18080
-     - Worker UI: http://localhost:18081
+     - Master UI: <http://localhost:18080>
+     - Worker UI: <http://localhost:18081>
      - Worker resources: 2 cores, 2GB memory
 
 ### Monitoring and Debugging
 
 1. **Local Mode**:
+
    - Logs appear in your terminal
    - Memory usage visible in system monitor
    - Easy to debug with print statements
 
 2. **Distributed Mode**:
+
    - Spark UI available at `http://localhost:18080`
    - Worker UI at `http://localhost:18081`
    - Monitor:
@@ -271,6 +290,7 @@ The application supports two Spark processing modes:
 ## Environment Variables
 
 Add your API keys to `docker-compose.yml` for Docker setup:
+
 ```yaml
 environment:
   - GEMINI_API_KEY=your_key_here
@@ -278,6 +298,7 @@ environment:
 ```
 
 For local setup, set environment variables in your shell:
+
 ```bash
 export GEMINI_API_KEY="your_key_here"
 ```
@@ -301,7 +322,7 @@ weave/
 
 ## Common Tasks
 
-### Crawling SemiAnalysis.com or TheInformation.com:
+### Crawling SemiAnalysis.com or TheInformation.com
 
 ```bash
 
@@ -399,6 +420,7 @@ abzu process kg refine
 ```
 
 Note: For Docker setup, the Gemini API key should be configured in `docker-compose.yml`:
+
 ```yaml
 environment:
   - GEMINI_API_KEY=your_key_here
