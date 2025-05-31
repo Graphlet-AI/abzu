@@ -2,10 +2,10 @@ base_dir: "data"
 
 crawl:
   semianalysis:
-    output: "${base_dir}/semianalysis.jsonl"
+    output: "${base_dir}/articles/semianalysis.jsonl"
 
   theinformation:
-    output: "${base_dir}/theinformation.jsonl"
+    output: "${base_dir}/articles/theinformation.jsonl"
 
   rss:
     feeds:
@@ -20,11 +20,11 @@ process:
   articles:
     semianalysis:
       input: "${crawl.semianalysis.output}"
-      output: "${base_dir}/processed_semianalysis.jsonl"
+      output: "${base_dir}/articles/processed_semianalysis.jsonl"
 
     theinformation:
       input: "${crawl.theinformation.output}"
-      output: "${base_dir}/processed_theinformation.jsonl"
+      output: "${base_dir}/articles/processed_theinformation.jsonl"
 
   rss:
     input_dir: "${crawl.rss.output_dir}"
