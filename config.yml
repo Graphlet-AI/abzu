@@ -15,6 +15,13 @@ crawl:
       wired: "https://www.wired.com/feed/tag/ai/latest/rss"
       nvidia-blog: "https://developer.nvidia.com/blog/rss"
     output_dir: "${base_dir}/rss"
+    ignore:
+      - "wsj.com"
+      - "github.com"
+
+  reddit:
+    input: "${base_dir}/reddit/reddit_posts.jsonl"
+    output: "${base_dir}/reddit/processed_reddit_posts.jsonl"
 
 process:
   articles:
@@ -36,6 +43,8 @@ process:
         - "${process.articles.semianalysis.output}"
         - "${process.articles.theinformation.output}"
         - "${crawl.rss.output_dir}/*.jsonl"
+        - "${chat.start.processed_articles}"
+        - "${crawl.reddit.input}"
       output: "${base_dir}/knowledge_graph"
 
     refine:
