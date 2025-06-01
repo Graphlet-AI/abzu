@@ -301,7 +301,7 @@ weave/
 
 ## Common Tasks
 
-### Crawling SemiAnalysis.com or TheInformation.com:
+### Crawling SemiAnalysis.com, reddit, or TheInformation.com:
 
 ```bash
 
@@ -313,6 +313,11 @@ poetry run abzu crawl semianalysis
 poetry run abzu crawl theinformation
 # Generic RSS feeds from feeds.txt
 poetry run abzu crawl rss -f feeds.txt
+
+ # Reddit - fetch ticker discussions
+abzu crawl reddit ticker AAPL
+abzu crawl reddit ticker TSLA --limit 50
+abzu crawl reddit ticker NVDA --output data/nvidia_reddit.jsonl
 
 # Local Installed Example (not docker)
 # SemiAnalysis

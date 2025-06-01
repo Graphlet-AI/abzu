@@ -10,3 +10,6 @@ data/semianalysis.jsonl
 data/processed_semianalysis.jsonl
 data/theinformation.jsonl
 data/processed_theinformation.json
+__pycache__/
+*.py[cod]
+*$py.class
