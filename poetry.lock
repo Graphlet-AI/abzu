@@ -6780,6 +6780,21 @@ anyio = ">=3.6.2,<5"
 full = ["httpx (>=0.27.0,<0.29.0)", "itsdangerous", "jinja2", "python-multipart (>=0.0.18)", "pyyaml"]
 
 [[package]]
+name = "ta-lib"
+version = "0.6.3"
+description = "Python wrapper for TA-Lib"
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "ta_lib-0.6.3.tar.gz", hash = "sha256:0c628db09b3fab6e5c26979e608b674e7aecc10359c82ba8d53f729767a856ac"},
+]
+
+[package.dependencies]
+numpy = "*"
+setuptools = "*"
+
+[[package]]
 name = "tenacity"
 version = "9.1.2"
 description = "Retry code until it succeeds"
@@ -7861,4 +7876,4 @@ cffi = ["cffi (>=1.11)"]
 [metadata]
 lock-version = "2.1"
 python-versions = "3.12.*"
-content-hash = "f450bdebf1c70a1b1fef0292f27aecde4b93199598cfc4ba479dd92730956762"
+content-hash = "4f68e8e410bfd261fa2b1d62ee3e7658585b1543d4b7976993dfbe2dd2662d64"

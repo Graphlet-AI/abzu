@@ -22,7 +22,7 @@ There are two ways to run Abzu:
 
 The easiest way to get started with Abzu is using Docker and Taskfile. This ensures a consistent development environment across all machines.
 
-### Prerequisites
+### Pre-Requisites
 
 #### For Linux
 
@@ -171,6 +171,16 @@ If you prefer not to use Docker, you can set up the project directly on your mac
 3. Apache Spark 3.5.5
 
 ### Installation Steps
+
+0. Install TA-Lib (if not already installed):
+
+```bash
+# 1. On an Intel / AMD x86 machine
+brew install ta-lib
+
+# 2. On an Apple Silicon M1 / M2 machine
+arch -arm64 brew install ta-lib
+```
 
 1. Create a Python environment:
 
