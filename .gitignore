@@ -10,3 +10,4 @@ data/semianalysis.jsonl
 data/processed_semianalysis.jsonl
 data/theinformation.jsonl
 data/processed_theinformation.json
+.mypy_cache
