@@ -43,6 +43,7 @@ This file provides guidance to OpenAI Codex when working with code in this repos
 - External strings - we store all strings in `config.yml` and use the abzu.config.config instance to access them. Do not hardcode strings in the codebase. If you need to add a new string, add it to the config.yml file and access it through the Config class's instance via `from abzu.config import config` and `config.get(key)`.
 - Imports - always import up top in PEP8 format. Do not import inside functions or classes. Use absolute imports, not relative imports. Do not use wildcard imports (e.g., `from module import *`). Always import specific classes or functions from modules.
 - Space Lines - never create a line with only spaces.
+- Imports - don't check if things are installed and handle it with a try/except. Instead, assume they are installed and import them directly. If they are not installed, the code will fail at runtime, which is acceptable in this project.
 
 ## Codex Logic
 
