@@ -21,7 +21,6 @@ logger = logging.getLogger(__name__)
 def build_knowledge_graph(
     input_path: list[str] = config.get("process.kg.raw.input"),
     output_path: str = config.get("process.kg.raw.output"),
-    partitions: int = 4,
     local_mode: Optional[bool] = None,
 ) -> None:
     """
@@ -30,7 +29,6 @@ def build_knowledge_graph(
     Args:
         input_path: Path(s) to the input JSON files
         output_path: Path to save the output parquet files
-        partitions: Number of partitions to use for data processing
         local_mode: Whether to run in local mode. If None, will be determined by environment
     """
     # Create SparkSession with appropriate configuration
@@ -45,10 +43,6 @@ def build_knowledge_graph(
 
     # Show a sample record
     processed_df.show(1, truncate=100, vertical=True)
-
-    # Process and optimize the dataframe
-    logger.info("Optimizing dataframe for graph extraction ...")
-    processed_df = processed_df.repartition(partitions)
 
     # Extract entities into separate dataframes
     logger.info("Extracting entities from documents ...")
