@@ -29,7 +29,7 @@ This file provides guidance to OpenAI Codex when working with code in this repos
 - Comments: Use comments to explain complex code, avoid obvious comments
 - Tests: Use pytest for testing, include type hints in test functions, use fixtures for setup/teardown
 - Tests: Don't make a class to contain unit tests. Just write the tests in pytest style.
-- Type hints: Use type hints for all function parameters and return types
+- Type hints: Use Python 3.9 type hints for all function parameters and return types. Use `list`, `dict`, `tuple`, etc. instead of `List`, `Dict`, `Tuple` from the `typing` module. Use `Optional` from the `typing` module for optional parameters.
 - Type checking: Use mypy for type checking, run mypy before committing code
 - Logging: Use logging for error handling, avoid print statements
 - Documentation: Use Sphinx for documentation, include docstrings in all public functions/classes
