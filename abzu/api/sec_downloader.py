@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SEC XBRL Data Extractor - Revised
+# SEC XBRL Data Extractor - Revised  -- Trying to fix things
 
 # Standard library imports
 import json
@@ -980,7 +980,7 @@ def process_10q_filing(ticker: str, filing_idx: int = 0) -> dict[str, Any]:
                 )
                 # Define save directory for XBRL files to avoid clutter
                 xbrl_save_dir = os.path.join(
-                    config.get("sec.download.xbrl_files"), cik, accession_no.replace("-", "")
+                    config.get("api.sec.download.xbrl_files"), cik, accession_no.replace("-", "")
                 )
                 file_path = download_xbrl_file(xbrl_file_info, save_dir=xbrl_save_dir)
 
@@ -1069,7 +1069,7 @@ def process_10q_filing(ticker: str, filing_idx: int = 0) -> dict[str, Any]:
             print("\n--- Attempt 3: HTML Filing Extraction (Fallback/Supplement) ---")
             try:
                 html_save_dir = os.path.join(
-                    config.get("sec.download.html_filings"), cik, accession_no.replace("-", "")
+                    config.get("api.sec.download.html_filings"), cik, accession_no.replace("-", "")
                 )
                 html_path = download_html_filing(
                     cik, accession_no, primary_doc_name, save_dir=html_save_dir
@@ -1227,11 +1227,13 @@ def display_financial_summary(results: dict[str, Any]):
 
 
 def process_all_tickers(
-    tickers_file: str = config.get("sec.download.tickers_file"),
-    output_dir: str = config.get("sec.download.output_dir"),
+    tickers_file: str = config.get("api.sec.download.tickers_file"),
+    output_dir: str = config.get("api.sec.download.output_dir"),
     filing_index: int = 0,
 ) -> None:
     """Process 10-Q filings for all tickers in a Parquet file."""
+
+    print("Reading tickers file", tickers_file)
 
     df = pd.read_parquet(tickers_file)
     tickers = df["symbol"].dropna().unique()
