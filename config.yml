@@ -31,6 +31,9 @@ process:
       input:
         - "${process.articles.semianalysis.output}"
         - "${process.articles.theinformation.output}"
+        - "${process.rss.output_dir}/processed_nvidia-blog.jsonl"
+        - "${process.rss.output_dir}/processed_wired.jsonl"
+        - "${process.rss.output_dir}/processed_techcrunch.jsonl"
       output: "${base_dir}/knowledge_graph"
 
     refine:
