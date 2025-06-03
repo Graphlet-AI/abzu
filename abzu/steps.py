@@ -39,6 +39,8 @@ def get_pipeline_steps() -> list[str]:
         "abzu dump returns -f data/financialdatasets/price.json",
         # Download SEC filings for companies
         "abzu api sec download",
+        # Download annual reports for key companies (optional - specify ticker and year)
+        "abzu api sec annual-report --ticker <TICKER> --year <YEAR>",
         # Build a single node / edge list in GraphFrames format
         "abzu process kg refine",
         # List all products found in the refined knowledge graph

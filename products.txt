@@ -1,0 +1,759 @@
+Company                       Product                       Description
+ACM Research                  SAPS Single Wafer Cleaning ToolA cleaning tool that applies space alternate phase shift (SAPS) megasonic acoustic vibrations via a fluid bath to clean wafers with high uniformity while minimizing pattern damage.
+ACM Research                  TEBO (Timely Energized Bubble Oscillation)A technology/tool that leverages controlled bubble oscillations to assist in cleaning, successfully applied in NAND processes at key customers.
+ACM Research                  Electro-Chemical Plating Tool A plating tool used primarily in chip packaging applications, competing with products like Lam Research’s Sabre 3D tools.
+AMD                           Rembrandt                     A notebook product line noted for improved battery life and GPU performance.
+AMD                           AMD V-Cache                   A product utilizing SoIC hybrid bonding on Zen 3, enabling additional stacked cache and improved interconnect performance.
+AMD                           Milan                         An existing AMD server CPU line competing in the market.
+AMD                           MI450X                        A forthcoming rack-scale GPU solution (with SKUs IF64 and IF128) expected in H2 2026 that could be competitive with NVIDIA’s VR200 NVL144.
+AMD                           AMD RDNA 3 GPUs               Advanced fanout packaged GPUs featuring very fine line-space (L/S) capabilities down to 2-micron.
+AMD                           MI400                         Briefly mentioned as part of AMD’s product discussions in the article.
+AMD                           MI355X                        An AMD GPU product pitched for competitive performance, though its scale (8 GPUs world size) is compared unfavorably against NVIDIA’s larger scale offerings.
+AMD                           MI350X                        Briefly mentioned as part of AMD’s portfolio alongside the MI300 series.
+AMD                           AMD CPUs                      Processors described as using flip chip packaging, which, while free of reticle limit issues, suffer from higher power consumption and wiring limitations.
+AMD                           Genoa X                       A variant of Genoa that incorporates 3D V-Cache technology to boost performance for technical applications such as computational fluid dynamics and electronic design automation.
+AMD                           MI300X                        A high-performance accelerator product that integrates advanced memory technologies for improved compute performance.
+AMD                           MI300A                        A variant of the MI300 product line aimed at HPC style applications.
+AMD                           AMD MI300X GPU                A GPU option mentioned in discussions of quantization and alternative hardware choices for AI inference.
+AMD                           MI300                         A GPU product recently integrated into PyTorch CI/CD as part of AMD's efforts to improve its software infrastructure.
+AMD                           AMD 3D V-Cache                An advanced packaging product that utilizes active silicon stacking, employing TSMC’s SoIC CoWo technology.
+AMD                           Bergamo                       An AMD CPU variant designed for cloud-native workloads, leveraging the Zen 4C cores which offer a layout optimized for greater density at the expense of frequency.
+AMD                           AMD MI300                     A high-performance AI accelerator chip targeting improved compute density in datacenters.
+AMD                           AMD MI250X GPU                A GPU product that employs multiple packaging techniques including the use of silicon bridges to connect GPU dies with HBM.
+AMD                           Rome                          An existing AMD server CPU line launched in late 2019.
+AMD                           MI308X                        An AI accelerator legally shipped to China, designed to skirt the current export restrictions.
+AMD                           Phoenix                       A next-generation product (spelled as 'Phenoix' in the article) intended to improve competitiveness in the client segment.
+AMD                           MI250X                        An advanced AI chip falling into the ‘Black Zone’ of export controls due to high performance levels.
+AMD                           Genoa                         AMD’s 4th generation Epyc server CPU for general-purpose and mainstream workloads; it features 96 cores, 12 DDR5 channels, and 160 PCIe Gen 5 lanes along with significant performance improvements over Milan.
+AMD                           Turin                         The next generation AMD server CPU expected to debut in the first half of 2024, featuring additional variants and advanced architectural enhancements.
+AMD                           Dragon Range                  A next-generation product expected to help change market perceptions.
+AMD                           3D V-Cache                    A 3D stacked cache solution that utilizes TSMC’s SoIC-X die-to-wafer hybrid bonding for improved performance and interconnect density.
+AMD                           Strix                         An upcoming product expected to shift the overall market picture.
+AMD                           Sienna                        A next-generation AMD server CPU platform mentioned along with other future offerings.
+AMD                           AMD Genoa                     A server CPU product from AMD targeted at datacenter applications.
+AMD                           Siena                         An AMD CPU variant tailored for Telco and Edge deployments as well as certain enterprise uses, characterized by lower power consumption and reduced memory/core counts relative to Genoa.
+AMD (Advanced Micro Devices, Inc.)AMD MI300X                    An AI accelerator product which includes advanced HBM configurations (12+1 layer) to overcome memory bandwidth challenges.
+ASE                           ASE Co-Packaged Optics        Research focused on optical packaging solutions aimed at overcoming bottlenecks of traditional wirebonding for 400G and 800G networking generations.
+ASML                          High-NA EUV Lithography ScannerA high numerical aperture extreme ultraviolet lithography scanner designed for high-volume manufacturing at advanced semiconductor process nodes.
+ASML                          NXE:3300                      A low‐NA EUV development tool which, for comparison, had only reached 15% of its target source power at shipment.
+ASML                          EXE:5000                      A high‐NA EUV lithography system deployed by Intel, notable for its advanced scanner design and high source power performance.
+ASML                          NXE:3400B                     A production low‐NA EUV system noted for reaching 50% of the target source power at its first shipment.
+ASML                          Lithography Tools             Tools used in semiconductor manufacturing to pattern wafers via advanced lithographic techniques.
+ASML                          3400C                         An earlier EUV lithography tool shipped by ASML (primarily in 2021), with an overlay accuracy of 1.5nm.
+ASML                          NXT 2100i                     A lithography system released in 2022 by ASML, notable for its ability to achieve an overlay accuracy of 1.5nm for advanced semiconductor nodes.
+ASML                          NXE:3800E                     A current low-NA EUV scanner tool used in leading edge technology nodes, whose throughput benefits from lower exposure doses compared to high-NA systems.
+ASML Holding NV               1980i                         A lithography tool used in the production of 7nm technologies that is now subject to strict export controls due to its dedicated chuck overlay performance.
+ASML Holding NV               TWINSCAN NXT:1980Di           An advanced DUV lithography tool that is effectively banned from export to China for use in advanced-node fabs.
+ASML Holding NV               Lithography Steppers          Equipment used in semiconductor manufacturing for patterning wafers, specifically leveraging lithography processes such as EUV.
+Advanced Micro Devices (AMD)  MI250X                        A high-performance computing chip used in AI and advanced processing applications.
+Advanced Micro Devices (AMD)  Genoa                         A high-performance CPU product that, despite lacking accelerators, may fall under supercomputer classification due to its performance potential.
+Advanced Micro Devices Inc. (AMD)AMD MI250X                    A previous HPC GPU chip used before the advent of the MI300, noted for its compute unit count.
+Advanced Micro Devices Inc. (AMD)AMD MI300                     A next-generation heterogeneous processor combining CPU and GPU compute elements with advanced packaging, offered in multiple variants (MI300A, MI300X, MI300C, MI300P) targeting AI and HPC applications.
+Advanced Micro Devices Inc. (AMD)AMD Banff XCD                 A GPU compute chiplet used in the MI300, optimized for compute workloads with a high number of compute units.
+Advanced Micro Devices Inc. (AMD)AMD GD300 Durango             A modified Zen 4 CPU chiplet integrated into the MI300 that provides high bandwidth connectivity to the active interposer.
+Advanced Micro Devices Inc. (AMD)Elk Range Active Interposer DieThe foundational chiplet building block for the MI300, featuring memory controllers, cache, and high-bandwidth interconnect interfaces.
+Advanced Micro Devices, Inc.  Infinity Fabric 4             A high-performance interconnect technology designed to efficiently link chiplets and support multiple protocols including PCIe, CXL, and UCIe.
+Advanced Micro Devices, Inc.  AMD Turin                     A product referenced as part of the competitive landscape in the high-performance CPU segment.
+Advanced Micro Devices, Inc.  MI300X                        AMD’s newly released GPU accelerator that boasts higher FP8 FLOPS, increased memory bandwidth, and larger memory capacity compared to competing products.
+Advanced Micro Devices, Inc.  AMD EPYC 9654 Genoa           A predecessor data center processor offering up to 96 Zen 4 cores, used as a reference point for Bergamo’s core count improvements.
+Advanced Micro Devices, Inc.  Bergamo                       An AMD chip that typically reaches production with just 2 to 3 steppings, highlighting a contrast in design efficiency compared to Intel.
+Advanced Micro Devices, Inc.  Zen 3                         An AMD CPU microarchitecture built on chiplet designs that delivers high performance per watt and forms the foundation of AMD’s competitive edge.
+Advanced Micro Devices, Inc.  MI400                         An upcoming AI accelerator product expected to address the IO limitations found in current PCIe-based designs.
+Advanced Micro Devices, Inc.  Genoa                         An AMD chip that, like Bergamo, benefits from fewer design iterations compared to Intel’s process.
+Advanced Micro Devices, Inc.  MI300                         An AI accelerator product noted for its use of PCIe SerDes for IO; its design is criticized for limiting the total IO compared to Ethernet-style SerDes.
+Advanced Micro Devices, Inc.  AMD EPYC 9004 Bergamo         A new server processor series featuring up to 128 Zen 4c cores, designed for cloud environments with improved core density, power efficiency, and cost-effectiveness.
+Advanced Micro Devices, Inc. (AMD)MI250X                        A high-power GPU that is blocked under the new export control rules.
+Advanced Micro Devices, Inc. (AMD)MI300                         Another GPU product affected by the restrictions alongside MI250X.
+Advanced Micro Devices, Inc. (AMD)AMD GPU/APU for Infotainment  A combined graphics and processing unit solution integrated into Tesla’s infotainment system on the same board as the FSD chips.
+Aehr                          WaferPak Contactor            A consumable contactor similar to a probe card that carries the wafer, used in conjunction with the FOX-XP tool. It costs around $1.5M.
+Aehr                          FOX-XP                        A wafer-level burn-in test tool for silicon carbide wafers, capable of testing up to 18 wafers simultaneously in a highly regulated extreme temperature environment. Priced at approximately $2.5M.
+Aehr                          FOX-XP WaferPak Aligner       An automated aligner that loads and unloads wafers between FOUPs or wafer cassettes and the WaferPak Contactors, priced at less than $1M.
+Aehr Test Systems             FOX-XP WaferPak Aligner       A system that uses vacuum suction to load and unload wafers between FOUPs or wafer cassettes and the WaferPak contactors. It is designed to support full automation of the FOX-XP test tools and is generally priced under $1 million.
+Aehr Test Systems             WaferPak Contactor            A consumable tool similar to a probe card that not only interfaces with the wafer but also carries it. It features 2048 I/O pins, multiple voltage levels, and supports high-voltage testing at temperatures up to 150°C, costing approximately $1.5 million.
+Aehr Test Systems             FOX-XP Tool                   A wafer-level burn-in tool capable of testing 9 to 18 wafers simultaneously inside a controlled, high-temperature chamber with power dissipation over 18 kW. The tool is priced at approximately $2.5 million.
+Agibot                        Agibot                        A robot product that has begun mass production, indicative of rapid scale in the robotics market.
+Airbnb                        Experiences                   A feature on the Airbnb platform that allows users to book local experiences such as cooking classes, tours, and other activities.
+Alibaba                       Yitian                        Alibaba's Arm-based server CPU product referenced in the context of shifting market dynamics.
+Amazon                        Amazon Trainium               A chip designed for AI training workloads, ordered through AlChip.
+Amazon                        Amazon HealthOmics platform   A platform leveraging AI models for innovations in healthcare and drug discovery.
+Amazon                        Amazon Graviton 3             A processor designed for cloud and datacenter applications.
+Amazon                        CodeWhisperer                 A machine learning–based code generation tool aimed at assisting developers, as discussed in the context of Amazon’s AI offerings.
+Amazon                        Étoile                        A new drama series centered on the world of ballet, featuring a story of a talent swap between New York and Paris companies, available via Amazon Prime.
+Amazon                        Bedrock                       An AWS service or product related to generative AI, mentioned as a keyword in the article header.
+Amazon                        Twitch.tv                     A live streaming platform primarily used by content creators, recently shifting its revenue share model from 70/30 to 50/50 and capping stream quality in certain regions based on infrastructure costs.
+Amazon                        Trainium2                     An AI chip designed for training tasks, part of Amazon’s multi-year AI infrastructure investments.
+Amazon                        Trainium 2                    A product used for AI training workloads, assembled by contracted original design manufacturers and benefiting from tariff exemptions under the USMCA.
+Amazon                        Inferentia3                   An AI processor targeted for inference workloads, complementing Amazon’s AI strategy.
+Amazon                        Alexa                         A voice assistant that, alongside other similar products, could see improvements through advanced generative AI.
+Amazon                        Titan                         Referred to as Amazon's very best model in the article, though noted as being outperformed by a number of open-source models.
+Amazon                        SageMaker                     A platform used for creating, training, and deploying machine learning models, noted in the article as less critical in practice compared to underlying GPU infrastructure.
+Amazon Web Services           Graviton                      An Arm-based server CPU product heavily used in AWS datacenters.
+Amazon Web Services           AWS Nitro                     A specialized chip for efficient, cost-effective data center performance.
+Amazon.com Inc.               Trainium2 custom silicon      A custom silicon chip developed to accelerate training for large-scale AI models.
+Amazon.com, Inc.              Inferentia2                   A chip very similar to Trainium1 but with fewer NeuronLink interconnect ports; largely used for AI inferencing tasks.
+Amazon.com, Inc.              Trainium1                     An earlier AI chip used primarily for non-complex internal workloads and generative AI inferencing.
+Amazon.com, Inc.              Graviton3                     A custom CPU featuring a chiplet design with advanced packaging, higher memory bandwidth, and efficient power consumption, tailored for AWS instances.
+Amazon.com, Inc.              EFAv3                         Elastic Fabric Adapter version 3, a scale-out ethernet networking product used to connect Trainium2 instances with low packet latency.
+Amazon.com, Inc.              Trainium2                     A custom AI chip designed for complex generative AI training and inference, featuring approximately 500W power, 667 TFLOP/s dense BF16 performance, 96GB HBM3e memory, and advanced scale-up and scale-out networking.
+Amazon.com, Inc.              Custom SSD controller         A controller designed in-house for SSDs that leverages raw NAND alongside software-managed flash translation layers to reduce performance variation and cost.
+Amazon.com, Inc.              Graviton 3 Servers            1U servers used in high-density rack environments, each featuring Graviton 3 CPUs.
+Amazon.com, Inc.              Project Rainier               A deployment project involving 400k Trainium2 chips intended for Anthropic’s AI workloads.
+Amazon.com, Inc.              Trainium                      Amazon’s AI chip designed for deep learning training workloads.
+Amazon.com, Inc.              Inferentia                    Amazon’s AI chip optimized for inference tasks.
+Amazon.com, Inc.              Amazon Nitro Program          A custom silicon development initiative aimed at optimizing general-purpose CPU computing and storage.
+Amazon.com, Inc.              400Gbe Network Interface ControllersHigh-speed NICs that are part of Amazon's development pipeline, deployed for networking applications leveraging proprietary protocols.
+Amazon.com, Inc.              AWS Nitro                     A custom hardware stack comprising a hypervisor, a security chip, and specialized networking cards to improve virtualization and offload management tasks.
+Amazon.com, Inc.              AWS platform                  Amazon’s cloud computing platform offering a wide range of infrastructure and services.
+Ampere Computing              AmpereOne A192 Siryn          A 192-core datacenter CPU featuring in-house CPU cores, a chiplet-style architecture, DDR5 memory and PCIe Gen 5 support, as well as advanced packaging and thermal design, optimized for predictable and scalable cloud performance.
+Ampere Computing              Ampere One                    The next-generation Ampere CPU based on a 5nm custom architecture (codenamed 'Siryn') featuring DDR5 and PCIe5, aimed at further performance and feature evolution.
+Ampere Computing              Ampere Altra Max              A variant of the Ampere Altra featuring 128 cores in a smaller die size, offering lower cost per core for cloud workloads.
+Ampere Computing              Ampere Altra                  A server CPU designed with high core counts (80 cores) optimized for cloud native performance and predictable operation.
+Ampere Computing              Altra                         Ampere’s previous CPU line, referenced for comparison with the new AmpereOne, which had lower core counts and used a more conventional monolithic die approach.
+Anker                         Nano II chargers              Next generation chargers available in 30, 45, and 65-watt versions, with the 65-watt model achieving the size efficiency previously seen in lower power models thanks to Power Integrations’ technological innovation.
+Anthropic                     Claude-2                      A foundation model known for offering a balance of quality and cost, and currently recognized as one of the leading publicly accessible AI models.
+Anthropic                     Claude-3                      An upcoming next-generation AI model from Anthropic that is expected to further enhance generative AI capabilities.
+Anthropic                     Claude-4                      A future advanced AI model from Anthropic, expected to power next-level AI applications.
+Anthropic                     Anthropic Claude 2            A language model built to surpass GPT-3.5 performance in various benchmarks.
+Anthropic                     Claude 3.5 Opus               A model from Anthropic mentioned for comparison in terms of training cost and performance.
+Anthropic                     Claude                        An AI chatbot whose model is being integrated into other products to enhance research and data analysis.
+Anthropic Inc.                Claude AI Models              AI models provided to customers to facilitate the development and deployment of AI agents capable of handling complex, multi-step tasks.
+Anthropic, Inc.               Claude 3.5 Opus               An internal model used by Anthropic for synthetic data generation and reward modeling, which was not publicly released.
+Anthropic, Inc.               Claude 3.5 Sonnet             A publicly discussed model that benefited from additional post-training enhancements using synthetic data generated by Claude 3.5 Opus.
+Anysphere                     Cursor                        A coding tool developed by Anysphere.
+Apple                         iPhone 14 Pro                 A premium iPhone model expected to maintain a price point of $999, offering advanced performance and design features.
+Apple                         Xcode                         Apple's programming tool which is set to incorporate Anthropic’s Claude Sonnet model for improved code writing and editing.
+Apple                         Xcode programming tool        An integrated development environment used for writing and editing code.
+Apple                         Siri                          A personal assistant that could be vastly improved with advanced language models and natural voice synthesis.
+Apple                         Apple A15                     An in-house designed processor that integrates large amounts of cache and demonstrates how advanced packaging can mitigate pad limitations.
+Apple                         iPhone Mini                   A smaller variant of the iPhone that has been discontinued and slated for replacement by a larger model.
+Apple                         Apple A series chips          Chips that utilize TSMC’s InFO packaging technology along with advanced fanout substrate designs.
+Apple                         iPhone                        Apple’s flagship smartphone line, including models like the iPhone SE and lower-end variants of the iPhone 12, which are experiencing reduced orders and declining sales.
+Apple                         iPhone Max                    A larger iPhone model with a similar screen size to the flagship iPhone Pro Max, introduced as a replacement for the iPhone Mini.
+Apple                         A15 chipset                   The existing chipset powering the iPhone 13 and used in the iPhone 14 and iPhone 14 Max, balancing performance and cost.
+Apple                         A16 chipset                   A new chipset designed to offer performance improvements but not used in the iPhone 14 models due to cost concerns.
+Apple                         Apple S series chips          Chips that benefit from advanced packaging techniques involving TSMC’s InFO process.
+Apple                         iPhone 14                     A smartphone model that is set to use the existing A15 chipset alongside an increased memory upgrade to 6GB of LPDDR5.
+Apple                         iPhone 14 Max                 A variant of the iPhone 14 that features similar specs to the standard model but is positioned at a higher price point.
+Apple                         iPhone 14 Pro Max             A premium and larger version of the iPhone 14 Pro, positioned at a price point of $1099 with enhanced features.
+Apple                         Apple silicon                 A range of processors designed by Apple for its devices, noted for improved performance and energy efficiency.
+Apple                         iPhone 13                     The predecessor smartphone model that shipped with 4GB of LPDDR4X memory.
+Apple                         Apple M1 Ultra                A product that integrates multiple advanced packaging types, using silicon bridges instead of a silicon interposer.
+Apple                         Apple M series chips          Chips that incorporate advanced packaging with TSMC’s InFO technology.
+Apple                         Apple M1                      A low-power processor used in mobile and laptop devices, contributing to TSMC’s high-performance computing revenue segment.
+Apple Inc.                    A12 Bionic                    An earlier chip used in previous iPad mini and iPad Air models that serves as a benchmark for the performance gains claimed in the A15 and A14 comparisons.
+Apple Inc.                    A14 Bionic                    The previous generation chip, used as a reference for performance improvements in the A15 and compared in discussions of CPU and GPU gains.
+Apple Inc.                    A15 Bionic                    Apple’s latest chip featuring a 2+4 core big.LITTLE CPU design, a 4 or 5 core GPU, a 16-core NPU with 15.8 TOPs, new video encoding/decoding capabilities, an updated ISP, variable refresh rate support in Pro models, and a doubled system cache of 32MB.
+Apple Inc.                    A15 SOC                       Apple's System-on-Chip that features increased die area and transistor count along with revised CPU, GPU, ISP, and NPU blocks to improve overall performance and efficiency.
+Apple Inc.                    A15 SoC                       A chip used in previous iPhone models and as a comparative baseline for the M2’s design and performance improvements.
+Apple Inc.                    A16 SoC                       An upcoming chip mentioned as part of a split lineup for iPhones, expected to be used on Pro models with design divergences from the A15.
+Apple Inc.                    M3                            An upcoming chip expected to incorporate the next-generation Armv9 based core and be manufactured on TSMC’s N3 node.
+Apple Inc.                    M2 Ultra                      A high-end system-on-chip (SoC) used in products like Mac Studio and Mac Pro, formed by stitching together two M2 Max chips using UltraFusion.
+Apple Inc.                    M2 SoC                        A system-on-chip with 20 billion transistors announced at WWDC that offers minor CPU improvements but significant enhancements in GPU performance and video editing capabilities.
+Apple Inc.                    M2 Pro                        A future higher-end variant of the M2 series, already designed and taped out, based on similar A15 IP.
+Apple Inc.                    Apple Intelligence            An AI features suite being developed for the Chinese market that relies on AI models provided by a Chinese firm.
+Apple Inc.                    M1 Mac                        A product from Apple's Mac lineup that has contributed to notable market share gains during its transition.
+Apple Inc.                    M1                            Apple’s previous generation chip, used as a baseline for comparing improvements in the M2.
+Apple Inc.                    M-series SoCs                 Arm-based system-on-chip products used in client notebooks and desktops.
+Apple Inc.                    iPhone 12                     Apple's smartphone that features a custom mmWave antenna solution, as revealed by iFixit's teardown.
+Apple Inc.                    Apple A16                     A mobile chipset used in Apple products, exemplifying advanced semiconductor design and fabrication.
+Apple Inc.                    iPhone 13                     A smartphone that is rumored to support satellite internet connectivity through a modem that incorporates the n53 band.
+Apple Inc.                    iPhone 17 Pro                 A premium iPhone model expected to make up approximately 25% of production.
+Apple Inc.                    iPhone 17 Pro Max             A premium iPhone model that is expected to account for around 40% of overall production.
+Apple Inc.                    iPhone 17 Standard            A standard iPhone model also estimated to comprise about 25% of production.
+Apple Inc.                    Foldable iPhone               A book-style foldable iPhone expected to debut next year. The device is anticipated to have an inner display of just under 8 inches when unfolded and an outer display of around 5.7 inches when closed.
+Apple Inc.                    Edge-to-Edge iPhone           A model featuring an edge-to-edge display, expected to launch in 2027.
+Apple Inc.                    Apple A14 Bionic              A mobile system-on-chip featuring an 88mm2 die size with 11.8 billion transistors, manufactured using a 5nm process node.
+Apple Inc.                    M1X (Colloquial)              A next-generation Mac chip referenced in relation to modifications made to the CPU core’s Memory Management Unit (MMU) that were originally intended for this generation.
+Apple Inc.                    M2 Max                        A higher-end variant in the M2 series with enhanced performance features, designed alongside the M2 Pro.
+Apple Inc.                    M3 Ultra                      A planned high-end chip that was ultimately cancelled.
+Apple Inc.                    Ultrathin iPhone              An upcoming ultrathin smartphone model scheduled for release this fall. It is noted to have worse battery life compared to other models.
+Apple Inc.                    iPhone                        Apple's flagship smartphone product with a complex bill of materials that drives significant semiconductor demand.
+Apple Inc.                    Ultra-thin iPhone             A new ultrathin iPhone expected to be around 5.5 millimeters thick. It features compromises such as a single speaker instead of a dual-speaker setup, one rear camera lens (as opposed to multiple lenses found on premium models), and reduced battery life—with an optional battery case in development to help address the shorter battery performance.
+Applied Materials             AMAT Sculpta                  A pattern shaping tool used as part of complementary patterning techniques in lithography.
+Applied Materials, Inc.       Modified Physical Vapor Deposition (PVD) ToolA modified deposition tool designed for panel level packaging. It combines techniques used in LCD panels, PCBs, and fan-out wafer level packaging to create large packages (stated as 600mm x 600mm or 670mm x 580mm) that can integrate many chips. The tool is capable of depositing ultra-thin layers (down to 10µm) and forming interconnect layers, low resistance contacts, or conformal seed layers for etched and laser-drilled vias.
+Applied Materials, Inc.       Centura Sculpta               A tool that introduces a new process step called pattern shaping, which uses a controllable ribbon beam of plasma to elongate features in one direction. It aims to reduce the need for EUV multi-patterning steps, thereby cutting costs, power consumption, water use, and emissions in advanced semiconductor manufacturing.
+Arm                           Neoverse cores                CPU cores tailored for datacenter and cloud computing applications.
+Arm                           Cortex cores                  Off-the-shelf CPU cores used in a wide range of devices, including smartphones.
+Arm                           Compute Subsystem (CSS)       A fully validated block for datacenter CPUs that allows customization on memory, I/O, and accelerators.
+Astera Labs                   Smart Cable Module            A module aimed at enhancing cable connectivity performance as part of Astera Labs’ vision to create a global connectivity platform.
+Astera Labs                   Aries Retimers                A family of smart retimer chips designed for PCIe 4.0 and 5.0 applications to overcome signal integrity issues in dense accelerator and cloud systems.
+Astera Labs                   Leo Memory Connectivity PlatformA third-generation CXL-based memory accelerator and pooling chip that supports dynamic memory pool resizing without requiring a host CPU restart. It features support for up to 2TB of memory, works with DDR4 and DDR5 (up to 5600MT/s), and is offered in E-series (expansion only) and P-series (pooling and sharing) variants.
+Astera Labs                   Leo CXL Memory Controllers    Memory controllers leveraging the CXL protocol to enable advanced memory pooling and facilitate efficient data exchanges in high-performance systems.
+Astera Labs                   Taurus Active Electrical Cable (AEC) Paddle Board ModulesModules designed to maintain high-speed signal integrity across active electrical cables in datacenter applications.
+Ayar Labs                     TeraPHY chiplet               A 75mm2 chip that delivers 2Tbps of IO by transmitting data through 8 single mode fibers using 32Gbps NRZ channels, enabling support for 64 PCIe 5.0 / CXL lanes while offering significant power and area efficiency compared to traditional optical transceivers.
+Ayar Labs                     TeraPHY co-packaged optical IO chipletA proposed optical I/O solution that integrates with RFICs to enable high-speed, low-power data transmission and reduced electromagnetic interference in defense systems and datacenters.
+Berkeley                      Microfield Exposure Tool      Tool used by Intel alongside low‐NA systems to characterize and down-select appropriate photoresists for high‐NA EUV lithography.
+Biren                         BR104                         A 1-die module AI chip that has roughly half of the BR100’s specifications, including lower aggregated performance figures. Despite lower specs, its design still raises compliance questions under US regulation guidelines.
+Biren                         BR100                         An AI chip with performance parameters that could fall under the new export control measures.
+Broadcom                      Tomahawk 5                    A switch product used to build large GPU clusters in a cost-effective manner and as an alternative to Nvidia's networking solutions.
+Broadcom Inc.                 YouTube Video Encoding Chips  Custom silicon products designed for video encoding applications, mentioned as part of Broadcom’s broader portfolio of customized routing and switching chips.
+Broadcom Inc.                 Google TPU                    A custom silicon accelerator chip designed to run AI workloads, referenced as part of Broadcom’s custom silicon ramp for major customers like Google.
+Broadcom Inc.                 FBAR Filter                   A filter component originally acquired via the Bulk Acoustic Wave business that has become indispensable in modern smartphones for tuning and filtering radio frequency signals.
+Broadcom Inc.                 Meta MTIA                     An in‐house AI chip developed for Meta, produced as part of Broadcom’s custom silicon business.
+ByteDance                     TikTok                        A social media app primarily used for creating and sharing short-form video content, which gained prominence during political campaigns.
+ByteDance Ltd.                TikTok                        A short-form video application operating globally that is also facing potential regulatory challenges in the U.S.
+ByteDance Ltd.                Douyin                        A sister short-form video application to TikTok, operating in China.
+Cerebras                      Open Source GPT-3             A version of the GPT-3 architecture trained from scratch using state-of-the-art scaling methods such as μ-parameterization.
+Cerebras Systems              Cerebras WSE2                 An AI accelerator product designed for large-scale AI applications.
+Cerebras Systems              WSE                           An AI accelerator chip mentioned in the context of supercomputing and advanced computing controls.
+Cerebras Systems              Cerebras WSE-2                The second-generation wafer-scale engine chip with dimensions of 215mm x 215mm, designed for machine learning training/inference and high performance computing applications. It leverages on-chip memory, high fabric bandwidth, and advanced interconnects to enable significant performance advantages.
+Cerebras Systems Inc.         Andromeda System              A 16 CS-2 wafer-scale system with 13.5 million AI cores, powered by AMD EPYC Milan processors and connected via a high-bandwidth SwarmX fabric link for training large language models.
+Character AI                  Character AI Chatbot          A conversational AI system designed to provide companionship and emotional support, while also offering capabilities like social simulation and personalized interaction.
+Community Collaboration       Vicuna                        A 13B parameter model that achieved performance close to commercial systems like ChatGPT, developed by a group of collaborating academic and independent researchers.
+CoreWeave Inc.                CoreWeave Managed Slurm       A managed offering that provides the Slurm scheduler and simplified deployment for GPU clusters.
+CoreWeave Inc.                CoreWeave Bare Metal          An offering that provides raw GPU nodes without managed scheduling software.
+CoreWeave Inc.                CoreWeave Managed Kubernetes  A managed Kubernetes offering that abstracts infrastructure management and enables rapid deployment of GPU workloads.
+CoreWeave Inc.                CoreWeave Managed SUNK (Slurm in Kubernetes)A managed solution combining Slurm scheduling within Kubernetes for efficient workload orchestration.
+Credo                         Active Electrical Cables (AEC)Active electrical cables designed for high-density datacenter applications, offering improved reliability over traditional passive copper cables.
+DISCO Corporation             Grinding Wheels (including MICRON-CUT)Ultra-thin grinding wheels used in semiconductor manufacturing, including innovations such as the 40 micron MICRON-CUT wheel.
+DISCO Corporation             Laser Lift-off Tool           A tool that uses laser technology to remove an outer full-thickness ring from a wafer as part of advanced integration processes.
+DISCO Corporation             Laser Saws and Stealth Dicing ToolsLaser-based cutting tools that include stealth dicing, a process that minimizes the street width between dies, enhancing die yield especially for ultra-small chip designs.
+DISCO Corporation             Wafer Dicing Saws (including DAD-2H)Saws used for dicing wafers into individual dies. The DAD-2H model was notably showcased in 1977.
+DISCO Corporation             Surface Planarization Tools   Equipment used to flatten and smooth wafer surfaces, often used subsequent to grinding operations.
+DISCO Corporation             Wafer Grinders                Machines used for grinding silicon wafers to achieve the desired thickness and surface quality.
+DISCO Corporation             CMP Tools                     Chemical Mechanical Planarization tools for surface finishing, although DISCO holds a low market share compared to competitors.
+Daily Harvest                 French Lentil and Leek CrumblesA frozen meal product from Daily Harvest that was linked to food poisoning incidents requiring emergency surgery.
+DeepSeek                      DeepSeek R1                   A reasoning model derived from DeepSeek V3, employing reinforcement learning on synthetic data to boost reasoning performance and efficiency.
+DeepSeek                      DeepSeek V2                   A version of DeepSeek’s model trained on 8.1 trillion tokens, achieving competitive performance with significantly lower compute.
+DeepSeek                      DeepSeek V3                   The base model by DeepSeek that integrates innovations like Multi-Token Prediction, Mixture-of-Experts architecture, and Multi-head Latent Attention to improve training efficiency and reduce inference costs.
+Dell Technologies             4xA100 Redstone Server        A low-volume, low-end AI server configuration using 4 A100 GPUs targeted primarily at the HPC market.
+Dell Technologies             8xH100 HGX Server             A more advanced GPU server configuration that Dell was late to design and ship, reflecting its recent push into the AI server market.
+Disco                         Wafer Dicing, Grinding and Cutting EquipmentTools used for cutting and processing semiconductor wafers into individual chips.
+EV Group                      Wafer bonding tools           Equipment used for bonding wafers together in semiconductor manufacturing; critical for producing CMOS image sensors, NAND flash, and advanced logic chips.
+Fungible                      Merchant Silicon for Cloud-level DPUsA product designed to address the networking and storage scaling demands for cloud infrastructures by leveraging programmable silicon.
+Generic                       Passive Direct Attached Copper (DAC) CablesCopper-based cables traditionally used for server connections, which face challenges at higher data rates due to increasing size and error rates.
+GlobalFoundries               RF-SOI                        A radio frequency Silicon on Insulator technology used in specialty applications.
+GlobalFoundries               Fotonix                       A silicon photonics offering branded as Fotonix, aimed at advancing photonic technologies.
+GlobalFoundries Inc.          12FDX                         An upcoming generation FD-SOI process technology that continues GlobalFoundries’ commitment to advanced manufacturing.
+GlobalFoundries Inc.          GF Fotonix platform           A silicon photonics platform that utilizes GlobalFoundries’ 90WG and 45CLO process nodes along with innovative packaging technologies to enable high-bandwidth, low-power optical interconnects for data centers and other applications.
+GlobalFoundries Inc.          22FDX                         A high-volume, advanced fully depleted silicon on insulator (FD-SOI) process technology offered by GlobalFoundries.
+GlobalFoundries Inc.          45CLO                         A silicon-on-insulator process capable of covering the O, C, and L optical bands and integrating active components such as drivers, TIAs, and optical modulators on a single die.
+GlobalFoundries Inc.          90WG                          A silicon photonics foundry process technology used in datacenter interconnects, remote radio heads and telecom applications, offering low loss with wavelengths at 1310nm and 1550nm.
+GoPro                         Karma Drone                   A drone product mentioned as being outclassed by DJI’s rapidly iterated drones.
+GoPro                         Hero5                         A drone product referenced in contrast to DJI’s offering, highlighting iteration speed and market competition.
+Google                        Gemini Flash 2.0 Thinking     Google’s reasoning model, noted for its large context length and lower cost, released prior to the hype around DeepSeek R1.
+Google                        PaLM model                    A full-size language model that requires significant hardware resources including TPUs and CPUs to run.
+Google                        TPUv5e                        A variant of Google’s TPUv5 for enhanced AI performance and scalability.
+Google                        PaLM Model                    A 540-billion parameter neural network model that exemplifies large-scale transfer learning and efficient sampling in AI research.
+Google                        Argos VPU                     A video processing unit designed to accelerate specialized computing workloads in data centers.
+Google                        YouTube                       A video streaming service that offers a 70/30 revenue split to creators while delivering higher quality streams (up to 4K) compared to Twitch.
+Google                        TPUv5                         An AI chip designed for both internal AI training/inference and external customer usage.
+Google                        Gemini 2 Ultra                A rumored model expected to surpass GPT-4 Turbo based on performance benchmarks.
+Google                        TPUv4                         A tensor processing unit used for AI acceleration, supplied to customers in high-volume designs.
+Google                        Google Gemini 1.5             An AI model noted for its performance and cost efficiency in serving inference workloads, particularly in long sequence tasks.
+Google                        GeminiAI                      An AI model used to power robotics, as demonstrated by its integration in Apptronik’s humanoid robots.
+Google                        Axion                         Google's Arm-based server CPU initiative mentioned as part of the competitive landscape.
+Google                        Gemini Ultra                  A large AI model by Google mentioned in the context of compute scaling comparisons.
+Google                        Google Gemini Pro             A language model competitor to GPT-3.5 offered as part of Google’s suite of AI products.
+Google                        Google Bard                   A search product that leverages a lightweight version of LaMDA, offering rapid response times and improved latency for enhanced search experiences.
+Google                        Google TPU                    An AI accelerator designed to support massive training deployments and specialized for large-scale AI workloads.
+Google                        Google Assistant              A voice assistant which, with the help of large language models, can provide improved personal assistance.
+Google                        TPU                           An AI accelerator product line mentioned in context with Broadcom, serving as a point of comparison for advanced chip designs.
+Google                        Pixel 6                       A smartphone on which foundation models are demonstrated to run at 5 tokens per second.
+Google LLC                    Gemini                        A project aimed at eliminating the traditional spine layer in datacenter networks to reduce power consumption and capital expenditure associated with electronic packet switches.
+Google LLC                    PaLM                          Google’s Pathways Language Model, a state-of-the-art dense transformer.
+Google LLC                    Google Argos VPU              A video encoding chip deployed at scale by Google that handles VP9 encoding, replacing the workload of over 10 million Intel CPUs and significantly reducing costs.
+Google LLC                    Gemini 2                      An upcoming AI model expected to improve performance and competitiveness in large-scale training.
+Google LLC                    Palomar                       Google’s internally developed optical circuit switch (OCS) system featuring the Palomar MEMS mirror package, which directs optical signals through mirrors for low latency and power savings.
+Google LLC                    Google TPU                    An AI accelerator chip used internally by Google, noted for its performance and cost-efficiency for AI workloads.
+Google LLC                    Google TPUv5                  A next-generation tensor processing unit designed for high-performance AI inferencing and training.
+Google LLC                    Pathways                      An internally developed training system that emphasizes fault tolerance and integration with Google’s vertically built infrastructure.
+Google LLC                    Bard                          A conversational AI interface that initially uses a lightweight version of the LaMDA model to scale user interactions.
+Google LLC                    MEENA                         A large language model released by Google prior to the Covid pandemic; it had higher model capacity than GPT-2 and was central to early comparisons with OpenAI's models.
+Google LLC                    Jax                           A machine learning framework developed by Google that competes with TensorFlow and is used in some of its generative AI models.
+Google LLC                    Jupiter                       Google’s custom all-encompassing networking stack that integrates in-house switches with reconfigurable software. It has been deployed for over five years across most of Google’s datacenters to enable higher performance and cost savings.
+Google LLC                    Gemini 1 Ultra                A leading frontier AI model that was trained across multiple datacenters.
+Google LLC                    LaMDA                         A transformer model focused on conversational applications.
+Google LLC                    TensorFlow                    An early dominant machine learning framework that eventually lost favor among researchers compared to PyTorch.
+Google LLC                    Argos VCU                     A custom ASIC (Video Coding Unit) designed to accelerate video encoding workloads across Google’s services by replacing traditional CPU-based encoding, offering support for H.264, VP9, and future AV1 formats.
+Google LLC                    TPUv4i (TPUv4 lite)           The predecessor inference chip to TPUv5e, used primarily in internal workloads.
+Google LLC                    TPUv5e (TPUv5 lite)           Google’s latest AI chip that offers a significant performance and total cost of ownership advantage for training and inference of models up to 200 billion parameters.
+Google LLC                    TPUv5 (Viperfish)             A higher-end member of Google’s TPU family, distinguished from the efficient TPUv5e.
+Google LLC                    Project Apollo                An initiative to replace the traditional Clos architecture’s electronic packet switches with an optical circuit switching solution, thereby reducing latency and power usage while allowing for future data rate upgrades.
+Graphcore                     Graphcore Bow IPU             An AI processor that uses wafer on wafer hybrid bonding to increase clock speeds by approximately 40% without additional power consumption.
+Graphcore                     Graphcore IPU BOW             An advanced packaging product that features active silicon stacking with TSMC’s SoIC WoW technology.
+Graphcore                     Good Computer                 A system-level solution comprising multiple servers and racks that leverages Graphcore’s accelerator technology and popular SDK for scaling AI training workloads.
+Graphcore                     IPU                           A processor designed for AI workloads, noted in the article as having challenges in performance scaling and software support.
+Graphcore                     Graphcore IPU                 An AI accelerator product offering direct links for inter-node communications to scale to hundreds or thousands of accelerators.
+Graphcore                     BOW                           An AI acceleration chip referenced under the advanced computing integrated circuit controls.
+Graphcore                     Bow                           Graphcore's newest AI accelerator that employs 3D wafer-on-wafer stacking and hybrid bonding to achieve up to 40% higher clock speeds and improved performance with full software compatibility.
+Graphcore                     Bow IPU                       A wafer-on-wafer hybrid bonded processor designed for high-performance computing applications.
+Habana                        Habana Gaudi                  An AI accelerator product aimed at improving inter-node communications and scaling across many accelerators.
+Huawei Technologies Co., Ltd. Huawei Ascend 910B            A new GPU built on SMIC's 7nm process that positions its performance between Nvidia’s A100 and H100, and is being purchased by multiple Chinese hyperscalers.
+Huawei Technologies Co., Ltd. Ascend 910                    Huawei’s earlier AI accelerator chip whose successor is being developed on a 7nm process using chiplets and HBM.
+Huawei Technologies Co., Ltd. Kirin 710A                    A 14nm based mobile SOC produced as a contingency solution at SMIC’s Chinese logic foundry, intended to replace the internally designed Kirin chips affected by US restrictions.
+Huawei Technologies Co., Ltd. Kirin 9000S                   A flagship system-on-chip featuring a custom Armv9 core, a proprietary GPU architecture, and integrated RF modem technology produced on SMIC’s N+2 7nm process.
+Huawei Technologies Co., Ltd. Ascend 910C                   An AI accelerator chip used in the CloudMatrix 384 system, noted for its role in boosting system-level performance despite not matching the per chip performance of competitors like Nvidia Blackwell.
+Huawei Technologies Co., Ltd. CloudMatrix 384               A rack scale AI system composed of 384 Ascend 910C chips connected in an all-to-all topology, delivering 300 PFLOPs of dense BF16 compute and enhanced aggregate memory capacity and bandwidth.
+Huawei Technologies Co., Ltd. Ascend 910B                   A variant of Huawei’s Ascend chip series mentioned in the context of comparative production volumes alongside the 910C.
+Huawei Technologies Co., Ltd. Ascend 910B AI accelerator    An AI accelerator chip designed for high-performance computing applications in artificial intelligence.
+IMS Nanofabrication           Multi-beam mask writer        A precision tool used to create photomask sets for semiconductor manufacturing, especially required for process nodes beyond 7nm.
+Illumina, Inc.                NovaSeq X                     A sequencing instrument that has significantly reduced the cost of whole genome sequencing, driving exponential growth in genomics data.
+Inflection                    Inflection-2                  A language model aiming to compete with GPT-3.5 in benchmark performance.
+Intel                         Granite Rapids                An upcoming Intel server CPU generation mentioned as part of the forecasted performance gap with AMD’s Genoa.
+Intel                         Sapphire Rapids               The prior design of Intel’s Xeon Scalable processors employing four smaller dies with chiplet disaggregation, which has been rethought in the new Emerald Rapids design.
+Intel                         Skylake                       An older Intel server CPU platform referenced in context of long deployment cycles.
+Intel                         Ice Lake server chips         Server processors that experienced a delayed ramp and were highlighted for volume increases despite margin pressures.
+Intel                         Ice Lake SP                   An existing Intel x86 server CPU line referenced for revenue and unit comparisons.
+Intel                         vPro                          A technology product suite aimed at enterprise security and management.
+Intel                         Ice Lake                      An earlier Intel CPU architecture referenced when discussing performance gaps with AMD’s newer platforms.
+Intel                         Sierra Forest                 An Intel server CPU generation mentioned in the context of future performance trends.
+Intel                         Mobileye EyeQ SOCs            System-on-a-chip products used in autonomous vehicle applications, with lifetime shipment milestones announced.
+Intel                         IPU                           Referenced as Intel’s latest IPU, this chip is part of Intel’s product portfolio in the semiconductor space.
+Intel                         Meteor Lake                   Intel's high-volume product intended to utilize EUV lithography in its Intel 4 process node, which has been delayed until at least Week 52, 2023.
+Intel                         Alder Lake                    A desktop and mobile CPU family that is part of Intel’s 10nm process ramp, contributing to shifts in average selling prices.
+Intel                         Tiger Lake                    A line of laptop and mobile CPU products noted for its strong sales ramp and significant shipment milestones.
+Intel                         Cascade Lake                  An older Intel server CPU platform compared against newer AMD solutions.
+Intel                         6 x 12" Mask                  A large reticle mask format proposed to improve scanner throughput by enabling full‐field exposures and reducing stitching issues.
+Intel                         Gaudi 3                       An upcoming AI chip with improved hardware performance, directly compared to Nvidia’s GPUs.
+Intel                         Xeon                          Intel’s server CPU series, referenced in the article as having a performance deficit compared to AMD’s Genoa.
+Intel                         Emerald Rapids                Intel’s 5th Generation Xeon Scalable processor redesign that features a reduction in chiplets, increased core counts and cache, upgraded DDR5 memory support, and other optimizations aimed at improving performance and efficiency compared to its predecessor.
+Intel                         Intel Meteor Lake CPUs        A product that utilizes Intel’s Foveros packaging technology to stack active silicon on passive silicon.
+Intel                         Gaudi HL-328 + HL-388         AI accelerators produced by Intel referenced in the new export restriction framework.
+Intel                         Intel EMIB-T                  A new variant of Intel’s Embedded Multi-die Interconnect Bridge (EMIB) technology that incorporates TSVs for higher interconnect density in complex heterogeneous packages.
+Intel Corporation             IPDK                          A public development kit that abstracts infrastructure processing unit hardware to enable efficient data plane tasks such as RDMA, storage acceleration and service mesh.
+Intel Corporation             Co-packaged Silicon Photonics A networking solution that integrates optical input/output within semiconductor packages to overcome the limitations of copper-based interconnects.
+Intel Corporation             Lunar Lake                    An upcoming client roadmap product featuring next-generation details and innovations, discussed during the event.
+Intel Corporation             Intel 16                      Intel’s foundry process node (formerly referred to as 22nm FFL or Intel 16nm) planned to be the first major foundry process.
+Intel Corporation             Sierra Forest                 Another datacenter product, shifted from a competitor node to Intel 3 and grouped with Granite Rapids under the Birch Stream platform for 2024.
+Intel Corporation             IFS Packaging Units           Packaging service units that have recently been shipped for revenue generation.
+Intel Corporation             Diamond Rapids                An upcoming datacenter CPU in Intel’s roadmap intended to boost competitiveness.
+Intel Corporation             Tofino 3 Networking Switch    High-performance networking switches designed for handling large-scale AI training and advanced network functions.
+Intel Corporation             Tofino 3                      An Intel networking product noted as the largest BGA package in the world.
+Intel Corporation             Custom ASIC for Networking    A custom application-specific integrated circuit (ASIC) designed for networking functions, set to ramp on the Intel 4 node.
+Intel Corporation             Intel Sierra Forest           An upcoming high core count CPU targeting datacenter applications by using a mix of E-cores to achieve up to 144 cores.
+Intel Corporation             Intel Sapphire Rapids         A datacenter server CPU product from Intel.
+Intel Corporation             Ice Lake                      An Intel chip noted for a slow production ramp and inefficiencies that affect overall capital utilization.
+Intel Corporation             Intel NNP-I Inference AcceleratorAn inference accelerator that was previously used heavily for DLRM workloads before being replaced in part by GPUs and serving as a reference for the architecture of Meta’s MTIA.
+Intel Corporation             Intel Habana Gaudi 2          Intel’s 2nd generation datacenter AI chip with limited adoption outside select cloud instances.
+Intel Corporation             Intel Gaudi3/PVC              An AI accelerator optimized for training, representing Intel's efforts in high-performance datacenter solutions.
+Intel Corporation             Intel Emerald Rapids CPU      A top-of-the-line CPU initially quoted in compute chassis configurations for AI clusters.
+Intel Corporation             Intel 7                       A process node technology that is reported to be on or ahead of its planned timeline.
+Intel Corporation             Intel 4                       A process node technology that is reported to be on or ahead of its planned timeline.
+Intel Corporation             Intel 3                       A process node technology that is reported to be on or ahead of its planned timeline.
+Intel Corporation             Intel 20A                     A process node technology that is reported to be on or ahead of its planned timeline.
+Intel Corporation             Intel 18A                     A leading-edge process node technology that is reported to be on or ahead of its planned timeline.
+Intel Corporation             networking switches           Products used for network communications whose development has been ended as part of the company's cost-cutting strategy.
+Intel Corporation             Intel Ponte Vecchio           An Intel GPU product aimed at AI workloads, noted for its delayed delivery and uncompetitive performance relative to Nvidia’s offerings.
+Intel Corporation             Clearwater Forest Test Chip   A test chip that has taped out using Intel’s 18A logic chiplets packaged on an Intel 3 base die with technologies such as EMIB and Foveros Direct (hybrid bonding).
+Intel Corporation             Ponte Vecchio High Performance Computing GPUA high performance computing GPU product developed for HPC applications that has experienced delays relative to its original 2021 target.
+Intel Corporation             Foveros Omni                  An advanced packaging product that utilizes copper pillars and ODI dies to enable smaller IO pitches and facilitate complex 3D logic stacking, particularly in Intel’s Foveros Omni implementations.
+Intel Corporation             Raptor Lake                   An earlier generation Intel CPU product manufactured on an Intel 7 monolithic process.
+Intel Corporation             Gaudi 3                       The successor to Gaudi 2, similarly affected by the U.S. export controls.
+Intel Corporation             Alder Lake                    Intel’s current generation CPU product line, referenced for architectural comparisons.
+Intel Corporation             Gaudi 2                       An AI accelerator chip that falls under the new restrictions based on its aggregate performance.
+Intel Corporation             Lakefield Hybrid CPU SoC      Intel’s first generation 3D-stacked hybrid CPU system-on-chip that introduced Foveros technology with a 50-micron bump pitch.
+Intel Corporation             Sapphire Rapids               Intel’s data center chip that required 12 design steppings, leading to higher costs and delayed time-to-market.
+Intel Corporation             Sapphire Rapids EE            A variant of the Sapphire Rapids CPU designed with integrated 5G network instructions and FEC to deliver flexible acceleration for vRAN workloads.
+Intel Corporation             Granite Rapids                A next-generation datacenter product, redefined to use Intel 3 node technology and planned as a 2024 offering.
+Intel Corporation             18A SRAM Test Wafer           A demonstration product showing the 18A process capabilities, with an SRAM test wafer presented on stage.
+Intel Corporation             OpenVINO                      An open-source toolkit for vision inference, neural network optimization, and efficient mapping of AI models across multiple Intel hardware platforms.
+Intel Corporation             Xeon Products                 Server processors that are expected to ramp on the Intel 3 process node, with two Xeon product variants mentioned.
+Intel Corporation             Alchemist Gaming GPU          A gaming GPU product, also known by its codename DG2, that has faced significant delays and remains pending a full release into the PC DIY market.
+Intel Corporation             Mount Evans IPU (DPU)         A processing unit included in Intel’s product lineup, associated with networking capabilities.
+Intel Corporation             Clearwater Forest             An expected datacenter CPU product as part of Intel’s future development plans.
+Intel Corporation             Tofino 2                      An Intel networking product featured at Intel’s Vision conference.
+Intel Corporation             FlexRAN                       A software stack designed to shift radio access network workloads onto commodity hardware while balancing programmability, performance, and power efficiency.
+Intel Corporation             RISC-V accelerator program    A program aimed at accelerating development and adoption of RISC-V technology that has now been cut as part of broader cost-saving measures.
+Intel Corporation             Mount Evans NIC               A NIC developed through a partnership effort involving Google and Intel aimed at enabling features similar to Amazon’s Elastic Block Storage.
+Intel Corporation             Falcon Shores                 An ambitious product combining GPU and CPU elements on a single carrier, targeted at future high-performance computing applications.
+Intel Corporation             Ponte Vecchio GPU             A high-performance GPU product by Intel that utilizes Foveros technology with advanced interconnects and a 36-micron bump pitch.
+Intel Corporation             Meteor Lake (Arrow Lake)      Intel’s mass market client architecture product featuring advanced packaging with multiple bump pitches, transitioning from the initial Meteor Lake naming to Arrow Lake.
+Intel Corporation             Meteor Lake Compute Tile      A key component of Intel’s Meteor Lake architecture, measured at around 40mm² using the Intel 4 process node.
+Intel Corporation             Mount Bryce eASIC             A purpose-built hardware accelerator used for processing Layer 1 digital signal processing workloads in radio access networks.
+Intel Corporation             Meteor Lake                   An Intel product featuring a compute tile of approximately 70mm², produced on the Intel 4 process node with low volume production and high cost structure.
+Intel Corporation             Rogue River Forest            A planned datacenter CPU product that underscores Intel’s struggle to rebuild market leadership.
+Intel Habana                  Intel Habana Gaudi2           A second-generation AI training chip that shows improved performance and is compared directly with Nvidia’s A100 on similar process nodes.
+Intel Habana                  Intel Habana Gaudi1           The previous generation AI training chip demonstrating good scalability with higher chip counts.
+KLIC                          wirebonder machines           Machines used predominantly in trailing edge semiconductor packaging, with emerging applications in miniLED panel and battery cell production, currently facing long lead times.
+Kioxia                        Kioxia highest density CMOS bonded to array (CBA) NANDA NAND flash memory product that uses CMOS bonding to an array architecture to achieve high density.
+Kokusai Electric Co., Ltd.    AdvancedAce                   A large batch chemical vapor deposition tool capable of processing up to 175 wafers at a time, used for deposition (excluding ALD) in semiconductor manufacturing.
+Kokusai Electric Co., Ltd.    Tsurugi                       A mini-batch deposition tool that processes up to 50 wafers at a time, designed to optimize heating/cooling cycles and gas flows for improved throughput.
+Kulicke & Soffa Industries    Wire Bonders                  Machines used to bond wires in semiconductor devices, a core product category for KLIC.
+Kulicke & Soffa Industries    Testers                       Equipment used for testing semiconductor devices during production.
+Kulicke and Soffa Industries  Wire bonders                  Traditional tools used for wire bonding in semiconductor packaging, a core business area that still holds approximately 80% of the overall market share.
+Kulicke and Soffa Industries  KNEXT                         A cloud-based software platform that provides real-time advanced process control, custom visualization, analytics, product traceability, and enables predictive maintenance.
+Kulicke and Soffa Industries  Pixalux                       A modified wire bonder tool designed for the mini-LED transfer process, capable of mechanically transferring mini-LEDs at a rate of 50 units per second.
+Kulicke and Soffa Industries  Luminex                       A next‐generation LED display tool that employs a non‐mechanical process using a laser to transfer and accurately place mini-LEDs, while incorporating sorting and re-pitching functions.
+Kulicke and Soffa Industries Inc.Laser-Based Bonding System    A laser system designed for high-speed bonding processes in battery cell and automotive applications, offering a faster process and lower cost of ownership compared to traditional methods.
+LAM                           Dry Photoresist Equipment     Equipment that uses the new dry photoresist process aimed at improving feature fidelity and process stability for advanced semiconductor nodes.
+Lab 91, Inc.                  2D Material Transfer Tool     A tool that automates the transfer of 2D materials from growth substrates to target silicon wafers, addressing a key bottleneck in high-volume semiconductor manufacturing.
+Lam Research                  Selective Etch Platform       A tool platform used in the etching processes during semiconductor manufacturing, expected to double its revenue as part of technology transitions.
+Lightmatter Inc.              Mars                          An earlier AI accelerator chip that utilized photonics for computing and data movement but ultimately did not succeed due to software and compute structure limitations.
+Lightmatter Inc.              Passage                       An optical interposer platform connecting up to 48 customer chips using GlobalFoundries’ Fotonix 45CLO process, designed to deliver 768 Terabits per second between tiles with dynamically configurable, low-latency routing.
+Lightmatter Inc.              Envise                        Lightmatter’s second-generation AI compute product, mentioned in passing as part of the company’s product evolution.
+Linutronix                    PREEMPT_RT                    A real-time scheduling patch for Linux that minimizes latency by managing interruptions and locks, used in industrial and time-sensitive applications.
+Lockheed Martin               F-22 Raptor                   A stealth tactical fighter aircraft noted for its integrated sensor systems used in targeting, tracking, and communications.
+Lockheed Martin               F-35 Lightning                A modern stealth fighter aircraft employing advanced sensor arrays, including state-of-the-art infrared and electro-optical systems, to provide a 360-degree situational awareness.
+Lumentum Holdings Inc.        200G EML Transceiver Products Transceiver products based on External Modulation Laser (EML) technology, with shipments expected to ramp in calendar 2024 for data center applications.
+Lyncean                       2Kw EUV Light Source          A high-power extreme ultraviolet light source that uses a synchrotron-based approach, capable of generating 2 kW of EUV light and designed to be scalable by stacking multiple units.
+Lynceus                       Manufacturing Quality Prediction SoftwareSoftware that uses AI models to predict the outcome of quality tests in real time, enabling fabs to rapidly detect defects, optimize inspection and metrology processes, reduce costs, and improve yield.
+MACOM Technologies            Siryn                         A 5nm-based chip platform featuring a custom developed core that supports high core counts without sacrificing silicon area.
+Marvell                       LiquidSecurity 2              An improved iteration of the LiquidSecurity HSM solution that leverages shared architecture with Marvell’s Octeon DPUs networking add-in cards and 5G network processors, enhancing performance and market competitiveness.
+Marvell                       LiquidSecurity                A PCIe card based HSM solution that replaces traditional on‐premises 1U HSM modules, enabling a cloud-based HSM service model with lower capital and operating costs.
+Marvell Technology Group      Octeon platform               A silicon solution used for Layer 1 processing in radio access networks.
+MediaTek                      MediaTek network processor    A network processor product utilizing advanced packaging techniques for high-performance applications.
+MediaTek                      MediaTek InFO-oS Networking SOCA networking system-on-chip that addresses reliability challenges in high-density fan-out packaging for high-performance applications.
+MediaTek Inc.                 Dimensity 1000 series         A series of mobile SoCs that initiated MediaTek’s push into the premium/high-end segment, targeting smartphones in the $300-$600 range.
+MediaTek Inc.                 MediaTek Dimensity 9200       A high-end chipset that powers advanced mobile devices and demonstrates the application of optimized process nodes.
+MediaTek Inc.                 MediaTek 5G Flagship SoC      An upcoming flagship smartphone SoC based on TSMC’s 4nm process, featuring an advanced CPU layout, improved cache configuration, and support for 5G 3GPP Release 16, targeting the upper flagship pricing segment.
+MediaTek Inc.                 MediaTek 1000 and 800 Series SOCsA range of system-on-chips with integrated 5G modems aimed at the midrange smartphone market ($300-$700) and focused exclusively on Sub 6GHz spectrum.
+Meta                          Llama 3 70B                   A smaller variant of the Llama 3 series, deployed across consumer platforms to power Meta AI.
+Meta                          OCP Rack                      An open compute project architecture rack that utilizes a busbar design for direct DC power delivery and may integrate a battery backup unit for increased efficiency.
+Meta                          Largest Recommendation Models Recommendation models used to serve users, requiring large GPU clusters for deployment.
+Meta                          Llama 3 405B                  An open-source language model intended to match GPT-4 performance.
+Meta                          MTIA                          An AI-related product mentioned as part of Meta’s broader software stack evolution.
+Meta                          LLaMA                         A foundation language model launched (but not fully open‐released) by Meta that was later leaked, sparking widespread innovation.
+Meta                          MSVP                          A chip designed to support large-scale, cost-effective deployment for specialized workloads.
+Meta                          LLAMA 3 405B                  A large language model from Meta mentioned alongside other frontier models.
+Meta                          Meta 3D Stacked Memory        A memory packaging approach that stacks SRAM or DRAM directly atop compute units to reduce latency and energy consumption by approximately 40%.
+Meta Platforms                Quest 2                       A virtual reality headset that has been heavily subsidized by Meta.
+Meta Platforms                Quest Pro                     A higher-cost virtual reality headset with less subsidy compared to Quest 2.
+Meta Platforms                Quest 3                       An upcoming virtual reality headset expected to have lower levels of subsidy.
+Meta Platforms, Inc.          Meta Scalable Video Processor (MSVP)A video encoding ASIC used since 2021 to perform transcoding at 4K resolution with capabilities for high-quality settings and efficient power usage. It boosts performance by 9x for H.264 and 50x for VP9 and is deployed in a PCIe module with additional memory support.
+Meta Platforms, Inc.          TorchInductor                 A native deep learning compiler that lowers FX graphs to highly optimized code across various hardware accelerators.
+Meta Platforms, Inc.          TorchDynamo                   A component of the PyTorch stack that converts user scripts into optimized FX graphs for improved execution efficiency.
+Meta Platforms, Inc.          MTIA                          Meta’s AI chip referenced as not being as advanced in performance and efficiency compared to Google’s TPU series.
+Meta Platforms, Inc.          RecD                          A deep learning recommendation model used to personalize user experiences.
+Meta Platforms, Inc.          Meta Training and Inference Accelerator (MTIA)An AI accelerator chip initially designed primarily for DLRM inference workloads. Fabricated on TSMC’s 7nm process and packaged by Amkor, it features a grid of processing elements, fixed accelerators, high-speed memory interfaces, and supports addressing both inference needs and roadmap ambitions for training in the future.
+Meta Platforms, Inc.          LLAMA                         A software framework related to large language models and AI research.
+Meta Platforms, Inc.          PyTorch 2.0                   A machine learning framework that introduces a compiled solution supporting graph execution, yielding large performance improvements for training and inference.
+Meta Platforms, Inc.          Cicero                        An AI software product designed for complex tasks, likely involving natural language or strategy.
+Meta Platforms, Inc.          LLAMA Series                  A series of dense language models made available to the open-source community, which have shaped how GPU-constrained groups approach model development.
+Meta Platforms, Inc.          PrimTorch                     A tool that reduces the number of operators in PyTorch by mapping over 2,000 operators to around 250 primitives, simplifying backend development.
+Meta Platforms, Inc.          Segment Anything              A computer vision product that segments images, likely for diverse AI applications.
+Meta Platforms, Inc.          PyTorch                       A deep learning framework used for building and training neural networks.
+Micron                        3D X-Point                    A non-volatile memory technology that was produced at the Lehi fab and is currently purchased by Intel from the facility.
+Micron                        Micron non-volatile FeRAM     A non-volatile memory product based on ferroelectric random-access memory technology, offering competitive density and performance.
+Micron Technology             DDR5 memory                   A next-generation memory product offering improved performance, capacity, and efficiency, expected to ramp up in both server and client PC markets.
+Microsoft                     Microsoft 1st gen AI chip     The first-generation AI chip from Microsoft, mentioned as not being able to replace Nvidia’s offerings.
+Microsoft                     Research Copilot              A tool designed to quickly answer questions about Microsoft products and usage, helping sales teams familiarize themselves with product features.
+Microsoft                     Operations Copilot            A tool that enables salespeople to review transcriptions and summaries of previous customer meetings, facilitating smoother transitions of customer accounts.
+Microsoft                     Phi-3 model                   A model from Microsoft’s Phi team, noted for training small models with significant amounts of synthetic data.
+Microsoft                     Athena                        An upcoming AI processor aimed at addressing future data center and inference needs.
+Microsoft                     Help Agent                    An AI chatbot under development intended to handle technical support queries, potentially reducing the need for traditional customer support roles.
+Microsoft                     GitHub Copilot                An AI coding product enhanced with a new asynchronous coding agent feature capable of autonomously performing complex coding tasks like debugging.
+Microsoft                     AI Agent Builder Tools        Tools that enable customers to build their own AI agents to handle various tasks.
+Microsoft                     Bing                          A search engine that has been updated to incorporate a next-generation OpenAI large language model, aiming to challenge incumbent search businesses.
+Microsoft                     Evol-Instruct                 An AI-based method developed by the WizardLM team to generate large, diverse sets of instructions for training large language models.
+Microsoft                     MAI-1 ~500B parameter MOE modelAn in-house large language model leveraging a mixture-of-experts approach, developed with contributions from Inflection’s pretraining team.
+Microsoft                     Site Reliability Engineer AgentAn AI agent designed to automatically monitor cloud systems and address outages without human supervision.
+Microsoft Corporation         Azure Boost network adaptor   A 200G DPU solution based on an external FPGA and an internally designed ASIC, designed to offload various hypervisor, host, network, and storage tasks from Azure instances.
+Microsoft Corporation         Cobalt                        An Arm-based server CPU product initiative from Microsoft.
+Microsoft Corporation         Azure Cobalt 100 CPU          Microsoft’s second Arm-based CPU deployed in its cloud, featuring 128 Neoverse N2 cores on Armv9 architecture with 12 channels of DDR5, aimed at enhancing internal products like Azure SQL servers and Microsoft Teams.
+Microsoft Corporation         Bing GPT                      A variant of large language model technology implemented within Bing to reduce token output and improve search relevance.
+Microsoft Corporation         Singularity Cluster Manager   A system designed for transparent migration of GPU virtual machines and global scheduling of GPU workloads.
+Microsoft Corporation         Xbox 360                      A gaming console that contributed to sparking interest in electronics and hardware repair.
+Microsoft Corporation         Athena                        Microsoft’s AI chip, mentioned in discussions comparing economic advantages for inference workloads.
+Microsoft Corporation         Azure Maia 100 (Athena/M100)  Microsoft’s long-awaited AI accelerator, designed to compete with products such as AMD MI300X, Nvidia H100/H200/B100, Google TPUv5, and Amazon Trainium/Inferentia2. The article discusses its volumes, performance, power consumption, rack design, and network topology.
+Microsoft Corporation         Copilot                       An AI-powered tool built on GPT-4 technology, intended to assist users in coding and other task automation.
+MinerVa                       Cryptocurrency Mining Chip    A 19.3mm2 chip used in cryptocurrency miners, with 120 chips per board and 3 boards per miner, resulting in a total power consumption of 3300W.
+Mistral                       Mistral Mixtral 8x7b          An open-source AI model showcased in inference demos, notable for its performance and efficiency in processing token sequences.
+Mistral                       Mistral Mixtral               A mixture-of-experts (MoE) language model designed for inference that aims to deliver higher quality outputs at lower pricing compared to incumbent models.
+MoneyGram                     MoneyGram Developer Tool      A tool designed for developers of crypto exchanges, wallets, and stablecoin apps to integrate seamlessly with MoneyGram's global cash network for enabling cash deposits and withdrawals.
+MosaicML Inc.                 GPT-70B                       A dense transformer model with 70 billion parameters.
+MosaicML Inc.                 GPT-30B                       A dense transformer model with 30 billion parameters.
+Mozilla                       Firefox browser               A web browser used for accessing the internet, whose revenue model involves sharing ad revenue from Google search queries.
+NETINT Semiconductor          Quadra T4 VPU                 The second-generation VPU available in 1, 2, and 4-chip configurations, which outperforms competing solutions like Nvidia’s T4 and Intel’s server CPUs when using HEVC and AV1 codecs.
+NETINT Semiconductor          Quadra ASIC                   The second-generation video encoding ASIC built on Samsung's 14nm process, featuring 4 lanes of PCIe 4.0, attached DRAM, dedicated hardware for video/audio encode/decode, AI inference, RISC CPUs, and a 2D video engine with standout capabilities in AV1 and H265/HEVC.
+NETINT Semiconductor          Mt. Augusta                   The third-generation video encoding ASIC scheduled to begin shipping in 2024/2025.
+NETINT Semiconductor          Logan ASIC                    The first-generation video encoding ASIC built on TSMC's 28nm process.
+NETINT Semiconductor          T432 VPU                      The first VPU product that integrates 4 Logan ASIC chips to deliver high-density, energy-efficient video processing.
+NVIDIA                        GB200 NVL72                   NVIDIA's rack-scale GPU product used as a benchmark for comparing AMD's offerings.
+NVIDIA Corporation            A100                          A data-center GPU used for AI training that is referenced to illustrate China’s existing AI chip inventory.
+NVIDIA Corporation            NVIDIA V100 GPU               A datacenter GPU that employs TSMC’s CoWoS-S technology to integrate high bandwidth memory with the compute die.
+NVIDIA Corporation            H800                          A high-performance GPU targeted at AI applications, mentioned in the context of China’s importation of advanced chips.
+NVIDIA Corporation            NVIDIA GB200 Rack             A high-performance rack system designed for AI and compute, mentioned as a point of comparison in the AI era.
+NVIDIA Corporation            DGX H100                      An AI server configuration that includes 8 H100 GPUs along with ancillary components such as dual Xeon processors, memory, NVSwitches, and networking gear, used for high-density AI compute clusters.
+NVIDIA Corporation            A800                          A variant of NVIDIA’s high-end GPU, offering capabilities similar to the H800.
+Neon                          Neon Cloud Database Service   A cloud-based database service offering cost-effective, short-term access to database functionality, optimized for AI-driven applications.
+NetInt Inc.                   NetInt VCU                    A video encoding ASIC similar to Meta’s and Google’s offerings, sold to companies such as ByteDance, Baidu, Tencent, and Alibaba.
+Nikon                         NSR-1505EX                    The first DUV lithography tool released by Nikon in 1988, initially featuring a resolution of 500nm and later upgraded to achieve 250nm resolution with a 100nm overlay.
+Nomic                         GPT4All                       An ecosystem and model aggregation that brings together various open source AI models, highlighting low-budget fine-tuning achievements.
+Not specified                 Chinchilla                    A dense transformer model that reflects optimal compute scaling observations.
+Not specified                 Bloom                         A dense transformer model designed for language generation.
+Not specified                 BERT                          A transformer model primarily used for natural language understanding.
+Not specified                 Gopher                        A transformer model noted for its capabilities in language tasks.
+Not specified                 MT-NLG                        A large-scale transformer model used for natural language generation tasks.
+Nvidia                        Oberon GB200 platform         A highly anticipated platform discussed for its pricing, cost of goods, margins, and production ramp that is creating buzz throughout the supply chain.
+Nvidia                        Hopper datacenter GPUs        Datacenter GPUs expected to be built on TSMC capacity, integral to Nvidia’s data center growth.
+Nvidia                        Nemo framework                An AI framework used by Amazon in place of SageMaker for its Titan model, highlighting the diminished role of cloud software in certain AI applications.
+Nvidia                        Nemotron 340B                 A high-performance model referenced with compute figures comparable to GPT-4.
+Nvidia                        Datacenter GPU                High-performance GPU products used in datacenter applications, benefiting from cutting-edge foundry processes.
+Nvidia                        full LHR V2                   A recompiled Nvidia driver created by removing the mining performance limiters (Lite Hash Rate) from its gaming GPUs; originally sold for $10 and later priced at $1,000,000 by the hackers.
+Nvidia                        DGX GB200 NVL72               A vertically integrated rack system that features 72 GPUs, 36 CPUs, 18 NVSwitches, 72 InfiniBand NICs for back-end networking, and 36 Bluefield 3 Ethernet NICs for front-end networking. It leverages NVLink connectivity to achieve high bandwidth while avoiding the power and cost penalties of optical transceivers.
+Nvidia                        Next-Generation GPU           An upcoming GPU from Nvidia aimed at advancing AI and high-performance computing.
+Nvidia                        400G InfiniBand NICs          High-speed network interface cards offered by Nvidia with lower lead times relative to their Ethernet counterparts.
+Nvidia                        X100 GPUs                     A series of upcoming GPUs mentioned as part of Nvidia’s aggressive hardware roadmap.
+Nvidia                        Orin automotive lineup        Automotive GPUs from Nvidia that benefit from improved cost and performance through TSMC’s manufacturing.
+Nvidia                        DGX H100                      A GPU-based system that, along with the DGX GB200 NVL72, utilizes three distinct networks: a front-end Ethernet network, a back-end InfiniBand or Ethernet scale-out network, and an NVLink scale-up network.
+Nvidia                        Nvidia A100                   A GPU product designed for AI training and inferencing workloads that utilizes advanced packaging technologies such as CoWoS.
+Nvidia                        Nvidia A100 GPU               A high-performance graphics processing unit which, like the H100, ships with approximately 10% of the chip disabled due to manufacturing yield strategies.
+Nvidia                        Cedar Fever-7 Networking ModuleA networking module aimed at reducing the transceiver count per H100 node and optimizing cost and reliability.
+Nvidia                        Nvidia AI GPUs with HBM memoryA product featuring active silicon on passive silicon packaging using TSMC’s CoWoS-S process.
+Nvidia                        Nvidia H100                   A datacenter GPU for AI applications, noted as a standout ramp in the semiconductor segment.
+Nvidia                        MGX modular server design platformA modular server design solution aimed at simplifying server architecture, although it commoditizes design work for OEMs.
+Nvidia                        L40S GPUs                     GPUs that are being pushed by Nvidia to drive better allocations of scarce high-end products like the H100.
+Nvidia                        GB300 GPU                     A new GPU variant introduced as part of the Blackwell series with upgraded memory (12-Hi HBM3E for 288GB total) and improved performance through architectural and system enhancements.
+Nvidia                        Nvidia HGX H100 server        A GPU server designed for demanding compute workloads, used in the discussion of total cost of ownership in colocation environments.
+Nvidia                        800G ConnectX-8 NIC           A network interface card offering twice the scale-out bandwidth on InfiniBand and Ethernet, with 48 PCIe lanes and SpectrumX capability, intended to improve data center interconnect performance.
+Nvidia                        GB200 family                  A next‐generation AI GPU server design that features high rack power density (up to 130 kW per rack) and necessitates direct-to-chip liquid cooling to deliver significant performance improvements over previous models.
+Nvidia                        Nvidia H100 GPU               A high-performance GPU used in advanced data centers that also ships with about 10% of its chip disabled due to manufacturing variations.
+Nvidia                        B20                           A GPU variant similar to the H20, also re-exported to China under the current framework.
+Nvidia                        Hopper GPU                    The next generation GPU designed for AI and HPC compute applications featuring 80 billion transistors, newer SMs, tensor cores, higher clock speeds, a 4th generation NVLink interconnect, and DPX instructions. It is available in a top-spec SMX style package with a power consumption of 700W.
+Nvidia                        Miranda                       A standard GPU-only product arriving after Umbriel, featuring PCIe Gen 6, up to 800G networking, and a roadmap supporting up to 192GB of HBM memory with potential for refresh to 288GB.
+Nvidia                        Lovelace gaming GPUs          Gaming GPUs by Nvidia slated to leverage TSMC’s advanced process nodes.
+Nvidia                        H100                          A high-end AI GPU referenced as a benchmark in the competitive landscape against new entrants.
+Nvidia                        DLSS                          A proprietary AI upscaling technology used in Nvidia products, whose source code was also leaked in the hack.
+Nvidia                        Spectrum-X Ethernet           An Ethernet-based network solution designed for large GPU clusters offering cost and performance advantages over traditional InfiniBand.
+Nvidia                        H100 GPU                      A high-performance GPU designed for AI workloads, whose production involves a multi-step supply chain process.
+Nvidia                        B100                          The first version of Nvidia's Blackwell GPUs, codenamed Umbriel, designed for time-to-market with features such as PCIe Gen 5 support, 700W air-cooled configuration, and doubled NVLink speeds.
+Nvidia                        DGX Cloud                     A cloud service offering focused on AI workloads that is part of Nvidia’s multi-pronged strategy.
+Nvidia                        H20                           A GPU variant that has been re-exported to China and is noted for its lower margins compared to other models.
+Nvidia                        Spectrum-X Ethernet network with Bluefield-3 DPU’sA networking solution that provides NIC mode functionality alongside advanced DPU capabilities.
+Nvidia                        RTX4090                       A high-end gaming GPU that, under the framework, is effectively banned from Tier 3 countries like China.
+Nvidia                        B300 GPU                      A compute-focused GPU produced on TSMC’s 4NP process, delivering a 50% performance increase in FLOPS over its predecessor (B200) and featuring increased power consumption for higher throughput.
+Nvidia                        B200                          A follow-up to the B100 with a higher power limit of 1,000W that requires a server redesign, yet it remains air-cooled and retains PCIe Gen 5 and enhanced networking capabilities.
+Nvidia                        NVSwitch                      A custom fabric switch designed for inter-node communications that will support large GPU clusters and enable memory sharing, sharding of models, and efficient data aggregation.
+Nvidia                        H200                          An upcoming AI GPU announced as part of Nvidia’s accelerated roadmap.
+Nvidia                        A100 GPU                      A GPU used as a benchmark in the article, manufactured on TSMC’s 7nm process, and compared against Graphcore’s accelerator.
+Nvidia                        RTX 3060 GPU                  A gaming graphics processing unit by Nvidia which first implemented the Lite Hash Rate (LHR) feature to limit cryptocurrency mining performance.
+Nvidia Corporation            RTX 4090                      A high-end GPU based on the AD102 die, noted for its dramatic transistor density increase and a MSRP increase from $1499 (3090/3090ti) to $1599.
+Nvidia Corporation            Blackwell GPU                 Another GPU product from Nvidia used in high-end AI clusters.
+Nvidia Corporation            V100                          An older generation GPU that is also banned under the new regulations.
+Nvidia Corporation            GB300 & B300 GPU              A next-generation GPU product family announced as part of Nvidia's roadmap, offering increased performance, higher memory capacity, and improved inference cost efficiency.
+Nvidia Corporation            GB300                         The upcoming flagship AI chip set to launch in the third quarter of the year, intended as an upgrade to an existing product.
+Nvidia Corporation            Spectrum Ethernet SN4600 SwitchA network switch used in frontend network deployments for AI clusters.
+Nvidia Corporation            800G Optical Transceivers     Optical transceivers used in InfiniBand, Ethernet, and NVLink networks, bundled with Nvidia products to drive over $1B in optics sales over the next 12 months.
+Nvidia Corporation            RTX 4080 12GB                 A GPU based on the AD104 die that has been controversially branded as part of the 4080 series despite comparisons with the older 3080ti, reflecting Nvidia’s cost and marketing challenges.
+Nvidia Corporation            GB200 NVL72                   A high-density rack variant requiring approximately 120kW per rack, featuring 18 1U compute trays with Bianca boards and 9 NVSwitch trays with dual 28.8Tb/s NVSwitch5 ASICs.
+Nvidia Corporation            4090                          A GPU designed for the datacenter expected to be granted a license under the revised restrictions.
+Nvidia Corporation            B200                          A GPU available in higher power configurations (including a 1200W variant not shown in tables) that delivers 2,250 TFLOPS of FP16/BF16 compute with increased clock speeds.
+Nvidia Corporation            DGX system                    An integrated system built around Nvidia GPUs, featuring tuned software libraries and direct vendor support.
+Nvidia Corporation            B200 NVL72/NVL36x2 (Miranda)  An upcoming form factor scheduled for Q2 2025 that uses x86 CPUs instead of Grace CPUs, expected to have a similar compute tray configuration but with lower upfront capital cost and distinct power and bandwidth tradeoffs.
+Nvidia Corporation            Bluefield-3                   A device integrated into some compute trays for frontend networking and management, although noted as overprovisioned in the reference design.
+Nvidia Corporation            B200A                         A GPU product based on the B102 die aimed at lower-end and mid-range AI systems, used to replace previous HGX 8-GPU configurations. An Ultra variant (B200A Ultra NVL36) is also introduced with performance enhancements but without a memory upgrade.
+Nvidia Corporation            DOCA                          A software platform aimed at enabling data processing unit (DPU) functionality in networking applications.
+Nvidia Corporation            RTX 3060                      A gaming GPU that was expected to offer reduced mining performance though constraints were eventually bypassed.
+Nvidia Corporation            GB200                         An existing AI chip product currently used by major cloud providers, which the GB300 is set to upgrade.
+Nvidia Corporation            Ampere GPU lineup             Nvidia’s current generation GPU lineup that is used as a benchmark for comparing the new Ada Lovelace architecture.
+Nvidia Corporation            GB200 Architecture            A high-density liquid-cooled AI chip architecture expected to ramp up to millions of units.
+Nvidia Corporation            GB200 NVL36x2                 A design using two interconnected racks (each at 66kW per rack) that together provide a non-blocking, all-to-all connection among 72 GPUs, with 2U compute trays and additional NVSwitch5 ASICs for cross-rack connectivity.
+Nvidia Corporation            GB200 NVL36x2 (Ariel)         A variant of the GB200 NVL36x2 in which the standard Bianca board is replaced with a custom Ariel board that includes 1 Grace CPU and 1 Blackwell GPU, targeted primarily at Meta's recommendation system workloads.
+Nvidia Corporation            SHARP                         A proprietary technology integrated into Nvidia switches for accelerating collective communication tasks such as broadcasts and reductions.
+Nvidia Corporation            DGX H100 NVL256 ‘Ranger’ PlatformA previously announced Nvidia platform that was not brought to production because of cost, power, and reliability concerns, serving as a benchmark for system design comparisons.
+Nvidia Corporation            DRIVE Thor                    An upcoming automotive compute platform expected to deliver over 2,000 TeraFLOPS of compute power, mentioned as a point of comparison to Tesla’s HW4 capabilities.
+Nvidia Corporation            Quantum X-800 3400            A CPO-based network switch featuring 144 ports at 800G designed to deliver high throughput and improved networking efficiency.
+Nvidia Corporation            RTX 4080                      A GPU that, based on its FP8 matmul and FP16 accumulate performance, may require a license under the new rules, though it is expected to be approved.
+Nvidia Corporation            CS9500 Series Modular Switch  A physical modular switch for NDR InfiniBand deployments with liquid cooling requirements.
+Nvidia Corporation            Parabricks                    A suite of GPU-accelerated tools for genomics secondary analysis, facilitating rapid base calling, alignment, and variant calling to overcome computational bottlenecks.
+Nvidia Corporation            Nvidia A100 GPU               An AI training GPU that is noted for its strong performance across multiple MLPerf benchmarks and flexible hardware capabilities.
+Nvidia Corporation            A100 GPU                      An Nvidia GPU mentioned as a performance benchmark, with the Huawei Ascend 910B landing between this product and the H100 in terms of performance.
+Nvidia Corporation            A100                          A current generation GPU designed for advanced AI and high-performance computing, featuring high IO and performance metrics.
+Nvidia Corporation            NVSwitch5 ASIC                An application-specific integrated circuit used in NVSwitch trays to manage high-speed NVLink communication among GPUs.
+Nvidia Corporation            NVLink Scale-Up Network       A specialized network interconnect designed for high-bandwidth GPU-to-GPU communications, offering up to 3.2TB/s bandwidth to support training and inference workloads in AI.
+Nvidia Corporation            NVLink Fusion                 A new offering that allows customers to combine Nvidia chips with chips designed by other vendors in AI servers.
+Nvidia Corporation            DGX Cloud                     A cloud service that offers pretrained models, optimized inference engines, and additional tools for AI development, attracting enterprise customers from several verticals.
+Nvidia Corporation            H100                          A next-generation AI and HPC chip subject to the new export controls.
+Nvidia Corporation            H100 GPU                      A high-performance GPU used in AI clusters for intensive machine learning and training workloads.
+Nvidia Corporation            H20 GPU                       An upcoming Nvidia GPU that will ship high performance chips into China, featuring full specifications including FLOPS, NVLink bandwidth, power consumption, and memory capabilities. It is also the only one in the series using CoWoS technology.
+Nvidia Corporation            Bianca Board                  A compute board integrated into the GB200 design that houses 1 Grace CPU and 2 Blackwell GPUs and serves as the heart of the compute tray.
+Nvidia Corporation            Mellanox Connect X7           A networking product using InfiniBand, employed to demonstrate Genoa’s enhanced IO performance.
+Nvidia Corporation            H200                          A Nvidia GPU product that offers competitive memory bandwidth and latency performance compared to AMD’s offerings.
+Nvidia Corporation            H200 GPU                      A future GPU product mentioned in the context of evolving IO requirements and enhanced chip interconnect capabilities.
+Nvidia Corporation            Base Command Manager (BCM)    A software package, also sold under the label Nvidia AI Enterprise, used for AI workflow and cluster management.
+Nvidia Corporation            H800                          A modified AI chip variant that has been blocked under the new U.S. export restrictions.
+Nvidia Corporation            HGX Series AI Servers         A line of high-performance AI server systems designed for demanding computational workloads in AI and deep learning.
+Nvidia Corporation            Hopper                        A next-generation product expected to become available next year, which is anticipated to bring significant cost improvements in AI training.
+Nvidia Corporation            Hopper GPU                    A GPU product designed for AI cluster deployments and high performance computing workloads.
+Nvidia Corporation            A800                          A modified version of Nvidia’s AI chips designed with slightly lower bandwidth, now blocked by the new regulation.
+Nvidia Corporation            Ada Lovelace GPU lineup       Nvidia’s new generation of GPUs based on the Ada Lovelace architecture offering substantial performance gains in ray tracing and AI rendering.
+Nvidia Corporation            MGX GB200A NVL36              A fully air-cooled 40kW per rack server featuring 36 GPUs interconnected with NVLink, designed for deployment in environments that cannot support high power density and liquid cooling setups. The design features nine compute trays, each with one Grace CPU and four 700W B200A GPUs, and emphasizes simplified thermal engineering.
+Nvidia Corporation            ConnectX-8 NIC                The next-generation network interface card offering increased bandwidth and improved connectivity for backend networking in future GB200 deployments.
+Nvidia Corporation            X100 GPU                      Another GPU product mentioned alongside the H100 and B100, part of Nvidia’s strategy to compete in the AI accelerator space.
+Nvidia Corporation            DCGMI Diagnostics             A diagnostic tool used to detect GPU errors such as silent data corruption in Nvidia GPUs.
+Nvidia Corporation            L2 GPU                        Another Nvidia GPU that will be part of the new lineup designed to meet emerging performance and regulatory requirements.
+Nvidia Corporation            L20 GPU                       One of Nvidia’s upcoming GPUs with detailed performance specifications, destined for the Chinese market.
+Nvidia Corporation            L4                            A GPU that is blocked under the new rules due to its performance and density parameters, despite being under the expected bar.
+Nvidia Corporation            L40S                          A GPU that was expected to ship to China but is now caught under the new restrictions.
+Nvidia Corporation            Grace CPU                     An Arm-based CPU used to complement Nvidia's GPU products in next-generation systems.
+Nvidia Corporation            B100                          An air-cooled GPU with a 700W thermal envelope delivering 1,750 TFLOPS of FP16/BF16 compute, designed to slot into existing HGX H100 systems.
+Nvidia Corporation            ConnectX-7 NIC                A network interface card used in backend networking within the GB200 systems, based on the ConnectX design.
+Nvidia Corporation            LHR Low Hash Rate GPUs        A refresh of the Ampere series GPUs that are engineered to reduce cryptocurrency mining efficiency.
+Nvidia Corporation            B100 GPU                      A next-generation GPU product referenced in discussions about overcoming IO limitations and achieving higher memory bandwidth.
+Nvidia Corporation            Oberon Series AI Servers      An AI server product series assembled by partners and sold by Nvidia, used for running advanced machine learning and data processing tasks.
+Nvidia Corporation            Nvidia A100                   A high-end GPU used as a benchmark for comparison in terms of memory bandwidth and power consumption, highlighting the advantages of the chip design found in the Cerebras WSE-2.
+Nvidia Corporation            Nvidia HGX A100 Server        A high-performance server used in datacenters and deployed by Microsoft for intensive AI training workloads.
+Nvidia Corporation            Nvidia H100 GPU (SXM 80GB variant)A high-end GPU designed for AI and data center workloads, noted for its performance and bandwidth specifications.
+Nvidia Corporation            Nvidia H100 GPU               A high-performance graphics processing unit designed for accelerating AI and deep learning tasks.
+Nvidia Corporation            Nvidia H100                   An AI accelerator with a thermal design power of 700 watts, designed for datacenter applications.
+Nvidia Corporation            Nvidia Top-Tier Chips         High-performance GPU chips slated for a guaranteed annual import quota in the UAE deal, supporting American AI datacenter builds.
+Nvidia Corporation            Nvidia GB200 NVL72 system     A state‐of‐the‐art 120kW, 72‐GPU rack designed for large language model (LLM) inference and training, cooled exclusively via Direct-to-Chip Liquid Cooling.
+Nvidia Corporation            Nvidia A100 GPUs              High-performance GPUs used as a baseline in cost comparisons for training GPT-style models.
+Nvidia Corporation            Nvidia Blackwell              A GPU product used as a performance comparison reference, where each Nvidia Blackwell is noted to outperform an individual Ascend chip.
+Nvidia Corporation            CMP Mining GPUs               GPUs specifically designed for cryptocurrency mining that cannot be repurposed for gaming.
+Nvidia Corporation            Nvidia Dynamo                 An open AI engine stack aimed at simplifying deployment and scaling of inference, enhancing throughput especially for higher interactivity use cases.
+Nvidia Corporation            Nvidia Bluefield-3 DPU        A data processing unit originally pitched for network virtualization in standard cloud deployments but considered unnecessary for AI Neoclouds.
+Onto Innovation               Ai Diffract                   An AI-based software suite integrated into Onto Innovation’s metrology tools to enhance modeling and accuracy in nanosheet inspection.
+Onto Innovation               Atlas V                       A product line from Onto Innovation offering superior standalone OCD metrology and inspection tools, leveraging advanced software and modeling for next-generation gate‐all‐around nanosheet processes.
+Onto Innovation               SpectraProbe                  A software suite that works in tandem with advanced hardware to provide precise 3D modeling for complex nanosheet structures.
+Open Assistant Project        Open Assistant                A model and an accompanying dataset for alignment via RLHF that brings open source reinforcement learning from human feedback within the reach of small-scale experimenters.
+Open Source Project           LLaMA-Adapter                 A technique that introduces both instruction tuning and multimodality in a very short training time using a small number of learnable parameters.
+OpenAI                        GPT-5                         The next-generation language model anticipated to drive future innovations in AI research.
+OpenAI                        DALL-E 3                      A generative model by OpenAI designed to create images from textual descriptions.
+OpenAI                        GPT‑4o model                  A version of OpenAI's advanced language model that recently underwent personality modifications based on user feedback.
+OpenAI                        GPT-4                         A large language model that uses a sparse architecture to activate only a subset of parameters during inference, enabling efficient scaling and lower inference costs.
+OpenAI                        GPT-3.5 Turbo                 A cost-effective chat and inference model that benefits from high batch sizes and efficient resource usage.
+OpenAI                        Codex                         An AI coding agent that automates software engineering tasks such as fixing bugs and answering questions about a codebase. It is powered by a version of the o3 reasoning model and is accessible through ChatGPT.
+OpenAI                        GPT                           A generative transformer-based language model.
+OpenAI                        GPT-4 Turbo                   A variant of GPT-4 designed to improve performance and efficiency.
+OpenAI                        Dall-E                        An AI image generation tool capable of creating novel visuals from text descriptions.
+OpenAI                        OpenAI Whisper                A speech-to-text model that has been adapted for on-device inference, offering an alternative to cloud-based speech recognition.
+OpenAI                        GPT-4o                        Another variant of GPT-4, part of OpenAI's efforts to balance compute and cost.
+OpenAI                        OpenAI Triton                 A compiler framework that converts Python (often via the PyTorch Inductor stack) into optimized GPU code, bypassing proprietary CUDA libraries.
+OpenAI                        ChatGPT                       A popular AI chatbot capable of searching the web and retrieving research information.
+OpenAI                        AI coding agent               A product that automates software engineering tasks such as fixing bugs and answering questions about a code base.
+OpenAI, Inc.                  o1                            An AI model release that demonstrates new paradigms in reasoning and scaling through improved training and inference methods.
+OpenAI, Inc.                  o1 Pro                        A follow‐up model to o1 featuring additional post-training adaptations and enhanced performance, including cost and batching improvements.
+Oracle Cloud Infrastructure (OCI)OCI HPC Stack                 A one-click deployment solution for setting up GPU clusters with Slurm and monitoring via Oracle Cloud Infrastructure.
+Pacific Biosciences of California, Inc.Revio                         A long-read sequencing instrument that integrates Nvidia GPUs to provide up to 12x the data throughput in 20% less time compared to previous systems.
+Palantir Technologies Inc.    Data-analytics software       A software product used for analyzing large datasets, helping organizations improve efficiencies and decision-making.
+Perplexity                    Comet Browser                 A browser product developed by Perplexity that uses computer agents to assist users with search, aimed at differentiating its offerings from competitors.
+Perplexity                    Perplexity Search Engine      An AI-powered search engine which has seen a five-fold increase in questions and significant user growth.
+Perplexity                    Perplexity Chatbot            A subscription-based chatbot product that allows individual users to ask queries and receive fast, summarized answers with links to sources. It is available for free or for $20 per month with enhanced features.
+Perplexity                    Perplexity API                An application programming interface that enables developers to integrate Perplexity’s AI search capabilities into their own products.
+Pinterest                     Pinterest Boards              A core product that allows users to curate and share collections of images, serving as Pinterest’s original feature and a primary focus of its renewed strategy.
+Power Integrations            33-watt in box charger        An advanced charger design that is set to increase penetration at a top-tier handset OEM.
+Power Integrations            130-watt charger design for gaming notebooksA design featuring four charging ports and three GaN-based InnoSwitches that enables smaller and more efficient gaming laptop power bricks.
+Power Integrations            InnoSwitch4                   The latest product that leverages GaN technology to achieve improved power density and performance, produced exclusively with GaN.
+Power Integrations            iDriver family                A family of gate driver solutions capable of handling up to 6500V, used across a wide range of applications from motors and UPS systems to renewable energy projects and electric vehicle charging.
+Power Integrations Inc.       InnoSwitch Device             A high voltage power module device designed for next-generation 800-volt electric vehicle platforms, incorporating a high-voltage silicon carbide MOSFET.
+Qualcomm                      Snapdragon X                  An Arm-based CPU product designed for Windows PCs.
+Qualcomm                      ultraSAW filters              An RF filter product operating from 600MHz to 2.7GHz released last year, which improved the usability of GlobalStar’s n53 band.
+Qualcomm                      Snapdragon 800                A flagship system-on-chip series originally manufactured at Samsung, now transitioning to TSMC for improved competitiveness.
+Qualcomm                      Data Center Chips for Artificial IntelligenceChips being developed to support artificial intelligence operations in data centers.
+Qualcomm                      Flagship SOC on Samsung’s 4nm nodeAn upcoming high-performance system-on-chip scheduled for release in Q1 next year, built on Samsung’s 4nm process.
+Qualcomm                      Flagship SOC on TSMC’s 4nm nodeA subsequent high-performance system-on-chip update scheduled for Q3 next year, built on TSMC’s 4nm process.
+Qualcomm                      Qualcomm S8G2                 A chipset used in flagship smartphones, which Samsung has adopted for its flagship smartphone SoC, built on TSMC N4 technology.
+Qualcomm                      Qualcomm S8G1                 A high-end smartphone SoC that experienced poor parametric yields in Samsung Foundry lines, prompting a shift to TSMC for production.
+Qualcomm                      S8G1 flagship SOC             A revised version of Qualcomm’s flagship SOC that will shift from Samsung’s node to TSMC’s N4 process to improve efficiency and performance.
+Qualcomm                      FSM200xx Platform             Qualcomm’s second‐generation small cell solution, manufactured on a Samsung 4nm LPP process and featuring full support for GPP Release 16, spectrum enhancements, and integrated Power over Ethernet (PoE) for reduced rollout costs.
+Qualcomm                      ultraBAW filters              A new RF filter product operating from 2.7GHz to 7.2GHz that supports wide channel bandwidths and upcoming deployments like C-Band and Wi‑Fi 6E, shipping in volume by H2 2022.
+Qualcomm                      FSM200xx                      A leadership product intended as part of a pre-qualified and pre‐approved vertical RF solution for small cells.
+Qualcomm                      Adreno GPUs (S8G1+ / S8G2)    Graphics processing units used in smartphones, noted for iterative generational improvements.
+Qualcomm                      mmWave Repeater               A product concept evaluated in three different forms to enhance 5G mmWave signal coverage and reduce overall network rollout costs by leveraging a few cells for backhaul.
+Qualcomm                      5G DU X100 Accelerator Card   A PCIe inline accelerator card designed to offload complex real-time RAN functions such as demodulation, beamforming, channel coding, and Massive MIMO computation to simplify vRAN/oRAN deployments.
+Qualcomm Inc.                 UltraBAW filters              A type of filter technology used in RF front-end modules to improve performance in wireless communications.
+Qualcomm Inc.                 5G and WiFi 7 front end modulesIntegrated modules that provide end-to-end RF solutions—from modem to antenna—for smartphones and automotive applications.
+Qualcomm Incorporated         Phoenix Core                  A custom CPU core architecture developed by Qualcomm, based on technology acquired from Nuvia, intended to deliver better performance and lower royalty rates under its architecture licensing agreement.
+Qualcomm Incorporated         Centriq Server CPU            A server CPU product led by Qualcomm’s former director of Datacenter, designed to compete in hyperscale environments.
+Qualcomm Incorporated         Qualcomm QTM525 mmWave Antenna ModuleQualcomm's 2nd generation mmWave antenna module, promoted as being less than 8mm thick but ultimately not thin enough for the iPhone 12.
+Qualcomm Incorporated         Qualcomm QTM535 mmWave Antenna ModuleQualcomm's next generation mmWave antenna module, designed for the X60 platform but not adopted in the iPhone 12 due to thickness constraints.
+Qualcomm Incorporated         Orion Server Platform         A server platform based on the Phoenix Core, intended to be licensed to hyperscalers rather than being sold as a merchant silicon platform.
+Qualcomm Incorporated         Cloud AI 100                  An AI inference product designed for edge applications that has recorded wins in the market.
+Qualcomm Incorporated         Nuvia Phoenix core            A CPU core derived from technology originally developed by Nuvia using Arm-based intellectual property, whose further development is under dispute between Arm and Qualcomm.
+Qualcomm Incorporated         Qualcomm SDR865 Transceiver and SubsystemA transceiver and subsystem used in conjunction with Apple's custom mmWave approach in the iPhone 12.
+Qualcomm Incorporated         Qualcomm X55 5G Modem RF SystemA 5G modem RF system from Qualcomm whose other components continue to be used in the iPhone 12.
+Qualcomm Incorporated         Snapdragon SoCs               Smartphone system-on-chips integrating Qualcomm technology, including customized Arm-based cores.
+Qualcomm Incorporated         DU X100                       A hardware accelerator designed for digital signal processing in Layer 1 of radio access networks.
+Qualcomm Incorporated         735G SoC                      An upper midrange system-on-chip previously developed on Samsung's 7nm process, mentioned as a past reference for Qualcomm’s limited process technology engagements.
+Qualcomm Incorporated         S888                          A Qualcomm chip referenced as a performance benchmark in comparison to Huawei’s Kirin 9000S.
+Qualcomm Incorporated         S8G1                          A Qualcomm chip whose performance and power consumption are compared directly with Huawei’s custom Arm A510 cores.
+Qualcomm Incorporated         FSM200                        A network infrastructure product from Qualcomm highlighted for its advanced design in the category.
+Qualcomm Incorporated         Qualcomm Snapdragon 8 Gen 2   A flagship mobile processor that leverages advanced semiconductor technology for performance enhancements.
+Rockley Photonics Inc.        Cloud Analytics Platform      A platform that will leverage cloud analytics to support and enhance the monitoring capabilities, enabling rapid testing, trend analysis, and disease management.
+Rockley Photonics Inc.        Advanced Module               An enhanced module featuring double the number of lasers compared to the basic module, extending the infrared spectroscopy range to detect additional biomarkers such as alcohol, carbon monoxide, glucose indicators, and lactate for non-invasive continuous glucose monitoring.
+Rockley Photonics Inc.        Basic Module                  A consumer electronics module that integrates a multi-laser spectrometer which measures biomarkers including blood oxygen, heart rate, breath rate, hydration, core body temperature, and blood pressure with higher accuracy than LED-based sensors.
+SK Hynix                      SK Hynix HBM4 with MR-MUF packagingA high-bandwidth memory product that leverages Mass Reflow – Molded Underfill (MR-MUF) packaging to enhance thermal performance and throughput.
+SK Hynix Inc.                 HBM3 Memory Module            The latest generation of High Bandwidth Memory modules, available in configurations such as 8-layer 16GB and 12-layer 24GB, used in high-performance GPUs.
+SMIC                          SMIC 7nm (N+2) Process Node   An advanced semiconductor manufacturing process node that is being mass produced by SMIC. It is reported to be very similar to TSMC’s 7nm process technology and does not use EUV lithography.
+STMicroelectronics            STMicroelectronics MicrocontrollerA microcontroller product whose price in China dropped from approximately $49.60 to $42.62, indicating falling demand and market adjustments.
+Samsung                       1X DRAM node                  Samsung’s current highest volume DRAM node, which is expected to be impacted by the ramp-up of the new 1A node.
+Samsung                       1A DRAM node                  A next-generation DRAM technology node that Samsung is about to ramp, anticipated to significantly increase supply amid an already oversupplied market.
+Samsung                       176L NAND                     A NAND memory technology node that Samsung is ramping up to catch up with competitors in the NAND market.
+Samsung                       Bixby                         A voice assistant developed to enhance user interaction on Samsung devices.
+Samsung                       Next chip                     A forthcoming chip expected to be larger and packaged differently for use in mass produced automobiles rather than in high-power datacenters.
+Samsung                       Samsung 1000-layer Vertical NAND (VNAND)A high-density NAND flash memory product that leverages advanced multiple wafer stacking techniques.
+Samsung Electronics           Game Optimizing Service       A service provided by Samsung that throttled applications (except benchmarks) to control heat and power consumption.
+Samsung Electronics           Exynos 2400                   A flagship smartphone chip based on older 4nm class technology, noted in the article as not representing a true next-generation process for Samsung.
+Samsung Electronics           Exynos 2200                   A smartphone system-on-chip (SoC) that suffered from abysmal yields and performance/power issues.
+Samsung Electronics           ISOCELL Smartphone Sensors    Smartphone image sensors that have been slow in adopting hybrid bonding technology relative to competitors.
+Samsung Electronics           Exynos                        Samsung's flagship mobile chipset line, which may see early low-volume production using the 3nm process node.
+Samsung LSI                   Tesla HW 3.0                  A co-designed automotive chip for self-driving/ADAS applications that has shipped millions of units into Tesla vehicles.
+SemiAnalysis                  Transistor Radio              A podcast that delves into semiconductor market trends, industry news, and subsegment analyses, featuring live webinars and detailed discussions.
+SemiAnalysis                  SemiAnalysis AI Accelerator ModelA model that breaks down the shipment volume of the different GB200 SKUs by quarter, including customized variants to various clouds, and provides component contribution analysis, with subscription discounts available for users.
+SemiAnalysis                  ClusterMAX-NCCL               A one-liner tool for running NCCL tests to benchmark and validate cluster networking performance.
+SemiAnalysis                  GB200 Component & Supply Chain BoM ModelA model that details the components, pricing, quantities, and supplier landscape for various GB200 SKUs, covering systems like GB200 NVL72/NVL36 and GB200A NVL36.
+SemiAnalysis                  ClusterMAX™ Rating System     A rating system designed to evaluate GPU cloud providers based on a comprehensive set of criteria including security, performance, reliability, and pricing.
+Semiconductor Manufacturing International CorporationKirin 9000S mobile SoC        A mobile system-on-chip produced using advanced semiconductor processes.
+ServiceNow, Inc.              ServiceNow Pro Plus           A subscription plan that integrates AI features for automatic issue resolution, priced about 30% higher than the older Pro plan with usage limits that can be expanded for additional cost.
+ServiceNow, Inc.              ServiceNow AI Consulting ServiceA high-touch, AI-driven consulting service designed for marquee clients to help them understand and implement AI tools within their existing workflows.
+SiFive                        X280                          A RISC-V core product that represents SiFive’s innovative approach using higher-level hardware design languages.
+SiFive                        P670                          A SiFive RISC-V core product that further extends the company's reach into high-performance processor design.
+SiFive                        P470                          Another RISC-V core in SiFive's portfolio, emphasizing scalability and performance.
+SiFive Inc.                   X280 Core                     A high-performance RISC-V CPU core featuring a wide vector pipeline, support for bfloat, matrix multiplies, and quantization. It is used in a range of applications from automotive to datacenter hypervisors.
+SiFive, Inc.                  SiFive P550 CPU               A high-performance CPU core design that is compared favorably with older Arm Cortex designs.
+Silicon Motion                SSD Controllers               Chips used in client and data center SSDs, with expectations for significant market share growth in high-end PCIe Gen 4 SSDs and developments targeting PCIe Gen 5.
+Silicon Motion                UFS Controller 3.1            A memory controller product designed for mobile devices that leverages TSMC’s 16-nanometer process technology, noted as facing supply constraints.
+Stanford University           Alpaca                        A variant of LLaMA enriched with instruction tuning, released shortly after LLaMA was leaked, demonstrating fast fine-tuning using low rank adaptation.
+Swaysure                      Capacitorless 3D DRAM         An advanced DRAM product that overcomes conventional memory design limitations, exemplifying breakthroughs in semiconductor technology.
+TSMC                          TSMC N2                       A GAA process node offering approximately 15% speed improvement, 30% power reduction, and improved density scaling along with multiple threshold voltage levels.
+TSMC                          TSMC CoWoS-R+                 An evolution of CoWoS technology using an organic substrate with RDL layers to support high-density, high-speed interconnects.
+TSMC                          TSMC 4th Generation SoIC      A next-generation chip-on-wafer hybrid bonding technology featuring a 3-micron pitch and capability of 100,000 bond pads per mm².
+TSMC                          AI chip                       A chip designed for artificial intelligence applications for which TSMC recently received a large order.
+TSMC                          TSMC SoIC                     Next-generation 3D packaging technology that employs hybrid bonding and a sub-15 µm TSV interconnect pitch to achieve higher density interconnects.
+Taiwan Semiconductor Manufacturing Company Limited (TSMC)N3E Process Node              An improved iteration of the N3 process that offers a better manufacturing process window, enhanced performance, lower defect density, and similar cost compared to N3; volume production is scheduled approximately one year after N3.
+Taiwan Semiconductor Manufacturing Company Limited (TSMC)N3 Process Node               A 3‑nanometer semiconductor manufacturing process node that is now shipping in Q1 2023 after a delay, with mass production in the latter half of 2022.
+Tanzanite Silicon Solutions   Smart Logic Interface Connector (SLIC) SoCAn ASIC that connects to other chips via CXL and standard DDR DIMMs, enabling independent scaling and the pooling of memory and compute resources across servers.
+Tenstorrent                   Wormhole                      A chip or machine-scale hardware system intended for data center deployment, with plans for large installations.
+Tenstorrent                   Jawbridge                     An earlier chip architecture in Tenstorrent’s evolution referenced in prior discussions of their hardware developments.
+Tenstorrent                   Buda                          A software platform built for PyTorch that allows seamless deployment and scaling of models from single-chip setups to thousands of interconnected systems.
+Tenstorrent                   Blackhole                     An upcoming chip based on TSMC 6nm technology that increases compute, integrates additional RISC-V CPU cores (licensed from SiFive), and transitions memory from GDDR6 to DDR5.
+Tenstorrent                   TenSix                        A processing array architecture that uses an array of RISC-V cores alongside a packet manager to handle mini-tensors and drive the chip’s performance.
+Tenstorrent                   Grayskull                     A second-generation chip built on GlobalFoundries 12nm technology, claimed to offer performance similar to Nvidia’s A100 GPU but with higher density and efficiency.
+Tenstorrent                   Grendel                       A forthcoming chip on TSMC 4nm technology that further increases compute performance and features in-house designed 64 RISC-V CPU cores with advanced ethernet switching.
+Tenstorrent Inc.              TenSix Processor Tile         A processor tile product that incorporates the X280 CPU core, used in Tenstorrent’s offerings for AI and high-performance computing.
+Tenstorrent Inc.              Nebula                        A 4U server chassis designed to house 32 Wormhole chips, interconnected in a full mesh to enable scaling across servers.
+Tenstorrent Inc.              Jawbridge                     A small testchip developed as a proof-of-concept for Tenstorrent’s architecture, demonstrating low power and impressive power/performance characteristics.
+Tenstorrent Inc.              GraySkull                     A commercial chip featuring 128 Tensix cores and a scalable network on chip, produced on a 620mm² die using GlobalFoundries 12nm technology, and noted for its first tapeout success (A0 silicon).
+Tenstorrent Inc.              Galaxy                        A rack-level solution comprising 8 Nebula chassis, 4 AMD Epyc servers and a large shared memory pool, enabling extensive AI training with high memory and networking capacity.
+Tenstorrent Inc.              Wormhole                      An advanced chip built on a 670mm² die (GlobalFoundries 12nm) that significantly scales performance, memory bandwidth, and networking capabilities with integrated 100Gb Ethernet ports. It is offered as both a PCIe add-in card and a module variant, and underpins Tenstorrent’s scale-out AI approaches.
+Tesla                         Tesla chip                    A chip image speculated to use an unorthodox packaging approach resembling TSMC’s InFO_SoW, posted by Dennis Hong, and associated with Tesla AI Day.
+Tesla                         Tesla Optimus                 A humanoid robot project mentioned as underperforming in demonstration compared to Chinese developments.
+Tesla                         ExaPod Supercomputer          An integrated supercomputing system design that leverages the Tesla D1 Dojo chip along with custom interconnects and exotic packaging to deliver exascale performance for training autonomous driving AI.
+Tesla                         Tesla D1 Dojo Chip            A custom AI chip designed to train massive multi-trillion parameter networks, featuring innovative on-wafer packaging, limited on-die SRAM paired with high throughput FP16/CFP8 computation, and high-bandwidth chip-to-chip interconnect.
+Tesla                         Dojo supercomputer            A high-power, AI training supercomputer design expected to scale for huge AI workloads and requiring advanced cooling solutions.
+Tesla                         Tesla Dojo 1                  A high-profile system that utilizes integrated fan out packaging on a wafer scale, serving as an example of advanced packaging applied to high performance computing.
+Tesla, Inc.                   D1 Training Chip              Tesla’s in-house AI training chip designed for both automotive and datacenter applications, featuring innovative packaging methods.
+Tesla, Inc.                   D1 Dojo Chip                  An AI training chip designed with GPU-level compute, CPU-level flexibility, and high networking bandwidth to run large neural networks efficiently.
+Tesla, Inc.                   Dojo Supercomputer            A supercomputer platform used for training Tesla’s AI models with data collected from its vehicle fleet.
+Tesla, Inc.                   Training Tile                 A fan-out wafer-based package that integrates 25 D1 Dojo chips, delivering high performance and off-chip bandwidth for scalable AI training systems.
+Tesla, Inc.                   Second-generation Full Self-Driving (FSD) ChipThe next-generation chip powering Tesla’s vehicles, featuring 20 Arm Cortex-A72 cores, three NPU cores with dedicated SRAM, and improved memory bandwidth for autonomous driving inference.
+Tesla, Inc.                   Phoenix Radar                 An in-house designed automotive radar system that integrates with the camera system to enhance vehicle safety through sensor fusion.
+Tokyo Electron                Photoresist Coaters and DevelopersEquipment used to apply and develop photoresist layers during the lithography process.
+Tokyo Electron                TEL Acrevia                   A tool used for complementary patterning, aiding in advanced lithographic processes.
+Tokyo Electron                Clean Track Lithius Pro Z     A coater/developer tool used to deposit and process chemically amplified resists on wafers in EUV lithography, used in conjunction with ASML photolithography systems.
+Tokyo Electron Limited        CLEAN TRACK LITHIUS Pro Z     A lithography resist track tool that coats a wafer with photoresist solution and subsequently develops it, and is the only tool in the world capable of coating and developing a wafer with EUV photoresist.
+USI                           USI mmWave Antenna Modules    Three custom mmWave antenna modules built by USI for integration into the iPhone 12, representing the company’s first design win in this area.
+Uber                          Uber One                      A subscription service from Uber offering free delivery and cash-back programs; Perplexity used promotions such as free full-year subscriptions for some Uber One subscribers.
+Unitree                       Unitree G1                    A commercially available humanoid robot noted for its low price and viability in the market.
+University of California, BerkeleyKoala                         A dialogue model trained entirely on freely available data which, in human evaluations, performed comparably to ChatGPT during 50%+ of comparisons.
+Veeco Technologies Inc.       Ion Beam Deposition Tool      A tool used for ion beam deposition, critical in manufacturing hard drive heads.
+Veeco Technologies Inc.       EUV Mask Deposition Tool      A tool that performs ion deposition for EUV masks, depositing molybdenum, silicon and applying a ruthenium capping layer for reflective mask structures.
+Veeco Technologies Inc.       Wet Processing System         A system used for metal lift-off, wafer cleaning, and processing in HBM memory fabrication and advanced packaging applications.
+Veeco Technologies Inc.       Propel Nanowire MicroLED Tool A tool aimed at the microLED market, particularly for red microLED manufacturing via pick and place, with potential to grow if monolithic microLED processes are developed.
+Veeco Technologies Inc.       Laser Annealing System        A front-end tool used for selective annealing processes, such as for gate-all-around devices, offering improved dopant activation with minimal diffusion.
+Veeco Technologies Inc.       Lithography Tool for Advanced PackagingA lithography system acquired through the Ultratech acquisition, used to pattern copper pillars and TSVs in advanced packaging processes.
+Veeco Technologies Inc.       MOCVD Equipment for LEDs      Equipment designed for metal organic chemical vapor deposition (MOCVD) used in LED epitaxial growth.
+Ventana Micro Systems         VT2                           A follow-on CPU chiplet design that will include the RISC-V Vector extensions, improving performance further.
+Ventana Micro Systems         Veyron VT1                    A RISC-V CPU chiplet featuring an 8‐wide out-of-order design, a 512KB instruction cache, and 3MB L3 cache slices per core, aimed at delivering high performance across datacenter, network, and 5G applications.
+Western Digital Corporation   XL-Flash-2                    A second-generation storage class memory product that leverages 16-plane MLC NAND, offering significant performance benefits for large-scale, low latency deployments.
+Windsurf                      SWE-1                         A family of AI models designed for software engineering tasks.
+X.AI                          X.AI Grok                     A language model that competes with GPT-3.5 on numerous benchmarks.
+Xilinx                        Versal                        A leading-edge FPGA product line contributing significantly to datacenter growth.
+Xilinx                        Zync                          A programmable logic product line that, together with Versal, highlights competitiveness in the FPGA market.
+YMTC                          Xtacking 3.0                  A 1Tb TLC NAND product marketed as the industry’s densest NAND with a density of 15.2Gbit/mm2, featuring more than 230 layers and a 6-plane architecture.
+Yangtze Memory Technologies Company (YMTC)128 Layer TLC NAND            A 3D NAND flash memory product that utilizes competitive design and manufacturing techniques to achieve high die bit density and performance.
+nVent Electric plc            Rear-Door Heat Exchanger (RDHx)An in‐rack cooling solution that places a heat exchanger on the rear door of a server rack to extract heat, thereby reducing the need for complete room-level airflow management.
+xAI                           xAI’s Grok models             Artificial intelligence models available for purchase through Microsoft's Azure cloud platform.
+安谋科技                          Power Core (XPU line)         A rebranded IP suite including various processing units such as NPUs (neural), SPUs (security), ISPs (image signal), and VPUs (video) designed for mobile, network infrastructure, 5G, and IoT applications.
