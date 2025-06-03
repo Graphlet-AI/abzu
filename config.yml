@@ -1,5 +1,9 @@
 base_dir: "data"
 
+logs:
+  file:
+    path: "${base_dir}/logs"
+
 crawl:
   ignore:
     - "wsj.com"
