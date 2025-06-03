@@ -1245,13 +1245,16 @@ def process_all_tickers(
     output_dir: str = config.get("api.sec.download.output_dir"),
     filing_index: int = 0,
     form_type: str = config.get("api.sec.download.form_type"),
+    ticker: str | None = config.get("api.sec.download.ticker"),
 ) -> None:
-    """Process filings of ``form_type`` for all tickers in a Parquet file."""
+    """Process filings of ``form_type`` for a ticker list or a single ticker."""
 
-    print("Reading tickers file", tickers_file)
-
-    df = pd.read_parquet(tickers_file)
-    tickers = df["symbol"].dropna().unique()
+    if ticker:
+        tickers = [ticker]
+    else:
+        print("Reading tickers file", tickers_file)
+        df = pd.read_parquet(tickers_file)
+        tickers = df["symbol"].dropna().unique()
 
     Path(output_dir).mkdir(parents=True, exist_ok=True)
 

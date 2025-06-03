@@ -433,6 +433,8 @@ poetry run abzu dump company-ticker-resolution -f data/refined_knowledge_graph/c
 
 # Download SEC filings for all tickers
 poetry run abzu api sec download
+# Or for a single ticker
+poetry run abzu api sec download --ticker NVDA
 
 # Local
 abzu api financialdatasets facts -f
