@@ -82,6 +82,8 @@ TEST_COMMANDS = [
             "--input",
             "--output",
             "--filing-index",
+            "--form-type",
+            "--ticker",
         ],
     ),
     (
