@@ -9,6 +9,8 @@ from typing import Any, Callable, Optional
 from discord import Intents, Message, TextChannel, errors
 from discord.ext import commands
 
+from abzu.url_extractor import URLExtractor
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -51,8 +53,13 @@ class URLMonitorBot(commands.Bot):
             r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
         )
         self.specific_channels = set(specific_channels) if specific_channels else None
-        self.ignored_domains = set(ignored_domains) if ignored_domains else set()
         self.on_url_found_callback = on_url_found_callback
+
+        # Initialize URLExtractor with provided ignored domains
+        self.url_extractor = URLExtractor(
+            ignore_domains=list(ignored_domains) if ignored_domains else [],
+            replace=False,  # Add to config domains
+        )
 
         # Set up event handlers
         self.setup_event_handlers()
@@ -115,8 +122,8 @@ class URLMonitorBot(commands.Bot):
 
                 # Process each URL (after filtering out ignored domains)
                 for url in urls:
-                    # Skip ignored domains
-                    if any(ignored in url.lower() for ignored in self.ignored_domains):
+                    # Skip ignored domains using URLExtractor
+                    if self.url_extractor.should_ignore_url(url):
                         logger.info(f"Ignoring URL from ignored domain: {url}")
                         continue
 

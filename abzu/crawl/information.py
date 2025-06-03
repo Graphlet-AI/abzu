@@ -14,6 +14,7 @@ import requests
 
 from abzu.config import config
 from abzu.html_extractor import HTMLExtractor
+from abzu.url_extractor import URLExtractor
 from abzu.utils import append_jsonl, build_crawled_url_index
 
 logger = logging.getLogger(__name__)
@@ -95,6 +96,9 @@ def parse_rss_and_save(rss_url: str, output_file: str, session: requests.Session
     crawled_urls = build_crawled_url_index(output_file)
     logger.info(f"Found {len(crawled_urls)} previously crawled URLs")
 
+    # Initialize URLExtractor
+    url_extractor = URLExtractor()
+
     try:
         logger.info(f"Fetching RSS feed from: {rss_url}")
         resp = session.get(rss_url, timeout=15)
@@ -138,6 +142,12 @@ def parse_rss_and_save(rss_url: str, output_file: str, session: requests.Session
             logger.debug(f"Skipping already crawled URL: {link}")
             continue
 
+        # Skip if URL should be ignored
+        if url_extractor.should_ignore_url(link):
+            skipped += 1
+            logger.info(f"Skipping ignored URL: {link}")
+            continue
+
         logger.info(f"Crawling: {link}")
 
         if getattr(entry, "content", None):
@@ -145,8 +155,36 @@ def parse_rss_and_save(rss_url: str, output_file: str, session: requests.Session
         else:
             feed_content = entry.get("summary", "")
 
+        # Initialize variables for content and URLs
+        content: str
+        extracted_urls: list[str] = []
+
         try:
-            content = extract_text_from_url(session, link)
+            # Fetch the full HTML first
+            resp = session.get(link, timeout=15)
+            if resp.status_code != 200:
+                logger.debug(f"Response status code: {resp.status_code} for {link}")
+            resp.raise_for_status()
+
+            # Extract URLs from HTML before processing
+            extracted_urls = url_extractor.extract_urls_from_html(resp.text)
+
+            # Extract clean text content
+            html_extractor = HTMLExtractor()
+            content = html_extractor.extract(resp.text)
+
+            # Log the extraction
+            original_size = len(resp.text)
+            extracted_size = len(content)
+            reduction_pct = (
+                ((original_size - extracted_size) / original_size * 100) if original_size > 0 else 0
+            )
+            logger.debug(
+                f"Extracted text from {link}: {original_size:,} → {extracted_size:,} chars "
+                f"({reduction_pct:.1f}% reduction)"
+            )
+            logger.debug(f"Extracted {len(extracted_urls)} URLs from {link}")
+
         except requests.exceptions.HTTPError as e:
             logger.error(f"HTTP error fetching {link}: {e}")
             content = ""
@@ -168,6 +206,7 @@ def parse_rss_and_save(rss_url: str, output_file: str, session: requests.Session
             "posted_at": published,
             "feed_content": feed_content,
             "content": content,
+            "urls": extracted_urls,
             "collected_at": collected_at,
         }
 

@@ -1,6 +1,11 @@
 base_dir: "data"
 
 crawl:
+  ignore:
+    - "wsj.com"
+    - "github.com"
+    - "stocktwits.com"
+
   semianalysis:
     output: "${base_dir}/articles/semianalysis.jsonl"
 
@@ -15,9 +20,6 @@ crawl:
       wired: "https://www.wired.com/feed/tag/ai/latest/rss"
       nvidia-blog: "https://developer.nvidia.com/blog/rss"
     output_dir: "${base_dir}/rss"
-    ignore:
-      - "wsj.com"
-      - "github.com"
 
   reddit:
     input: "${base_dir}/reddit/reddit_posts.jsonl"
