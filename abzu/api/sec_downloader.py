@@ -1240,6 +1240,48 @@ def display_financial_summary(results: dict[str, Any]):
         # Else: data_item might be a simple string (e.g. from HTML DocumentPeriodEndDate, already handled) or other non-dict type
 
 
+def download_annual_report(
+    ticker: str,
+    year: int,
+    save_dir: str = config.get("api.sec.download.annual_reports"),
+) -> str:
+    """Download the 10-K filing for ``ticker`` in ``year`` as plain text."""
+
+    cik = get_cik_from_ticker(ticker)
+    filings = list_recent_filings(cik, form_type="10-K", count=20)
+
+    target_filing = next(
+        (f for f in filings if f.get("filing_date_obj") and f["filing_date_obj"].year == year),
+        None,
+    )
+
+    if not target_filing:
+        raise ValueError(f"No 10-K filing found for {ticker} in {year}")
+
+    html_save_dir = os.path.join(
+        config.get("api.sec.download.html_filings"),
+        cik,
+        target_filing["acc_with_dashes"].replace("-", ""),
+    )
+    html_path = download_html_filing(
+        cik,
+        target_filing["acc_with_dashes"],
+        target_filing["doc"],
+        save_dir=html_save_dir,
+    )
+
+    with open(html_path, "rb") as f:
+        soup = BeautifulSoup(f, "html.parser")
+        text = soup.get_text(separator="\n")
+
+    os.makedirs(save_dir, exist_ok=True)
+    output_path = os.path.join(save_dir, f"{ticker}_{year}.txt")
+    with open(output_path, "w", encoding="utf-8") as out_file:
+        out_file.write(text)
+
+    return output_path
+
+
 def process_all_tickers(
     tickers_file: str = config.get("api.sec.download.tickers_file"),
     output_dir: str = config.get("api.sec.download.output_dir"),
