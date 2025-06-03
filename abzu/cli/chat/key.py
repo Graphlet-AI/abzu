@@ -1,7 +1,6 @@
 """CLI command for verifying Discord authentication tokens."""
 
 import asyncio
-import logging
 import os
 from typing import Optional
 
@@ -9,11 +8,9 @@ import click
 from discord.errors import HTTPException, LoginFailure
 from discord.http import HTTPClient
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
+from abzu.logs import get_logger
+
+logger = get_logger(__name__)
 
 
 @click.command(context_settings={"show_default": True})

@@ -19,6 +19,9 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 from abzu.config import config
+from abzu.logs import get_logger
+
+logger = get_logger(__name__)
 
 # Constants
 USER_AGENT = "Your Name <youremail@example.com>"  # PLEASE REPLACE

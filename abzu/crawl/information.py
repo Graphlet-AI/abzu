@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import datetime
-import logging
 import os
 from typing import Optional
 
@@ -14,10 +13,11 @@ import requests
 
 from abzu.config import config
 from abzu.html_extractor import HTMLExtractor
+from abzu.logs import get_logger
 from abzu.url_extractor import URLExtractor
 from abzu.utils import append_jsonl, build_crawled_url_index
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 # TheInformation RSS feed URL (fixed)
 RSS_URL = "https://www.theinformation.com/feed"

@@ -1,7 +1,6 @@
 """Company ticker resolution dump command."""
 
 import json
-import logging
 import re
 from pathlib import Path
 from typing import Dict, Tuple
@@ -13,8 +12,9 @@ from rapidfuzz import fuzz, process
 
 from abzu.api.sec_downloader import HEADERS
 from abzu.config import config
+from abzu.logs import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def _normalize(name: str) -> str:

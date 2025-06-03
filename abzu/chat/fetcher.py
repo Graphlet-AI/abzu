@@ -1,6 +1,5 @@
 """URL content fetcher with retry/backoff strategy."""
 
-import logging
 import re
 import time
 from datetime import datetime
@@ -12,13 +11,10 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 from abzu.html_extractor import HTMLExtractor
+from abzu.logs import get_logger
 from abzu.url_extractor import URLExtractor
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class ContentFetcher:

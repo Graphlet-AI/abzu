@@ -1,7 +1,6 @@
 """Discord bot for URL monitoring and processing."""
 
 import asyncio
-import logging
 import os
 import re
 from typing import Any, Callable, Optional
@@ -9,13 +8,10 @@ from typing import Any, Callable, Optional
 from discord import Intents, Message, TextChannel, errors
 from discord.ext import commands
 
+from abzu.logs import get_logger
 from abzu.url_extractor import URLExtractor
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class URLMonitorBot(commands.Bot):

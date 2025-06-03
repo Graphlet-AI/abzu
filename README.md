@@ -576,6 +576,57 @@ Sells         411  411
 SoldBy        411  411
 ```
 
+## Logging
+
+Abzu uses a centralized logging system that writes to both file and console.
+
+### Usage
+
+```python
+from abzu.logs import get_logger
+
+# Get a logger for your module
+logger = get_logger(__name__)
+
+# Use standard logging methods
+logger.info("Processing started")
+logger.error(f"Failed to process: {error}")
+logger.warning("Missing data")
+logger.debug("Debug information")
+```
+
+### Configuration
+
+Logging is configured in `config.yml`:
+
+```yaml
+logs:
+  file:
+    path: "${base_dir}/logs"  # Logs stored in data/logs/
+```
+
+### Log Output
+
+- **File**: Logs are written to `data/logs/app.log`
+- **Console**: Logs are also displayed in the terminal
+- **Format**: `%(asctime)s - %(name)s - %(levelname)s - %(message)s`
+- **Level**: INFO by default
+
+### Best Practices
+
+1. Always use `get_logger(__name__)` to create module-specific loggers
+2. Use appropriate log levels:
+   - `DEBUG`: Detailed information for diagnosing problems
+   - `INFO`: General informational messages
+   - `WARNING`: Warning messages for potentially harmful situations
+   - `ERROR`: Error messages for serious problems
+   - `CRITICAL`: Critical messages for very serious errors
+
+3. Include context in error messages:
+   ```python
+   logger.error(f"Failed to process file {file_path}: {e}")
+   ```
+
 ## HOWTO `poetry`
 
 ```bash

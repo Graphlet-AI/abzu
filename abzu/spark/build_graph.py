@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 """Build a knowledge graph from pre-processed articles."""
-import logging
 from pathlib import Path
 from typing import Optional
 
@@ -9,13 +8,10 @@ from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql import types as T
 
 from abzu.config import config
+from abzu.logs import get_logger
 from abzu.spark.config import get_spark_session
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def build_knowledge_graph(

@@ -1,6 +1,5 @@
 """Crawl articles from the web for processing."""
 
-import logging
 import os
 import time
 from datetime import datetime
@@ -23,17 +22,12 @@ from twisted.internet import reactor  # noqa: E402
 
 from abzu.config import config  # noqa: E402
 from abzu.html_extractor import HTMLExtractor  # noqa: E402
+from abzu.logs import get_logger  # noqa: E402
 from abzu.url_extractor import URLExtractor  # noqa: E402
 from abzu.utils import append_jsonl, build_crawled_url_index  # noqa: E402
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
-
-# Disable Scrapy duplicate logging
-logging.getLogger("scrapy").propagate = False
+logger = get_logger(__name__)
+logger.propagate = False  # Disable Scrapy duplicate logging
 
 
 class ArticleCrawler(scrapy.Spider):

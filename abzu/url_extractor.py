@@ -1,6 +1,5 @@
 """URL extraction and filtering utility."""
 
-import logging
 import re
 from typing import List, Set
 from urllib.parse import urlparse
@@ -8,8 +7,9 @@ from urllib.parse import urlparse
 from lxml import html as lxml_html
 
 from abzu.config import config
+from abzu.logs import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class URLExtractor:

@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-import logging
 from pathlib import Path
 from typing import Optional
 
 from abzu.config import config
 from abzu.crawl.information import DEFAULT_USER_AGENT, build_session, parse_rss_and_save
+from abzu.logs import get_logger
 from abzu.url_extractor import URLExtractor
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def crawl_rss(

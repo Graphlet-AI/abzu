@@ -1,11 +1,11 @@
-import logging
 from pathlib import Path
 from typing import Optional
 
 from abzu.articles.processor import process_main
 from abzu.config import config
+from abzu.logs import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def process_rss_feeds(

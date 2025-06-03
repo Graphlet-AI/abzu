@@ -1,10 +1,10 @@
 """HTML text extraction utilities."""
 
-import logging
-
 from bs4 import BeautifulSoup
 
-logger = logging.getLogger(__name__)
+from abzu.logs import get_logger
+
+logger = get_logger(__name__)
 
 
 class HTMLExtractor:
