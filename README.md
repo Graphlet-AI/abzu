@@ -478,7 +478,10 @@ abzu api sec download
     "title": "GlobalFoundries Is A Leading-Edge Foundry Despite Claims Otherwise – SemiAnalysis",
     "posted_at": "2021-06-21T19:19:48+00:00",
     "collected_at": "2025-04-15T04:20:37.763490",
-    "content": "GlobalFoundries is still a..."
+    "content": "GlobalFoundries is still a...",
+    "urls": [
+        "https://semianalysis.com/2021/06/21/globalfoundries-is-a-leading-edge/"
+    ]
 }
 ```
 
