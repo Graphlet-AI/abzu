@@ -4,8 +4,10 @@ import click
 
 from abzu.config import config
 
+__all__ = ["annual_report"]
 
-@click.command(context_settings={"show_default": True})
+
+@click.command(name="annual-report", context_settings={"show_default": True})
 @click.option("-t", "--ticker", required=True, help="Ticker symbol (e.g., AAPL)")
 @click.option("-y", "--year", type=int, required=True, help="Filing year")
 @click.option(
