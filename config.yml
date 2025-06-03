@@ -48,9 +48,11 @@ process:
       input:
         - "${process.articles.semianalysis.output}"
         - "${process.articles.theinformation.output}"
-        - "${crawl.rss.output_dir}/*.jsonl"
+        - "${process.rss.output_dir}/processed_nvidia-blog.jsonl"
+        - "${process.rss.output_dir}/processed_wired.jsonl"
+        - "${process.rss.output_dir}/processed_techcrunch.jsonl"
         - "${chat.start.processed_articles}"
-        - "${crawl.reddit.input}"
+        - "${crawl.reddit.output}"
       output: "${base_dir}/knowledge_graph"
 
     refine:
@@ -78,10 +80,13 @@ api:
 
   sec:
     download:
-      tickers_file: "${process.kg.raw.output}/tickers.parquet"
+      tickers_file: "${process.kg.refine.output}/tickers.parquet"
       output_dir: "${base_dir}/sec/tickers"
       xbrl_files: "${base_dir}/sec/xbrl_files"
       html_filings: "${base_dir}/sec/html_filings"
+      annual_reports: "${base_dir}/sec/annual_reports"
+      form_type: "10-Q"
+      ticker: null
 
 dump:
   companies:
