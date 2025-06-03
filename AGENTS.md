@@ -72,5 +72,5 @@ This file provides guidance to OpenAI Codex when working with code in this repos
 
 ## Alerts
 
-- BEEP when you are done with something and prompt me, the user in your UI. I need to hear that you're done because I do more than one thing at once. Use the comand `echo -ne '\007'` to beep.
-- Use the applescript-mcp server to send me a message when you are done with something. Say "Done with task X" where X is the task you are done with. Alternatively, use the command `osascript -e 'tell application "System Events" to display dialog "Done with task X"'` to send me a message.
+- BEEP only ONCE when you are done with something and prompt me, the user in your UI. I need to hear that you're done because I do more than one thing at once. Use the command `echo -ne '\007'` to beep. Do not keep beeping multiple times or continuously. Just beep once when you are done with a task.
+- Use the applescript-mcp server to send me a message when you are done with something. Say "Done with task X" where X is the task you are done with. Alternatively, use the command `osascript -e 'tell application "System Events" to display dialog "Done with task X"'` to send me a message. Send only ONE alert, not multiple alerts.
