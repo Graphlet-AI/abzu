@@ -137,10 +137,16 @@ def fetch_company_index(cik: str) -> dict[str, Any]:
     return cast(dict[str, Any], resp.json())  # Cast to satisfy mypy
 
 
-def list_recent_filings(cik: str, form_type: str = "10-Q", count: int = 3) -> list[dict[str, Any]]:
+def list_recent_filings(
+    cik: str, form_type: str = config.get("api.sec.download.form_type"), count: int = 3
+) -> list[dict[str, Any]]:
     """
-    Lists recent filings of a specific form type (e.g., "10-Q") for a given CIK.
-    Returns a list of dictionaries, each containing details of a filing.
+    List recent filings of the specified ``form_type`` for a given ``cik``.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Collection of filing metadata dictionaries.
     """
     print(f"Listing recent {form_type} filings for CIK {cik}, count={count}")
     idx = fetch_company_index(cik)
@@ -549,6 +555,7 @@ def get_data_from_sec_api(
     api_type: str,
     concept_name_map: Optional[dict[str, list[str]]] = None,
     min_filing_year: int = 0,
+    form_type: str = config.get("api.sec.download.form_type"),
 ) -> dict[str, Any]:
     """
     Fetches and processes data from SEC's CompanyFacts or CompanyConcept API.
@@ -595,10 +602,10 @@ def get_data_from_sec_api(
 
                 if concept_data_block and "units" in concept_data_block:
                     for unit, values_list in concept_data_block.get("units", {}).items():
-                        # Filter for 10-Q forms, recent filing dates, and sort by end date (most recent first)
+                        # Filter for matching forms, recent filing dates, and sort by end date (most recent first)
                         quarterly_values_temp = []
                         for v_item in values_list:
-                            if v_item.get("form") == "10-Q":
+                            if v_item.get("form") == form_type:
                                 filed_date_obj = parse_date_flexible(v_item.get("filed"))
                                 if filed_date_obj and filed_date_obj.year >= min_filing_year:
                                     quarterly_values_temp.append(v_item)
@@ -659,7 +666,7 @@ def get_data_from_sec_api(
                     for unit, values_list in api_data.get("units", {}).items():
                         quarterly_values_temp = []
                         for v_item in values_list:
-                            if v_item.get("form") == "10-Q":
+                            if v_item.get("form") == form_type:
                                 filed_date_obj = parse_date_flexible(v_item.get("filed"))
                                 if filed_date_obj and filed_date_obj.year >= min_filing_year:
                                     quarterly_values_temp.append(v_item)
@@ -863,19 +870,18 @@ def extract_from_html(html_path: str, filing_date_obj: datetime) -> dict[str, An
     return financial_data
 
 
-def process_10q_filing(ticker: str, filing_idx: int = 0) -> dict[str, Any]:
-    """
-    Main orchestrator to process a 10-Q filing.
-    It tries multiple methods: SEC APIs, XBRL parsing, and HTML parsing as a fallback.
-    """
+def process_filing(
+    ticker: str, form_type: str = config.get("api.sec.download.form_type"), filing_idx: int = 0
+) -> dict[str, Any]:
+    """Process a single SEC filing of the given ``form_type`` for ``ticker``."""
     try:
         cik = get_cik_from_ticker(ticker)
         print(f"\n=== Processing {ticker} (CIK: {cik}), Filing Index: {filing_idx} ===")
 
-        filings = list_recent_filings(cik, form_type="10-Q", count=filing_idx + 1)
+        filings = list_recent_filings(cik, form_type=form_type, count=filing_idx + 1)
         if not filings or filing_idx >= len(filings):
             return {
-                "error": f"No 10-Q filing found at index {filing_idx} for {ticker}",
+                "error": f"No {form_type} filing found at index {filing_idx} for {ticker}",
                 "ticker": ticker,
                 "cik": cik,
             }
@@ -912,7 +918,10 @@ def process_10q_filing(ticker: str, filing_idx: int = 0) -> dict[str, Any]:
         # --- Method 1: SEC CompanyFacts API ---
         print("\n--- Attempt 1: SEC CompanyFacts API ---")
         api_facts_result = get_data_from_sec_api(
-            cik, "facts", min_filing_year=filing_date_obj.year - 2
+            cik,
+            "facts",
+            min_filing_year=filing_date_obj.year - 2,
+            form_type=form_type,
         )  # Look back ~2 years from filing year
 
         if not api_facts_result.get("errors") and api_facts_result.get("data"):
@@ -1143,7 +1152,12 @@ def process_10q_filing(ticker: str, filing_idx: int = 0) -> dict[str, Any]:
         return {"error": f"Unexpected critical error: {str(e)}", "ticker": ticker}
 
 
-def save_results_to_json(data: dict[str, Any], output_file: str = "10q_data.json"):
+def process_10q_filing(ticker: str, filing_idx: int = 0) -> dict[str, Any]:
+    """Backward-compatible wrapper for processing 10-Q filings."""
+    return process_filing(ticker, form_type="10-Q", filing_idx=filing_idx)
+
+
+def save_results_to_json(data: dict[str, Any], output_file: str = "filing_data.json"):
     """Saves the extracted data dictionary to a JSON file."""
     # Ensure the output directory exists
     output_dir = os.path.dirname(output_file)
@@ -1230,8 +1244,9 @@ def process_all_tickers(
     tickers_file: str = config.get("api.sec.download.tickers_file"),
     output_dir: str = config.get("api.sec.download.output_dir"),
     filing_index: int = 0,
+    form_type: str = config.get("api.sec.download.form_type"),
 ) -> None:
-    """Process 10-Q filings for all tickers in a Parquet file."""
+    """Process filings of ``form_type`` for all tickers in a Parquet file."""
 
     print("Reading tickers file", tickers_file)
 
@@ -1242,10 +1257,10 @@ def process_all_tickers(
 
     for ticker in tickers:
         print(f"Processing ticker: {ticker}")
-        result = process_10q_filing(ticker, filing_idx=filing_index)
+        result = process_filing(ticker, form_type=form_type, filing_idx=filing_index)
 
         accession = result.get("accession_number", "UNKNOWN_ACC").replace("-", "")
-        fname = f"{ticker}_{accession}_10q_data.json"
+        fname = f"{ticker}_{accession}_{form_type.lower()}_data.json"
         save_results_to_json(result, os.path.join(output_dir, fname))
 
         display_financial_summary(result)

@@ -26,11 +26,23 @@ from abzu.config import config
     "filing_index",
     type=int,
     default=0,
-    help="Index of 10-Q filing to process (0=most recent)",
+    help="Index of filing to process (0=most recent)",
 )
-def download(tickers_file, output_dir, filing_index):
+@click.option(
+    "-t",
+    "--form-type",
+    "form_type",
+    default=config.get("api.sec.download.form_type"),
+    help="SEC form type to download (e.g., 10-Q or 10-K)",
+)
+def download(tickers_file, output_dir, filing_index, form_type):
     """Download SEC filings for all tickers in the file."""
     from abzu.api.sec_downloader import process_all_tickers
 
-    process_all_tickers(tickers_file, output_dir, filing_index)
+    process_all_tickers(
+        tickers_file=tickers_file,
+        output_dir=output_dir,
+        filing_index=filing_index,
+        form_type=form_type,
+    )
     return 0

@@ -65,6 +65,7 @@ api:
       output_dir: "${base_dir}/sec/tickers"
       xbrl_files: "${base_dir}/sec/xbrl_files"
       html_filings: "${base_dir}/sec/html_filings"
+      form_type: "10-Q"
 
 dump:
   companies:
