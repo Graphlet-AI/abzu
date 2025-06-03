@@ -435,6 +435,8 @@ poetry run abzu dump company-ticker-resolution -f data/refined_knowledge_graph/c
 poetry run abzu api sec download
 # Or for a single ticker
 poetry run abzu api sec download --ticker NVDA
+# Download a single annual report
+poetry run abzu api sec annual-report --ticker NVDA --year 2023
 
 # Local
 abzu api financialdatasets facts -f

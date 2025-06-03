@@ -99,6 +99,15 @@ abzu api sec download
   - Processes and stores filing data
 - **Why**: Provides regulatory and financial information
 
+```bash
+abzu api sec annual-report --ticker NVDA --year 2023
+```
+- **What it does**: Downloads a plain text 10-K filing
+- **How it works**:
+  - Retrieves the filing HTML for the specified year
+  - Saves the text to the annual reports directory
+- **Why**: Enables LLM processing of annual reports
+
 ### 4. Development Commands
 
 #### Testing

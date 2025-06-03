@@ -87,6 +87,15 @@ TEST_COMMANDS = [
         ],
     ),
     (
+        "api sec annual-report --help",
+        [
+            "Usage: cli api sec annual-report [OPTIONS]",
+            "--ticker",
+            "--year",
+            "--output-dir",
+        ],
+    ),
+    (
         "dump returns --help",
         [
             "Usage: cli dump returns [OPTIONS]",
