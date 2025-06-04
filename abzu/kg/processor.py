@@ -130,7 +130,6 @@ def run_spark_script(
 def process_raw_kg(
     input_file: list[str] = config.get("process.kg.raw.input"),
     output_dir: str = config.get("process.kg.raw.output"),
-    partitions: int = 4,
 ) -> int:
     """Process articles into a raw knowledge graph.
 
@@ -139,7 +138,6 @@ def process_raw_kg(
     Args:
         input_file: List of paths to the input JSONL files with processed articles
         output_dir: Directory to store the knowledge graph
-        partitions: Number of Spark partitions to use
 
     Returns:
         0 on success, 1 on failure
@@ -169,7 +167,6 @@ def process_raw_kg(
 def process_refine_kg(
     input_dir: str = config.get("process.kg.refine.input"),
     output_dir: str = config.get("process.kg.refine.output"),
-    partitions: int = 4,
 ) -> int:
     """Refine the knowledge graph by creating bidirectional relationships.
 
@@ -178,7 +175,6 @@ def process_refine_kg(
     Args:
         input_dir: Path to the directory with raw knowledge graph
         output_dir: Directory to store the refined knowledge graph
-        partitions: Number of Spark partitions to use
 
     Returns:
         0 on success, 1 on failure
@@ -191,7 +187,7 @@ def process_refine_kg(
 
     try:
         logger.info("Refining knowledge graph...")
-        refine_knowledge_graph(input_dir, output_dir, partitions)
+        refine_knowledge_graph(input_dir, output_dir)
         logger.info("Knowledge graph refinement completed successfully")
         return 0
 
