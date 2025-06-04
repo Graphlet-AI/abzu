@@ -78,7 +78,7 @@ class Company {
   ticker Ticker?
   @description("Ticker symbol of the company if publicly traded")
 
-  description string
+  description string?
   @description("Description of the company")
 
   website_url string?

@@ -1,4 +1,4 @@
-"""CLI command to download SEC annual reports."""
+"""CLI command to download and process SEC annual reports."""
 
 import click
 
@@ -21,8 +21,9 @@ __all__ = ["annual_report"]
     help="Directory to save annual report text",
 )
 def annual_report(ticker: str, year: int, output_dir: str) -> None:
-    """Download a 10-K filing and save it as plain text."""
-
-    path = download_annual_report(ticker, year, save_dir=output_dir)
-    logger.info(f"Saved annual report to {path}")
-    click.secho(f"Saved annual report to {path}", fg="green")
+    """Download a 10-K filing and process it with BAML."""
+    from abzu.api.annual_report_processor import process_annual_report
+    
+    processed_path = process_annual_report(ticker, year, output_dir)
+    logger.info(f"Saved processed annual report to {processed_path}")
+    click.secho(f"Saved processed annual report to {processed_path}", fg="green")
