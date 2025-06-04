@@ -14,6 +14,27 @@ class HTMLExtractor:
         """Initialize the HTML extractor."""
         pass
 
+    def _log_efficiency(
+        self, html_content: str, extracted_text: str, fallback: bool = False
+    ) -> None:
+        """Log extraction efficiency metrics.
+
+        Args:
+            html_content: Original HTML content
+            extracted_text: Extracted text content
+            fallback: Whether this was a fallback extraction
+        """
+        original_size = len(html_content)
+        extracted_size = len(extracted_text)
+        reduction_pct = (
+            ((original_size - extracted_size) / original_size * 100) if original_size > 0 else 0
+        )
+        method = " (fallback)" if fallback else ""
+        logger.info(
+            f"Extracted text from HTML{method}: {original_size:,} → {extracted_size:,} chars "
+            f"({reduction_pct:.1f}% reduction)"
+        )
+
     def extract(self, html_content: str) -> str:
         """Extract text content from HTML, preserving structure.
 
@@ -75,6 +96,9 @@ class HTMLExtractor:
                 lines.append(f"Title: {title}")
                 lines.append("")
 
+            # Initialize the output text variable
+            text: str
+
             # Process content
             for element in article_content.find_all(
                 ["h1", "h2", "h3", "h4", "h5", "h6", "p", "li"]
@@ -117,10 +141,14 @@ class HTMLExtractor:
             while "\n\n\n" in text:
                 text = text.replace("\n\n\n", "\n\n")
 
-            return text.strip()
+            extracted_text = text.strip()
+            self._log_efficiency(html_content, extracted_text)
+            return extracted_text
 
         except Exception as e:
-            logger.warning(f"Failed to parse HTML: {e}")
+            logger.warning(f"Failed to parse HTML on first pass: {e}")
             # Fallback: simple text extraction
             soup = BeautifulSoup(html_content, "html.parser")
-            return soup.get_text(separator="\n", strip=True)
+            extracted_text = soup.get_text(separator="\n", strip=True)
+            self._log_efficiency(html_content, extracted_text, fallback=True)
+            return extracted_text

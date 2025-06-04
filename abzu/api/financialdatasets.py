@@ -990,11 +990,15 @@ def financialdatasets_tickers_main(
         # Ensure the output directory exists
         os.makedirs(os.path.dirname(os.path.abspath(output_file)), exist_ok=True)
 
+        # Transform the tickers to have a ticker field instead of symbol
+        for ticker in result.get("tickers", []):
+            ticker["ticker"] = ticker.pop("symbol", None)
+
         # Write the result to the output file
         logger.info(f"Writing tickers to {output_file}")
         with open(output_file, "w") as f:
             if pretty:
-                json.dump(result, f, indent=2)
+                json.dump(result, f, indent=4)
             else:
                 json.dump(result, f)
 
