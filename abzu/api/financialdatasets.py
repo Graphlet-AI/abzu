@@ -1,7 +1,6 @@
 """Financial Datasets API client for Abzu."""
 
 import json
-import logging
 import os
 import pathlib
 import re
@@ -16,12 +15,9 @@ from tqdm import tqdm
 from urllib3.util.retry import Retry
 
 from abzu.config import config
+from abzu.logs import get_logger
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class FinancialDatasetsAPI:

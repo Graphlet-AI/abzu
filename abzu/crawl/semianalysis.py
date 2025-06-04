@@ -1,6 +1,5 @@
 """Crawl articles from the web for processing."""
 
-import logging
 import os
 import time
 from datetime import datetime
@@ -23,16 +22,12 @@ from twisted.internet import reactor  # noqa: E402
 
 from abzu.config import config  # noqa: E402
 from abzu.html_extractor import HTMLExtractor  # noqa: E402
+from abzu.logs import get_logger  # noqa: E402
+from abzu.url_extractor import URLExtractor  # noqa: E402
 from abzu.utils import append_jsonl, build_crawled_url_index  # noqa: E402
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
-
-# Disable Scrapy duplicate logging
-logging.getLogger("scrapy").propagate = False
+logger = get_logger(__name__)
+logger.propagate = False  # Disable Scrapy duplicate logging
 
 
 class ArticleCrawler(scrapy.Spider):
@@ -75,6 +70,8 @@ class ArticleCrawler(scrapy.Spider):
         self.crawled_urls = crawled_urls if crawled_urls is not None else set()
         # Initialize HTML extractor
         self.html_extractor = HTMLExtractor()
+        # Initialize URL extractor
+        self.url_extractor = URLExtractor()
 
     def parse(self, response: Response) -> Iterator[scrapy.Request]:
         """Parse the archive page and follow links to individual articles."""
@@ -123,6 +120,11 @@ class ArticleCrawler(scrapy.Spider):
                     skipped_articles += 1
                     self.__class__._skipped_articles += 1
                     logger.info(f"Skipping already crawled URL: {absolute_url}")
+                # Check if URL should be ignored
+                elif self.url_extractor.should_ignore_url(absolute_url):
+                    skipped_articles += 1
+                    self.__class__._skipped_articles += 1
+                    logger.info(f"Skipping ignored URL: {absolute_url}")
                 else:
                     new_articles += 1
                     logger.info(f"Queuing new article URL: {absolute_url}")
@@ -174,6 +176,10 @@ class ArticleCrawler(scrapy.Spider):
         # Get the full HTML content
         html_content = response.text
 
+        # Extract URLs from HTML
+        extracted_urls = self.url_extractor.extract_urls_from_html(html_content)
+        logger.info(f"Extracted {len(extracted_urls)} URLs from article")
+
         # Extract text using HTMLExtractor
         extracted_text = self.html_extractor.extract(html_content)
 
@@ -194,7 +200,7 @@ class ArticleCrawler(scrapy.Spider):
         )
         logger.info(f"Content preview: {content_preview}")
 
-        # Save the article with extracted text
+        # Save the article with extracted text and URLs
         self.save(
             {
                 "url": response.url,
@@ -203,6 +209,7 @@ class ArticleCrawler(scrapy.Spider):
                 "posted_at": posted_at.isoformat(),
                 "collected_at": datetime.now().isoformat(),
                 "content": extracted_text,
+                "urls": extracted_urls,
             }
         )
 

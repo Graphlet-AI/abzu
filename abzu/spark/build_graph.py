@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 """Build a knowledge graph from pre-processed articles."""
-import logging
 from pathlib import Path
 from typing import Optional
 
@@ -9,19 +8,15 @@ from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql import types as T
 
 from abzu.config import config
+from abzu.logs import get_logger
 from abzu.spark.config import get_spark_session
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def build_knowledge_graph(
     input_path: list[str] = config.get("process.kg.raw.input"),
     output_path: str = config.get("process.kg.raw.output"),
-    partitions: int = 4,
     local_mode: Optional[bool] = None,
 ) -> None:
     """
@@ -30,7 +25,6 @@ def build_knowledge_graph(
     Args:
         input_path: Path(s) to the input JSON files
         output_path: Path to save the output parquet files
-        partitions: Number of partitions to use for data processing
         local_mode: Whether to run in local mode. If None, will be determined by environment
     """
     # Create SparkSession with appropriate configuration
@@ -45,10 +39,6 @@ def build_knowledge_graph(
 
     # Show a sample record
     processed_df.show(1, truncate=100, vertical=True)
-
-    # Process and optimize the dataframe
-    logger.info("Optimizing dataframe for graph extraction ...")
-    processed_df = processed_df.repartition(partitions)
 
     # Extract entities into separate dataframes
     logger.info("Extracting entities from documents ...")

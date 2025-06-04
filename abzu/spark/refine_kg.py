@@ -1,21 +1,17 @@
 #!/usr/bin/env python3
 """Refine the knowledge graph by creating bidirectional relationships and a unified edge list."""
 
-import logging
 from pathlib import Path
 
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame, SparkSession
 
 from abzu.config import config
+from abzu.logs import get_logger
 from abzu.spark.config import get_spark_session
 from abzu.spark.ticker_enrichment import _best_match, load_sec_map
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def refine_knowledge_graph(

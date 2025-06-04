@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SEC XBRL Data Extractor - Revised
+# SEC XBRL Data Extractor - Revised  -- Trying to fix things
 
 # Standard library imports
 import json
@@ -19,6 +19,9 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 from abzu.config import config
+from abzu.logs import get_logger
+
+logger = get_logger(__name__)
 
 # Constants
 USER_AGENT = "Your Name <youremail@example.com>"  # PLEASE REPLACE
@@ -105,7 +108,7 @@ def parse_date_flexible(date_str: Optional[str]) -> Optional[datetime]:
             return datetime.strptime(date_str, fmt)
         except ValueError:
             continue
-    # print(f"Warning: Could not parse date string: {date_str}") # Optional: for debugging
+    # logger.info(f"Warning: Could not parse date string: {date_str}") # Optional: for debugging
     return None
 
 
@@ -114,13 +117,13 @@ def get_cik_from_ticker(ticker: str) -> str:
     Converts a stock ticker symbol to its corresponding CIK number using the SEC's ticker file.
     Raises KeyError if the ticker is not found.
     """
-    print(f"Fetching CIK for ticker: {ticker} from {TICKER_URL}")
+    logger.info(f"Fetching CIK for ticker: {ticker} from {TICKER_URL}")
     resp = session.get(TICKER_URL, headers=HEADERS)
     resp.raise_for_status()  # Raises an HTTPError for bad responses (4XX or 5XX)
     for line in resp.text.splitlines():
         sym, cik_str = line.split("\t")
         if sym.lower() == ticker.lower():
-            print(f"Found CIK: {cik_str} for ticker: {ticker}")
+            logger.info(f"Found CIK: {cik_str} for ticker: {ticker}")
             return str(cik_str)  # CIK is returned as a string, potentially with leading zeros
     raise KeyError(f"Ticker {ticker} not found in SEC ticker list.")
 
@@ -131,18 +134,24 @@ def fetch_company_index(cik: str) -> dict[str, Any]:
     This index contains metadata about all filings for the company.
     """
     url = BASE_JSON_URL.format(cik=cik)  # CIK should be zero-padded to 10 digits if not already
-    print(f"Fetching company index for CIK {cik} from: {url}")
+    logger.info(f"Fetching company index for CIK {cik} from: {url}")
     resp = session.get(url, headers=HEADERS)
     resp.raise_for_status()
     return cast(dict[str, Any], resp.json())  # Cast to satisfy mypy
 
 
-def list_recent_filings(cik: str, form_type: str = "10-Q", count: int = 3) -> list[dict[str, Any]]:
+def list_recent_filings(
+    cik: str, form_type: str = config.get("api.sec.download.form_type"), count: int = 3
+) -> list[dict[str, Any]]:
     """
-    Lists recent filings of a specific form type (e.g., "10-Q") for a given CIK.
-    Returns a list of dictionaries, each containing details of a filing.
+    List recent filings of the specified ``form_type`` for a given ``cik``.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Collection of filing metadata dictionaries.
     """
-    print(f"Listing recent {form_type} filings for CIK {cik}, count={count}")
+    logger.info(f"Listing recent {form_type} filings for CIK {cik}, count={count}")
     idx = fetch_company_index(cik)
     recent_filings_data = idx.get("filings", {}).get("recent", {})
 
@@ -176,7 +185,7 @@ def list_recent_filings(cik: str, form_type: str = "10-Q", count: int = 3) -> li
             )
             if len(output_filings) >= count:
                 break
-    print(f"Found {len(output_filings)} recent {form_type} filings.")
+    logger.info(f"Found {len(output_filings)} recent {form_type} filings.")
     return output_filings
 
 
@@ -188,7 +197,7 @@ def get_xbrl_files(cik: str, accession: str) -> list[dict[str, Any]]:  # Return 
     acc_no_dashes = accession.replace("-", "")
     # Construct the base URL for the filing's directory on SEC Edgar
     filing_dir_url = f"{BASE_ARCHIVES_URL}/edgar/data/{int(cik)}/{acc_no_dashes}/"
-    print(f"Searching for XBRL files in directory: {filing_dir_url}")
+    logger.info(f"Searching for XBRL files in directory: {filing_dir_url}")
 
     xbrl_files: list[dict[str, Any]] = []  # Type changed to Any for values
     json_index_url = f"{filing_dir_url}index.json"  # Modern filings have a JSON index
@@ -198,7 +207,7 @@ def get_xbrl_files(cik: str, accession: str) -> list[dict[str, Any]]:  # Return 
         resp = session.get(json_index_url, headers=HEADERS)
         resp.raise_for_status()
         index_data = resp.json()
-        print(f"Successfully fetched JSON index: {json_index_url}")
+        logger.info(f"Successfully fetched JSON index: {json_index_url}")
 
         for file_entry in index_data.get("directory", {}).get("item", []):
             name = file_entry.get("name", "")
@@ -229,7 +238,7 @@ def get_xbrl_files(cik: str, accession: str) -> list[dict[str, Any]]:  # Return 
                 )
     except (requests.RequestException, json.JSONDecodeError) as e:
         # Fallback to HTML parsing if JSON index is unavailable or invalid
-        print(
+        logger.info(
             f"JSON index not available or failed to parse ({e}), falling back to HTML directory parsing for: {filing_dir_url}"
         )
         try:
@@ -262,13 +271,13 @@ def get_xbrl_files(cik: str, accession: str) -> list[dict[str, Any]]:  # Return 
                         }
                     )
         except requests.RequestException as html_e:
-            print(f"Error fetching HTML directory {filing_dir_url}: {html_e}")
+            logger.info(f"Error fetching HTML directory {filing_dir_url}: {html_e}")
 
     # Sort files to prioritize likely instance documents
     xbrl_files.sort(
         key=lambda x: (not x["is_instance"], not x["name"].endswith("_htm.xml"), x["name"])
     )
-    print(
+    logger.info(
         f"Found {len(xbrl_files)} potential XBRL-related files. Top candidates: {[f['name'] for f in xbrl_files[:3]]}"
     )
     return xbrl_files
@@ -281,7 +290,7 @@ def download_file(url: str, save_dir: str, file_name: str) -> str:
     safe_file_name = re.sub(r"[^\w\.\-]", "_", file_name)
     local_path = os.path.join(save_dir, safe_file_name)
 
-    print(f"Downloading {url} to {local_path}")
+    logger.info(f"Downloading {url} to {local_path}")
     resp = session.get(url, headers=HEADERS)
     resp.raise_for_status()
     with open(local_path, "wb") as f:
@@ -310,7 +319,7 @@ def parse_xbrl_instance(file_path: str, filing_date_obj: datetime) -> dict[str, 
     """
     Parses an XBRL instance file to extract contexts and facts based on CONCEPT_MAP.
     """
-    print(f"Parsing XBRL file: {file_path}")
+    logger.info(f"Parsing XBRL file: {file_path}")
     try:
         # Use lxml.etree for robust XML parsing
         parser = etree.XMLParser(huge_tree=True, recover=True, no_network=True)
@@ -354,7 +363,7 @@ def parse_xbrl_instance(file_path: str, filing_date_obj: datetime) -> dict[str, 
 
         if not contexts:
             return {"error": "No contexts found in XBRL document."}
-        print(f"Found {len(contexts)} contexts in XBRL.")
+        logger.info(f"Found {len(contexts)} contexts in XBRL.")
 
         facts: dict[str, list[dict[str, Any]]] = {}
         raw_fact_count = 0
@@ -408,7 +417,7 @@ def parse_xbrl_instance(file_path: str, filing_date_obj: datetime) -> dict[str, 
                             }
                         )
 
-        print(
+        logger.info(
             f"Processed {raw_fact_count} raw fact elements, mapped to {len(facts)} distinct concepts."
         )
         if not facts:
@@ -417,10 +426,10 @@ def parse_xbrl_instance(file_path: str, filing_date_obj: datetime) -> dict[str, 
         return {"contexts": contexts, "facts": facts}
 
     except etree.XMLSyntaxError as e:
-        print(f"XML Syntax Error parsing XBRL {file_path}: {str(e)}")
+        logger.info(f"XML Syntax Error parsing XBRL {file_path}: {str(e)}")
         return {"error": f"XML Syntax Error: {str(e)}"}
     except Exception as e:
-        print(f"Generic exception parsing XBRL {file_path}: {str(e)}")
+        logger.info(f"Generic exception parsing XBRL {file_path}: {str(e)}")
         traceback.print_exc()
         return {"error": f"Failed to parse XBRL: {str(e)}"}
 
@@ -433,7 +442,7 @@ def find_best_quarter_end_date(
     Prioritizes 'DocumentPeriodEndDate' facts and validates against the filing date.
     """
     if "error" in xbrl_data or "facts" not in xbrl_data or "contexts" not in xbrl_data:
-        print("Cannot determine quarter end date: XBRL data is invalid or incomplete.")
+        logger.info("Cannot determine quarter end date: XBRL data is invalid or incomplete.")
         return None
 
     potential_dates: set[str] = set()
@@ -450,7 +459,7 @@ def find_best_quarter_end_date(
 
     # 2. If not found or not suitable, infer from context end dates of major financial facts
     if not potential_dates:
-        print(
+        logger.info(
             "No direct 'DocumentPeriodEndDate' fact found or suitable. Inferring from other key facts."
         )
         key_concepts_for_date_inference = ["Assets", "NetIncomeLoss", "Revenue"]
@@ -471,7 +480,7 @@ def find_best_quarter_end_date(
                             potential_dates.add(end_date_str)
 
     if not potential_dates:
-        print("Could not determine a reliable recent quarter_end_date from XBRL contexts.")
+        logger.info("Could not determine a reliable recent quarter_end_date from XBRL contexts.")
         return None
 
     # Sort potential dates and pick the latest valid one
@@ -480,16 +489,16 @@ def find_best_quarter_end_date(
         d for d in [parse_date_flexible(s) for s in potential_dates] if d is not None
     ]
     if not valid_datetime_objects:
-        print("No valid datetime objects found from potential dates.")
+        logger.info("No valid datetime objects found from potential dates.")
         return None
 
     sorted_dates_obj = sorted(valid_datetime_objects, reverse=True)
 
     if sorted_dates_obj:
         best_date_str = sorted_dates_obj[0].strftime("%Y-%m-%d")
-        print(f"Determined best quarter_end_date from XBRL: {best_date_str}")
+        logger.info(f"Determined best quarter_end_date from XBRL: {best_date_str}")
         return best_date_str
-    print("No suitable quarter end dates found after sorting.")
+    logger.info("No suitable quarter end dates found after sorting.")
     return None
 
 
@@ -538,7 +547,7 @@ def extract_relevant_facts_for_period(
             output_facts[concept_key] = best_fact_for_concept
 
     if not output_facts:
-        print(
+        logger.info(
             f"No facts extracted for target period {target_quarter_end_date}. This might be okay if the period had no data for mapped concepts."
         )
     return output_facts
@@ -549,6 +558,7 @@ def get_data_from_sec_api(
     api_type: str,
     concept_name_map: Optional[dict[str, list[str]]] = None,
     min_filing_year: int = 0,
+    form_type: str = config.get("api.sec.download.form_type"),
 ) -> dict[str, Any]:
     """
     Fetches and processes data from SEC's CompanyFacts or CompanyConcept API.
@@ -569,7 +579,7 @@ def get_data_from_sec_api(
 
     if api_type == "facts":
         url = FACT_URL.format(cik=cik.zfill(10))  # Ensure CIK is 10 digits, zero-padded
-        print(f"Fetching from SEC CompanyFacts API: {url}")
+        logger.info(f"Fetching from SEC CompanyFacts API: {url}")
         try:
             resp = session.get(url, headers=HEADERS)
             resp.raise_for_status()
@@ -595,10 +605,10 @@ def get_data_from_sec_api(
 
                 if concept_data_block and "units" in concept_data_block:
                     for unit, values_list in concept_data_block.get("units", {}).items():
-                        # Filter for 10-Q forms, recent filing dates, and sort by end date (most recent first)
+                        # Filter for matching forms, recent filing dates, and sort by end date (most recent first)
                         quarterly_values_temp = []
                         for v_item in values_list:
-                            if v_item.get("form") == "10-Q":
+                            if v_item.get("form") == form_type:
                                 filed_date_obj = parse_date_flexible(v_item.get("filed"))
                                 if filed_date_obj and filed_date_obj.year >= min_filing_year:
                                     quarterly_values_temp.append(v_item)
@@ -641,7 +651,7 @@ def get_data_from_sec_api(
                 sec_concept_list
             ):  # e.g., "Revenues" or "PaymentsToAcquirePropertyPlantAndEquipment"
                 url = COMPANY_CONCEPT_URL.format(cik=cik.zfill(10), concept=sec_concept_name)
-                print(
+                logger.info(
                     f"Fetching from SEC CompanyConcept API for '{our_concept}' (using '{sec_concept_name}'): {url}"
                 )
                 try:
@@ -649,17 +659,19 @@ def get_data_from_sec_api(
                     resp.raise_for_status()
                     api_data = resp.json()
                 except requests.RequestException as e:
-                    print(f"CompanyConcept API for '{sec_concept_name}' failed: {e}")
+                    logger.info(f"CompanyConcept API for '{sec_concept_name}' failed: {e}")
                     continue  # Try next SEC concept name in the list
                 except json.JSONDecodeError as e:
-                    print(f"CompanyConcept API JSON decode for '{sec_concept_name}' failed: {e}")
+                    logger.info(
+                        f"CompanyConcept API JSON decode for '{sec_concept_name}' failed: {e}"
+                    )
                     continue
 
                 if "units" in api_data:  # Check if the API returned any data for this concept
                     for unit, values_list in api_data.get("units", {}).items():
                         quarterly_values_temp = []
                         for v_item in values_list:
-                            if v_item.get("form") == "10-Q":
+                            if v_item.get("form") == form_type:
                                 filed_date_obj = parse_date_flexible(v_item.get("filed"))
                                 if filed_date_obj and filed_date_obj.year >= min_filing_year:
                                     quarterly_values_temp.append(v_item)
@@ -702,7 +714,7 @@ def extract_from_html(html_path: str, filing_date_obj: datetime) -> dict[str, An
     Extracts basic financial data from an HTML filing as a last resort.
     This is highly heuristic and less reliable than XBRL or API methods.
     """
-    print(f"Attempting to extract data from HTML (last resort): {html_path}")
+    logger.info(f"Attempting to extract data from HTML (last resort): {html_path}")
     # Initialize all mapped concepts to None for this HTML extraction attempt
     financial_data: dict[str, Any] = {key: None for key in CONCEPT_MAP.keys()}
     financial_data["source_method"] = "html_extraction_WARN"  # Mark as HTML sourced with a warning
@@ -711,7 +723,7 @@ def extract_from_html(html_path: str, filing_date_obj: datetime) -> dict[str, An
         with open(html_path, "rb") as f:  # Open in binary read mode
             soup = BeautifulSoup(f, "html.parser")
     except Exception as e:
-        print(f"Error reading or parsing HTML file {html_path}: {e}")
+        logger.info(f"Error reading or parsing HTML file {html_path}: {e}")
         financial_data["error_html_parsing"] = str(e)
         return financial_data
 
@@ -748,11 +760,11 @@ def extract_from_html(html_path: str, filing_date_obj: datetime) -> dict[str, An
     if possible_dates:
         best_date_obj = max(possible_dates)  # Get the latest valid date found
         financial_data["DocumentPeriodEndDate"] = best_date_obj.strftime("%Y-%m-%d")
-        print(
+        logger.info(
             f"HTML: Determined DocumentPeriodEndDate (approx): {financial_data['DocumentPeriodEndDate']}"
         )
     else:
-        print("HTML: Could not reliably determine DocumentPeriodEndDate from text.")
+        logger.info("HTML: Could not reliably determine DocumentPeriodEndDate from text.")
 
     # 2. Try to find other financial values using keywords in tables
     html_keywords_map: dict[str, list[str]] = {
@@ -782,7 +794,7 @@ def extract_from_html(html_path: str, filing_date_obj: datetime) -> dict[str, An
 
     tables = soup.find_all("table")
 
-    print(f"HTML: Found {len(tables)} tables to scan.")
+    logger.info(f"HTML: Found {len(tables)} tables to scan.")
     for table_idx, table in enumerate(tables):
         # Check for "in thousands" or "in millions" in table headers or nearby text
         multiplier = 1
@@ -813,7 +825,7 @@ def extract_from_html(html_path: str, filing_date_obj: datetime) -> dict[str, An
         elif "in billions" in table_context_text:
             multiplier = 1000000000
         if multiplier > 1:
-            print(f"HTML Table {table_idx}: Detected multiplier {multiplier}")
+            logger.info(f"HTML Table {table_idx}: Detected multiplier {multiplier}")
 
         for row in table.find_all("tr"):
             cells = row.find_all(["th", "td"])
@@ -852,7 +864,7 @@ def extract_from_html(html_path: str, filing_date_obj: datetime) -> dict[str, An
                                     "unit": "USD_HTML_ESTIMATE",
                                     "xbrl_tag": "N/A_HTML",
                                 }
-                                print(
+                                logger.info(
                                     f"HTML: Found {concept_key} ('{kw}' in '{row_label}'): {numeric_value}"
                                 )
                                 break  # Keyword found for this concept, move to next concept_key
@@ -863,19 +875,18 @@ def extract_from_html(html_path: str, filing_date_obj: datetime) -> dict[str, An
     return financial_data
 
 
-def process_10q_filing(ticker: str, filing_idx: int = 0) -> dict[str, Any]:
-    """
-    Main orchestrator to process a 10-Q filing.
-    It tries multiple methods: SEC APIs, XBRL parsing, and HTML parsing as a fallback.
-    """
+def process_filing(
+    ticker: str, form_type: str = config.get("api.sec.download.form_type"), filing_idx: int = 0
+) -> dict[str, Any]:
+    """Process a single SEC filing of the given ``form_type`` for ``ticker``."""
     try:
         cik = get_cik_from_ticker(ticker)
-        print(f"\n=== Processing {ticker} (CIK: {cik}), Filing Index: {filing_idx} ===")
+        logger.info(f"\n=== Processing {ticker} (CIK: {cik}), Filing Index: {filing_idx} ===")
 
-        filings = list_recent_filings(cik, form_type="10-Q", count=filing_idx + 1)
+        filings = list_recent_filings(cik, form_type=form_type, count=filing_idx + 1)
         if not filings or filing_idx >= len(filings):
             return {
-                "error": f"No 10-Q filing found at index {filing_idx} for {ticker}",
+                "error": f"No {form_type} filing found at index {filing_idx} for {ticker}",
                 "ticker": ticker,
                 "cik": cik,
             }
@@ -893,7 +904,7 @@ def process_10q_filing(ticker: str, filing_idx: int = 0) -> dict[str, Any]:
                 "cik": cik,
             }
 
-        print(
+        logger.info(
             f"Target Filing: Accession# {accession_no}, Filed: {filing_date_str}, Primary Doc: {primary_doc_name}"
         )
 
@@ -910,9 +921,12 @@ def process_10q_filing(ticker: str, filing_idx: int = 0) -> dict[str, Any]:
         }
 
         # --- Method 1: SEC CompanyFacts API ---
-        print("\n--- Attempt 1: SEC CompanyFacts API ---")
+        logger.info("\n--- Attempt 1: SEC CompanyFacts API ---")
         api_facts_result = get_data_from_sec_api(
-            cik, "facts", min_filing_year=filing_date_obj.year - 2
+            cik,
+            "facts",
+            min_filing_year=filing_date_obj.year - 2,
+            form_type=form_type,
         )  # Look back ~2 years from filing year
 
         if not api_facts_result.get("errors") and api_facts_result.get("data"):
@@ -932,7 +946,7 @@ def process_10q_filing(ticker: str, filing_idx: int = 0) -> dict[str, Any]:
                     if data_val:
                         final_results["financial_data"][concept] = data_val
                         populated_count += 1
-                print(
+                logger.info(
                     f"CompanyFacts API: Successfully extracted {populated_count} concepts for period ending {api_doc_end_date_str}."
                 )
                 # If key data points are found, we might consider this sufficient
@@ -942,45 +956,45 @@ def process_10q_filing(ticker: str, filing_idx: int = 0) -> dict[str, Any]:
                     if final_results["financial_data"].get(k)
                 )
                 if key_items_found >= 3:  # If we found 3 of the 4 main items
-                    print("CompanyFacts API provided sufficient key data. Finalizing.")
+                    logger.info("CompanyFacts API provided sufficient key data. Finalizing.")
                     return final_results
                 else:
-                    print(
+                    logger.info(
                         f"CompanyFacts API data was sparse ({key_items_found} key items). Will try other methods."
                     )
             else:
                 final_results["errors"].append(
                     f"CompanyFacts API DocumentPeriodEndDate ({api_doc_end_date_str}) not suitable for filing {filing_date_str}."
                 )
-                print(
+                logger.info(
                     f"CompanyFacts API DocumentPeriodEndDate ({api_doc_end_date_str}) not suitable for filing {filing_date_str}."
                 )
         else:
             final_results["errors"].extend(
                 api_facts_result.get("errors", ["Unknown error with CompanyFacts API."])
             )
-            print(
+            logger.info(
                 f"CompanyFacts API failed or returned no data. Errors: {api_facts_result.get('errors')}"
             )
 
         # --- Method 2: XBRL File Parsing ---
-        print("\n--- Attempt 2: XBRL File Parsing ---")
+        logger.info("\n--- Attempt 2: XBRL File Parsing ---")
         xbrl_files_list = get_xbrl_files(cik, accession_no)
         if not xbrl_files_list:
             final_results["errors"].append("No XBRL files found for parsing.")
-            print("No XBRL files found to parse.")
+            logger.info("No XBRL files found to parse.")
         else:
             parsed_xbrl_data: Optional[dict[str, Any]] = None
             target_xbrl_doc_end_date: Optional[str] = None
             best_xbrl_file_source_name: Optional[str] = None
 
             for xbrl_file_info in xbrl_files_list:  # Already sorted by likelihood of being instance
-                print(
+                logger.info(
                     f"Attempting to parse XBRL file: {xbrl_file_info['name']} (Marked as instance: {xbrl_file_info.get('is_instance', False)})"
                 )
                 # Define save directory for XBRL files to avoid clutter
                 xbrl_save_dir = os.path.join(
-                    config.get("sec.download.xbrl_files"), cik, accession_no.replace("-", "")
+                    config.get("api.sec.download.xbrl_files"), cik, accession_no.replace("-", "")
                 )
                 file_path = download_xbrl_file(xbrl_file_info, save_dir=xbrl_save_dir)
 
@@ -994,16 +1008,16 @@ def process_10q_filing(ticker: str, filing_idx: int = 0) -> dict[str, Any]:
                         parsed_xbrl_data = _current_parsed_data
                         target_xbrl_doc_end_date = _current_doc_end_date
                         best_xbrl_file_source_name = xbrl_file_info["name"]
-                        print(
+                        logger.info(
                             f"Successfully parsed XBRL and found valid period: {target_xbrl_doc_end_date} from {best_xbrl_file_source_name}"
                         )
                         break  # Found a good XBRL file and its period, stop searching
                     else:
-                        print(
+                        logger.info(
                             f"Parsed {xbrl_file_info['name']}, but could not determine a valid recent period end date."
                         )
                 else:
-                    print(
+                    logger.info(
                         f"Failed to parse or find facts in {xbrl_file_info['name']}. Error: {_current_parsed_data.get('error')}"
                     )
 
@@ -1024,7 +1038,7 @@ def process_10q_filing(ticker: str, filing_idx: int = 0) -> dict[str, Any]:
                         if data_val:
                             final_results["financial_data"][concept] = data_val
                             populated_count += 1
-                    print(
+                    logger.info(
                         f"XBRL Parsing: Successfully extracted {populated_count} concepts for period ending {target_xbrl_doc_end_date}."
                     )
                     # Check if XBRL provided enough key data
@@ -1034,21 +1048,23 @@ def process_10q_filing(ticker: str, filing_idx: int = 0) -> dict[str, Any]:
                         if final_results["financial_data"].get(k)
                     )
                     if key_items_found_xbrl >= 3:
-                        print("XBRL parsing provided sufficient key data. Finalizing.")
+                        logger.info("XBRL parsing provided sufficient key data. Finalizing.")
                         return final_results
                     else:
-                        print(
+                        logger.info(
                             f"XBRL data was sparse ({key_items_found_xbrl} key items). May fall back to HTML if needed."
                         )
                 else:
                     error_msg = f"Failed to extract relevant facts for period {target_xbrl_doc_end_date} from parsed XBRL. Error: {xbrl_extracted_facts.get('error')}"
                     final_results["errors"].append(error_msg)
-                    print(error_msg)
+                    logger.info(error_msg)
             else:
                 final_results["errors"].append(
                     "Could not find/parse a suitable XBRL instance document or determine its period."
                 )
-                print("XBRL Parsing: No suitable instance document found or period determined.")
+                logger.info(
+                    "XBRL Parsing: No suitable instance document found or period determined."
+                )
 
         # --- Method 3: HTML Filing Extraction (Last Resort or Supplement) ---
         # Only run if primary methods didn't yield enough, or to fill gaps.
@@ -1060,16 +1076,16 @@ def process_10q_filing(ticker: str, filing_idx: int = 0) -> dict[str, Any]:
                 if final_results["financial_data"].get(k)
             )
             if key_items_from_primary >= 2:  # If we already have 2+ key items, maybe skip HTML
-                print(
+                logger.info(
                     "\nPrimary methods yielded some key data. Skipping HTML unless gaps are large."
                 )
                 # should_try_html = False # Uncomment to be less reliant on HTML
 
         if should_try_html:
-            print("\n--- Attempt 3: HTML Filing Extraction (Fallback/Supplement) ---")
+            logger.info("\n--- Attempt 3: HTML Filing Extraction (Fallback/Supplement) ---")
             try:
                 html_save_dir = os.path.join(
-                    config.get("sec.download.html_filings"), cik, accession_no.replace("-", "")
+                    config.get("api.sec.download.html_filings"), cik, accession_no.replace("-", "")
                 )
                 html_path = download_html_filing(
                     cik, accession_no, primary_doc_name, save_dir=html_save_dir
@@ -1086,7 +1102,7 @@ def process_10q_filing(ticker: str, filing_idx: int = 0) -> dict[str, Any]:
                     final_results["financial_data"]["DocumentPeriodEndDate"] = html_doc_end_date_str
                     if final_results["source_method"] == "N/A":  # If no method worked yet
                         final_results["source_method"] = "html_extraction_WARN (primary)"
-                    print(f"HTML: Set DocumentPeriodEndDate to {html_doc_end_date_str}")
+                    logger.info(f"HTML: Set DocumentPeriodEndDate to {html_doc_end_date_str}")
 
                 # Fill in missing data from HTML if other methods didn't find it
                 html_filled_count = 0
@@ -1101,7 +1117,7 @@ def process_10q_filing(ticker: str, filing_idx: int = 0) -> dict[str, Any]:
                         html_filled_count += 1
 
                 if html_filled_count > 0:
-                    print(f"HTML: Supplemented {html_filled_count} missing concepts.")
+                    logger.info(f"HTML: Supplemented {html_filled_count} missing concepts.")
                     if not final_results["source_method"].startswith(
                         "html_extraction_WARN (primary)"
                     ):
@@ -1120,30 +1136,35 @@ def process_10q_filing(ticker: str, filing_idx: int = 0) -> dict[str, Any]:
             except Exception as e:
                 error_msg = f"HTML processing failed: {str(e)}"
                 final_results["errors"].append(error_msg)
-                print(error_msg)
+                logger.info(error_msg)
                 traceback.print_exc()
 
         if final_results["source_method"] == "N/A":
             final_results["errors"].append(
                 "Failed to extract significant data using any reliable method."
             )
-            print("CRITICAL: Failed to extract significant data using any method.")
+            logger.info("CRITICAL: Failed to extract significant data using any method.")
 
         return final_results
 
     except KeyError as e:  # e.g. Ticker not found
-        print(f"KeyError during processing for {ticker}: {str(e)}")
+        logger.info(f"KeyError during processing for {ticker}: {str(e)}")
         return {"error": str(e), "ticker": ticker}
     except requests.exceptions.RequestException as e:
-        print(f"Network error during processing for {ticker}: {str(e)}")
+        logger.info(f"Network error during processing for {ticker}: {str(e)}")
         return {"error": f"Network error: {str(e)}", "ticker": ticker}
     except Exception as e:
-        print(f"Unexpected critical error processing {ticker}: {str(e)}")
+        logger.info(f"Unexpected critical error processing {ticker}: {str(e)}")
         traceback.print_exc()
         return {"error": f"Unexpected critical error: {str(e)}", "ticker": ticker}
 
 
-def save_results_to_json(data: dict[str, Any], output_file: str = "10q_data.json"):
+def process_10q_filing(ticker: str, filing_idx: int = 0) -> dict[str, Any]:
+    """Backward-compatible wrapper for processing 10-Q filings."""
+    return process_filing(ticker, form_type="10-Q", filing_idx=filing_idx)
+
+
+def save_results_to_json(data: dict[str, Any], output_file: str = "filing_data.json"):
     """Saves the extracted data dictionary to a JSON file."""
     # Ensure the output directory exists
     output_dir = os.path.dirname(output_file)
@@ -1153,7 +1174,7 @@ def save_results_to_json(data: dict[str, Any], output_file: str = "10q_data.json
     with open(output_file, "w", encoding="utf-8") as f:
         # Use default=str to handle any non-serializable objects like datetime
         json.dump(data, f, indent=2, default=str)
-    print(f"Results successfully saved to {output_file}")
+    logger.info(f"Results successfully saved to {output_file}")
 
 
 def display_financial_summary(results: dict[str, Any]):
@@ -1163,36 +1184,36 @@ def display_financial_summary(results: dict[str, Any]):
     if "error" in results and not results.get(
         "financial_data"
     ):  # Critical error before data structure init
-        print(f"\n--- Error Summary for {ticker} ---")
-        print(f"Error: {results['error']}")
+        logger.info(f"\n--- Error Summary for {ticker} ---")
+        logger.info(f"Error: {results['error']}")
         return
 
-    print(f"\n--- Financial Summary for {ticker} ---")
-    print(f"CIK: {results.get('cik', 'N/A')}")
-    print(f"Filing Date: {results.get('filing_date', 'N/A')}")
-    print(f"Accession Number: {results.get('accession_number', 'N/A')}")
-    print(f"Data Source Method(s): {results.get('source_method', 'N/A')}")
+    logger.info(f"\n--- Financial Summary for {ticker} ---")
+    logger.info(f"CIK: {results.get('cik', 'N/A')}")
+    logger.info(f"Filing Date: {results.get('filing_date', 'N/A')}")
+    logger.info(f"Accession Number: {results.get('accession_number', 'N/A')}")
+    logger.info(f"Data Source Method(s): {results.get('source_method', 'N/A')}")
 
     financial_data = results.get("financial_data", {})
     doc_period_end_val = financial_data.get("DocumentPeriodEndDate")
 
     # Handle DocumentPeriodEndDate which might be a string or a dict from API/XBRL
     if isinstance(doc_period_end_val, dict) and "value" in doc_period_end_val:
-        print(f"Document Period End Date: {doc_period_end_val['value']}")
+        logger.info(f"Document Period End Date: {doc_period_end_val['value']}")
     elif isinstance(doc_period_end_val, str):
-        print(f"Document Period End Date: {doc_period_end_val}")
+        logger.info(f"Document Period End Date: {doc_period_end_val}")
     else:
         # Corrected f-string: removed f if no placeholder
-        print("Document Period End Date: Not reliably determined or N/A")
+        logger.info("Document Period End Date: Not reliably determined or N/A")
 
     if results.get("errors"):
-        print("\nEncountered Errors/Warnings:")
+        logger.info("\nEncountered Errors/Warnings:")
         for err_idx, err in enumerate(results["errors"][:5]):  # Print first 5 errors/warnings
-            print(f"  - {err_idx + 1}: {err}")  # Added space around +
+            logger.info(f"  - {err_idx + 1}: {err}")  # Added space around +
         if len(results["errors"]) > 5:
-            print(f"  ... and {len(results['errors']) - 5} more.")
+            logger.info(f"  ... and {len(results['errors']) - 5} more.")
 
-    print("\nKey Financial Data Points:")
+    logger.info("\nKey Financial Data Points:")
     # Iterate through CONCEPT_MAP to display in a consistent order
     for concept_key in CONCEPT_MAP.keys():
         if concept_key == "DocumentPeriodEndDate":
@@ -1218,32 +1239,80 @@ def display_financial_summary(results: dict[str, Any]):
                 except (ValueError, TypeError):
                     pass  # Keep as string if formatting fails
 
-            print(f"  {concept_key:<25}: {value_str:<15} {unit:<10} {xbrl_tag_info}")
+            logger.info(f"  {concept_key:<25}: {value_str:<15} {unit:<10} {xbrl_tag_info}")
         elif (
             data_item is None and concept_key != "source_method"
         ):  # Explicitly show None for unpopulated mapped concepts
-            print(f"  {concept_key:<25}: None")
+            logger.info(f"  {concept_key:<25}: None")
         # Else: data_item might be a simple string (e.g. from HTML DocumentPeriodEndDate, already handled) or other non-dict type
+
+
+def download_annual_report(
+    ticker: str,
+    year: int,
+    save_dir: str = config.get("api.sec.download.annual_reports"),
+) -> str:
+    """Download the 10-K filing for ``ticker`` in ``year`` as plain text."""
+
+    cik = get_cik_from_ticker(ticker)
+    filings = list_recent_filings(cik, form_type="10-K", count=20)
+
+    target_filing = next(
+        (f for f in filings if f.get("filing_date_obj") and f["filing_date_obj"].year == year),
+        None,
+    )
+
+    if not target_filing:
+        raise ValueError(f"No 10-K filing found for {ticker} in {year}")
+
+    html_save_dir = os.path.join(
+        config.get("api.sec.download.html_filings"),
+        cik,
+        target_filing["acc_with_dashes"].replace("-", ""),
+    )
+    html_path = download_html_filing(
+        cik,
+        target_filing["acc_with_dashes"],
+        target_filing["doc"],
+        save_dir=html_save_dir,
+    )
+
+    with open(html_path, "rb") as f:
+        soup = BeautifulSoup(f, "html.parser")
+        text = soup.get_text(separator="\n")
+
+    os.makedirs(save_dir, exist_ok=True)
+    output_path = os.path.join(save_dir, f"{ticker}_{year}.txt")
+    with open(output_path, "w", encoding="utf-8") as out_file:
+        out_file.write(text)
+
+    return output_path
 
 
 def process_all_tickers(
     tickers_file: str = config.get("api.sec.download.tickers_file"),
     output_dir: str = config.get("api.sec.download.output_dir"),
     filing_index: int = 0,
+    form_type: str = config.get("api.sec.download.form_type"),
+    ticker: str | None = config.get("api.sec.download.ticker"),
 ) -> None:
-    """Process 10-Q filings for all tickers in a Parquet file."""
+    """Process filings of ``form_type`` for a ticker list or a single ticker."""
 
-    df = pd.read_parquet(tickers_file)
-    tickers = df["symbol"].dropna().unique()
+    if ticker:
+        tickers = [ticker]
+    else:
+        logger.info("Reading tickers file", tickers_file)
+        df = pd.read_parquet(tickers_file)
+        tickers = df["symbol"].dropna().unique().tolist()
 
     Path(output_dir).mkdir(parents=True, exist_ok=True)
 
     for ticker in tickers:
-        print(f"Processing ticker: {ticker}")
-        result = process_10q_filing(ticker, filing_idx=filing_index)
+        logger.info(f"Processing ticker: {ticker}")
+        result = process_filing(ticker, form_type=form_type, filing_idx=filing_index)
 
         accession = result.get("accession_number", "UNKNOWN_ACC").replace("-", "")
-        fname = f"{ticker}_{accession}_10q_data.json"
+        fname = f"{ticker}_{accession}_{form_type.lower()}_data.json"
         save_results_to_json(result, os.path.join(output_dir, fname))
 
         display_financial_summary(result)

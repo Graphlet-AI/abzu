@@ -1,7 +1,6 @@
 """Article processing module for Abzu."""
 
 import asyncio
-import logging
 import os
 import time
 from pathlib import Path
@@ -10,13 +9,10 @@ from typing import Any
 from abzu.baml_client.async_client import b as async_b
 from abzu.baml_client.types import IndustryArticle
 from abzu.config import config
+from abzu.logs import get_logger
 from abzu.utils import load_jsonl, save_jsonl
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def load_articles(file_path: str) -> list[dict[str, Any]]:

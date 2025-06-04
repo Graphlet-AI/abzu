@@ -1,6 +1,5 @@
 """CLI command for retrieving financial metrics from Financial Datasets API."""
 
-import logging
 import os
 from typing import Optional
 
@@ -12,12 +11,9 @@ from abzu.api.financialdatasets import (
     read_data_file,
 )
 from abzu.config import config
+from abzu.logs import get_logger
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @click.command(context_settings={"show_default": True})

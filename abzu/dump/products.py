@@ -1,8 +1,8 @@
-import logging
-
 import pandas as pd
 
-logger = logging.getLogger(__name__)
+from abzu.logs import get_logger
+
+logger = get_logger(__name__)
 
 
 def dump_products_main(file_path: str) -> int:

@@ -1,6 +1,5 @@
 """URL content fetcher with retry/backoff strategy."""
 
-import logging
 import re
 import time
 from datetime import datetime
@@ -12,12 +11,10 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 from abzu.html_extractor import HTMLExtractor
+from abzu.logs import get_logger
+from abzu.url_extractor import URLExtractor
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class ContentFetcher:
@@ -67,6 +64,8 @@ class ContentFetcher:
 
         # Initialize HTML extractor
         self.html_extractor = HTMLExtractor()
+        # Initialize URL extractor
+        self.url_extractor = URLExtractor()
 
     def extract_title(self, content: str) -> str:
         """Extract the title from HTML content.
@@ -136,6 +135,11 @@ class ContentFetcher:
         if not url.startswith(("http://", "https://")):
             url = "https://" + url
 
+        # Check if URL should be ignored
+        if self.url_extractor.should_ignore_url(url):
+            logger.info(f"Skipping ignored URL: {url}")
+            return False, "URL is from an ignored domain"
+
         try:
             # Add a pause before making the request to prevent rate limiting
             if self.pause_seconds > 0:
@@ -149,6 +153,10 @@ class ContentFetcher:
 
             # Get content
             html_content = response.text
+
+            # Extract URLs from HTML before processing
+            extracted_urls = list(dict.fromkeys(self.url_extractor.extract_urls_from_html(html_content)))
+            logger.info(f"Extracted {len(extracted_urls)} unique URLs from {url}")
 
             # Extract clean text using HTMLExtractor
             extracted_text = self.html_extractor.extract(html_content)
@@ -176,6 +184,7 @@ class ContentFetcher:
                 "collected_at": collected_at,
                 "posted_at": posted_at,
                 "content": extracted_text,  # Store extracted text instead of HTML
+                "urls": extracted_urls,  # Add extracted URLs
             }
 
             logger.info(f"Successfully fetched content from {url}")

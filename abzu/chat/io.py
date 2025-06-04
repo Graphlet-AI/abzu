@@ -1,7 +1,6 @@
 """I/O utilities for Chat agent."""
 
 import json
-import logging
 import os
 from datetime import datetime
 from pathlib import Path
@@ -9,12 +8,9 @@ from typing import Any, Optional
 
 from abzu.baml_client.types import IndustryArticle
 from abzu.config import config
+from abzu.logs import get_logger
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class ArticleStorage:

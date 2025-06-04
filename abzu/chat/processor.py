@@ -1,17 +1,13 @@
 """Process URLs into IndustryArticle objects using BAML."""
 
-import logging
 import os
 from typing import Any, Union
 
 from abzu.baml_client.async_client import b as async_b
 from abzu.baml_client.types import IndustryArticle
+from abzu.logs import get_logger
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class ArticleProcessor:

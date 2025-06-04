@@ -332,10 +332,9 @@ weave/
 
 ## Common Tasks
 
-### Crawling SemiAnalysis.com or TheInformation.com
+### Crawling SemiAnalysis.com, reddit, or TheInformation.com
 
 ```bash
-
 # Docker (in container shell)
 # SemiAnalysis
 poetry run abzu crawl semianalysis
@@ -345,21 +344,22 @@ poetry run abzu crawl theinformation
 # Generic RSS feeds from feeds.txt
 poetry run abzu crawl rss -f feeds.txt
 
+ # Reddit - fetch ticker discussions
+abzu crawl reddit ticker AAPL
+abzu crawl reddit ticker TSLA --limit 50
+abzu crawl reddit ticker NVDA --output data/nvidia_reddit.jsonl
+
 # Local Installed Example (not docker)
 # SemiAnalysis
 abzu crawl semianalysis
-
 # TheInformation (requires login cookies)
 abzu crawl theinformation
 # Generic RSS feeds from feeds.txt
-abzu crawl rss -f feeds.txt
+abzu crawl rss
 # Outputs to the directory configured in `crawl.rss.output_dir`
 ```
 
-To scrape TheInformation you must be signed into the site in your browser so the
-command can load your session cookies. Alternatively pass `--cookie "name=value;"`
-to the command.
-The crawler fetches from `https://www.theinformation.com/feed` by default.
+To scrape TheInformation you must be signed into the site in your browser so the command can load your session cookies. Alternatively pass `--cookie "name=value;"` to the command. The crawler fetches from `https://www.theinformation.com/feed` by default.
 
 ### Information Extraction
 
@@ -460,6 +460,10 @@ poetry run abzu dump company-ticker-resolution -f data/refined_knowledge_graph/c
 
 # Download SEC filings for all tickers
 poetry run abzu api sec download
+# Or for a single ticker
+poetry run abzu api sec download --ticker NVDA
+# Download a single annual report
+poetry run abzu api sec annual-report --ticker NVDA --year 2023
 
 # Local
 abzu api financialdatasets facts -f
@@ -478,7 +482,10 @@ abzu api sec download
     "title": "GlobalFoundries Is A Leading-Edge Foundry Despite Claims Otherwise – SemiAnalysis",
     "posted_at": "2021-06-21T19:19:48+00:00",
     "collected_at": "2025-04-15T04:20:37.763490",
-    "content": "GlobalFoundries is still a..."
+    "content": "GlobalFoundries is still a...",
+    "urls": [
+        "https://semianalysis.com/2021/06/21/globalfoundries-is-a-leading-edge/"
+    ]
 }
 ```
 
@@ -572,6 +579,58 @@ Represents     23   23
 Sells         411  411
 SoldBy        411  411
 ```
+
+## Logging
+
+Abzu uses a centralized logging system that writes to both file and console.
+
+### Usage
+
+```python
+from abzu.logs import get_logger
+
+# Get a logger for your module
+logger = get_logger(__name__)
+
+# Use standard logging methods
+logger.info("Processing started")
+logger.error(f"Failed to process: {error}")
+logger.warning("Missing data")
+logger.debug("Debug information")
+```
+
+### Configuration
+
+Logging is configured in `config.yml`:
+
+```yaml
+logs:
+  file:
+    path: "${base_dir}/logs"  # Logs stored in data/logs/
+```
+
+### Log Output
+
+- **File**: Logs are written to `data/logs/app.log`
+- **Console**: Logs are also displayed in the terminal
+- **Format**: `%(asctime)s - %(name)s - %(levelname)s - %(message)s`
+- **Level**: INFO by default
+
+### Best Practices
+
+1. Always use `get_logger(__name__)` to create module-specific loggers
+2. Use appropriate log levels:
+   - `DEBUG`: Detailed information for diagnosing problems
+   - `INFO`: General informational messages
+   - `WARNING`: Warning messages for potentially harmful situations
+   - `ERROR`: Error messages for serious problems
+   - `CRITICAL`: Critical messages for very serious errors
+
+3. Include context in error messages:
+
+   ```python
+   logger.error(f"Failed to process file {file_path}: {e}")
+   ```
 
 ## HOWTO `poetry`
 

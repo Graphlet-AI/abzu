@@ -1,7 +1,6 @@
 """Chat agent for URL monitoring and article processing."""
 
 import asyncio
-import logging
 from typing import Any, Optional, cast
 
 from discord import Message
@@ -13,12 +12,9 @@ from abzu.chat.fetcher import ContentFetcher
 from abzu.chat.io import ArticleStorage
 from abzu.chat.processor import ArticleProcessor
 from abzu.config import config
+from abzu.logs import get_logger
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class AgentConfig(BaseModel):

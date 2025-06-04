@@ -2,6 +2,12 @@
 Module for handling the pipeline steps functionality.
 """
 
+import click
+
+from abzu.logs import get_logger
+
+logger = get_logger(__name__)
+
 
 def get_pipeline_steps() -> list[str]:
     """
@@ -54,6 +60,6 @@ def print_pipeline_steps() -> None:
     """
     steps = get_pipeline_steps()
 
-    print("Complete Pipeline Steps:")
+    click.echo("Complete Pipeline Steps:")
     for idx, step in enumerate(steps, 1):
-        print(f"{idx}. Run '{step}'")
+        click.echo(f"{idx}. Run '{step}'")

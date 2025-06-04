@@ -31,7 +31,7 @@ class IndustryArticle {
   @description("Ticker symbols of the companies mentioned in the article")
 
   partnerships Partnership[]?
-  @description("Partnerships mentioned in the article")
+  @description("Partnerships between two companies mentioned in the article. A partnership is a business relationship between two companies that is not a customer relationship or an investment.")
 
   customers Customer[]?
   @description("Customer relationships mentioned in the article")
@@ -127,19 +127,23 @@ class Technology {
 
 class Partnership {
   src_company Company
-  @description("First company in partnership")
+  @description("First company in a partnership")
 
   dst_company Company
-  @description("Second company in partnership")
+  @description("Second company in a partnership")
 
-  value int
+  value int?
   @description("Value of the partnership in currency. This is the amount of money that will flow through the partnership. This is not the valuation of the company.")
 
-  currency string
+  currency string?
   @description("Currency of the value of a partnership. ISO 4217 3-letter currency code")
 
+  country string?
+  @description("Country of the partnership. This is the country where the partnership is to be executed.")
+
   description string
-  @description("Description of the partnership. What is its purpose?")
+  @description("Description of the partnership. What is its purpose? Characterize the relationship between the pair of companies.")
+
 }
 
 class Customer {

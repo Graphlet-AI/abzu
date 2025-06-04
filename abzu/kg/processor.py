@@ -1,21 +1,17 @@
 """Process articles into a knowledge graph."""
 
 import importlib.util
-import logging
 import os
 import subprocess
 import sys
 from pathlib import Path
 
 from abzu.config import config
+from abzu.logs import get_logger
 from abzu.spark.build_graph import build_knowledge_graph
 from abzu.spark.refine_kg import refine_knowledge_graph
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 # Check if PySpark is installed
@@ -156,7 +152,7 @@ def process_raw_kg(
 
     try:
         logger.info("Building knowledge graph...")
-        build_knowledge_graph(input_file, output_dir, partitions)
+        build_knowledge_graph(input_file, output_dir)
         logger.info("Knowledge graph build completed successfully")
         return 0
 

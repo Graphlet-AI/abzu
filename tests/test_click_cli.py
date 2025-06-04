@@ -82,6 +82,17 @@ TEST_COMMANDS = [
             "--input",
             "--output",
             "--filing-index",
+            "--form-type",
+            "--ticker",
+        ],
+    ),
+    (
+        "api sec annual-report --help",
+        [
+            "Usage: cli api sec annual-report [OPTIONS]",
+            "--ticker",
+            "--year",
+            "--output-dir",
         ],
     ),
     (

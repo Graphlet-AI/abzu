@@ -1,19 +1,15 @@
 """CLI command for starting the chat bot."""
 
 import asyncio
-import logging
 import os
 from typing import Optional
 
 import click
 
 from abzu.config import config
+from abzu.logs import get_logger
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @click.command(context_settings={"show_default": True})

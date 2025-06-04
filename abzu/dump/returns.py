@@ -1,8 +1,9 @@
 import json
-import logging
 from typing import Any
 
-logger = logging.getLogger(__name__)
+from abzu.logs import get_logger
+
+logger = get_logger(__name__)
 
 
 def load_price_data(file_path: str) -> dict[str, Any]:
