@@ -69,6 +69,10 @@ async def process_article_async(
         # Pass through the article URL
         result.url = article.get("url", None)
 
+        # Pass through any title and urls
+        result.title = article.get("title", result.title)
+        result.urls = article.get("urls", result.urls)
+
         logger.info(f"Processed article: {article.get('title', 'unknown')}")
         return result
     except Exception as e:

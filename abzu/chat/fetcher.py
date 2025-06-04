@@ -155,7 +155,9 @@ class ContentFetcher:
             html_content = response.text
 
             # Extract URLs from HTML before processing
-            extracted_urls = list(dict.fromkeys(self.url_extractor.extract_urls_from_html(html_content)))
+            extracted_urls = list(
+                dict.fromkeys(self.url_extractor.extract_urls_from_html(html_content))
+            )
             logger.info(f"Extracted {len(extracted_urls)} unique URLs from {url}")
 
             # Extract clean text using HTMLExtractor
