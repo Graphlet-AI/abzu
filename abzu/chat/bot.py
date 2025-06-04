@@ -36,6 +36,10 @@ class URLMonitorBot(commands.Bot):
             on_url_found_callback: Callback function to call when a URL is found.
                 Function should accept (url: str, message: Message).
         """
+
+        self.specific_channels: Optional[list[int]] = specific_channels or []
+        self.ignored_domains: Optional[list[str]] = ignored_domains or []
+
         # Set up intents (permissions)
         if intents is None:
             intents = Intents.default()
@@ -48,12 +52,14 @@ class URLMonitorBot(commands.Bot):
         self.url_pattern = re.compile(
             r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
         )
-        self.specific_channels = set(specific_channels) if specific_channels else None
+        self.specific_channels = (
+            list(set(self.specific_channels)) if self.specific_channels else None
+        )
         self.on_url_found_callback = on_url_found_callback
 
         # Initialize URLExtractor with provided ignored domains
         self.url_extractor = URLExtractor(
-            ignore_domains=list(ignored_domains) if ignored_domains else [],
+            ignore_domains=list(self.ignored_domains) if self.ignored_domains else [],
             replace=False,  # Add to config domains
         )
 
