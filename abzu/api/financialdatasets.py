@@ -16,6 +16,7 @@ from urllib3.util.retry import Retry
 
 from abzu.config import config
 from abzu.logs import get_logger
+from abzu.utils import save_jsonl
 
 logger = get_logger(__name__)
 
@@ -969,7 +970,7 @@ def financialdatasets_tickers_main(
     """Get all available tickers from the Financial Datasets API.
 
     This function retrieves all ticker symbols from the Financial Datasets API
-    and stores them in a JSON file.
+    and stores them in JSON Lines format (one ticker per line).
 
     Args:
         api_key: API key for Financial Datasets
@@ -990,19 +991,18 @@ def financialdatasets_tickers_main(
         # Ensure the output directory exists
         os.makedirs(os.path.dirname(os.path.abspath(output_file)), exist_ok=True)
 
-        # Transform the tickers to have a ticker field instead of symbol
-        for ticker in result.get("tickers", []):
-            ticker["ticker"] = ticker.pop("symbol", None)
+        # Get the tickers list
+        tickers_list = result.get("tickers", [])
 
-        # Write the result to the output file
-        logger.info(f"Writing tickers to {output_file}")
-        with open(output_file, "w") as f:
-            if pretty:
-                json.dump(result, f, indent=4)
-            else:
-                json.dump(result, f)
+        # Convert to list of dicts with ticker field
+        ticker_objects = [{"ticker": ticker_str} for ticker_str in tickers_list]
 
-        logger.info(f"Successfully wrote tickers data to {output_file}")
+        # Write the tickers in JSON Lines format using the utility
+        logger.info(f"Writing {len(ticker_objects)} tickers to {output_file} in JSON Lines format")
+        if save_jsonl(ticker_objects, output_file, create_backup=False):
+            logger.info(f"Successfully wrote {len(ticker_objects)} tickers to {output_file}")
+        else:
+            raise Exception("Failed to save tickers to file")
         return 0
     except Exception as e:
         logger.error(f"Error retrieving tickers: {e}")
