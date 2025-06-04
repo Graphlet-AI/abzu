@@ -23,18 +23,10 @@ from abzu.kg.processor import process_refine_kg
     type=click.Path(file_okay=False, dir_okay=True),
     help="Output directory for refined knowledge graph.",
 )
-@click.option(
-    "-p",
-    "--partitions",
-    type=int,
-    default=4,
-    help="Number of Spark partitions (default: 4)",
-)
-def refine(input_dir, output_dir, partitions):
+def refine(input_dir, output_dir):
     """Refine knowledge graph by creating bidirectional relationships."""
 
     return process_refine_kg(
         input_dir=input_dir,
         output_dir=output_dir,
-        partitions=partitions,
     )

@@ -25,18 +25,10 @@ from abzu.kg.processor import process_raw_kg
     default=config.get("process.kg.raw.output"),
     help="Output directory for raw knowledge graph type Parquet files.",
 )
-@click.option(
-    "-p",
-    "--partitions",
-    type=int,
-    default=config.get("process.kg.raw.partitions", 10),
-    help="Number of partitions for Spark processing.",
-)
-def raw(input_file, output_dir, partitions):
+def raw(input_file, output_dir):
     """Extract raw knowledge graph from processed articles."""
 
     return process_raw_kg(
         input_file=list(input_file),
         output_dir=output_dir,
-        partitions=partitions,
     )
