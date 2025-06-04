@@ -13,7 +13,7 @@ class AnnualReportData {
   subsidiaries Subsidiary[]?
   @description("Subsidiaries of the reporting company mentioned in the report.")
 
-  partnerships Partnership[]?
+  partnerships AnnualReportPartnership[]?
   @description("Partnerships involving the reporting company mentioned in the report.")
 
   investments Investment[]?
@@ -23,37 +23,6 @@ class AnnualReportData {
   @description("Supplier relationships of the reporting company mentioned in the report.")
 }
 
-class Company {
-  name string
-  @description("Formal name of the company, including legal suffix like Inc., Ltd., Co., etc. Normalize common variations.")
-
-  ticker Ticker?
-  @description("Ticker symbol of the company if publicly traded.")
-
-  incorporation_jurisdiction string?
-  @description("State or country of incorporation.")
-
-  principal_executive_offices_location string?
-  @description("Location of the company's principal executive offices.")
-}
-
-class Ticker {
-  name string
-  symbol string
-  exchange string?
-}
-
-class Product {
-  name string
-  description string?
-  manufacturer Company
-}
-
-class Technology {
-  name string
-  developer Company?
-  description string?
-}
 
 class Subsidiary {
   name string
@@ -69,7 +38,7 @@ class Subsidiary {
   @description("Percentage of ownership by the parent company, if stated.")
 }
 
-class Partnership {
+class AnnualReportPartnership {
   company1 Company
   @description("The reporting company or one of the primary companies in the partnership.")
 
@@ -108,11 +77,6 @@ class SupplierRelationship {
   @description("A snippet from the report describing the supplier relationship.")
 }
 
-enum DealType {
-  Sale @description("Sale of a product or technology")
-  Acquisition @description("Acquisition of a company")
-  Investment @description("Investment in a company or country")
-}
 
 function ExtractCompanyRelationshipsFromAnnualReport(report_text: string) -> AnnualReportData {
   client CustomGeminiFallback
