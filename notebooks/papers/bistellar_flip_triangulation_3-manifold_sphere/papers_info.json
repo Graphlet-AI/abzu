@@ -1,0 +1,52 @@
+{
+  "0805.1144v3": {
+    "title": "f-Vectors of 3-Manifolds",
+    "authors": [
+      "Frank H. Lutz",
+      "Thom Sulanke",
+      "Ed Swartz"
+    ],
+    "summary": "In 1970, Walkup completely described the set of $f$-vectors for the four\n3-manifolds $S^3$, $S^2 twist S^1$, $S^2 \\times S^1$, and $RP^3$. We improve\none of Walkup's main restricting inequalities on the set of $f$-vectors of\n3-manifolds. As a consequence of a bound by Novik and Swartz, we also derive a\nnew lower bound on the number of vertices that are needed for a combinatorial\n$d$-manifold in terms of its $\\beta_1$-coefficient, which partially settles a\nconjecture of K\\\"uhnel. Enumerative results and a search for small\ntriangulations with bistellar flips allow us, in combination with the new\nbounds, to completely determine the set of $f$-vectors for twenty further\n3-manifolds, that is, for the connected sums of sphere bundles $(S^2 \\times\nS^1)^{# k}$ and twisted sphere bundles $(S^2 twist S^1)^{# k}$, where\n$k=2,3,4,5,6,7,8,10,11,14$. For many more 3-manifolds of different geometric\ntypes we provide small triangulations and a partial description of their set of\n$f$-vectors. Moreover, we show that the 3-manifold $RP^3 # RP^3$ has (at least)\ntwo different minimal $g$-vectors.",
+    "pdf_url": "http://arxiv.org/pdf/0805.1144v3",
+    "published": "2008-05-08"
+  },
+  "math/0610825v1": {
+    "title": "Uniqueness of Walkup's 9-vertex 3-dimensional Klein bottle",
+    "authors": [
+      "Bhaskar Bagchi",
+      "Basudeb Datta"
+    ],
+    "summary": "Via a computer search, Altshuler and Steinberg found that there are 1296 +1\ncombinatorial 3-manifolds on nine vertices, of which only one is non-sphere.\nThis exceptional 3-manifold $K^{3}_{9}$ triangulates the twisted $S^{2}$-bundle\nover $S^{1}$. It was first constructed by Walkup. In this paper, we present a\ncomputer-free proof of the uniqueness of this non-sphere combinatorial\n3-manifold. As opposed to the computer-generated proof, ours does not require\nwading through all the 9-vertex 3-spheres. As a preliminary result, we also\nshow that any 9-vertex combinatorial 3-manifold is equivalent by proper\nbistellar moves to a 9-vertex neighbourly 3-manifold.",
+    "pdf_url": "http://arxiv.org/pdf/math/0610825v1",
+    "published": "2006-10-27"
+  },
+  "1110.6080v1": {
+    "title": "Simplification paths in the Pachner graphs of closed orientable 3-manifold triangulations",
+    "authors": [
+      "Benjamin A. Burton"
+    ],
+    "summary": "It is important to have effective methods for simplifying 3-manifold\ntriangulations without losing any topological information. In theory this is\ndifficult: we might need to make a triangulation super-exponentially more\ncomplex before we can make it smaller than its original size. Here we present\nexperimental work that suggests the reality is far different: for an exhaustive\ncensus of 81,800,394 one-vertex triangulations that span 1,901 distinct closed\norientable 3-manifolds, we never need to add more than two extra tetrahedra, we\nnever need more than a handful of Pachner moves (or bistellar flips), and the\naverage number of Pachner moves decreases as the number of tetrahedra grows. If\nthey generalise, these extremely surprising results would have significant\nimplications for decision algorithms and the study of triangulations in\n3-manifold topology.\n  Key techniques include polynomial-time computable signatures that identify\ntriangulations up to isomorphism, the isomorph-free generation of non-minimal\ntriangulations, theoretical operations to reduce sequences of Pachner moves,\nand parallel algorithms for studying finite level sets in the infinite Pachner\ngraph.",
+    "pdf_url": "http://arxiv.org/pdf/1110.6080v1",
+    "published": "2011-10-27"
+  },
+  "2012.02398v3": {
+    "title": "Connecting 3-manifold triangulations with unimodal sequences of elementary moves",
+    "authors": [
+      "Benjamin A. Burton",
+      "Alexander He"
+    ],
+    "summary": "A key result in computational 3-manifold topology is that any two\ntriangulations of the same 3-manifold are connected by a finite sequence of\nbistellar flips, also known as Pachner moves. One limitation of this result is\nthat little is known about the structure of this sequence; knowing more about\nthe structure could help both proofs and algorithms. Motivated by this, we\nconsider sequences of moves that are \"unimodal\" in the sense that they break up\ninto two parts: first, a sequence that monotonically increases the size of the\ntriangulation; and second, a sequence that monotonically decreases the size. We\nprove that any two one-vertex triangulations of the same 3-manifold, each with\nat least two tetrahedra, are connected by a unimodal sequence of 2-3 and 2-0\nmoves. We also study the practical utility of unimodal sequences; specifically,\nwe implement an algorithm to find such sequences, and use this algorithm to\nperform some detailed computational experiments.",
+    "pdf_url": "http://arxiv.org/pdf/2012.02398v3",
+    "published": "2020-12-04"
+  },
+  "1907.02643v3": {
+    "title": "Geometric moves relate geometric triangulations",
+    "authors": [
+      "Tejas Kalelkar",
+      "Advait Phanse"
+    ],
+    "summary": "A geometric triangulation of a Riemannian manifold is a triangulation where\nthe interior of each simplex is totally geodesic. Bistellar moves are local\nchanges to the triangulation which are higher dimensional versions of the flip\noperation of triangulations in a plane. We show that geometric triangulations\nof a compact hyperbolic, spherical or Euclidean manifold are connected by\ngeometric bistellar moves (possibly adding or removing vertices), after taking\nsufficiently many derived subdivisions. For dimensions 2 and 3, we show that\ngeometric triangulations of such manifolds are directly related by geometric\nbistellar moves (without having to take derived subdivision).",
+    "pdf_url": "http://arxiv.org/pdf/1907.02643v3",
+    "published": "2019-07-04"
+  }
+}
