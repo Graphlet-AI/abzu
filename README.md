@@ -22,14 +22,16 @@ There are two ways to run Abzu:
 
 The easiest way to get started with Abzu is using Docker and Taskfile. This ensures a consistent development environment across all machines.
 
-### Prerequisites
+### Pre-Requisites
 
-#### For Linux:
+#### For Linux
+
 - Docker
 - Docker Compose
 - Bash shell
 
-#### For macOS:
+#### For macOS
+
 - Docker Desktop (includes Docker and Docker Compose)
 - Zsh shell (default on macOS)
 - At least 4GB RAM allocated to Docker Desktop
@@ -37,18 +39,21 @@ The easiest way to get started with Abzu is using Docker and Taskfile. This ensu
 ### Initial Setup
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/Graphlet-AI/abzu.git
 cd abzu
 ```
 
 2. Make the setup script executable and run it:
+
 ```bash
 chmod +x setup.sh
 ./setup.sh
 ```
 
 The setup script will:
+
 - Detect your operating system (Linux or macOS)
 - Check for required dependencies (Docker and Docker Compose)
 - Install the appropriate version of Taskfile for your system
@@ -60,6 +65,7 @@ The setup script will:
    - Or restart your terminal
 
 4. Verify the installation:
+
 ```bash
 task --version
 ```
@@ -117,16 +123,19 @@ task help
 #### Method 2: Using Container Shell
 
 1. Start the services:
+
 ```bash
 task up
 ```
 
 2. Open a shell in the container:
+
 ```bash
 task shell
 ```
 
 3. Inside the container, run commands with Poetry:
+
 ```bash
 # Show help
 poetry run abzu --help
@@ -144,6 +153,7 @@ poetry run abzu process kg raw
 ### Development Environment Features
 
 The Docker setup provides:
+
 - Jupyter Notebook server running on port 8888
 - Live code reloading (changes are reflected immediately)
 - Persistent data storage in the `data` directory
@@ -154,7 +164,7 @@ The Docker setup provides:
 
 If you prefer not to use Docker, you can set up the project directly on your machine.
 
-### Prerequisites
+### Pre-Requisites
 
 1. Python 3.12
 2. Java 11
@@ -162,7 +172,18 @@ If you prefer not to use Docker, you can set up the project directly on your mac
 
 ### Installation Steps
 
+0. Install TA-Lib (if not already installed):
+
+```bash
+# 1. On an Intel / AMD x86 machine
+brew install ta-lib
+
+# 2. On an Apple Silicon M1 / M2 machine
+arch -arm64 brew install ta-lib
+```
+
 1. Create a Python environment:
+
 ```bash
 # Option 1: Conda
 conda create -n abzu python=3.12 -y
@@ -174,6 +195,7 @@ source venv/bin/activate
 ```
 
 2. Install Poetry:
+
 ```bash
 # Option 1: Using pipx (recommended)
 # On macOS:
@@ -189,16 +211,19 @@ curl -sSL https://install.python-poetry.org | python3 -
 ```
 
 3. Install dependencies:
+
 ```bash
 poetry install
 ```
 
 4. Install pre-commit checks:
+
 ```bash
 pre-commit install
 ```
 
 5. Generate BAML client:
+
 ```bash
 baml-cli test
 baml-cli generate
@@ -227,6 +252,7 @@ abzu process kg raw
 The application supports two Spark processing modes:
 
 1. **Local Mode (Default)**
+
    - Runs Spark in a single JVM on your machine
    - Best for:
      - Development and testing
@@ -238,6 +264,7 @@ The application supports two Spark processing modes:
      - No additional services required
 
 2. **Distributed Mode (Docker only)**
+
    - Runs Spark across multiple containers using Bitnami Spark images
    - Best for:
      - Production environments
@@ -248,18 +275,20 @@ The application supports two Spark processing modes:
      - Web UI monitoring (ports 18080, 18081)
      - Fault tolerance
    - Configuration:
-     - Master UI: http://localhost:18080
-     - Worker UI: http://localhost:18081
+     - Master UI: <http://localhost:18080>
+     - Worker UI: <http://localhost:18081>
      - Worker resources: 2 cores, 2GB memory
 
 ### Monitoring and Debugging
 
 1. **Local Mode**:
+
    - Logs appear in your terminal
    - Memory usage visible in system monitor
    - Easy to debug with print statements
 
 2. **Distributed Mode**:
+
    - Spark UI available at `http://localhost:18080`
    - Worker UI at `http://localhost:18081`
    - Monitor:
@@ -271,6 +300,7 @@ The application supports two Spark processing modes:
 ## Environment Variables
 
 Add your API keys to `docker-compose.yml` for Docker setup:
+
 ```yaml
 environment:
   - GEMINI_API_KEY=your_key_here
@@ -278,6 +308,7 @@ environment:
 ```
 
 For local setup, set environment variables in your shell:
+
 ```bash
 export GEMINI_API_KEY="your_key_here"
 ```
@@ -301,10 +332,9 @@ weave/
 
 ## Common Tasks
 
-### Crawling SemiAnalysis.com, reddit, or TheInformation.com:
+### Crawling SemiAnalysis.com, reddit, or TheInformation.com
 
 ```bash
-
 # Docker (in container shell)
 # SemiAnalysis
 poetry run abzu crawl semianalysis
@@ -322,18 +352,14 @@ abzu crawl reddit ticker NVDA --output data/nvidia_reddit.jsonl
 # Local Installed Example (not docker)
 # SemiAnalysis
 abzu crawl semianalysis
-
 # TheInformation (requires login cookies)
 abzu crawl theinformation
 # Generic RSS feeds from feeds.txt
-abzu crawl rss -f feeds.txt
+abzu crawl rss
 # Outputs to the directory configured in `crawl.rss.output_dir`
 ```
 
-To scrape TheInformation you must be signed into the site in your browser so the
-command can load your session cookies. Alternatively pass `--cookie "name=value;"`
-to the command.
-The crawler fetches from `https://www.theinformation.com/feed` by default.
+To scrape TheInformation you must be signed into the site in your browser so the command can load your session cookies. Alternatively pass `--cookie "name=value;"` to the command. The crawler fetches from `https://www.theinformation.com/feed` by default.
 
 ### Information Extraction
 
@@ -404,6 +430,7 @@ abzu process kg refine
 ```
 
 Note: For Docker setup, the Gemini API key should be configured in `docker-compose.yml`:
+
 ```yaml
 environment:
   - GEMINI_API_KEY=your_key_here
@@ -455,7 +482,10 @@ abzu api sec download
     "title": "GlobalFoundries Is A Leading-Edge Foundry Despite Claims Otherwise – SemiAnalysis",
     "posted_at": "2021-06-21T19:19:48+00:00",
     "collected_at": "2025-04-15T04:20:37.763490",
-    "content": "GlobalFoundries is still a..."
+    "content": "GlobalFoundries is still a...",
+    "urls": [
+        "https://semianalysis.com/2021/06/21/globalfoundries-is-a-leading-edge/"
+    ]
 }
 ```
 
@@ -549,6 +579,58 @@ Represents     23   23
 Sells         411  411
 SoldBy        411  411
 ```
+
+## Logging
+
+Abzu uses a centralized logging system that writes to both file and console.
+
+### Usage
+
+```python
+from abzu.logs import get_logger
+
+# Get a logger for your module
+logger = get_logger(__name__)
+
+# Use standard logging methods
+logger.info("Processing started")
+logger.error(f"Failed to process: {error}")
+logger.warning("Missing data")
+logger.debug("Debug information")
+```
+
+### Configuration
+
+Logging is configured in `config.yml`:
+
+```yaml
+logs:
+  file:
+    path: "${base_dir}/logs"  # Logs stored in data/logs/
+```
+
+### Log Output
+
+- **File**: Logs are written to `data/logs/app.log`
+- **Console**: Logs are also displayed in the terminal
+- **Format**: `%(asctime)s - %(name)s - %(levelname)s - %(message)s`
+- **Level**: INFO by default
+
+### Best Practices
+
+1. Always use `get_logger(__name__)` to create module-specific loggers
+2. Use appropriate log levels:
+   - `DEBUG`: Detailed information for diagnosing problems
+   - `INFO`: General informational messages
+   - `WARNING`: Warning messages for potentially harmful situations
+   - `ERROR`: Error messages for serious problems
+   - `CRITICAL`: Critical messages for very serious errors
+
+3. Include context in error messages:
+
+   ```python
+   logger.error(f"Failed to process file {file_path}: {e}")
+   ```
 
 ## HOWTO `poetry`
 

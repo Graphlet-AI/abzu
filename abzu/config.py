@@ -97,22 +97,43 @@ class Config:
         key_path : str
             Dot-separated path to the configuration value
         default : Any, optional
-            Default value to return if the key is not found, by default None
+            Default value to return if the key is not found. If None and the key
+            is not found, raises KeyError.
 
         Returns
         -------
         Any
             The configuration value
+
+        Raises
+        ------
+        KeyError
+            If the key is not found and no default is provided
         """
         # Split the key path into parts
         parts = key_path.split(".")
 
         # Start at the root of the configuration
         config = self._config
+        traversed_path = []
 
         # Traverse the configuration tree
         for part in parts:
-            if not isinstance(config, dict) or part not in config:
+            traversed_path.append(part)
+            if not isinstance(config, dict):
+                if default is None:
+                    raise KeyError(
+                        f"Configuration key '{key_path}' not found. "
+                        f"'{'.'.join(traversed_path[:-1])}' is not a dictionary."
+                    )
+                return default
+            if part not in config:
+                if default is None:
+                    available_keys = list(config.keys()) if isinstance(config, dict) else []
+                    raise KeyError(
+                        f"Configuration key '{key_path}' not found at '{'.'.join(traversed_path)}'. "
+                        f"Available keys: {available_keys}"
+                    )
                 return default
             config = config[part]
 

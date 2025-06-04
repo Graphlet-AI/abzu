@@ -1,6 +1,5 @@
 """Crawl articles from the web for processing."""
 
-import logging
 import os
 import time
 from datetime import datetime
@@ -9,6 +8,7 @@ from typing import Any, Iterator, Optional, cast
 
 import dateutil.parser
 import scrapy
+import scrapy.utils.log
 from scrapy.crawler import CrawlerRunner
 from scrapy.http.response import Response
 from scrapy.utils.log import configure_logging
@@ -21,13 +21,13 @@ asyncioreactor.install()
 from twisted.internet import reactor  # noqa: E402
 
 from abzu.config import config  # noqa: E402
+from abzu.html_extractor import HTMLExtractor  # noqa: E402
+from abzu.logs import get_logger  # noqa: E402
+from abzu.url_extractor import URLExtractor  # noqa: E402
 from abzu.utils import append_jsonl, build_crawled_url_index  # noqa: E402
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
+logger.propagate = False  # Disable Scrapy duplicate logging
 
 
 class ArticleCrawler(scrapy.Spider):
@@ -50,6 +50,7 @@ class ArticleCrawler(scrapy.Spider):
         "RANDOMIZE_DOWNLOAD_DELAY": False,  # Don't randomize the delay
         "CONCURRENT_REQUESTS": 1,  # Only one request at a time
         "CONCURRENT_REQUESTS_PER_DOMAIN": 1,  # Only one request per domain at a time
+        "LOG_LEVEL": "INFO",
     }
 
     def __init__(
@@ -67,6 +68,10 @@ class ArticleCrawler(scrapy.Spider):
         self.articles_processed = 0
         # Set of URLs that have already been crawled
         self.crawled_urls = crawled_urls if crawled_urls is not None else set()
+        # Initialize HTML extractor
+        self.html_extractor = HTMLExtractor()
+        # Initialize URL extractor
+        self.url_extractor = URLExtractor()
 
     def parse(self, response: Response) -> Iterator[scrapy.Request]:
         """Parse the archive page and follow links to individual articles."""
@@ -74,7 +79,7 @@ class ArticleCrawler(scrapy.Spider):
         logger.info(f"Parsing archive page: {response.url}")
 
         # Log the response status to help with debugging
-        logger.info(f"Response status: {response.status}")
+        logger.debug(f"Response status: {response.status}")
 
         # Find all article links - adjust selector based on actual HTML structure
         # Use a more specific selector for SemiAnalysis articles
@@ -115,6 +120,11 @@ class ArticleCrawler(scrapy.Spider):
                     skipped_articles += 1
                     self.__class__._skipped_articles += 1
                     logger.info(f"Skipping already crawled URL: {absolute_url}")
+                # Check if URL should be ignored
+                elif self.url_extractor.should_ignore_url(absolute_url):
+                    skipped_articles += 1
+                    self.__class__._skipped_articles += 1
+                    logger.info(f"Skipping ignored URL: {absolute_url}")
                 else:
                     new_articles += 1
                     logger.info(f"Queuing new article URL: {absolute_url}")
@@ -145,23 +155,6 @@ class ArticleCrawler(scrapy.Spider):
         title = response.css("title::text").get() or "untitled"
         logger.info(f"Article title: {title}")
 
-        # Try different selectors for content based on the site structure
-        if "semianalysis.com" in response.url:
-            # First try the main content selector
-            text_fragments = response.css("div.entry-content *::text, article *::text").getall()
-            if not text_fragments:
-                # Fallback to a more general selector
-                text_fragments = response.css("article *::text, .post-content *::text").getall()
-                if not text_fragments:
-                    # Last resort selector
-                    text_fragments = response.css("body *::text").getall()
-                    logger.warning(f"Using last resort selector for {response.url}")
-        else:
-            text_fragments = response.css("div.entry-content *::text").getall()
-
-        # Log the number of text fragments found
-        logger.info(f"Found {len(text_fragments)} text fragments in the article")
-
         # Try various selectors for the publication date
         posted_at_str = (
             response.css('meta[property="article:published_time"]::attr(content)').get()
@@ -180,14 +173,34 @@ class ArticleCrawler(scrapy.Spider):
             logger.warning(f"No posted_at metadata found for {response.url}")
             posted_at = datetime.now()
 
-        # Join the text fragments into a single content string
-        content: str = " ".join(text_fragments).strip()
+        # Get the full HTML content
+        html_content = response.text
+
+        # Extract URLs from HTML
+        extracted_urls = self.url_extractor.extract_urls_from_html(html_content)
+        logger.info(f"Extracted {len(extracted_urls)} URLs from article")
+
+        # Extract text using HTMLExtractor
+        extracted_text = self.html_extractor.extract(html_content)
+
+        # Log the extraction result
+        original_size = len(html_content)
+        extracted_size = len(extracted_text)
+        reduction_pct = (
+            ((original_size - extracted_size) / original_size * 100) if original_size > 0 else 0
+        )
+        logger.info(
+            f"Extracted text from HTML: {original_size:,} → {extracted_size:,} chars "
+            f"({reduction_pct:.1f}% reduction)"
+        )
 
         # Log a snippet of the content for debugging
-        content_preview = content[:200] + "..." if len(content) > 200 else content
+        content_preview = (
+            extracted_text[:200] + "..." if len(extracted_text) > 200 else extracted_text
+        )
         logger.info(f"Content preview: {content_preview}")
 
-        # Save the article
+        # Save the article with extracted text and URLs
         self.save(
             {
                 "url": response.url,
@@ -195,7 +208,8 @@ class ArticleCrawler(scrapy.Spider):
                 "title": title,
                 "posted_at": posted_at.isoformat(),
                 "collected_at": datetime.now().isoformat(),
-                "content": content,
+                "content": extracted_text,
+                "urls": extracted_urls,
             }
         )
 
@@ -273,13 +287,19 @@ def run_batch_crawl(
         crawled_urls = build_crawled_url_index(output_path)
         print(f"Built index of {len(crawled_urls)} previously crawled URLs")
 
-    configure_logging()
+    # Disable Scrapy's default logging configuration to avoid duplicates
+    configure_logging({"LOG_ENABLED": False})
+
     settings = get_project_settings()
     # Configure concurrency for the spider
     settings.set("CONCURRENT_REQUESTS", concurrent_requests)
     settings.set("CONCURRENT_REQUESTS_PER_DOMAIN", concurrent_requests)
     settings.set("DOWNLOAD_DELAY", 0.7)  # Minimum delay between requests
     settings.set("LOG_LEVEL", "INFO")
+    settings.set("LOG_ENABLED", True)
+
+    # Disable verbose startup logs
+    settings.set("LOG_STDOUT", False)
 
     # Make sure we're using the AsyncIO reactor that we installed
     settings.set("TWISTED_REACTOR", "twisted.internet.asyncioreactor.AsyncioSelectorReactor")

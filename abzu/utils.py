@@ -1,13 +1,14 @@
 """Utility functions for Abzu."""
 
 import json
-import logging
 import os
 import shutil
 from pathlib import Path
 from typing import Any, Union
 
-logger = logging.getLogger(__name__)
+from abzu.logs import get_logger
+
+logger = get_logger(__name__)
 
 
 def backup_file(file_path: Union[str, Path]) -> bool:

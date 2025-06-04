@@ -1,7 +1,6 @@
 """Chat agent for URL monitoring and article processing."""
 
 import asyncio
-import logging
 from typing import Any, Optional, cast
 
 from discord import Message
@@ -13,12 +12,9 @@ from abzu.chat.fetcher import ContentFetcher
 from abzu.chat.io import ArticleStorage
 from abzu.chat.processor import ArticleProcessor
 from abzu.config import config
+from abzu.logs import get_logger
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class AgentConfig(BaseModel):
@@ -48,7 +44,7 @@ class AgentConfig(BaseModel):
     )
     max_retries: int = Field(5, description="Maximum number of retries for rate-limited requests.")
     pause_seconds: float = Field(0.5, description="Number of seconds to pause between requests.")
-    timeout: int = Field(30, description="Request timeout in seconds.")
+    timeout: int = Field(200, description="Request timeout in seconds.")
     use_cloudscraper: bool = Field(
         False, description="Whether to use cloudscraper instead of requests."
     )
@@ -81,7 +77,7 @@ class DiscordAgent:
             processed_articles_path=config.get("chat.start.processed_articles"),  # type: ignore
             max_retries=5,
             pause_seconds=0.5,
-            timeout=30,
+            timeout=200,
             use_cloudscraper=False,
         )
 
@@ -172,6 +168,31 @@ class DiscordAgent:
             logger.error("Agent components not initialized")
             return
 
+        # Helper function to send error to bots channel
+        async def send_error_to_bots(error_msg: str):
+            """Send error message to #bots channel."""
+            if not self.bot_runner or not self.bot_runner.bot:
+                await message.channel.send(error_msg)
+                return
+
+            # Find the #bots channel
+            bots_channel = None
+            for guild in self.bot_runner.bot.guilds:
+                for channel in guild.text_channels:
+                    if channel.name == "bots":
+                        bots_channel = channel
+                        break
+                if bots_channel:
+                    break
+
+            if bots_channel:
+                await bots_channel.send(
+                    f"Error processing URL from {message.channel.mention}: {error_msg}"
+                )
+            else:
+                # Fallback to original channel if #bots not found
+                await message.channel.send(error_msg)
+
         try:
             # Fetch the content
             logger.info(f"Fetching content from URL: {url}")
@@ -179,7 +200,7 @@ class DiscordAgent:
 
             if not success:
                 logger.error(f"Failed to fetch URL {url}: {result}")
-                await message.channel.send(f"Failed to process URL: {url}")
+                await send_error_to_bots(f"Failed to process URL: {url}")
                 return
 
             # Store the raw article
@@ -187,11 +208,11 @@ class DiscordAgent:
             self.article_storage.save_raw_article(article)
 
             # Process the article
-            success, processed_result = self.article_processor.process_article(article)
+            success, processed_result = await self.article_processor.process_article(article)
 
             if not success:
                 logger.error(f"Failed to process article from URL {url}: {processed_result}")
-                await message.channel.send(f"Failed to extract information from URL: {url}")
+                await send_error_to_bots(f"Failed to extract information from URL: {url}")
                 return
 
             # Store the processed article
@@ -202,7 +223,7 @@ class DiscordAgent:
 
         except Exception as e:
             logger.error(f"Error processing URL {url}: {e}")
-            await message.channel.send(f"Error processing URL: {url}")
+            await send_error_to_bots(f"Error processing URL: {url}")
 
 
 async def start_agent(config: Optional[dict[str, Any]] = None) -> DiscordAgent:

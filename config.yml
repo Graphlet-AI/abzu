@@ -1,28 +1,47 @@
 base_dir: "data"
 
+logs:
+  file:
+    path: "logs"
+
 crawl:
+  tickers: "${base_dir}/sec/company_tickers.json"
+
+  ignore:
+    - "wsj.com"
+    - "github.com"
+    - "stocktwits.com"
+
   semianalysis:
-    output: "${base_dir}/semianalysis.jsonl"
+    output: "${base_dir}/articles/semianalysis.jsonl"
 
   theinformation:
-    output: "${base_dir}/theinformation.jsonl"
+    output: "${base_dir}/articles/theinformation.jsonl"
 
   rss:
-    feeds_file: "feeds.txt"
+    feeds:
+      wsj-tech: "https://feeds.content.dowjones.io/public/rss/RSSWSJD"
+      wsj-markets: "https://feeds.content.dowjones.io/public/rss/RSSMarketsMain"
+      techcrunch: "https://techcrunch.com/feed/"
+      wired: "https://www.wired.com/feed/tag/ai/latest/rss"
+      nvidia-blog: "https://developer.nvidia.com/blog/rss"
     output_dir: "${base_dir}/rss"
+
+  reddit:
+    input: "${crawl.tickers}"
+    output: "${base_dir}/reddit/reddit_posts.jsonl"
 
 process:
   articles:
     semianalysis:
       input: "${crawl.semianalysis.output}"
-      output: "${base_dir}/processed_semianalysis.jsonl"
+      output: "${base_dir}/articles/processed_semianalysis.jsonl"
 
     theinformation:
       input: "${crawl.theinformation.output}"
-      output: "${base_dir}/processed_theinformation.jsonl"
+      output: "${base_dir}/articles/processed_theinformation.jsonl"
 
   rss:
-    feeds_file: "${crawl.rss.feeds_file}"
     input_dir: "${crawl.rss.output_dir}"
     output_dir: "${base_dir}/rss/processed"
 
@@ -34,6 +53,8 @@ process:
         - "${process.rss.output_dir}/processed_nvidia-blog.jsonl"
         - "${process.rss.output_dir}/processed_wired.jsonl"
         - "${process.rss.output_dir}/processed_techcrunch.jsonl"
+        - "${chat.start.processed_articles}"
+        # - "${crawl.reddit.output}"
       output: "${base_dir}/knowledge_graph"
 
     refine:

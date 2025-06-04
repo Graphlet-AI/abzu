@@ -19,7 +19,7 @@ abzu = "abzu.cli.click_cli:main"
 
 python = "3.12.*"
 scrapy = "^2.12.0"
-baml-py = "^0.86.1"
+baml-py = ">=0.89.0"
 pyspark = "^3.5.5"
 python-dateutil = "^2.9.0.post0"
 pydantic = "^2.11.3"
@@ -46,12 +46,13 @@ pynacl = "^1.5.0"
 discord-py = "^2.5.2"
 arxiv = "^2.2.0"
 anthropic = "^0.51.0"
+lxml = "^5.4.0"
 praw = "^7.8.1"
 
 [tool.poetry.group.dev.dependencies]
 flake8 = "^7.2.0"
 isort = "^5.13.2"
-mypy = "^1.14.0"
+mypy = "^1.16.0"
 pytest = "^8.3.4"
 ipython = "^8.31.0"
 pandas-stubs = "^2.2.3.241126"
@@ -114,3 +115,7 @@ ignore_missing_imports = true
 max-line-length = 100
 ignore = ["E203", "E266", "E501", "W503", "C901"]
 extend-ignore = ["E203", "E266", "E501", "W503", "C901"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "strict"
+asyncio_default_fixture_loop_scope = "function"
