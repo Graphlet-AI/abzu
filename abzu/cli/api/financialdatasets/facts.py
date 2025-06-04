@@ -12,9 +12,9 @@ from abzu.config import config
     "-f",
     "--file",
     "input_file",
-    type=click.Path(exists=True, file_okay=True, dir_okay=True),
-    flag_value=config.get("api.financialdatasets.facts.input"),
-    help="Path to JSONL or Parquet file with records containing 'ticker', 'symbol', or 'cik' field. Use as flag to use default file from config.",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False),
+    default=config.get("api.financialdatasets.facts.input"),
+    help="Path to JSONL or Parquet file with records containing 'ticker', 'symbol', or 'cik' field",
 )
 @click.option(
     "-k",
@@ -77,20 +77,20 @@ def facts(
     Output behavior:
     - When using --ticker or --cik (single company): Always outputs to stdout
     - When using --file (multiple companies): Outputs to file specified by --output
+    - When no options specified: Uses default input file and outputs to default output file
     """
     # Validate mutually exclusive options
     single_company_opts = [ticker, cik]
     single_company_count = sum(1 for opt in single_company_opts if opt)
 
-    if input_file and single_company_count > 0:
-        raise click.UsageError(
-            "Cannot use --file with --ticker or --cik. Choose either file processing or single company lookup."
-        )
-
-    # Display help if no required parameters are provided
-    if not ticker and not cik and not input_file:
-        click.echo(ctx.get_help())
-        return 0
+    # If ticker or cik is specified, we shouldn't use the input file
+    if single_company_count > 0:
+        if input_file != config.get("api.financialdatasets.facts.input"):
+            raise click.UsageError(
+                "Cannot use --file with --ticker or --cik. Choose either file processing or single company lookup."
+            )
+        # Clear input_file if we're doing single company lookup
+        input_file = None
 
     from abzu.api.financialdatasets import financialdatasets_facts_main
 
@@ -98,7 +98,7 @@ def facts(
     if output_file == "-":
         output_file = None
 
-    # Only use the output file when --file is specified, otherwise output to stdout
+    # Use output file when processing from file, otherwise stdout for single company
     effective_output = output_file if input_file else None
 
     return financialdatasets_facts_main(
