@@ -1,6 +1,5 @@
 """CLI tools for Abzu using Click."""
 
-import logging
 import sys
 
 import click
@@ -11,12 +10,9 @@ from abzu.cli.crawl import crawl
 from abzu.cli.dump import dump
 from abzu.cli.process import process
 from abzu.cli.steps import steps
+from abzu.logs import get_logger
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @click.group()

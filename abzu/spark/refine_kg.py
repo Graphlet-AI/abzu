@@ -1,28 +1,23 @@
 #!/usr/bin/env python3
 """Refine the knowledge graph by creating bidirectional relationships and a unified edge list."""
 
-import logging
 from pathlib import Path
 
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame, SparkSession
 
 from abzu.config import config
+from abzu.logs import get_logger
 from abzu.spark.config import get_spark_session
 from abzu.spark.ticker_enrichment import _best_match, load_sec_map
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def refine_knowledge_graph(
     input_path: str = config.get("process.kg.refine.input"),
     output_path: str = config.get("process.kg.refine.output"),
-    partitions: int = 4,
-    local_mode: bool = None,
+    local_mode: bool = True,
 ) -> None:
     """
     Refine the knowledge graph by creating bidirectional relationships and a unified edge list.
@@ -30,8 +25,7 @@ def refine_knowledge_graph(
     Args:
         input_path: Path to the raw knowledge graph parquet files
         output_path: Path to save the refined knowledge graph
-        partitions: Number of Spark partitions to use
-        local_mode: Whether to run in local mode. If None, will be determined by environment
+        local_mode: Whether to run in local mode. Defaults to True.
     """
     # Create SparkSession with appropriate configuration
     spark: SparkSession = get_spark_session(

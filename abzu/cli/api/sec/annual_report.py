@@ -2,7 +2,11 @@
 
 import click
 
+from abzu.api.sec_downloader import download_annual_report
 from abzu.config import config
+from abzu.logs import get_logger
+
+logger = get_logger(__name__)
 
 __all__ = ["annual_report"]
 
@@ -18,8 +22,7 @@ __all__ = ["annual_report"]
 )
 def annual_report(ticker: str, year: int, output_dir: str) -> None:
     """Download a 10-K filing and save it as plain text."""
-    from abzu.api.sec_downloader import download_annual_report
 
     path = download_annual_report(ticker, year, save_dir=output_dir)
+    logger.info(f"Saved annual report to {path}")
     click.secho(f"Saved annual report to {path}", fg="green")
-    return 0

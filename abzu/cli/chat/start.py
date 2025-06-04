@@ -1,19 +1,15 @@
 """CLI command for starting the chat bot."""
 
 import asyncio
-import logging
 import os
 from typing import Optional
 
 import click
 
 from abzu.config import config
+from abzu.logs import get_logger
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @click.command(context_settings={"show_default": True})
@@ -26,7 +22,7 @@ logger = logging.getLogger(__name__)
     "-p",
     "--prefix",
     default="!",
-    help="Command prefix for the Discord bot (default: !)",
+    help="Command prefix for the Discord bot",
 )
 @click.option(
     "-c",
@@ -60,19 +56,19 @@ logger = logging.getLogger(__name__)
     "--retries",
     default=5,
     type=int,
-    help="Maximum number of retries for rate-limited requests (default: 5)",
+    help="Maximum number of retries for rate-limited requests",
 )
 @click.option(
     "--pause",
     default=0.5,
     type=float,
-    help="Number of seconds to pause between requests (default: 0.5)",
+    help="Number of seconds to pause between requests",
 )
 @click.option(
     "--timeout",
-    default=30,
+    default=200,
     type=int,
-    help="Request timeout in seconds (default: 30)",
+    help="Request timeout in seconds",
 )
 @click.option(
     "--use-cloudscraper",

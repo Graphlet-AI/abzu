@@ -16,9 +16,11 @@ The typical workflow in Abzu follows these steps:
 ### 1. Crawling Articles
 
 #### SemiAnalysis.com Crawler
+
 ```bash
 abzu crawl semianalysis
 ```
+
 - **What it does**: Crawls the SemiAnalysis.com website for articles
 - **How it works**:
   - Uses Scrapy to crawl archive pages
@@ -27,9 +29,11 @@ abzu crawl semianalysis
 - **Why**: SemiAnalysis provides detailed semiconductor industry analysis
 
 #### TheInformation.com Crawler
+
 ```bash
 abzu crawl theinformation
 ```
+
 - **What it does**: Fetches articles from TheInformation.com's RSS feed
 - **How it works**:
   - Requires authentication (uses browser cookies or manual cookie string)
@@ -39,9 +43,11 @@ abzu crawl theinformation
 - **Why**: TheInformation provides exclusive tech industry news
 
 #### Generic RSS Crawler
+
 ```bash
 abzu crawl rss -f feeds.txt
 ```
+
 - **What it does**: Crawls multiple RSS feeds defined in a file
 - **How it works**:
   - Reads `source:url` pairs from `feeds.txt`
@@ -52,10 +58,12 @@ abzu crawl rss -f feeds.txt
 ### 2. Processing Articles
 
 #### Article Processing
+
 ```bash
 abzu process articles semianalysis
 abzu process articles theinformation
 ```
+
 - **What it does**: Extracts structured information from crawled articles
 - **How it works**:
   - Uses BAML to extract entities and relationships
@@ -64,10 +72,12 @@ abzu process articles theinformation
 - **Why**: Converts unstructured text into structured data
 
 #### Knowledge Graph Processing
+
 ```bash
 abzu process kg raw
 abzu process kg refine
 ```
+
 - **What it does**: Builds and refines the knowledge graph
 - **How it works**:
   - `raw`: Extracts vertices and edges from processed articles
@@ -78,9 +88,11 @@ abzu process kg refine
 ### 3. API Operations
 
 #### Financial Data
+
 ```bash
 abzu api financialdatasets --file data/knowledge_graph/tickers.parquet
 ```
+
 - **What it does**: Fetches financial data for companies
 - **How it works**:
   - Reads company tickers from the knowledge graph
@@ -89,9 +101,11 @@ abzu api financialdatasets --file data/knowledge_graph/tickers.parquet
 - **Why**: Enriches the knowledge graph with financial information
 
 #### SEC Filings
+
 ```bash
 abzu api sec download
 ```
+
 - **What it does**: Downloads SEC filings for companies
 - **How it works**:
   - Uses company CIK numbers from the knowledge graph
@@ -111,9 +125,11 @@ abzu api sec annual-report --ticker NVDA --year 2023
 ### 4. Development Commands
 
 #### Testing
+
 ```bash
 abzu test
 ```
+
 - **What it does**: Runs the test suite
 - **How it works**:
   - Executes unit tests
@@ -122,10 +138,12 @@ abzu test
 - **Why**: Ensures code quality and functionality
 
 #### Linting and Formatting
+
 ```bash
 abzu lint
 abzu format
 ```
+
 - **What it does**: Checks and fixes code style
 - **How it works**:
   - `lint`: Runs style checkers
@@ -135,11 +153,13 @@ abzu format
 ## Environment-Specific Notes
 
 ### Local Environment
+
 - Direct access to browser cookies
 - Faster processing for small datasets
 - Good for development and testing
 
 ### Docker Environment
+
 - Isolated environment
 - Consistent dependencies
 - Better for production and large datasets
@@ -176,4 +196,4 @@ abzu format
 3. **Development**
    - Run tests before committing
    - Keep BAML definitions up to date
-   - Document new sources in `feeds.txt` 
+   - Document new sources in `feeds.txt`

@@ -1,7 +1,6 @@
 """Discord bot for URL monitoring and processing."""
 
 import asyncio
-import logging
 import os
 import re
 from typing import Any, Callable, Optional
@@ -9,11 +8,10 @@ from typing import Any, Callable, Optional
 from discord import Intents, Message, TextChannel, errors
 from discord.ext import commands
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
+from abzu.logs import get_logger
+from abzu.url_extractor import URLExtractor
+
+logger = get_logger(__name__)
 
 
 class URLMonitorBot(commands.Bot):
@@ -38,6 +36,10 @@ class URLMonitorBot(commands.Bot):
             on_url_found_callback: Callback function to call when a URL is found.
                 Function should accept (url: str, message: Message).
         """
+
+        self.specific_channels: Optional[list[int]] = specific_channels or []
+        self.ignored_domains: Optional[list[str]] = ignored_domains or []
+
         # Set up intents (permissions)
         if intents is None:
             intents = Intents.default()
@@ -50,9 +52,16 @@ class URLMonitorBot(commands.Bot):
         self.url_pattern = re.compile(
             r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
         )
-        self.specific_channels = set(specific_channels) if specific_channels else None
-        self.ignored_domains = set(ignored_domains) if ignored_domains else set()
+        self.specific_channels = (
+            list(set(self.specific_channels)) if self.specific_channels else None
+        )
         self.on_url_found_callback = on_url_found_callback
+
+        # Initialize URLExtractor with provided ignored domains
+        self.url_extractor = URLExtractor(
+            ignore_domains=list(self.ignored_domains) if self.ignored_domains else [],
+            replace=False,  # Add to config domains
+        )
 
         # Set up event handlers
         self.setup_event_handlers()
@@ -115,8 +124,8 @@ class URLMonitorBot(commands.Bot):
 
                 # Process each URL (after filtering out ignored domains)
                 for url in urls:
-                    # Skip ignored domains
-                    if any(ignored in url.lower() for ignored in self.ignored_domains):
+                    # Skip ignored domains using URLExtractor
+                    if self.url_extractor.should_ignore_url(url):
                         logger.info(f"Ignoring URL from ignored domain: {url}")
                         continue
 

@@ -19,7 +19,7 @@ from abzu.config import config
     "--output",
     "output_file",
     default=config.get("process.articles.semianalysis.output"),
-    type=click.Path(exists=True, dir_okay=False, file_okay=True, path_type=str),
+    type=click.Path(dir_okay=False, file_okay=True, path_type=str),
     help="Output JSONL file path",
 )
 @click.option(

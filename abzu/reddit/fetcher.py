@@ -10,6 +10,9 @@ import praw
 from praw.models import Comment, Submission
 
 from abzu.config import config
+from abzu.logs import get_logger
+
+logger = get_logger(__name__)
 
 
 def save_to_jsonl(posts: List[Dict], ticker: str, output_path: Path) -> None:
@@ -300,9 +303,9 @@ class RedditFetcher:
                         enhanced_posts.append(post)
 
                 all_posts.extend(enhanced_posts)
-                print(f"Found {len(enhanced_posts)} posts in r/{subreddit}")
+                logger.info(f"Found {len(enhanced_posts)} posts in r/{subreddit}")
             except Exception as e:
-                print(f"Error searching r/{subreddit}: {e}")
+                logger.error(f"Error searching r/{subreddit}: {e}")
                 continue
 
         # Remove duplicates based on post ID

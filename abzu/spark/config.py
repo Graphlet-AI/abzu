@@ -27,10 +27,8 @@ def get_spark_session(
     # Determine if we should use local mode
     if local_mode is None:
         # Check if we're running in Docker with distributed setup
-        local_mode = not (
-            os.getenv("SPARK_MASTER") is not None
-            and os.getenv("SPARK_MASTER", "").startswith("spark://")
-        )
+        spark_master: Optional[str] = os.getenv("SPARK_MASTER")
+        local_mode = not (spark_master is not None and spark_master.startswith("spark://"))
 
     # Start building the SparkSession
     builder = SparkSession.builder.appName(app_name)

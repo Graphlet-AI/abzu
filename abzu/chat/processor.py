@@ -1,17 +1,13 @@
 """Process URLs into IndustryArticle objects using BAML."""
 
-import logging
 import os
 from typing import Any, Union
 
-from abzu.baml_client.sync_client import b
+from abzu.baml_client.async_client import b as async_b
 from abzu.baml_client.types import IndustryArticle
+from abzu.logs import get_logger
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class ArticleProcessor:
@@ -26,7 +22,9 @@ class ArticleProcessor:
                 "BAML article processing may fail."
             )
 
-    def process_article(self, article: dict[str, Any]) -> tuple[bool, Union[IndustryArticle, str]]:
+    async def process_article(
+        self, article: dict[str, Any]
+    ) -> tuple[bool, Union[IndustryArticle, str]]:
         """Process an article using BAML.
 
         Args:
@@ -40,14 +38,16 @@ class ArticleProcessor:
         article_text = article.get("content", "")
 
         if not article_text:
-            error_msg = f"Empty article text for URL: {article.get('url', 'unknown')}"
+            error_msg = f"Empty article content for URL: {article.get('url', 'unknown')}"
             logger.warning(error_msg)
             return False, error_msg
 
         try:
-            # Process the article using BAML
-            logger.info(f"Processing article: {article.get('title', 'unknown')}")
-            result = b.ExtractIndustryArticle(article_text)
+            # Content is already extracted text, just pass it to BAML
+            logger.info(
+                f"Processing article: {article.get('title', 'unknown')} ({len(article_text):,} chars)"
+            )
+            result = await async_b.ExtractIndustryArticle(article_text)
 
             # Pass through timestamps from the original article
             result.collected_at = article.get("collected_at")

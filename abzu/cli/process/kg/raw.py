@@ -11,9 +11,9 @@ from abzu.kg.processor import process_raw_kg
     "-i",
     "--input",
     "input_file",
-    required=True,
+    required=False,
     multiple=True,
-    type=click.Path(exists=True, dir_okay=False),
+    type=click.Path(exists=True, dir_okay=True, file_okay=True),
     default=config.get("process.kg.raw.input"),
     help="Comma-separated input processed articles JSONL files.",
 )
@@ -25,18 +25,10 @@ from abzu.kg.processor import process_raw_kg
     default=config.get("process.kg.raw.output"),
     help="Output directory for raw knowledge graph type Parquet files.",
 )
-@click.option(
-    "-p",
-    "--partitions",
-    type=int,
-    default=4,
-    help="Number of Spark partitions (default: 4)",
-)
-def raw(input_file, output_dir, partitions):
+def raw(input_file, output_dir):
     """Extract raw knowledge graph from processed articles."""
 
     return process_raw_kg(
         input_file=list(input_file),
         output_dir=output_dir,
-        partitions=partitions,
     )
