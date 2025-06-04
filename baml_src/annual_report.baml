@@ -89,6 +89,12 @@ function ExtractCompanyRelationshipsFromAnnualReport(report_text: string) -> Ann
     {{ report_text }}
     ---
 
+    Important notes for supplier relationships:
+    - customer_company: The company purchasing goods/services (usually the reporting company)
+    - supplier_company: The company providing goods/services to the customer
+    - For partnerships, ensure both companies are properly identified with complete company information
+    - For investments, clearly distinguish between investor_company and invested_company
+
     {{ ctx.output_format }}
 
     JSON:
