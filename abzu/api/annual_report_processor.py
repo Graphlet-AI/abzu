@@ -8,7 +8,11 @@ import os
 from pathlib import Path
 from typing import Any, Dict
 
-from abzu.api.sec_downloader import download_annual_report
+from abzu.api.sec_downloader import (
+    download_annual_report,
+    get_cik_from_ticker,
+    list_recent_filings,
+)
 from abzu.baml_client.sync_client import b
 from abzu.baml_client.types import AnnualReportData
 from abzu.config import config
@@ -99,3 +103,83 @@ def process_annual_report(
 
     logger.info("Saved processed annual report to %s", processed_path)
     return processed_path
+
+
+def _extract_related_tickers(data: dict[str, Any]) -> list[str]:
+    """Return a list of ticker symbols referenced in ``data``."""
+
+    tickers: set[str] = set()
+
+    def add(company: dict[str, Any] | None) -> None:
+        if not company:
+            return
+        ticker = company.get("ticker")
+        if isinstance(ticker, dict):
+            symbol = ticker.get("symbol")
+            if symbol:
+                tickers.add(symbol.upper())
+
+    add(data.get("reporting_company"))
+
+    for partnership in data.get("partnerships", []) or []:
+        add(partnership.get("company1"))
+        add(partnership.get("company2"))
+
+    for investment in data.get("investments", []) or []:
+        add(investment.get("investor_company"))
+        add(investment.get("invested_company"))
+
+    for supplier in data.get("suppliers", []) or []:
+        add(supplier.get("customer_company"))
+        add(supplier.get("supplier_company"))
+
+    for subsidiary in data.get("subsidiaries", []) or []:
+        add(subsidiary.get("parent_company"))
+
+    return list(tickers)
+
+
+def _latest_10k_year(ticker: str) -> int:
+    """Return the filing year of the most recent 10-K for ``ticker``."""
+
+    cik = get_cik_from_ticker(ticker)
+    filings = list_recent_filings(cik, form_type="10-K", count=1)
+    if not filings:
+        raise ValueError(f"No 10-K filing found for {ticker}")
+    year: int = filings[0]["filing_date_obj"].year
+    return year
+
+
+def process_annual_reports_bfs(ticker: str, year: int, output_dir: str) -> list[str]:
+    """Process annual reports in breadth-first order starting from ``ticker``."""
+
+    queue = [ticker.upper()]
+    processed: set[str] = set()
+
+    while queue:
+        current = queue.pop(0)
+        if current in processed:
+            continue
+
+        try:
+            current_year = year if current == ticker.upper() else _latest_10k_year(current)
+            path = process_annual_report(current, current_year, output_dir)
+        except Exception as exc:  # noqa: BLE001 - surface errors via log
+            logger.error("Failed to process %s: %s", current, exc)
+            continue
+
+        processed.add(current)
+
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                report_data = json.load(f)
+        except Exception as exc:  # noqa: BLE001
+            logger.error("Failed to read processed report for %s: %s", current, exc)
+            continue
+
+        for sym in _extract_related_tickers(report_data):
+            sym = sym.upper()
+            if sym not in processed and sym not in queue:
+                queue.append(sym)
+
+    return list(processed)
