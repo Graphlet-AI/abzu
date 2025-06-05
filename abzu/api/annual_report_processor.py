@@ -146,7 +146,8 @@ def _latest_10k_year(ticker: str) -> int:
     filings = list_recent_filings(cik, form_type="10-K", count=1)
     if not filings:
         raise ValueError(f"No 10-K filing found for {ticker}")
-    return filings[0]["filing_date_obj"].year
+    year: int = filings[0]["filing_date_obj"].year
+    return year
 
 
 def process_annual_reports_bfs(ticker: str, year: int, output_dir: str) -> list[str]:
@@ -160,8 +161,8 @@ def process_annual_reports_bfs(ticker: str, year: int, output_dir: str) -> list[
         if current in processed:
             continue
 
-        current_year = year if current == ticker.upper() else _latest_10k_year(current)
         try:
+            current_year = year if current == ticker.upper() else _latest_10k_year(current)
             path = process_annual_report(current, current_year, output_dir)
         except Exception as exc:  # noqa: BLE001 - surface errors via log
             logger.error("Failed to process %s: %s", current, exc)
