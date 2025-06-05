@@ -93,6 +93,7 @@ TEST_COMMANDS = [
             "--ticker",
             "--year",
             "--output-dir",
+            "--bfs/--no-bfs",
         ],
     ),
     (
