@@ -97,6 +97,14 @@ TEST_COMMANDS = [
         ],
     ),
     (
+        "api sec annual-reports build kuzu --help",
+        [
+            "Usage: cli api sec annual-reports build kuzu [OPTIONS]",
+            "--input-dir",
+            "--output-dir",
+        ],
+    ),
+    (
         "dump returns --help",
         [
             "Usage: cli dump returns [OPTIONS]",

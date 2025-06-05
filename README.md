@@ -465,6 +465,7 @@ poetry run abzu api sec download --ticker NVDA
 # Download a single annual report and process it with BAML
 poetry run abzu api sec annual-report --ticker NVDA --year 2023
 poetry run abzu api sec annual-report --ticker NVDA --year 2023 --bfs
+poetry run abzu api sec annual-reports build kuzu
 
 # Local
 abzu api financialdatasets facts -f
