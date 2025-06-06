@@ -105,6 +105,14 @@ TEST_COMMANDS = [
         ],
     ),
     (
+        "api sec annual-reports bulk --help",
+        [
+            "Usage: cli api sec annual-reports bulk [OPTIONS]",
+            "--input-file",
+            "--output-dir",
+        ],
+    ),
+    (
         "dump returns --help",
         [
             "Usage: cli dump returns [OPTIONS]",
