@@ -34,8 +34,22 @@ def build() -> None:
 )
 def build_kuzu(input_dir: str, output_dir: str) -> None:
     """Build a Kuzu graph from processed annual reports."""
-    companies_path, edges_path = build_annual_report_kuzu_graph(input_dir, output_dir)
-    logger.info("Saved companies CSV to %s", companies_path)
-    logger.info("Saved edges CSV to %s", edges_path)
-    click.secho(f"Saved companies CSV to {companies_path}", fg="green")
-    click.secho(f"Saved edges CSV to {edges_path}", fg="green")
+    paths = build_annual_report_kuzu_graph(input_dir, output_dir)
+    logger.info("Saved companies CSV to %s", paths["companies"])
+    for key in (
+        "invests_in",
+        "has_investor",
+        "partnered_with",
+        "supplies",
+        "has_supplier",
+    ):
+        logger.info("Saved %s CSV to %s", key, paths[key])
+    click.secho(f"Saved companies CSV to {paths['companies']}", fg="green")
+    for key in (
+        "invests_in",
+        "has_investor",
+        "partnered_with",
+        "supplies",
+        "has_supplier",
+    ):
+        click.secho(f"Saved {key} CSV to {paths[key]}", fg="green")
