@@ -120,7 +120,6 @@ def _process_file(
                 if sub_id and sub_id not in companies:
                     companies[sub_id] = {"id": sub_id, "name": sub_name, "ticker": None}
                 if parent_id:
-                    has_investor.add((sub_id, parent_id))
                     subsidiary_of.add((sub_id, parent_id))
                     has_subsidiary.add((parent_id, sub_id))
 
