@@ -42,6 +42,8 @@ def build_kuzu(input_dir: str, output_dir: str) -> None:
         "partnered_with",
         "supplies",
         "has_supplier",
+        "subsidiary_of",
+        "has_subsidiary",
     ):
         logger.info("Saved %s CSV to %s", key, paths[key])
     click.secho(f"Saved companies CSV to {paths['companies']}", fg="green")
@@ -51,5 +53,7 @@ def build_kuzu(input_dir: str, output_dir: str) -> None:
         "partnered_with",
         "supplies",
         "has_supplier",
+        "subsidiary_of",
+        "has_subsidiary",
     ):
         click.secho(f"Saved {key} CSV to {paths[key]}", fg="green")
