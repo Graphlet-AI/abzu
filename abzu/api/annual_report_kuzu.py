@@ -65,6 +65,8 @@ def _process_file(
     partnered_with: set[tuple[str, str]],
     supplies: set[tuple[str, str]],
     has_supplier: set[tuple[str, str]],
+    subsidiary_of: set[tuple[str, str]],
+    has_subsidiary: set[tuple[str, str]],
 ) -> None:
     with open(path, "r", encoding="utf-8") as f:
         data = json.load(f)
@@ -118,7 +120,8 @@ def _process_file(
                 if sub_id and sub_id not in companies:
                     companies[sub_id] = {"id": sub_id, "name": sub_name, "ticker": None}
                 if parent_id:
-                    has_investor.add((sub_id, parent_id))
+                    subsidiary_of.add((sub_id, parent_id))
+                    has_subsidiary.add((parent_id, sub_id))
 
 
 def build_annual_report_kuzu_graph(input_dir: str, output_dir: str) -> dict[str, str]:
@@ -146,6 +149,8 @@ def build_annual_report_kuzu_graph(input_dir: str, output_dir: str) -> dict[str,
     partnered_with: set[tuple[str, str]] = set()
     supplies: set[tuple[str, str]] = set()
     has_supplier: set[tuple[str, str]] = set()
+    subsidiary_of: set[tuple[str, str]] = set()
+    has_subsidiary: set[tuple[str, str]] = set()
 
     for file in base.rglob("processed_*.json"):
         try:
@@ -157,6 +162,8 @@ def build_annual_report_kuzu_graph(input_dir: str, output_dir: str) -> dict[str,
                 partnered_with,
                 supplies,
                 has_supplier,
+                subsidiary_of,
+                has_subsidiary,
             )
         except Exception as exc:  # noqa: BLE001 - surface errors via log
             logger.error("Failed to process %s: %s", file, exc)
@@ -168,6 +175,8 @@ def build_annual_report_kuzu_graph(input_dir: str, output_dir: str) -> dict[str,
     partnered_with_path = Path(output_dir) / "partnered_with.csv"
     supplies_path = Path(output_dir) / "supplies.csv"
     has_supplier_path = Path(output_dir) / "has_supplier.csv"
+    subsidiary_of_path = Path(output_dir) / "subsidiary_of.csv"
+    has_subsidiary_path = Path(output_dir) / "has_subsidiary.csv"
 
     with open(companies_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=["id", "name", "ticker"])
@@ -187,14 +196,18 @@ def build_annual_report_kuzu_graph(input_dir: str, output_dir: str) -> dict[str,
     _write_edges(partnered_with_path, partnered_with)
     _write_edges(supplies_path, supplies)
     _write_edges(has_supplier_path, has_supplier)
+    _write_edges(subsidiary_of_path, subsidiary_of)
+    _write_edges(has_subsidiary_path, has_subsidiary)
     logger.info(
-        "Saved %d companies, %d invests_in, %d has_investor, %d partnered_with, %d supplies, %d has_supplier",
+        "Saved %d companies, %d invests_in, %d has_investor, %d partnered_with, %d supplies, %d has_supplier, %d subsidiary_of, %d has_subsidiary",
         len(companies),
         len(invests_in),
         len(has_investor),
         len(partnered_with),
         len(supplies),
         len(has_supplier),
+        len(subsidiary_of),
+        len(has_subsidiary),
     )
     return {
         "companies": str(companies_path),
@@ -203,4 +216,6 @@ def build_annual_report_kuzu_graph(input_dir: str, output_dir: str) -> dict[str,
         "partnered_with": str(partnered_with_path),
         "supplies": str(supplies_path),
         "has_supplier": str(has_supplier_path),
+        "subsidiary_of": str(subsidiary_of_path),
+        "has_subsidiary": str(has_subsidiary_path),
     }

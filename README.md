@@ -473,6 +473,8 @@ poetry run abzu api sec annual-reports build kuzu
 # - partnered_with.csv
 # - supplies.csv
 # - has_supplier.csv
+# - subsidiary_of.csv
+# - has_subsidiary.csv
 
 # Local
 abzu api financialdatasets facts -f
