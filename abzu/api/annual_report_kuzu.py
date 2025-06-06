@@ -5,7 +5,7 @@ from __future__ import annotations
 import csv
 import json
 from pathlib import Path
-from typing import Any, Dict, Iterable, Tuple
+from typing import Any, Dict, Iterable
 
 from abzu.logs import get_logger
 
@@ -42,7 +42,13 @@ def _add_company(companies: Dict[str, Dict[str, str]], company: Dict[str, Any]) 
 
 
 def _process_file(
-    path: Path, companies: Dict[str, Dict[str, str]], edges: set[Tuple[str, str, str]]
+    path: Path,
+    companies: Dict[str, Dict[str, str]],
+    invests_in: set[tuple[str, str]],
+    has_investor: set[tuple[str, str]],
+    partnered_with: set[tuple[str, str]],
+    supplies: set[tuple[str, str]],
+    has_supplier: set[tuple[str, str]],
 ) -> None:
     with open(path, "r", encoding="utf-8") as f:
         data = json.load(f)
@@ -58,7 +64,8 @@ def _process_file(
             id1 = _add_company(companies, c1)
             id2 = _add_company(companies, c2)
             if id1 and id2:
-                edges.add((id1, id2, "partnership"))
+                partnered_with.add((id1, id2))
+                partnered_with.add((id2, id1))
 
     for inv in data.get("investments", []) or []:
         investor = inv.get("investor_company")
@@ -67,16 +74,18 @@ def _process_file(
             id1 = _add_company(companies, investor)
             id2 = _add_company(companies, invested)
             if id1 and id2:
-                edges.add((id1, id2, "investment"))
+                invests_in.add((id1, id2))
+                has_investor.add((id2, id1))
 
     for supplier in data.get("suppliers", []) or []:
         customer = supplier.get("customer_company")
-        supplier_c = supplier.get("supplier_company")
-        if customer and supplier_c:
-            id1 = _add_company(companies, customer)
-            id2 = _add_company(companies, supplier_c)
-            if id1 and id2:
-                edges.add((id1, id2, "supplier"))
+        vendor = supplier.get("supplier_company")
+        if customer and vendor:
+            cust_id = _add_company(companies, customer)
+            vend_id = _add_company(companies, vendor)
+            if cust_id and vend_id:
+                supplies.add((vend_id, cust_id))
+                has_supplier.add((cust_id, vend_id))
 
     for sub in data.get("subsidiaries", []) or []:
         parent = sub.get("parent_company")
@@ -88,10 +97,10 @@ def _process_file(
                 if sub_id not in companies:
                     companies[sub_id] = {"id": sub_id, "name": name.strip(), "ticker": None}
                 if parent_id:
-                    edges.add((parent_id, sub_id, "subsidiary"))
+                    has_investor.add((sub_id, parent_id))
 
 
-def build_annual_report_kuzu_graph(input_dir: str, output_dir: str) -> Tuple[str, str]:
+def build_annual_report_kuzu_graph(input_dir: str, output_dir: str) -> dict[str, str]:
     """Extract relationships from processed annual reports and write CSV files.
 
     Parameters
@@ -103,25 +112,41 @@ def build_annual_report_kuzu_graph(input_dir: str, output_dir: str) -> Tuple[str
 
     Returns
     -------
-    Tuple[str, str]
-        Paths to the companies and edges CSV files.
+    dict[str, str]
+        Mapping of output CSV names to their file paths.
     """
     base = Path(input_dir)
     if not base.exists():
         raise FileNotFoundError(f"Input directory not found: {input_dir}")
 
     companies: Dict[str, Dict[str, str]] = {}
-    edges: set[Tuple[str, str, str]] = set()
+    invests_in: set[tuple[str, str]] = set()
+    has_investor: set[tuple[str, str]] = set()
+    partnered_with: set[tuple[str, str]] = set()
+    supplies: set[tuple[str, str]] = set()
+    has_supplier: set[tuple[str, str]] = set()
 
     for file in base.rglob("processed_*.json"):
         try:
-            _process_file(file, companies, edges)
+            _process_file(
+                file,
+                companies,
+                invests_in,
+                has_investor,
+                partnered_with,
+                supplies,
+                has_supplier,
+            )
         except Exception as exc:  # noqa: BLE001 - surface errors via log
             logger.error("Failed to process %s: %s", file, exc)
 
     Path(output_dir).mkdir(parents=True, exist_ok=True)
     companies_path = Path(output_dir) / "companies.csv"
-    edges_path = Path(output_dir) / "edges.csv"
+    invests_in_path = Path(output_dir) / "invests_in.csv"
+    has_investor_path = Path(output_dir) / "has_investor.csv"
+    partnered_with_path = Path(output_dir) / "partnered_with.csv"
+    supplies_path = Path(output_dir) / "supplies.csv"
+    has_supplier_path = Path(output_dir) / "has_supplier.csv"
 
     with open(companies_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=["id", "name", "ticker"])
@@ -129,11 +154,32 @@ def build_annual_report_kuzu_graph(input_dir: str, output_dir: str) -> Tuple[str
         for comp in companies.values():
             writer.writerow(comp)
 
-    with open(edges_path, "w", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f)
-        writer.writerow(["src", "dst", "type"])
-        for src, dst, rel in edges:
-            writer.writerow([src, dst, rel])
+    def _write_edges(path: Path, rows: Iterable[tuple[str, str]]) -> None:
+        with open(path, "w", newline="", encoding="utf-8") as edge_file:
+            writer = csv.DictWriter(edge_file, fieldnames=["_from", "_to"])
+            writer.writeheader()
+            for src, dst in rows:
+                writer.writerow({"_from": src, "_to": dst})
 
-    logger.info("Saved %d companies and %d edges", len(companies), len(edges))
-    return str(companies_path), str(edges_path)
+    _write_edges(invests_in_path, invests_in)
+    _write_edges(has_investor_path, has_investor)
+    _write_edges(partnered_with_path, partnered_with)
+    _write_edges(supplies_path, supplies)
+    _write_edges(has_supplier_path, has_supplier)
+    logger.info(
+        "Saved %d companies, %d invests_in, %d has_investor, %d partnered_with, %d supplies, %d has_supplier",
+        len(companies),
+        len(invests_in),
+        len(has_investor),
+        len(partnered_with),
+        len(supplies),
+        len(has_supplier),
+    )
+    return {
+        "companies": str(companies_path),
+        "invests_in": str(invests_in_path),
+        "has_investor": str(has_investor_path),
+        "partnered_with": str(partnered_with_path),
+        "supplies": str(supplies_path),
+        "has_supplier": str(has_supplier_path),
+    }

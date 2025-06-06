@@ -466,6 +466,13 @@ poetry run abzu api sec download --ticker NVDA
 poetry run abzu api sec annual-report --ticker NVDA --year 2023
 poetry run abzu api sec annual-report --ticker NVDA --year 2023 --bfs
 poetry run abzu api sec annual-reports build kuzu
+# Output files are written to config.api.sec.build_kuzu.output_dir:
+# - companies.csv
+# - invests_in.csv
+# - has_investor.csv
+# - partnered_with.csv
+# - supplies.csv
+# - has_supplier.csv
 
 # Local
 abzu api financialdatasets facts -f
