@@ -183,3 +183,51 @@ def process_annual_reports_bfs(ticker: str, year: int, output_dir: str) -> list[
                 queue.append(sym)
 
     return list(processed)
+
+
+def process_annual_reports_bfs_bulk(tickers: list[str], output_dir: str) -> list[str]:
+    """Process annual reports in BFS order starting from ``tickers``.
+
+    Parameters
+    ----------
+    tickers:
+        List of starting ticker symbols.
+    output_dir:
+        Directory where downloaded and processed reports are stored.
+
+    Returns
+    -------
+    list[str]
+        Symbols of all processed tickers.
+    """
+
+    queue = [t.upper() for t in tickers]
+    processed: set[str] = set()
+
+    while queue:
+        current = queue.pop(0)
+        if current in processed:
+            continue
+
+        try:
+            year = _latest_10k_year(current)
+            path = process_annual_report(current, year, output_dir)
+        except Exception as exc:  # noqa: BLE001 - surface errors via log
+            logger.error("Failed to process %s: %s", current, exc)
+            continue
+
+        processed.add(current)
+
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                report_data = json.load(f)
+        except Exception as exc:  # noqa: BLE001
+            logger.error("Failed to read processed report for %s: %s", current, exc)
+            continue
+
+        for sym in _extract_related_tickers(report_data):
+            sym = sym.upper()
+            if sym not in processed and sym not in queue:
+                queue.append(sym)
+
+    return list(processed)
