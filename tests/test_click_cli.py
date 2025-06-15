@@ -93,6 +93,23 @@ TEST_COMMANDS = [
             "--ticker",
             "--year",
             "--output-dir",
+            "--bfs/--no-bfs",
+        ],
+    ),
+    (
+        "api sec annual-reports build kuzu --help",
+        [
+            "Usage: cli api sec annual-reports build kuzu [OPTIONS]",
+            "--input-dir",
+            "--output-dir",
+        ],
+    ),
+    (
+        "api sec annual-reports bulk --help",
+        [
+            "Usage: cli api sec annual-reports bulk [OPTIONS]",
+            "--input-file",
+            "--output-dir",
         ],
     ),
     (

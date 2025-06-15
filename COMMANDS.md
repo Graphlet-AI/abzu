@@ -116,10 +116,12 @@ abzu api sec download
 ```bash
 abzu api sec annual-report --ticker NVDA --year 2023
 ```
-- **What it does**: Downloads a plain text 10-K filing
+- **What it does**: Downloads a 10-K filing and extracts relationships with BAML
 - **How it works**:
   - Retrieves the filing HTML for the specified year
   - Saves the text to the annual reports directory
+  - Processes the text with the annual report BAML template
+  - Writes the JSON output prefixed with ``processed_`` in the same directory
 - **Why**: Enables LLM processing of annual reports
 
 ### 4. Development Commands

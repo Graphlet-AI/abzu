@@ -1,8 +1,11 @@
-"""CLI command to download SEC annual reports."""
+"""CLI command to download and process SEC annual reports."""
 
 import click
 
-from abzu.api.sec_downloader import download_annual_report
+from abzu.api.annual_report_processor import (
+    process_annual_report,
+    process_annual_reports_bfs,
+)
 from abzu.config import config
 from abzu.logs import get_logger
 
@@ -20,9 +23,19 @@ __all__ = ["annual_report"]
     default=config.get("api.sec.download.annual_reports"),
     help="Directory to save annual report text",
 )
-def annual_report(ticker: str, year: int, output_dir: str) -> None:
-    """Download a 10-K filing and save it as plain text."""
+@click.option(
+    "--bfs/--no-bfs",
+    default=False,
+    help="Follow related tickers in breadth-first order",
+)
+def annual_report(ticker: str, year: int, output_dir: str, bfs: bool) -> None:
+    """Download a 10-K filing and process it with BAML."""
 
-    path = download_annual_report(ticker, year, save_dir=output_dir)
-    logger.info(f"Saved annual report to {path}")
-    click.secho(f"Saved annual report to {path}", fg="green")
+    if bfs:
+        process_annual_reports_bfs(ticker, year, output_dir)
+        logger.info("Completed BFS annual report processing")
+        click.secho("Completed BFS annual report processing", fg="green")
+    else:
+        processed_path = process_annual_report(ticker, year, output_dir)
+        logger.info(f"Saved processed annual report to {processed_path}")
+        click.secho(f"Saved processed annual report to {processed_path}", fg="green")

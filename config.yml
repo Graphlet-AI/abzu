@@ -11,6 +11,8 @@ crawl:
     - "wsj.com"
     - "github.com"
     - "stocktwits.com"
+    - "x.com"
+    - "linkedin.com"
 
   semianalysis:
     output: "${base_dir}/articles/semianalysis.jsonl"
@@ -89,6 +91,8 @@ api:
       annual_reports: "${base_dir}/sec/annual_reports"
       form_type: "10-Q"
       ticker: null
+    build_kuzu:
+      output_dir: "${base_dir}/sec/kuzu"
 
 dump:
   companies:
