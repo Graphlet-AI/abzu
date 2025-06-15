@@ -11,6 +11,8 @@ crawl:
     - "wsj.com"
     - "github.com"
     - "stocktwits.com"
+    - "x.com"
+    - "linkedin.com"
 
   semianalysis:
     output: "${base_dir}/articles/semianalysis.jsonl"
