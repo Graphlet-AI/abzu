@@ -25,6 +25,7 @@ crawl:
       techcrunch: "https://techcrunch.com/feed/"
       wired: "https://www.wired.com/feed/tag/ai/latest/rss"
       nvidia-blog: "https://developer.nvidia.com/blog/rss"
+      nvidia-corp: "https://feeds.feedburner.com/nvidiablog"
     output_dir: "${base_dir}/rss"
 
   reddit:
