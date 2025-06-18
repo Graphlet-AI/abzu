@@ -45,9 +45,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Submodules - submodules go under `subs/`. Ignore them completely. Never write to submodules in anything you do.
 - Space Lines - never create a line with only spaces.
 - Imports - don't check if things are installed and handle it with a try/except. Instead, assume they are installed and import them directly. If they are not installed, the code will fail at runtime, which is acceptable in this project.
+- Always put spaces around operators and variables, e.g. `x = 1 + 2`, not `x=1+2`
 
 ## Claude Logic
 
+- Find the root cause of an issue before figuring out a solution. Fix problems.
+- Do not create workarounds for issues without asking. Always find the root cause of an issue and fix it.
 - Command Line Interfaces - at the end of your coding tasks, please alter the 'abzu' CLI to accommodate the changes.
 - Separate logic from the CLI - separate the logic under `abzu` and sub-modules from the command line interface (CLI) code in `abzu.cli`. The CLI should only handle input/output from/to the user and should not contain any business logic. For example the module for `abzu process kg` should be in `abzu.kg.*` and not in `abzu.cli.api`. Similarly, the module for `abzu process articles` should be in `abzu.articles.*` and not in `abzu.cli.api`.
 - Read the README - consult the README before taking action. The README contains information about the project and how to use it. If you need to add a new command or change an existing one, consult the README first.
