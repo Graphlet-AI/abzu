@@ -57,6 +57,10 @@ process:
       input: "${crawl.semianalysis.output}"
       output: "${base_dir}/articles/processed_semianalysis.jsonl"
 
+    datacenter:
+      input: "${crawl.datacenter.output}"
+      output: "${base_dir}/articles/processed_datacenter.jsonl"
+
     theinformation:
       input: "${crawl.theinformation.output}"
       output: "${base_dir}/articles/processed_theinformation.jsonl"
@@ -69,6 +73,7 @@ process:
     raw:
       input:
         - "${process.articles.semianalysis.output}"
+        - "${process.articles.datacenter.output}"
         - "${process.articles.theinformation.output}"
         - "${process.rss.output_dir}/processed_nvidia-blog.jsonl"
         - "${process.rss.output_dir}/processed_wired.jsonl"
