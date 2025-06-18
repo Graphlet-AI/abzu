@@ -87,7 +87,7 @@ def crawl_rss(
             logger.error("No feeds found in configuration at crawl.rss.feeds")
             return 1
 
-        logger.info(f"Processing {len(feeds)} feeds from configuration")
+        logger.debug(f"Processing {len(feeds)} feeds from configuration")
         for source, url in feeds.items():
             # Check if RSS feed URL should be ignored
             if url_extractor.should_ignore_url(url):

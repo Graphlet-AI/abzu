@@ -33,7 +33,7 @@ from abzu.config import config
 )
 def semianalysis(url, output_path, pages, batch_size, concurrent_requests):
     """Crawl SemiAnalysis website."""
-    from abzu.crawl import crawl_semianalysis
+    from abzu.crawl.semianalysis import crawl_semianalysis
 
     return crawl_semianalysis(
         url=url,
