@@ -27,7 +27,9 @@ crawl:
       RANDOMIZE_DOWNLOAD_DELAY: false
       CONCURRENT_REQUESTS: 1
       CONCURRENT_REQUESTS_PER_DOMAIN: 1
+      LOG_ENABLED: true
       LOG_LEVEL: "INFO"
+      LOG_FORMAT: "%(levelname)s: %(message)s"
 
   semianalysis:
     output: "${base_dir}/articles/semianalysis.jsonl"
