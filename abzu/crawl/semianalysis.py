@@ -38,21 +38,6 @@ class ArticleCrawler(scrapy.Spider):
     _total_articles_processed = 0
     _skipped_articles = 0
 
-    custom_settings = {
-        "COOKIES_ENABLED": False,
-        "RETRY_ENABLED": True,
-        "RETRY_TIMES": 3,
-        "AUTOTHROTTLE_ENABLED": True,
-        "AUTOTHROTTLE_START_DELAY": 0.5,
-        "AUTOTHROTTLE_MAX_DELAY": 5.0,
-        "DOWNLOAD_TIMEOUT": 10,
-        "DOWNLOAD_DELAY": 0.7,  # Enforce a minimum delay of 0.7 seconds between requests
-        "RANDOMIZE_DOWNLOAD_DELAY": False,  # Don't randomize the delay
-        "CONCURRENT_REQUESTS": 1,  # Only one request at a time
-        "CONCURRENT_REQUESTS_PER_DOMAIN": 1,  # Only one request per domain at a time
-        "LOG_LEVEL": "INFO",
-    }
-
     def __init__(
         self,
         archive_url: str,
@@ -72,6 +57,10 @@ class ArticleCrawler(scrapy.Spider):
         self.html_extractor = HTMLExtractor()
         # Initialize URL extractor
         self.url_extractor = URLExtractor()
+
+        # Load custom settings from config
+        spider_config = config.get("crawl.spider.config")
+        self.custom_settings = spider_config
 
     def parse(self, response: Response) -> Iterator[scrapy.Request]:
         """Parse the archive page and follow links to individual articles."""
@@ -168,10 +157,10 @@ class ArticleCrawler(scrapy.Spider):
                 logger.info(f"Extracted publication date: {posted_at}")
             except (ValueError, TypeError) as e:
                 logger.warning(f"Failed to parse posted_at for {response.url}: {e}")
-                posted_at = datetime.now()
+                posted_at = None
         else:
             logger.warning(f"No posted_at metadata found for {response.url}")
-            posted_at = datetime.now()
+            posted_at = None
 
         # Get the full HTML content
         html_content = response.text
@@ -195,7 +184,7 @@ class ArticleCrawler(scrapy.Spider):
                 "url": response.url,
                 "list_url": self.start_urls[0],
                 "title": title,
-                "posted_at": posted_at.isoformat(),
+                "posted_at": posted_at.isoformat() if posted_at else None,
                 "collected_at": datetime.now().isoformat(),
                 "content": extracted_text,
                 "urls": extracted_urls,
