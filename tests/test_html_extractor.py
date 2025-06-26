@@ -1,6 +1,9 @@
 """Unit tests for HTMLExtractor."""
 
+import logging
+
 import pytest
+from bs4 import BeautifulSoup
 
 from abzu.html_extractor import HTMLExtractor
 
@@ -300,3 +303,116 @@ def test_content_class_container(extractor):
     result = extractor.extract(html)
     assert "# Article Title" in result
     assert "Article content." in result
+
+
+def test_efficiency_logging_normal(extractor, caplog):
+    """Test that efficiency metrics are logged during extraction."""
+    html = """
+    <html>
+        <body>
+            <h1>Test Article</h1>
+            <p>This is a test paragraph with some content.</p>
+            <script>console.log('This should be removed');</script>
+        </body>
+    </html>
+    """
+
+    with caplog.at_level(logging.INFO):
+        result = extractor.extract(html)
+
+    # Verify extraction worked
+    assert "# Test Article" in result
+    assert "This is a test paragraph" in result
+    assert "console.log" not in result
+
+    # Verify efficiency was logged
+    assert any("Extracted text from HTML:" in record.message for record in caplog.records)
+    assert any("→" in record.message for record in caplog.records)
+    assert any("% reduction)" in record.message for record in caplog.records)
+
+
+def test_efficiency_logging_fallback(extractor, caplog, monkeypatch):
+    """Test that efficiency metrics are logged during fallback extraction."""
+
+    # Mock BeautifulSoup to raise an exception during normal extraction
+    def mock_soup_init(self, *args, **kwargs):
+        raise ValueError("Test exception")
+
+    # Patch only for the first call, then restore for fallback
+    call_count = 0
+    original_init = BeautifulSoup.__init__
+
+    def patched_init(self, *args, **kwargs):
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            raise ValueError("Test exception")
+        return original_init(self, *args, **kwargs)
+
+    monkeypatch.setattr(BeautifulSoup, "__init__", patched_init)
+
+    html = "<p>Test content</p>"
+    with caplog.at_level(logging.INFO):
+        result = extractor.extract(html)
+
+    # Should get text from fallback extraction
+    assert "Test content" in result
+
+    # Should have warning about failure
+    assert any("Failed to parse HTML on first pass" in record.message for record in caplog.records)
+    # Should have efficiency log with (fallback)
+    assert any(
+        "Extracted text from HTML (fallback):" in record.message for record in caplog.records
+    )
+
+
+def test_efficiency_logging_large_reduction(extractor, caplog):
+    """Test efficiency logging shows significant reduction for HTML-heavy content."""
+    html = """
+    <html>
+        <head>
+            <style>
+                body { margin: 0; padding: 0; font-family: Arial; }
+                .container { width: 100%; max-width: 1200px; }
+                /* Lots of CSS to increase HTML size */
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="wrapper">
+                    <div class="content">
+                        <h1>Small Title</h1>
+                        <p>Brief content.</p>
+                    </div>
+                </div>
+            </div>
+            <script>
+                // Lots of JavaScript code that will be removed
+                function doSomething() { console.log('test'); }
+                var data = [1, 2, 3, 4, 5];
+            </script>
+        </body>
+    </html>
+    """
+
+    with caplog.at_level(logging.INFO):
+        result = extractor.extract(html)
+
+    # Verify only the actual content was extracted
+    assert "# Small Title" in result
+    assert "Brief content." in result
+    assert len(result) < 100  # Result should be much smaller than input
+
+    # Find the efficiency log entry
+    efficiency_logs = [
+        r.message for r in caplog.records if "Extracted text from HTML:" in r.message
+    ]
+    assert len(efficiency_logs) == 1
+
+    # Verify it shows a high reduction percentage
+    import re
+
+    match = re.search(r"\((\d+\.\d+)% reduction\)", efficiency_logs[0])
+    assert match is not None
+    reduction_pct = float(match.group(1))
+    assert reduction_pct > 70  # Should have > 70% reduction due to all the HTML/CSS/JS

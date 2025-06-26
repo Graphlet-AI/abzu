@@ -14,11 +14,31 @@ crawl:
     - "x.com"
     - "linkedin.com"
 
+  spider:
+    config:
+      COOKIES_ENABLED: false
+      RETRY_ENABLED: true
+      RETRY_TIMES: 3
+      AUTOTHROTTLE_ENABLED: true
+      AUTOTHROTTLE_START_DELAY: 0.5
+      AUTOTHROTTLE_MAX_DELAY: 5.0
+      DOWNLOAD_TIMEOUT: 10
+      DOWNLOAD_DELAY: 0.7
+      RANDOMIZE_DOWNLOAD_DELAY: false
+      CONCURRENT_REQUESTS: 1
+      CONCURRENT_REQUESTS_PER_DOMAIN: 1
+      LOG_ENABLED: true
+      LOG_LEVEL: "INFO"
+      LOG_FORMAT: "%(levelname)s: %(message)s"
+
   semianalysis:
     output: "${base_dir}/articles/semianalysis.jsonl"
 
   theinformation:
     output: "${base_dir}/articles/theinformation.jsonl"
+
+  datacenter:
+    output: "${base_dir}/articles/datacenter.jsonl"
 
   rss:
     feeds:
@@ -40,6 +60,10 @@ process:
       input: "${crawl.semianalysis.output}"
       output: "${base_dir}/articles/processed_semianalysis.jsonl"
 
+    datacenter:
+      input: "${crawl.datacenter.output}"
+      output: "${base_dir}/articles/processed_datacenter.jsonl"
+
     theinformation:
       input: "${crawl.theinformation.output}"
       output: "${base_dir}/articles/processed_theinformation.jsonl"
@@ -52,6 +76,7 @@ process:
     raw:
       input:
         - "${process.articles.semianalysis.output}"
+        - "${process.articles.datacenter.output}"
         - "${process.articles.theinformation.output}"
         - "${process.rss.output_dir}/processed_nvidia-blog.jsonl"
         - "${process.rss.output_dir}/processed_wired.jsonl"

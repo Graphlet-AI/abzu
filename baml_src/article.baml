@@ -18,6 +18,9 @@ class IndustryArticle {
   posted_at string?
   @description("Date the article was published, in ISO-8601 format")
 
+  urls string[]?
+  @description("URLs mentioned in the article. This is a URL that was quoted or linked to. This is not the source of the article.")
+
   authors Author[]?
   @description("Authors of the article")
 

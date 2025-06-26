@@ -496,7 +496,7 @@ abzu api sec download
     "collected_at": "2025-04-15T04:20:37.763490",
     "content": "GlobalFoundries is still a...",
     "urls": [
-        "https://semianalysis.com/2021/06/21/globalfoundries-is-a-leading-edge/"
+        "https://fuse.wikichip.org/news/5588/a-look-at-trishul-arms-first-high-density-3d-logic-stacked-test-chip/"
     ]
 }
 ```

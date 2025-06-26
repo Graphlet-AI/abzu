@@ -49,6 +49,7 @@ This file provides guidance to OpenAI Codex when working with code in this repos
 
 - Command Line Interfaces - at the end of your coding tasks, please alter the 'abzu' CLI to accommodate the changes.
 - Separate logic from the CLI - separate the logic under `abzu` and sub-modules from the command line interface (CLI) code in `abzu.cli`. The CLI should only handle input/output from/to the user and should not contain any business logic. For example the module for `abzu process kg` should be in `abzu.kg.*` and not in `abzu.cli.api`. Similarly, the module for `abzu process articles` should be in `abzu.articles.*` and not in `abzu.cli.api`.
+- Help strings - never put the default option values in the help strings. The help strings should only describe what the option does, not what the default value is. The default values are already documented in the `config.yml` file and will be printed via the `@click.command(context_settings={"show_default": True})` decorator of each Click command.
 - Read the README - consult the README before taking action. The README contains information about the project and how to use it. If you need to add a new command or change an existing one, consult the README first.
 - Update the README - if appropriate, update the README with any new commands or changes to existing commands. The README should always reflect the current state of the project.
 - Use Poetry - use poetry for dependency management and packaging. Do not use pip or conda.

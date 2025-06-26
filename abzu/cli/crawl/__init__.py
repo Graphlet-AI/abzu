@@ -2,6 +2,7 @@
 
 import click
 
+from abzu.cli.crawl.datacenter import datacenter
 from abzu.cli.crawl.reddit import reddit
 from abzu.cli.crawl.rss import rss
 from abzu.cli.crawl.semianalysis import semianalysis
@@ -14,6 +15,7 @@ def crawl():
     pass
 
 
+crawl.add_command(datacenter)
 crawl.add_command(semianalysis)
 crawl.add_command(theinformation)
 crawl.add_command(rss)

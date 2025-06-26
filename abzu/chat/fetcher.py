@@ -163,17 +163,6 @@ class ContentFetcher:
             # Extract clean text using HTMLExtractor
             extracted_text = self.html_extractor.extract(html_content)
 
-            # Log the extraction result
-            original_size = len(html_content)
-            extracted_size = len(extracted_text)
-            reduction_pct = (
-                ((original_size - extracted_size) / original_size * 100) if original_size > 0 else 0
-            )
-            logger.info(
-                f"Extracted text from HTML: {original_size:,} → {extracted_size:,} chars "
-                f"({reduction_pct:.1f}% reduction)"
-            )
-
             # Extract title and posted date from original HTML
             title = self.extract_title(html_content)
             posted_at = self.extract_posted_date(html_content, url)

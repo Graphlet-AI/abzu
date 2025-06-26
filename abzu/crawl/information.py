@@ -76,17 +76,6 @@ def extract_text_from_url(session: requests.Session, url: str) -> str:
     html_extractor = HTMLExtractor()
     extracted_text = html_extractor.extract(resp.text)
 
-    # Log the extraction
-    original_size = len(resp.text)
-    extracted_size = len(extracted_text)
-    reduction_pct = (
-        ((original_size - extracted_size) / original_size * 100) if original_size > 0 else 0
-    )
-    logger.debug(
-        f"Extracted text from {url}: {original_size:,} → {extracted_size:,} chars "
-        f"({reduction_pct:.1f}% reduction)"
-    )
-
     return extracted_text
 
 
@@ -173,16 +162,6 @@ def parse_rss_and_save(rss_url: str, output_file: str, session: requests.Session
             html_extractor = HTMLExtractor()
             content = html_extractor.extract(resp.text)
 
-            # Log the extraction
-            original_size = len(resp.text)
-            extracted_size = len(content)
-            reduction_pct = (
-                ((original_size - extracted_size) / original_size * 100) if original_size > 0 else 0
-            )
-            logger.debug(
-                f"Extracted text from {link}: {original_size:,} → {extracted_size:,} chars "
-                f"({reduction_pct:.1f}% reduction)"
-            )
             logger.debug(f"Extracted {len(extracted_urls)} URLs from {link}")
 
         except requests.exceptions.HTTPError as e:
