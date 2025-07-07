@@ -52,6 +52,13 @@ class BaseArticleCrawler(scrapy.Spider, ABC):
     _backup_done = False
     _total_articles_processed = 0
     _skipped_articles = 0
+    _custom_settings = {
+        "USER_AGENT": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+        "DEFAULT_REQUEST_HEADERS": {
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.9",
+        },
+    }
 
     def __init__(
         self,
@@ -142,7 +149,13 @@ class BaseArticleCrawler(scrapy.Spider, ABC):
                     new_articles += 1
                     self._logger.info(f"Queuing new article URL: {absolute_url}")
                     yield scrapy.Request(
-                        absolute_url, callback=self.parse_article, errback=self.handle_error
+                        absolute_url,
+                        callback=self.parse_article,
+                        errback=self.handle_error,
+                        headers={
+                            "Referer": "https://www.google.com/",
+                            "Cache-Control": "max-age=0",
+                        },
                     )
 
         self._logger.info(
