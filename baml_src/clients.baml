@@ -30,7 +30,7 @@ client<llm> CustomGemini25Pro {
     provider google-ai
     retry_policy Exponential
     options {
-        model "gemini-2.5-pro-preview-03-25"
+        model "gemini-2.5-pro-preview-06-05"
         api_key env.GEMINI_API_KEY
     }
 }
