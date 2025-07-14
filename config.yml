@@ -13,6 +13,7 @@ crawl:
     - "stocktwits.com"
     - "x.com"
     - "linkedin.com"
+    - "docs.google.com"
 
   spider:
     config:
@@ -48,7 +49,22 @@ crawl:
       wired: "https://www.wired.com/feed/tag/ai/latest/rss"
       nvidia-blog: "https://developer.nvidia.com/blog/rss"
       nvidia-corp: "https://feeds.feedburner.com/nvidiablog"
+      robohub: "https://robohub.org/feed/"
+      semi-engineering: "https://semiengineering.com/feed"
+      semi-today-features: "https://www.semiconductor-today.com/rss/features.xml"
+      neutron-bytes: "https://neutronbytes.com/feed/"
+      ee-times: "https://www.eetimes.com/tag/semiconductors/feed/"
+      robotics-tomorrow-news: "https://www.roboticstomorrow.com/rss/news/"
+      robotics-tomorrow-robotics: "https://www.roboticstomorrow.com/rss/robotics/"
+      new-atlas: "https://newatlas.com/robotics/index.rss"
+      techxplore: "https://techxplore.com/rss-feed/semiconductors-news/"
+      ee-journal: "https://www.eejournal.com/category/semiconductor/feed/"
+      any-silicon: "https://anysilicon.com/feed/"
+      fabricated-knowledge: "https://www.fabricatedknowledge.com/feed"
+      planet-analog: "https://www.planetanalog.com/feed/"
+      ieee-spectrum-semi: "https://spectrum.ieee.org/feeds/topic/semiconductors.rss"
     output_dir: "${base_dir}/rss"
+    min_year: 2024
 
   reddit:
     input: "${crawl.tickers}"
