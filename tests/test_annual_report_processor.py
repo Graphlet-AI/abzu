@@ -1,10 +1,10 @@
-import pytest
+from typing import Any, Dict
 
 from abzu.api.annual_report_processor import enrich_company_tickers
 
 
 def test_enrich_company_tickers() -> None:
-    data = {
+    data: Dict[str, Any] = {
         "reporting_company": {"name": "Alpha Inc"},
         "suppliers": [
             {
@@ -23,7 +23,7 @@ def test_enrich_company_tickers() -> None:
         ],
     }
 
-    sec_map = {
+    sec_map: Dict[str, str] = {
         "alpha": "ALP",
         "beta": "BET",
         "gamma": "GAM",
