@@ -4,7 +4,7 @@ import json
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Optional
 
 import praw
 from praw.models import Comment, Submission
@@ -15,7 +15,7 @@ from abzu.logs import get_logger
 logger = get_logger(__name__)
 
 
-def save_to_jsonl(posts: List[Dict], ticker: str, output_path: Path) -> None:
+def save_to_jsonl(posts: list[dict], ticker: str, output_path: Path) -> None:
     """Save posts to JSONL format matching theinformation.jsonl structure."""
     with open(output_path, "w", encoding="utf-8") as f:
         for post in posts:
@@ -74,7 +74,7 @@ class RedditFetcher:
             user_agent=user_agent,
         )
 
-    def fetch_hot_posts(self, subreddit: str, limit: int = 10) -> List[Dict]:
+    def fetch_hot_posts(self, subreddit: str, limit: int = 10) -> list[dict]:
         """
         Fetch hot posts from a subreddit.
 
@@ -87,7 +87,7 @@ class RedditFetcher:
 
         Returns
         -------
-        List[Dict]
+        list[dict]
             List of post data dictionaries
         """
         posts = []
@@ -99,7 +99,7 @@ class RedditFetcher:
 
         return posts
 
-    def fetch_new_posts(self, subreddit: str, limit: int = 10) -> List[Dict]:
+    def fetch_new_posts(self, subreddit: str, limit: int = 10) -> list[dict]:
         """
         Fetch new posts from a subreddit.
 
@@ -112,7 +112,7 @@ class RedditFetcher:
 
         Returns
         -------
-        List[Dict]
+        list[dict]
             List of post data dictionaries
         """
         posts = []
@@ -126,7 +126,7 @@ class RedditFetcher:
 
     def fetch_top_posts(
         self, subreddit: str, time_filter: str = "day", limit: int = 10
-    ) -> List[Dict]:
+    ) -> list[dict]:
         """
         Fetch top posts from a subreddit.
 
@@ -141,7 +141,7 @@ class RedditFetcher:
 
         Returns
         -------
-        List[Dict]
+        list[dict]
             List of post data dictionaries
         """
         posts = []
@@ -153,7 +153,7 @@ class RedditFetcher:
 
         return posts
 
-    def fetch_post_with_comments(self, post_id: str, comment_limit: int = 20) -> Dict:
+    def fetch_post_with_comments(self, post_id: str, comment_limit: int = 20) -> dict:
         """
         Fetch a specific post with its comments.
 
@@ -166,7 +166,7 @@ class RedditFetcher:
 
         Returns
         -------
-        Dict
+        dict
             Post data with comments
         """
         submission = self.reddit.submission(id=post_id)
@@ -185,7 +185,7 @@ class RedditFetcher:
 
     def search_posts(
         self, query: str, subreddit: Optional[str] = None, limit: int = 10
-    ) -> List[Dict]:
+    ) -> list[dict]:
         """
         Search for posts.
 
@@ -200,7 +200,7 @@ class RedditFetcher:
 
         Returns
         -------
-        List[Dict]
+        list[dict]
             List of matching post data dictionaries
         """
         posts = []
@@ -217,7 +217,7 @@ class RedditFetcher:
 
         return posts
 
-    def _extract_submission_data(self, submission: Submission) -> Dict:
+    def _extract_submission_data(self, submission: Submission) -> dict:
         """
         Extract data from a Reddit submission.
 
@@ -228,7 +228,7 @@ class RedditFetcher:
 
         Returns
         -------
-        Dict
+        dict
             Extracted submission data
         """
         return {
@@ -254,7 +254,7 @@ class RedditFetcher:
             "spoiler": submission.spoiler,
         }
 
-    def fetch_ticker_posts(self, ticker: str, limit: int = 25) -> List[Dict]:
+    def fetch_ticker_posts(self, ticker: str, limit: int = 25) -> list[dict]:
         """
         Fetch posts for a specific ticker across multiple finance subreddits.
 
@@ -267,7 +267,7 @@ class RedditFetcher:
 
         Returns
         -------
-        List[Dict]
+        list[dict]
             List of unique posts mentioning the ticker
         """
         # Finance-related subreddits
@@ -317,7 +317,7 @@ class RedditFetcher:
 
         return final_posts
 
-    def _extract_comment_data(self, comment: Comment) -> Dict:
+    def _extract_comment_data(self, comment: Comment) -> dict:
         """
         Extract data from a Reddit comment.
 
@@ -328,7 +328,7 @@ class RedditFetcher:
 
         Returns
         -------
-        Dict
+        dict
             Extracted comment data
         """
         return {

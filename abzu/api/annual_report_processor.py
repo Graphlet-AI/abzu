@@ -6,7 +6,7 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 from abzu.api.sec_downloader import (
     download_annual_report,
@@ -21,7 +21,7 @@ from abzu.spark.ticker_enrichment import _best_match, load_sec_map
 logger = logging.getLogger(__name__)
 
 
-def enrich_company_tickers(data: Dict[str, Any], sec_map: Dict[str, str] | None = None) -> None:
+def enrich_company_tickers(data: dict[str, Any], sec_map: dict[str, str] | None = None) -> None:
     """Populate missing ticker information for companies in annual report data.
 
     Parameters
@@ -36,7 +36,7 @@ def enrich_company_tickers(data: Dict[str, Any], sec_map: Dict[str, str] | None 
     if sec_map is None:
         sec_map = load_sec_map()
 
-    def update_company(company: Dict[str, Any] | None) -> None:
+    def update_company(company: dict[str, Any] | None) -> None:
         if not company or company.get("ticker"):
             return
         ticker, score = _best_match(company.get("name", ""), sec_map)

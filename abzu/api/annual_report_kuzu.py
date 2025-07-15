@@ -6,7 +6,7 @@ import csv
 import json
 import re
 from pathlib import Path
-from typing import Any, Dict, Iterable, Optional
+from typing import Any, Iterable, Optional
 
 from cleanco import basename
 
@@ -15,7 +15,7 @@ from abzu.logs import get_logger
 logger = get_logger(__name__)
 
 
-def _company_id(company: Dict[str, Any]) -> str:
+def _company_id(company: dict[str, Any]) -> str:
     ticker = company.get("ticker")
     symbol: str | None = None
     if isinstance(ticker, dict):
@@ -39,7 +39,7 @@ def _company_id(company: Dict[str, Any]) -> str:
     return ""
 
 
-def _add_company(companies: Dict[str, Dict[str, Optional[str]]], company: Dict[str, Any]) -> str:
+def _add_company(companies: dict[str, dict[str, Optional[str]]], company: dict[str, Any]) -> str:
     cid = _company_id(company)
     if not cid:
         return ""
@@ -59,7 +59,7 @@ def _add_company(companies: Dict[str, Dict[str, Optional[str]]], company: Dict[s
 
 def _process_file(
     path: Path,
-    companies: Dict[str, Dict[str, Optional[str]]],
+    companies: dict[str, dict[str, Optional[str]]],
     invests_in: set[tuple[str, str]],
     has_investor: set[tuple[str, str]],
     partnered_with: set[tuple[str, str]],
@@ -143,7 +143,7 @@ def build_annual_report_kuzu_graph(input_dir: str, output_dir: str) -> dict[str,
     if not base.exists():
         raise FileNotFoundError(f"Input directory not found: {input_dir}")
 
-    companies: Dict[str, Dict[str, Optional[str]]] = {}
+    companies: dict[str, dict[str, Optional[str]]] = {}
     invests_in: set[tuple[str, str]] = set()
     has_investor: set[tuple[str, str]] = set()
     partnered_with: set[tuple[str, str]] = set()

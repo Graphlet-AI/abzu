@@ -3,7 +3,6 @@
 import json
 import re
 from pathlib import Path
-from typing import Dict, Tuple
 
 import pandas as pd
 import requests
@@ -41,7 +40,7 @@ def _load_sec_companies(cache_path: Path = Path(config.get("dump.tickers.cache")
     return df
 
 
-def _best_match(name: str, sec_map: Dict[str, str]) -> Tuple[str | None, float]:
+def _best_match(name: str, sec_map: dict[str, str]) -> tuple[str | None, float]:
     """Return best ticker match and score for a company name."""
     norm = _normalize(name)
     if norm in sec_map:
