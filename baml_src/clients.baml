@@ -16,11 +16,11 @@ client<llm> CustomGPT4o {
   }
 }
 
-client<llm> CustomGemini20Flash {
+client<llm> CustomGemini25Flash {
     provider google-ai
     retry_policy Constant
     options {
-        model "gemini-2.0-flash"
+        model "gemini-2.5-flash"
         api_key env.GEMINI_API_KEY
     }
 }
