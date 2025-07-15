@@ -63,8 +63,8 @@ crawl:
       wired: "https://www.wired.com/feed/tag/ai/latest/rss"
       wsj-markets: "https://feeds.content.dowjones.io/public/rss/RSSMarketsMain"
       wsj-tech: "https://feeds.content.dowjones.io/public/rss/RSSWSJD"
-  output_dir: "${base_dir}/rss"
-  min_year: 2024
+    output_dir: "${base_dir}/rss"
+    min_year: 2024
 
   reddit:
     input: "${crawl.tickers}"
