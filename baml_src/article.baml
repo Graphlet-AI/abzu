@@ -49,7 +49,7 @@ class IndustryArticle {
   @description("Technologies mentioned in the article. Technologies does not include products")
 
   deals Deal[]?
-  @description("Commercial deals mentioned in the article: sales, acquisitions or investments.")
+  @description("Commercial deals mentioned in the article: sales, acquisitions, financing or investments.")
 
   cited_sources NewsSource[]?
   @description("News sources mentioned in the article. This is a news source that was quoted or linked to. This is not the source of the article.")
@@ -192,6 +192,7 @@ class Investor {
 enum DealType {
   Sale @description("Sale of a product or technology")
   Acquisition @description("Acquisition of a company")
+  Financing @description("Financing of a company or deal between companies)
   Investment @description("Investment in a company or country")
 }
 
@@ -209,7 +210,7 @@ class Deal {
   @description("Products involved in the deal. This is the product that was sold, acquired or invested in.")
 
   type DealType
-  @description("Type of the deal: Sale, Acquisition or Investment. No partnerships.")
+  @description("Type of the deal: Sale, Acquisition, Financing or Investment. No partnerships.")
 
   description string
   @description("Description of the deal. What was bought, sold or invested in and by who? For how much money in which currency?")
