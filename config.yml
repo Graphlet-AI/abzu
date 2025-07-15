@@ -84,6 +84,10 @@ process:
       input: "${crawl.theinformation.output}"
       output: "${base_dir}/articles/processed_theinformation.jsonl"
 
+    reddit:
+      input: "${crawl.reddit.output}"
+      output: "${base_dir}/reddit/processed_reddit_posts.jsonl"
+
   rss:
     input_dir: "${crawl.rss.output_dir}"
     output_dir: "${base_dir}/rss/processed"
@@ -94,11 +98,11 @@ process:
         - "${process.articles.semianalysis.output}"
         - "${process.articles.datacenter.output}"
         - "${process.articles.theinformation.output}"
+        - "${process.articles.reddit.output}"
         - "${process.rss.output_dir}/processed_nvidia-blog.jsonl"
         - "${process.rss.output_dir}/processed_wired.jsonl"
         - "${process.rss.output_dir}/processed_techcrunch.jsonl"
         - "${chat.start.processed_articles}"
-        # - "${crawl.reddit.output}"
       output: "${base_dir}/knowledge_graph"
 
     refine:
