@@ -69,6 +69,7 @@ EXCHANGE_SUFFIX_MAP = {
     "NK": "NSE",  # Nagoya Stock Exchange
     "SP": "SSE",  # Sapporo Securities Exchange
     "FS": "FSE",  # Fukuoka Stock Exchange
+    "JP": "JPX",  # Japan Exchange Group
     # Asia - South Korea
     "KS": "KOSPI",  # Korea Exchange (KOSPI)
     "KQ": "KOSDAQ",  # Korea Exchange (KOSDAQ)
