@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """Build a knowledge graph from pre-processed articles."""
-from pathlib import Path
 from typing import Optional
 
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame, SparkSession
-from pyspark.sql import types as T
+from pyspark.sql.window import Window
 
 from abzu.config import config
+from abzu.finance.symbols import EXCHANGE_SUFFIX_MAP
 from abzu.logs import get_logger
 from abzu.spark.config import get_spark_session
 
@@ -34,147 +34,120 @@ def build_knowledge_graph(
     )
 
     logger.info(f"Reading processed articles from {input_path} ...")
-    processed_df: DataFrame = spark.read.json(input_path)
-    logger.info(f"Loaded {processed_df.count():,} processed articles")
+    articles_df: DataFrame = spark.read.json(input_path)
+    logger.info(f"Loaded {articles_df.count():,} processed articles")
 
     # Show a sample record
-    processed_df.show(1, truncate=100, vertical=True)
+    articles_df.show(1, truncate=100, vertical=True)
 
     # Extract entities into separate dataframes
     logger.info("Extracting entities from documents ...")
 
-    # Extract companies with deduplication
+    # Extract companies
     logger.info("Extracting companies ...")
-    companies_raw_df = processed_df.select(
-        F.explode_outer(F.col("companies")).alias("company")
-    ).filter("company IS NOT NULL")
-
-    # Need to handle the companies schema based on what's returned
-    # First select all fields from the company struct
-    companies_df = companies_raw_df.select("company.*")
-    companies_df = companies_df.dropDuplicates(["name"])
-    logger.info(f"Extracted {companies_df.count():,} unique companies")
-
-    # Extract products with company relationships
-    logger.info("Extracting products")
-    products_raw_df = processed_df.select(
-        F.explode_outer(F.col("products")).alias("product")
-    ).filter("product IS NOT NULL")
-
-    # Select all fields from the product struct
-    products_df = products_raw_df.select("product.*")
-
-    # We need to handle nested structures carefully
-    # For deduplication, create name columns
-    products_df = products_df.withColumn("manufacturer_name", F.col("manufacturer.name"))
-    products_df = products_df.dropDuplicates(["name", "manufacturer_name"])
-    logger.info(f"Extracted {products_df.count():,} unique products")
-
-    # Extract technologies with company relationships
-    logger.info("Extracting technologies ...")
-    technologies_raw_df = processed_df.select(
-        F.explode_outer(F.col("technologies")).alias("technology")
-    ).filter("technology IS NOT NULL")
-
-    # Select all fields from the technology struct
-    technologies_df = technologies_raw_df.select("technology.*")
-    logger.info("Technology expanded schema:")
-    technologies_df.printSchema()
-
-    # For deduplication, create name columns
-    technologies_df = technologies_df.withColumn("developer_name", F.col("developer.name"))
-    technologies_df = technologies_df.dropDuplicates(["name", "developer_name"])
-    logger.info(f"Extracted {technologies_df.count():,} unique technologies")
-
-    # Extract tickers
-    logger.info("Extracting tickers ...")
-    tickers_raw_df = processed_df.select(F.explode_outer(F.col("tickers")).alias("ticker")).filter(
-        "ticker IS NOT NULL"
+    companies_raw_df = (
+        articles_df.select(F.explode_outer(F.col("companies")).alias("company"))
+        .filter("company IS NOT NULL")
+        .select("company.*")
     )
 
-    # Select all fields from the ticker struct
-    ticker_field = tickers_raw_df.schema["ticker"]
-    if isinstance(ticker_field.dataType, T.StructType):
-        tickers_df = tickers_raw_df.select("ticker.*")
-    else:
-        tickers_df = tickers_raw_df.select(
-            F.lit(None).cast(T.StringType()).alias("name"),
-            F.col("ticker").cast(T.StringType()).alias("symbol"),
-            F.lit(None).cast(T.StringType()).alias("exchange"),
+    # Handle the lack of companies in the articles gracefully
+    logger.info(f"Total companies raw: {companies_raw_df.count():,}")
+    if companies_raw_df.isEmpty():
+        logger.warning("No companies found in the articles. Exiting.")
+        return
+
+    #
+    # Get a list of company names and exchanges per symbol
+    #
+
+    tickers_df = companies_raw_df.filter("ticker IS NOT NULL").select("ticker.*")
+    tickers_df.show(5, truncate=100, vertical=True)
+    logger.info(f"Total tickers: {tickers_df.count():,}")
+
+    # Group tickers by symbol to get a list of exchanges and names
+    grouped_tickers_df = tickers_df.groupby("symbol").agg(
+        F.collect_list("exchange").alias("exchanges"),
+        F.collect_list("name").alias("names"),
+        F.count("*").alias("symbol_count"),
+    )
+
+    #
+    # Tickers are sometimes attached to the symbol via a period. Take this if no exchange is provided.
+    #
+
+    # First, we need to go back to the original tickers_df to count exchange occurrences
+    ticker_exchange_counts_df = (
+        tickers_df.filter(F.col("exchange").isNotNull())
+        .groupBy("symbol", "exchange")
+        .agg(F.count("*").alias("exchange_count"))
+    )
+
+    # Use window function to rank exchanges by count for each symbol
+    window_spec = Window.partitionBy("symbol").orderBy(F.desc("exchange_count"))
+
+    most_common_exchange_df = (
+        ticker_exchange_counts_df.withColumn("rank", F.row_number().over(window_spec))
+        .filter(F.col("rank") == 1)
+        .select("symbol", F.col("exchange").alias("official_exchange"))
+    )
+
+    # Join back with unique_tickers_df
+    unique_tickers_with_official_exchange_df = grouped_tickers_df.join(
+        most_common_exchange_df, on="symbol", how="left"
+    )
+
+    # For symbols with only one exchange or where join didn't match, use the first exchange
+    unique_tickers_with_official_exchange_df = unique_tickers_with_official_exchange_df.withColumn(
+        "official_exchange",
+        F.when(
+            F.col("official_exchange").isNull(),
+            F.when(F.size("exchanges") >= 1, F.col("exchanges").getItem(0)).otherwise(None),
+        ).otherwise(F.col("official_exchange")),
+    )
+
+    # Clean up ticker symbols and extract exchange from symbol if needed
+    # Handle cases like "2590.HK" where .HK indicates the exchange HKEX
+    tickers_with_split_exchange_df = (
+        unique_tickers_with_official_exchange_df.withColumn(
+            "symbol_parts", F.split(F.col("symbol"), "\\.")
         )
-    tickers_df = tickers_df.dropDuplicates(["symbol"])
-    logger.info(f"Extracted {tickers_df.count():,} unique ticker symbols")
-
-    # Create company relationships
-    logger.info("Creating company-ticker relationships ...")
-    company_ticker_schema = companies_df.schema["ticker"]
-    if isinstance(company_ticker_schema.dataType, T.StructType):
-        company_ticker_df = (
-            companies_df.filter(F.col("ticker").isNotNull())
-            .select(
-                F.col("name").alias("company_name"),
-                F.col("ticker.symbol").alias("ticker_symbol"),
-            )
-            .dropDuplicates()
+        .withColumn("clean_symbol", F.col("symbol_parts").getItem(0))
+        .withColumn(
+            "symbol_exchange",
+            F.when(F.size("symbol_parts") > 1, F.col("symbol_parts").getItem(1)).otherwise(None),
         )
-    else:
-        company_ticker_df = (
-            companies_df.filter(F.col("ticker").isNotNull())
-            .select(
-                F.col("name").alias("company_name"),
-                F.col("ticker").cast(T.StringType()).alias("ticker_symbol"),
-            )
-            .dropDuplicates()
+        .withColumn(
+            "final_exchange",
+            F.when(
+                # If we already have an official exchange, use it
+                F.col("official_exchange").isNotNull(),
+                F.col("official_exchange"),
+            ).otherwise(
+                # Otherwise, use the exchange from the symbol suffix
+                F.col("symbol_exchange")
+            ),
         )
-
-    # Product-Company relationships
-    logger.info("Creating product-company relationships ...")
-    product_company_df = products_df.select(
-        F.col("name").alias("product_name"),
-        F.col("manufacturer_name").alias("company_name"),
-    ).dropDuplicates()
-
-    # Technology-Company relationships
-    logger.info("Creating technology-company relationships ...")
-    tech_company_df = technologies_df.select(
-        F.col("name").alias("technology_name"),
-        F.col("developer_name").alias("company_name"),
-    ).dropDuplicates()
-
-    # Save data
-    logger.info(f"Saving knowledge graph to {output_path} ...")
-    Path(output_path).mkdir(parents=True, exist_ok=True)
-
-    # Save all dataframes
-    logger.info("Saving documents")
-    processed_df.write.mode("overwrite").parquet(f"{output_path}/documents.parquet")
-
-    logger.info("Saving entities")
-    companies_df.write.mode("overwrite").parquet(f"{output_path}/companies.parquet")
-    products_df.write.mode("overwrite").parquet(f"{output_path}/products.parquet")
-    technologies_df.write.mode("overwrite").parquet(f"{output_path}/technologies.parquet")
-    tickers_df.write.mode("overwrite").parquet(f"{output_path}/tickers.parquet")
-
-    logger.info("Saving relationships")
-    company_ticker_df.write.mode("overwrite").parquet(
-        f"{output_path}/company_ticker_relationships.parquet"
-    )
-    product_company_df.write.mode("overwrite").parquet(
-        f"{output_path}/product_company_relationships.parquet"
-    )
-    tech_company_df.write.mode("overwrite").parquet(
-        f"{output_path}/tech_company_relationships.parquet"
+        .withColumn(
+            "final_symbol",
+            F.when(
+                # If official exchange exists, remove the suffix from symbol
+                F.col("official_exchange").isNotNull(),
+                F.col("clean_symbol"),
+            ).otherwise(
+                # Otherwise, keep the original symbol
+                F.col("symbol")
+            ),
+        )
     )
 
-    logger.info("Knowledge graph build complete")
+    # Now nominate the clean symbol and exchange
+    clean_tickers_df = tickers_with_split_exchange_df.selectExpr(
+        "final_symbol AS symbol",
+        "final_exchange AS exchange",
+        "names",
+    )
+    clean_tickers_df.show(5, truncate=100, vertical=True)
 
-    # Log summary stats
-    logger.info("Knowledge Graph Statistics:")
-    logger.info(f"- Documents: {processed_df.count():,}")
-    logger.info(f"- Companies: {companies_df.count():,}")
-    logger.info(f"- Products: {products_df.count():,}")
-    logger.info(f"- Technologies: {technologies_df.count():,}")
-    logger.info(f"- Tickers: {tickers_df.count():,}")
-    logger.info(f"- Company-Ticker relationships: {company_ticker_df.count():,}")
-    logger.info(f"- Product-Company relationships: {product_company_df.count():,}")
-    logger.info(f"- Technology-Company relationships: {tech_company_df.count():,}")
+
+EXCHANGE_SUFFIX_MAP
