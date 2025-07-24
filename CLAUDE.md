@@ -4,14 +4,69 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
+### Development
 - Install Dependencies: `poetry install`
 - Run CLI: `poetry run abzu`
 - Build/Generate abzu/baml_client code: `baml-cli generate`
-- Test baml_src code: `baml-cli test`, `poetry run pytest tests/`
+- Test baml_src code: `baml-cli test`
+- Test all: `poetry run pytest tests/`
 - Test single: `poetry run pytest tests/path_to_test.py::test_name`
-- Lint: `pre-commit run --all-files`, `poetry run flake8`
-- Format: `poetry run black .`, `poetry run isort .`
-- Type check: `poetry run mypy`
+- Test specific cache modes: `poetry run pytest -e ABZU_CACHE_MODE=hybrid tests/test_sync.py`
+- Lint: `pre-commit run --all-files`, `poetry run flake8 abzu tests`
+- Format: `poetry run black abzu tests`, `poetry run isort abzu tests`
+- Type check: `poetry run mypy abzu tests`
+
+### Docker Development (via Taskfile)
+- Setup: `task setup` (builds container)
+- Start services: `task up` (runs all services in background)
+- Stop services: `task down`
+- Container shell: `task shell`
+- Run tests: `task test`
+- Format code: `task format`
+- Lint code: `task lint`
+- See all tasks: `task help`
+
+### Common Workflows
+- Crawl articles: `abzu crawl semianalysis`, `abzu crawl theinformation`, `abzu crawl rss -f feeds.txt`
+- Process articles: `abzu process articles semianalysis`
+- Build KG: `abzu process kg raw`, then `abzu process kg refine`
+- API operations: `abzu api financialdatasets`, `abzu api sec download --ticker NVDA`
+- Run pipeline steps: `abzu steps`
+
+## Architecture Overview
+
+### Project Structure
+- **abzu/** - Core application code
+  - **api/** - External API integrations (SEC, FinancialDatasets)
+  - **articles/** - Article processing logic
+  - **chat/** - Discord bot functionality
+  - **cli/** - Click-based CLI commands (no business logic here)
+  - **crawl/** - Web crawlers (Scrapy-based)
+  - **dump/** - Data export utilities
+  - **kg/** - Knowledge graph processing (Spark/GraphFrames)
+  - **reddit/** - Reddit data fetching
+  - **spark/** - PySpark data processing utilities
+  - **workflows/** - Dapr workflow definitions
+- **baml_src/** - BAML templates for LLM extraction
+- **data/** - Default data storage directory
+- **tests/** - Test suite
+
+### Key Technologies
+- **LLM Integration**: BAML (Boundary AI Markup Language) for structured extraction
+- **Data Processing**: Apache Spark (PySpark) for ETL and graph operations
+- **Graph Database**: Kuzu for graph storage and queries
+- **Web Crawling**: Scrapy with custom spiders
+- **Caching Modes**: 
+  - none: No caching (legacy)
+  - local: Redis + disk
+  - hybrid: Dapr state store (Redis) + S3/MinIO
+
+### Data Flow
+1. **Crawling**: Fetch articles → JSONL files
+2. **Processing**: Extract entities via BAML/LLM → processed JSONL
+3. **KG Raw**: Build initial graph → Parquet files (vertices/edges)
+4. **KG Refine**: Deduplicate and enrich → refined Parquet files
+5. **APIs**: Enrich with financial/SEC data
 
 ## Code Style
 
@@ -31,7 +86,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Tests: Don't make a class to contain unit tests. Just write the tests in pytest style.
 - Type hints: Use Python 3.9 type hints for all function parameters and return types. Use `list`, `dict`, `tuple`, etc. instead of `List`, `Dict`, `Tuple` from the `typing` module. Use `Optional` from the `typing` module for optional parameters.
 - Type checking: Use mypy for type checking, run mypy before committing code
-- Logging: Use logging for error handling, avoid print statements
+- Logging: Use logging for error handling, avoid print statements. Always use `from abzu.logs import get_logger` and `logger = get_logger(__name__)`
 - Documentation: Use Sphinx for documentation, include docstrings in all public functions/classes
 - Code style: Follow PEP 8 for Python code style, use flake8 for linting
 - Mypy: Use mypy for type checking, run mypy before committing code. Configure it in `pyproject.toml`, not `mypy.ini`.
@@ -46,7 +101,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Space Lines - never create a line with only spaces.
 - Imports - don't check if things are installed and handle it with a try/except. Instead, assume they are installed and import them directly. If they are not installed, the code will fail at runtime, which is acceptable in this project.
 
-## Claude Logic
+## Development Guidelines
 
 - Command Line Interfaces - at the end of your coding tasks, please alter the 'abzu' CLI to accommodate the changes. It is a Python / Click CLI.
 - Separate logic from the CLI - separate the logic under `abzu` and sub-modules from the command line interface (CLI) code in `abzu.cli`. The CLI should only handle input/output from/to the user and should not contain any business logic. For example the module for `abzu process kg` should be in `abzu.kg.*` and not in `abzu.cli.api`. Similarly, the module for `abzu process articles` should be in `abzu.articles.*` and not in `abzu.cli.api`.
@@ -72,6 +127,45 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Do not use 'rm' to remove files - use `git rm` to remove files from the repository. This will ensure that the files are removed from the git history as well.
 - I repeat, NEVER TALK ABOUT YOURSELF IN COMMIT MESSAGES. Do not put "Generated with [Claude Code](https://claude.ai/code)" or anything else relating to Claude or Anthropic in commit messages. Commit messages should only describe the code changes made, not the tool used to make them.
 - Ask questions before mitigating a simple problem with a complex fix.
+
+## Important Notes
+
+### BAML Client Generation
+The `abzu/baml_client/` directory is auto-generated. Never edit files in this directory directly. To make changes:
+1. Edit the BAML source files in `baml_src/`
+2. Run `baml-cli generate` to regenerate the client
+3. Test with `baml-cli test`
+
+### Configuration Management
+All configuration is centralized in `config.yml`. Access configuration values using:
+```python
+from abzu.config import config
+value = config.get("path.to.key", "default_value")
+```
+
+### Logging Best Practices
+Always use the centralized logging system:
+```python
+from abzu.logs import get_logger
+logger = get_logger(__name__)
+
+logger.info("Processing started")
+logger.error(f"Failed to process: {error}")
+```
+
+### Testing Approaches
+- Unit tests: Test individual functions/classes in isolation
+- Integration tests: Test with real services (Redis, S3, etc.)
+- Cache mode tests: Test different caching strategies
+- BAML tests: Use `baml-cli test` for LLM extraction testing
+
+### Spark Development
+When writing PySpark code:
+- Keep dataflows linear and simple
+- Don't check for column/path existence
+- Write single functions for complete dataflows
+- Use DataFrame API over RDDs
+- Leverage Spark's lazy evaluation
 
 ## Alerts
 

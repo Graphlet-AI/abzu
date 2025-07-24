@@ -1,10 +1,10 @@
-import pytest
+from typing import Any
 
 from abzu.api.annual_report_processor import enrich_company_tickers
 
 
 def test_enrich_company_tickers() -> None:
-    data = {
+    data: dict[str, Any] = {
         "reporting_company": {"name": "Alpha Inc"},
         "suppliers": [
             {

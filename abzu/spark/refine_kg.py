@@ -184,6 +184,12 @@ def refine_knowledge_graph(
     technology_df.write.mode("overwrite").parquet(f"{output_path}/technologies.parquet")
 
     # Log summary
-    logger.info("Knowledge graph refinement complete!")
-    logger.info(f"- Total entities: {vertices_df.count():,}")
-    logger.info(f"- Total relationships: {edge_df.count():,}")
+    logger.info("Refined Knowledge Graph Statistics:")
+    logger.info(f"- Vertices: {vertices_df.count():,}")
+    logger.info(f"- Edges: {edge_df.count():,}")
+    logger.info(f"- Companies: {company_df.count():,}")
+    logger.info(f"- Products: {product_df.count():,}")
+    logger.info(f"- Technologies: {technology_df.count():,}")
+    logger.info(f"- Tickers: {ticker_df.count():,}")
+
+    logger.info("Knowledge graph refinement complete")

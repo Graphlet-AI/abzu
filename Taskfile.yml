@@ -76,11 +76,31 @@ tasks:
       vars: [CLI_ARGS]
 
   test:
-    desc: Run tests
+    desc: Run all tests
     cmds:
       - '{{.DOCKER_COMPOSE}} run --rm abzu poetry run pytest {{.CLI_ARGS}}'
     requires:
       vars: [CLI_ARGS]
+
+  test:sync:
+    desc: Run sync service tests
+    cmds:
+      - '{{.DOCKER_COMPOSE}} run --rm -e ABZU_CACHE_MODE=hybrid abzu poetry run pytest tests/test_sync.py tests/test_sync_integration.py -vv'
+
+  test:cache:
+    desc: Run cache tests
+    cmds:
+      - '{{.DOCKER_COMPOSE}} run --rm -e ABZU_CACHE_MODE=hybrid abzu poetry run pytest tests/test_cache.py -vv'
+
+  test:unit:
+    desc: Run unit tests
+    cmds:
+      - '{{.DOCKER_COMPOSE}} run --rm abzu poetry run pytest tests/test_sync.py -v'
+
+  test:integration:
+    desc: Run integration tests
+    cmds:
+      - '{{.DOCKER_COMPOSE}} run --rm -e ABZU_CACHE_MODE=hybrid abzu poetry run pytest tests/test_sync_integration.py -v'
 
   lint:
     desc: Run linting checks
