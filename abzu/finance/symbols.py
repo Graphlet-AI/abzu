@@ -1,10 +1,13 @@
 "Exchange suffix to exchange mapping for financial symbols."
 
+from pyspark.sql.functions import expr
+
+#
+# Define known exchange suffixes for validation
+#
+
 # Note: Some data providers use different conventions Bloomberg uses different suffixes than
 # Reuters/Refinitiv. Yahoo Finance often uses different conventions as well
-
-
-# Define known exchange suffixes for validation
 EXCHANGE_SUFFIX_MAP = {
     # United States
     "O": "NASDAQ",  # NASDAQ (Reuters convention)
@@ -134,3 +137,20 @@ EXCHANGE_SUFFIX_MAP = {
     "ICE": "ICE",  # Intercontinental Exchange
     "LME": "LME",  # London Metal Exchange
 }
+
+suffix_mapping_expr = expr(
+    "CASE "
+    + " ".join(
+        [f"WHEN UPPER(symbol_suffix) = '{k}' THEN '{v}'" for k, v in EXCHANGE_SUFFIX_MAP.items()]
+    )
+    + " ELSE NULL END"
+)
+
+# Create an expression specifically for normalizing ticker.exchange
+ticker_exchange_normalization_expr = expr(
+    "CASE "
+    + " ".join(
+        [f"WHEN UPPER(ticker.exchange) = '{k}' THEN '{v}'" for k, v in EXCHANGE_SUFFIX_MAP.items()]
+    )
+    + " ELSE ticker.exchange END"
+)

@@ -7,7 +7,7 @@ from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.window import Window
 
 from abzu.config import config
-from abzu.finance.symbols import EXCHANGE_SUFFIX_MAP
+from abzu.finance.symbols import suffix_mapping_expr
 from abzu.logs import get_logger
 from abzu.spark.config import get_spark_session
 
@@ -51,18 +51,16 @@ def build_knowledge_graph(
         .select("company.*")
     )
 
-    # Handle the lack of companies in the articles gracefully
-    logger.info(f"Total companies raw: {companies_raw_df.count():,}")
-    if companies_raw_df.isEmpty():
-        logger.warning("No companies found in the articles. Exiting.")
-        return
-
     #
     # Get a list of company names and exchanges per symbol
     #
 
-    tickers_df = companies_raw_df.filter("ticker IS NOT NULL").select("ticker.*")
-    tickers_df.show(5, truncate=100, vertical=True)
+    tickers_df = (
+        companies_raw_df.filter("ticker IS NOT NULL")
+        .select("ticker.*")
+        .select(F.upper("exchange").alias("exchange"), F.upper("symbol").alias("symbol"), "name")
+    )
+    tickers_df.show(20, truncate=100)
     logger.info(f"Total tickers: {tickers_df.count():,}")
 
     # Group tickers by symbol to get a list of exchanges and names
@@ -89,65 +87,102 @@ def build_knowledge_graph(
     most_common_exchange_df = (
         ticker_exchange_counts_df.withColumn("rank", F.row_number().over(window_spec))
         .filter(F.col("rank") == 1)
-        .select("symbol", F.col("exchange").alias("official_exchange"))
+        .select("symbol", F.col("exchange").alias("most_common_exchange"))
     )
 
-    # Join back with unique_tickers_df
-    unique_tickers_with_official_exchange_df = grouped_tickers_df.join(
+    # Join back with grouped_tickers_df
+    unique_tickers_with_exchange_df = grouped_tickers_df.join(
         most_common_exchange_df, on="symbol", how="left"
-    )
-
-    # For symbols with only one exchange or where join didn't match, use the first exchange
-    unique_tickers_with_official_exchange_df = unique_tickers_with_official_exchange_df.withColumn(
-        "official_exchange",
-        F.when(
-            F.col("official_exchange").isNull(),
-            F.when(F.size("exchanges") >= 1, F.col("exchanges").getItem(0)).otherwise(None),
-        ).otherwise(F.col("official_exchange")),
     )
 
     # Clean up ticker symbols and extract exchange from symbol if needed
     # Handle cases like "2590.HK" where .HK indicates the exchange HKEX
-    tickers_with_split_exchange_df = (
-        unique_tickers_with_official_exchange_df.withColumn(
-            "symbol_parts", F.split(F.col("symbol"), "\\.")
-        )
-        .withColumn("clean_symbol", F.col("symbol_parts").getItem(0))
+    tickers_with_parsed_exchange_df = (
+        unique_tickers_with_exchange_df
+        # Find the last dot position (in case there are multiple dots)
+        .withColumn("last_dot_pos", F.expr("INSTR(REVERSE(symbol), '.')"))
         .withColumn(
-            "symbol_exchange",
-            F.when(F.size("symbol_parts") > 1, F.col("symbol_parts").getItem(1)).otherwise(None),
+            "base_symbol",
+            F.when(
+                F.col("last_dot_pos") > 0,
+                F.expr("SUBSTRING(symbol, 1, LENGTH(symbol) - last_dot_pos)"),
+            ).otherwise(F.col("symbol")),
         )
+        .withColumn(
+            "symbol_suffix",
+            F.when(
+                F.col("last_dot_pos") > 0,
+                F.expr("SUBSTRING(symbol, LENGTH(symbol) - last_dot_pos + 2, last_dot_pos)"),
+            ).otherwise(None),
+        )
+        # Map suffix to exchange using EXCHANGE_SUFFIX_MAP
+        .withColumn("mapped_exchange", suffix_mapping_expr)  # Changed this line
+        # Determine final exchange with clear priority
         .withColumn(
             "final_exchange",
-            F.when(
-                # If we already have an official exchange, use it
-                F.col("official_exchange").isNotNull(),
-                F.col("official_exchange"),
-            ).otherwise(
-                # Otherwise, use the exchange from the symbol suffix
-                F.col("symbol_exchange")
+            F.coalesce(
+                # 1. Use most common exchange from data if available
+                F.col("most_common_exchange"),
+                # 2. Use mapped exchange from suffix if valid
+                F.col("mapped_exchange"),
+                # 3. Use first exchange from list if any
+                F.when(F.size("exchanges") > 0, F.col("exchanges").getItem(0)),
+                # 4. Use raw suffix as last resort (for unknown suffixes)
+                F.col("symbol_suffix"),
             ),
         )
+        # Determine final symbol based on exchange resolution
         .withColumn(
             "final_symbol",
             F.when(
-                # If official exchange exists, remove the suffix from symbol
-                F.col("official_exchange").isNotNull(),
-                F.col("clean_symbol"),
-            ).otherwise(
-                # Otherwise, keep the original symbol
+                # If we have a valid mapped exchange from suffix, use base symbol
+                F.col("mapped_exchange").isNotNull(),
+                F.col("base_symbol"),
+            )
+            .when(
+                # If we have most common exchange and suffix maps to same exchange, use base symbol
+                (F.col("most_common_exchange").isNotNull())
+                & (F.col("most_common_exchange") == F.col("mapped_exchange")),
+                F.col("base_symbol"),
+            )
+            .otherwise(
+                # Otherwise keep original symbol (including any suffix)
                 F.col("symbol")
             ),
         )
     )
 
-    # Now nominate the clean symbol and exchange
-    clean_tickers_df = tickers_with_split_exchange_df.selectExpr(
-        "final_symbol AS symbol",
-        "final_exchange AS exchange",
+    # Select final columns with optional debug information
+    eval_tickers_df = tickers_with_parsed_exchange_df.select(
+        F.col("final_symbol").alias("symbol"),
+        F.col("final_exchange").alias("exchange"),
         "names",
+        # Optional: Include debug columns to verify logic
+        F.col("most_common_exchange").alias("_debug_most_common"),
+        F.col("symbol_suffix").alias("_debug_suffix"),
+        F.col("mapped_exchange").alias("_debug_mapped_exchange"),
     )
-    clean_tickers_df.show(5, truncate=100, vertical=True)
+    eval_tickers_df.show(10, truncate=False, vertical=True)
 
+    # Data quality check
+    logger.info("Data quality summary:")
+    quality_summary = eval_tickers_df.agg(
+        F.count("*").alias("total_symbols"),
+        F.sum(F.when(F.col("exchange").isNull(), 1).otherwise(0)).alias("missing_exchanges"),
+        F.sum(F.when(F.col("exchange") == F.col("_debug_suffix"), 1).otherwise(0)).alias(
+            "unmapped_suffixes"
+        ),
+        F.sum(F.when(F.col("_debug_mapped_exchange").isNotNull(), 1).otherwise(0)).alias(
+            "symbols_with_valid_suffix"
+        ),
+    ).collect()[0]
 
-EXCHANGE_SUFFIX_MAP
+    logger.info(f"Total symbols: {quality_summary['total_symbols']:,}")
+    logger.info(f"Missing exchanges: {quality_summary['missing_exchanges']:,}")
+    logger.info(f"Unmapped suffixes used as exchange: {quality_summary['unmapped_suffixes']:,}")
+    logger.info(
+        f"Symbols with valid exchange suffix: {quality_summary['symbols_with_valid_suffix']:,}"
+    )
+
+    clean_tickers_df = eval_tickers_df.select("symbol", "exchange", "names").distinct()
+    clean_tickers_df
