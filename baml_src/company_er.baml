@@ -1,14 +1,17 @@
 
 // This is a BAML config file, which extends the Jinja2 templating language to write LLM functions.
 
-
+enum Result {
+    MATCH @description("The two companies match and have been resolved to a single entity.")
+    NO_MATCH @description("The two companies do not match and have not been resolved to a single entity, or we can't be certain.")
+}
 
 class EntityResolutionResponse {
 
 //   @description("The first company being matched with another company. This is the company that is being resolved to a single entity. If you think a company is a public entity, remember it may be abbrevited: e.g. 'Alphabet Inc.' may be referred to as 'Google' or 'GOOGL'. If you think a company is publicly traded, remember it may be referred to by its full name or by its abbreviation, e.g. 'International Business Machines' may be referred to as 'IBM'. If you think a company is a well known private entity, remember it may be referred to by its full name or by its abbreviation, e.g. 'Space Exploration Technologies Corp.' may be referred to as 'SpaceX'. If you think a company is a subsidiary of another company, remember it may be referred to by its full name or by its abbreviation, e.g. 'Instagram' may be referred to as 'Facebook' or 'Meta Platforms Inc.'.")
   
-  match bool
-  @description("Whether the two companies match.")
+  match Result
+  @description("Do the two companies match?")
 
   company Company?
   @description("The resolved, combined company if the two companies match. If not, this is null.")
@@ -28,12 +31,13 @@ function EntityResolution(company_one: Company, company_two: Company) -> EntityR
     {{ ctx.output_format(hoist_classes=["Company", "Ticker"]) }}
 
     {{ _.role("user") }}
+
     Company One: {{ company_one }}
     Company Two: {{ company_two }}
   "#
 }
 
-test TSMCPositiveTest {
+test CombineDescriptionPositiveTest {
   functions [EntityResolution]
   args {
     company_one {
@@ -59,3 +63,21 @@ test TSMCPositiveTest {
   }
 }
 
+test DifferentNamesNegativeTest {
+  functions [EntityResolution]
+  args {
+    company_one {
+        name "Applied Materials, Inc."
+        ticker {
+            symbol "AMAT"
+            name "Applied Materials, Inc."
+        }
+        description "Applied Materials is a global leader in materials engineering solutions for semiconductor manufacturing, providing equipment, services and software for chip fabrication including deposition, etch, and inspection systems."
+    }
+    company_two {
+        name "Applied Material Sciences"
+    }
+  }
+  @@assert( verify_no_match, {{ this.match == "NO_MATCH" }} )
+  // @@assert( verify_null_match, {{ this.company == null }} )
+}
