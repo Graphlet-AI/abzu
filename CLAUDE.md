@@ -171,3 +171,30 @@ When writing PySpark code:
 
 - BEEP only ONCE when you are done with something and prompt me, the user in your UI. I need to hear that you're done because I do more than one thing at once. Use the command `echo -ne '\007'` to beep. Do not keep beeping multiple times or continuously. Just beep once when you are done with a task.
 - Use the applescript-mcp server to send me a message when you are done with something. Say "Done with task X" where X is the task you are done with. Alternatively, use the command `osascript -e 'tell application "System Events" to display dialog "Done with task X"'` to send me a message. Send only ONE alert, not multiple alerts.
+
+## Additional Context
+
+### Python Dependencies
+- Python 3.12 required
+- Core packages: pyspark==3.5.5, scrapy==2.11, baml, kuzu, discord.py
+- Development tools: poetry, black, isort, flake8, mypy, pytest
+- See pyproject.toml for complete dependency list
+
+### Environment Variables
+- `ABZU_CACHE_MODE`: Set caching strategy (none/local/hybrid)
+- `SPARK_MODE`: Set Spark execution mode (local/distributed)
+- Additional env vars can be configured in Docker setup
+
+### State Management and Caching
+- **None mode**: No caching, direct file I/O
+- **Local mode**: Redis for state, local disk for artifacts
+- **Hybrid mode**: Dapr state store (Redis) + S3/MinIO for artifacts
+- State store configuration in `dapr/statestore.yaml`
+
+### Common Pitfalls to Avoid
+- Never edit files in `abzu/baml_client/` - always regenerate
+- Don't use relative imports - always use absolute imports
+- Don't hardcode paths or config values - use config.yml
+- Don't break up Spark dataflows into multiple functions
+- Don't add default values to Click help strings
+- Don't create documentation files unless explicitly requested
