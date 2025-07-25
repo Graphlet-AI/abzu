@@ -120,6 +120,46 @@ tasks:
       - '{{.DOCKER_COMPOSE}} down -v'
       - docker system prune -f
 
+  baml:
+    desc: Generate BAML client code
+    cmds:
+      - '{{.DOCKER_COMPOSE}} run --rm abzu poetry run baml-cli generate'
+
+  chat:
+    desc: Run chat commands (key, auth, start)
+    cmds:
+      - '{{.DOCKER_COMPOSE}} run --rm abzu poetry run abzu chat {{.CLI_ARGS}}'
+    requires:
+      vars: [CLI_ARGS]
+
+  reddit:
+    desc: Crawl Reddit data
+    cmds:
+      - '{{.DOCKER_COMPOSE}} run --rm abzu poetry run abzu crawl reddit'
+
+  rss:
+    desc: Process RSS feeds
+    cmds:
+      - '{{.DOCKER_COMPOSE}} run --rm abzu poetry run abzu process rss'
+
+  dump:
+    desc: Dump/export data
+    cmds:
+      - '{{.DOCKER_COMPOSE}} run --rm abzu poetry run abzu dump {{.CLI_ARGS}}'
+    requires:
+      vars: [CLI_ARGS]
+
+  steps:
+    desc: Show all pipeline steps
+    cmds:
+      - '{{.DOCKER_COMPOSE}} run --rm abzu poetry run abzu steps'
+
+  run-all:
+    desc: Run the complete pipeline (WARNING: This will take a long time!)
+    cmds:
+      - task: baml
+      - echo "Complete pipeline would run here - implement specific steps as needed"
+
   help:
     desc: Show available tasks
     cmds:
