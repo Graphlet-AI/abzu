@@ -38,7 +38,7 @@ client<llm> CustomGeminiFallback {
   provider fallback
   retry_policy Exponential
   options {
-    strategy [CustomGemini25Pro, CustomGemini20Flash]
+    strategy [CustomGemini25Pro, CustomGemini25Flash]
   }
 }
 
