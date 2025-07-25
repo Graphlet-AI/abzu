@@ -1,0 +1,7 @@
+version: 1
+common:
+  resourcesPath: ./dapr_configs
+apps:
+  - appID: abzu
+    appDirPath: .
+    command: ["python3", "-m", "abzu"]

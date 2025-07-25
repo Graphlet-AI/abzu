@@ -52,7 +52,7 @@ def reddit(input: Optional[str], ticker: Optional[str], output: str, limit: int)
         default_input = config.get("crawl.reddit.input")
         if default_input:
             input = default_input
-            if not Path(input).exists():
+            if input and not Path(input).exists():
                 click.echo(f"Error: Default input file not found: {default_input}")
                 return
         else:
