@@ -185,4 +185,49 @@ def build_knowledge_graph(
     )
 
     clean_tickers_df = eval_tickers_df.select("symbol", "exchange", "names").distinct()
-    clean_tickers_df
+
+    #
+    # Now take the most common ticker per company name as the canonical ticker
+    #
+    companies_unique_df = companies_raw_df.select("name").distinct()
+
+    # Explode names to join with companies
+    clean_tickers_exploded_df = clean_tickers_df.select(
+        "symbol", "exchange", F.explode_outer("names").alias("name")
+    )
+
+    # Count occurrences of each ticker per company name to find most common
+    ticker_counts_df = clean_tickers_exploded_df.groupBy("name", "symbol", "exchange").agg(
+        F.count("*").alias("ticker_count")
+    )
+
+    # Use window function to rank tickers by count for each company name
+    name_window = Window.partitionBy("name").orderBy(F.desc("ticker_count"))
+
+    most_common_ticker_df = (
+        ticker_counts_df.withColumn("rank", F.row_number().over(name_window))
+        .filter(F.col("rank") == 1)
+        .select("name", "symbol", "exchange")
+    )
+
+    #
+    # Now join tickers back to unique companies to get companies with tickers :)
+    #
+    companies_tickers_df = companies_unique_df.join(
+        most_common_ticker_df, on="name", how="left_outer"
+    ).select(
+        "name",
+        # Note: we drop the ticker.name field here to avoid confusion
+        F.when(F.col("symbol").isNotNull(), F.struct(F.col("exchange"), F.col("symbol"))).alias(
+            "ticker"
+        ),
+    )
+
+    # Write them to a file to use in Eridu project...
+    companies_tickers_df.repartition(1).write.mode("overwrite").parquet(
+        f"{output_path}/companies_tickers.parquet",
+    )
+
+    #
+    #
+    #
