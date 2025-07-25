@@ -62,6 +62,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - PySpark - Do not break up dataflow into functions for loading, computing this, computing that, etc. Create a single function that performs the entire dataflow at hand. Do not check if columns exist, assume they do. Do not check if paths exist, assume they do. We prefer a more linear flow for Spark scripts and simple code over complexity. This only applies to Spark code.
 - PySpark - assume the fields are present, don't handle missing fields unless I ask you to.
 - PySpark - don't handle obscure edge cases, just implement the logic that I ask DIRECTLY.
+- PySpark - SparkSessions should be created BELOW any imports. Do not create SparkSessions at the top of the file.
 - Flake8 - fix flake8 errors without being asked and without my verification.
 - Black - fix black errors without being asked and without my verification.
 - Isort - fix isort errors without being asked and without my verification.
