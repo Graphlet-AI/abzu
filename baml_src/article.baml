@@ -4,13 +4,12 @@
 class IndustryArticle {
   
   title string
-  @description("Title of the article")
 
   url string?
   @description("URL of the article")
 
   source NewsSource?
-  @description("Source of the article. This is the news source that published the article.")
+  @description("News source of the article: who published the article?")
 
   collected_at string?
   @description("Date the article was collected, in ISO-8601 format")
@@ -19,16 +18,15 @@ class IndustryArticle {
   @description("Date the article was published, in ISO-8601 format")
 
   urls string[]?
-  @description("URLs mentioned in the article. This is a URL that was quoted or linked to. This is not the source of the article.")
+  @description("Any URLs mentioned in the article. This is a URL that was quoted or linked to, not the source url of the article.")
 
   authors Author[]?
-  @description("Authors of the article")
 
   summary string
-  @description("Summary of the article")
+  @description("Summary of the article. What is it about? What are the key points?")
 
   companies Company[]?
-  @description("Companies mentioned in the article")
+  @description("Companies mentioned in the article. Use full name with company suffix.")
 
   tickers Ticker[]?
   @description("Ticker symbols of the companies mentioned in the article")
@@ -46,7 +44,7 @@ class IndustryArticle {
   @description("Products mentioned in the article")
 
   technologies Technology[]?
-  @description("Technologies mentioned in the article. Technologies does not include products")
+  @description("Technologies mentioned in the article. Technologies does not include products.")
 
   deals Deal[]?
   @description("Commercial deals mentioned in the article: sales, acquisitions, financing or investments.")
@@ -57,7 +55,7 @@ class IndustryArticle {
 
 class Author {
   name string
-  @description("Name of the author")
+  @description("Name of the author or editor of the article")
 
   profile_url string?
   @description("URL of the author's profile")
@@ -82,28 +80,24 @@ class Company {
   @description("Ticker symbol of the company if publicly traded")
 
   description string?
-  @description("Description of the company")
+  @description("What does the company do? What is it known for?")
 
   website_url string?
-  @description("URL of the company's website")
 
   headquarters_location string?
-  @description("Location of the company's headquarters")
+  @description("Location of the company's headquarters, city and country")
 
   revenue_usd int?
   @description("Revenue of the company in USD")
 
   employees int?
-  @description("Number of employees of the company")
 
   founded_year int?
-  @description("Year the company was founded")
 
   ceo string?
-  @description("Name of the company's CEO")
+  @description("Full name of the company's CEO")
 
   linkedin_url string?
-  @description("LinkedIn URL of the company")
 }
 
 class Product {
