@@ -1,0 +1,61 @@
+
+// This is a BAML config file, which extends the Jinja2 templating language to write LLM functions.
+
+
+
+class EntityResolutionResponse {
+
+//   @description("The first company being matched with another company. This is the company that is being resolved to a single entity. If you think a company is a public entity, remember it may be abbrevited: e.g. 'Alphabet Inc.' may be referred to as 'Google' or 'GOOGL'. If you think a company is publicly traded, remember it may be referred to by its full name or by its abbreviation, e.g. 'International Business Machines' may be referred to as 'IBM'. If you think a company is a well known private entity, remember it may be referred to by its full name or by its abbreviation, e.g. 'Space Exploration Technologies Corp.' may be referred to as 'SpaceX'. If you think a company is a subsidiary of another company, remember it may be referred to by its full name or by its abbreviation, e.g. 'Instagram' may be referred to as 'Facebook' or 'Meta Platforms Inc.'.")
+  
+  match bool
+  @description("Whether the two companies match.")
+
+  company Company?
+  @description("The resolved, combined company if the two companies match. If not, this is null.")
+}
+
+function EntityResolution(company_one: Company, company_two: Company) -> EntityResolutionResponse {
+  // see clients.baml
+  client CustomGeminiFallback
+
+  // The prompt uses Jinja syntax. Change the models or this text and watch the prompt preview change!
+  prompt #"
+    Examine the following two companies and determine if they are the same entity. If they are the same, return the resolved company with all attributes filled out. If one record has a valid field and the other doesn't, add it. If there are multiple company descriptions, summarize and combine them into a single description of less than 60 words.
+
+    Return a match decision and a single company object with all combined attributes filled out if the two companies are the same entity, or an empty company object if they are not the same entity.
+
+    {# special macro to print the output instructions. #}
+    {{ ctx.output_format(hoist_classes=["Company", "Ticker"]) }}
+
+    {{ _.role("user") }}
+    Company One: {{ company_one }}
+    Company Two: {{ company_two }}
+  "#
+}
+
+test TSMCPositiveTest {
+  functions [EntityResolution]
+  args {
+    company_one {
+        name "Tesla, Inc."
+        ticker {
+            exchange "NASDAQ"
+            symbol "TSLA"
+            name "Tesla, Inc."
+      }
+      description "Tesla is a leader in electric transportation and energy storage, producing high-performance EVs, solar solutions, battery systems, and pioneering autonomous driving software to accelerate the global shift toward sustainable energy."
+      founded_year 2003
+      ceo "Elon Musk"
+    }
+    company_two {
+        name "Tesla"
+        ticker {
+            symbol "TSLA"
+            name "Tesla"
+        }
+        description "Tesla is known for its electric car innovations  ￼ and has developed the Powerwall home battery, launched in 2015  ￼ to advance accessible solar energy storage and reliable backup power for homes"
+        headquarters_location "Austin, United States"
+    }
+  }
+}
+
