@@ -63,7 +63,7 @@ test CombineDescriptionPositiveTest {
   }
 }
 
-test DifferentNamesNegativeTest {
+test DifferentNameFullRecordNegativeTest {
   functions [EntityResolution]
   args {
     company_one {
@@ -81,3 +81,36 @@ test DifferentNamesNegativeTest {
   @@assert( verify_no_match, {{ this.match == "NO_MATCH" }} )
   // @@assert( verify_null_match, {{ this.company == null }} )
 }
+
+test DifferentFullRecordsNegativeTest {
+  functions [EntityResolution]
+  args {
+    company_one {
+        name "Applied Materials, Inc."
+        ticker {
+            exchange "NASDAQ"
+            symbol "AMAT"
+            name "Applied Materials, Inc."
+        }
+        description "Applied Materials is a global leader in materials engineering solutions for semiconductor manufacturing, providing equipment, services and software for chip fabrication including deposition, etch, and inspection systems."
+        founded_year 1967
+        ceo "Gary Dickerson"
+        headquarters_location "Santa Clara, United States"
+    }
+    company_two {
+        name "Applied Material Sciences"
+        ticker {
+            exchange "TSXV"
+            symbol "AMS"
+            name "Applied Material Sciences"
+        }
+        description "Applied Material Sciences specializes in advanced composite materials and nanotechnology solutions for aerospace and defense applications, developing carbon fiber components and specialized coatings for extreme environments."
+        founded_year 2008
+        ceo "Michael Chen"
+        headquarters_location "Vancouver, Canada"
+    }
+  }
+  @@assert( verify_no_match, {{ this.match == "NO_MATCH" }} )
+  // @@assert( verify_null_match, {{ this.company == null }} )
+}
+
