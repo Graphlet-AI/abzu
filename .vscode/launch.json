@@ -1,0 +1,11 @@
+{
+    "configurations": [
+        {
+            "name": "Launch Dapr",
+            "request": "launch",
+            "type": "dapr",
+            "runFile": "$(workspaceFolder)/dapr.yaml",
+            "preLaunchTask": "dapr"
+        }
+    ]
+}

@@ -15,4 +15,8 @@ logs
 __pycache__/
 *.py[cod]
 *$py.class
+cache/*
+!cache/.gitkeep
+minio-data/*
+!minio-data/.gitkeep
 .claude/settings.json.bak

@@ -1,0 +1,63 @@
+# Multi-stage build for debugging ta-lib installation
+FROM python:3.12-slim AS base
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    POETRY_VERSION=2.1.3 \
+    POETRY_HOME="/opt/poetry" \
+    POETRY_VIRTUALENVS_CREATE=false \
+    PATH="/opt/poetry/bin:$PATH"
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    build-essential \
+    git \
+    wget \
+    pkg-config \
+    && rm -rf /var/lib/apt/lists/*
+
+# Stage 1: Install Poetry
+FROM base AS poetry-installer
+
+RUN curl -sSL https://install.python-poetry.org | python3 -
+
+# Stage 2: Build dependencies
+FROM base AS dependencies
+
+# Build TA-Lib directly in this stage
+RUN wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz && \
+    tar -xzf ta-lib-0.4.0-src.tar.gz && \
+    cd ta-lib && \
+    ./configure --prefix=/usr && \
+    make && \
+    make install && \
+    cd .. && \
+    rm -rf ta-lib ta-lib-0.4.0-src.tar.gz && \
+    ldconfig && \
+    echo "=== Checking TA-Lib installation ===" && \
+    find /usr -name "libta_lib*" -type f && \
+    echo "=== ldconfig output ===" && \
+    ldconfig -p | grep ta_lib
+
+# Copy Poetry from installer stage
+COPY --from=poetry-installer /opt/poetry /opt/poetry
+
+# Set working directory
+WORKDIR /app
+
+# Copy only dependency files for caching
+COPY pyproject.toml poetry.lock* ./
+
+# First, install all dependencies except ta-lib
+RUN sed -i '/ta-lib/d' pyproject.toml && \
+    poetry lock && \
+    poetry install --no-interaction --no-ansi --no-root
+
+# Install numpy for ta-lib
+RUN pip install numpy
+
+# STOP HERE FOR DEBUGGING
+# Keep container running so we can debug
+CMD ["tail", "-f", "/dev/null"]
