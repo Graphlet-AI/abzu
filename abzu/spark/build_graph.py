@@ -3,6 +3,7 @@
 from typing import Optional
 
 import pyspark.sql.functions as F
+import pyspark.sql.types as T
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.window import Window
 
@@ -223,11 +224,50 @@ def build_knowledge_graph(
         ),
     )
 
-    # Write them to a file to use in Eridu project...
-    companies_tickers_df.repartition(1).write.mode("overwrite").parquet(
-        f"{output_path}/companies_tickers.parquet",
+    #
+    # Now group companies by _ticker_ and assign them all the most common or longest company name
+    #
+
+    # First group the tickers by company name, count them and select the most common ticker per group
+    companies_tickers_counts_df = (
+        companies_tickers_df.filter(F.col("ticker").isNotNull())
+        .groupBy("ticker", "name")
+        .agg(F.count("*").alias("company_count"))
     )
 
-    #
-    #
-    #
+    # Now choose the most common name for each ticker, or the longest name if there is a tie
+    companies_name_counts_df = companies_tickers_counts_df.groupBy("ticker").agg(
+        F.collect_list(F.struct("name", "company_count")).alias("name_counts"),
+        F.max("company_count").alias("max_count"),
+    )
+
+    # Define a UDF to select the most common name or longest name in case of ties
+    @F.udf(T.StringType())
+    def select_best_name_udf(name_counts):
+        # Sort by count descending, then by length descending
+        sorted_names = sorted(name_counts, key=lambda x: (-x.company_count, -len(x.name)))
+        if sorted_names:
+            return sorted_names[0].name
+        return None
+
+    companies_tickers_names_df = (
+        companies_name_counts_df.withColumn("best_name", select_best_name_udf("name_counts"))
+        .filter(F.col("max_count") > 1)
+        .select("ticker", "best_name")
+    )
+
+    # Now join the companies_tickers_names_df back to the companies_tickers_df
+    companies_tickers_df = companies_tickers_df.join(
+        companies_tickers_names_df, on="ticker", how="left_outer"
+    )
+
+    # Select final columns - may have reduced a few company names
+    final_companies_tickers_df = companies_tickers_df.select(
+        F.coalesce("best_name", "name").alias("name"),
+        F.col("ticker"),
+    ).distinct()
+
+    # Write them to a file to use in Eridu project...
+    final_companies_tickers_df.repartition(1).write.mode("overwrite").parquet(
+        f"{output_path}/companies_tickers.parquet",
+    )
