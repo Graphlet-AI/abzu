@@ -23,7 +23,7 @@ function EntityResolution(company_one: Company, company_two: Company) -> EntityR
 
   // The prompt uses Jinja syntax. Change the models or this text and watch the prompt preview change!
   prompt #"
-    Examine the following two companies and determine if they are the same entity. If they are the same, return the resolved company with all attributes filled out. If one record has a valid field and the other doesn't, add it. If there are multiple company descriptions, summarize and combine them into a single description of less than 60 words.
+    Examine the following two companies and determine if they are the same entity. Consider acronyms of company names when making your decision. If two companies are the same, return the resolved company with all combined attributes filled out. If one record has a valid field and the other doesn't, add it. If there are multiple company descriptions, summarize and combine them into a single description of less than 60 words.
 
     Return a match decision and a single company object with all combined attributes filled out if the two companies are the same entity, or an empty company object if they are not the same entity.
 
