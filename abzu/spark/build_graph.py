@@ -44,12 +44,13 @@ def build_knowledge_graph(
     # Extract entities into separate dataframes
     logger.info("Extracting entities from documents ...")
 
-    # Extract companies
+    # Extract companies and assign a random UUID id
     logger.info("Extracting companies ...")
     companies_raw_df = (
         articles_df.select(F.explode_outer(F.col("companies")).alias("company"))
         .filter("company IS NOT NULL")
         .select("company.*")
+        .withColumn("id", F.expr("uuid()"))
     )
 
     #
@@ -263,11 +264,52 @@ def build_knowledge_graph(
 
     # Select final columns - may have reduced a few company names
     final_companies_tickers_df = companies_tickers_df.select(
-        F.coalesce("best_name", "name").alias("name"),
-        F.col("ticker"),
+        "name",
+        F.coalesce("best_name", "name").alias("updated_name"),
+        F.col("ticker").alias("updated_ticker"),
+    ).distinct()
+
+    #
+    # Now combine the new company tickers back with the original companies
+    #
+
+    final_companies_df = (
+        companies_raw_df.join(
+            final_companies_tickers_df,
+            on="name",
+            how="left_outer",
+        )
+        .withColumn("name", F.coalesce("updated_name", "name"))
+        .drop("updated_name")
+    )
+
+    # Transform the tickers without names back to the original by adding the name
+    final_companies_df = (
+        final_companies_df.withColumn(
+            "updated_ticker",
+            F.when(
+                F.col("updated_ticker").isNotNull(),
+                F.struct(
+                    F.col("ticker.exchange"),
+                    F.col("name").alias("name"),
+                    F.col("ticker.symbol"),
+                ),
+            ).otherwise(None),
+        )
+        .withColumn("ticker", F.coalesce("updated_ticker", "ticker"))
+        .drop("updated_ticker")
+    )
+
+    # Put 'id' colum first
+    final_companies_df = final_companies_df.select(
+        "id", *final_companies_df.columns[:-1]
     ).distinct()
 
     # Write them to a file to use in Eridu project...
-    final_companies_tickers_df.repartition(1).write.mode("overwrite").parquet(
-        f"{output_path}/companies_tickers.parquet",
+    companies_output_path = f"{output_path}/companies_tickers.parquet"
+    final_companies_df.repartition(1).write.mode("overwrite").parquet(
+        companies_output_path,
+    )
+    logger.info(
+        f"Saved {final_companies_tickers_df.count():,} companies to {companies_output_path}"
     )
