@@ -51,16 +51,5 @@
         "deny": [
             "Bash(pip install:*)"
         ]
-    },
-    "dontCrawlDirectory": false,
-    "mcpServers": { },
-    "ignorePatterns": [ ],
-    "exampleFiles": [
-        "abzu/crawl.py",
-        "abzu/cli/process_kg.py",
-        "scripts/build_graph.py",
-        "abzu/cli/crawl.py",
-        "abzu/cli/click_cli.py",
-        "abzu/cli/click_api.py"
-    ]
+    }
 }
