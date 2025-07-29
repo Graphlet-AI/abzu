@@ -111,6 +111,32 @@ test DifferentFullRecordsNegativeTest {
     }
   }
   @@assert( verify_no_match, {{ this.match == "NO_MATCH" }} )
-  // @@assert( verify_null_match, {{ this.company == null }} )
+  @@assert( verify_null_match, {{ this.company is none }} )
+}
+
+test JustNameSameExceptPeriodTest {
+    functions [EntityResolution]
+    args {
+        company_one {
+            name "ABB Ltd."
+        }
+        company_two {
+            name "ABB Ltd"
+        }
+    }
+    @@assert( verify_match, {{ this.match == "MATCH" }} )
+}
+
+test JustNameSameExceptAbbreviationTest {
+    functions [EntityResolution]
+    args {
+        company_one {
+            name "International Business Machines Corporation"
+        }
+        company_two {
+            name "IBM"
+        }
+    }
+    @@assert( verify_match, {{ this.match == "MATCH" }} )
 }
 
