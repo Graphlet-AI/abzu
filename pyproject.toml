@@ -48,6 +48,7 @@ anthropic = "^0.51.0"
 lxml = "^5.4.0"
 praw = "^7.8.1"
 sentence-transformers = "^5.0.0"
+dapr = "^1.15.0"
 
 [tool.poetry.group.dev.dependencies]
 flake8 = "^7.2.0"
