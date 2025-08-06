@@ -377,3 +377,92 @@ Electronics manufacturers have made a flurry of investment announcements since T
         "#
     }
 }
+
+test DataCentersTest {
+  functions [ExtractIndustryArticle]
+  args {
+    article_text #"
+     Title: Oracle to deploy cluster of more than 130,000 AMD MI355X GPUs - DCD
+
+# Oracle to deploy cluster of more than 130,000 AMD MI355X GPUs
+
+Cloud company's GB200 NVL72 supercluster also now available, and other Oracle news
+Oracle is set to deploy an AI cluster with up to 131,072 of AMD's new MI355X GPUs.
+The company has also made its Nvidia GB200 NVL72 supercluster available, signed a new customer partnership with Seekr, and is joining Nvidia's DGX Cloud Lepton platform.
+
+## Oracle goes big on AMD
+
+Oracle has announced that it will be offering the new AMD Instinct MI355X GPUs via Oracle Cloud Infrastructure (OCI), scalable up to a zettascale AI cluster of 131,072 GPUs.
+According to Oracle, this will offer customers more than 2x better price-performance for large-scale AI training and inference workloads compared to the previous AMD GPU generation.
+The cluster deployment builds on previous plans to deploy around30,000of the MI355X GPUs.
+AMD officiallylaunchedthe MI355X GPUs on June 12 during its Advancing AI conference in San Jose, California.
+Built using 3nm technology and based on AMD’s CDNA 4 architecture, the MI350 series offers 288GB of HBM3E and 8Tbps of memory bandwidth. Seventy-two teraflops of FP64 is provided by the MI350X and 79 teraflops for the MI355X, with the GPUs' total board power (TBP) up to 1,000W and 1,400W, respectively.
+When compared to Nvidia’s GB200 and B200, AMD claimed its MI355X GPU provides 1.6x more memory capacity, 1x more memory bandwidth, and 2x more peak FP64 performance. The GPUs additionally offer a 4x generation-on-generation AI compute increase and a 35x generational improvement in inferencing.
+Oracle claims it will be among the first hyperscalers to offer an AI supercomputer with the chips.
+“To support customers that are running the most demanding AI workloads in the cloud, we are dedicated to providing the broadest AI infrastructure offerings,” said Mahesh Thiagarajan, executive vice president, Oracle Cloud Infrastructure. “AMD Instinct GPUs, paired with OCI’s performance, advanced networking, flexibility, security, and scale, will help our customers meet their inference and training needs for AI workloads and new agentic applications.”
+“AMD and Oracle have a shared history of providing customers with open solutions to accommodate high performance, efficiency, and greater system design flexibility,” added Forrest Norrod, executive vice president and general manager, Data Center Solutions Business Group, AMD. “The latest generation of AMD Instinct GPUs and Pollara NICs on OCI will help support new use cases in inference, fine-tuning, and training, offering more choice to customers as AI adoption grows.”
+
+## Nvidia GB200 NVL72 systems on OCI Supercluster now available, and more Nvidia news
+
+Oracle has made the Nvidia GB200 NVL72 OCI Supercluster with 131,072 Blackwell GPUs generally available.
+Plans for the massive cluster were first revealed inSeptember 2024, and while the GPUs were madeavailableearlier this year via OCI, the full cluster has now been deployed and is available for use.
+The NVL72 systems are liquid-cooled. In addition to the Supercluster, the Blackwell GPUS are available via Nvidia DGX Cloud and OCI to run next-generation reasoning models and AI agents.
+“Oracle has become the platform of choice for AI training and inferencing, and our work with Nvidia boosts our ability to support customers running some of the world’s most demanding AI workloads,” said Karan Batta, senior vice president, Oracle Cloud Infrastructure. “Combining Nvidia's full-stack AI computing platform with OCI’s performance, security, and deployment flexibility enables us to deliver AI capabilities at scale to help advance AI efforts globally.”
+“Developers need the latest AI infrastructure and software to rapidly build and launch innovative solutions,” said Ian Buck, vice president of hyperscale and HPC, Nvidia. “With OCI and Nvidia, they get the performance and tools to bring ideas to life, wherever their work happens.”
+Earlier this year, Oracle revealed it planned to deploy64,000Nvidia GB200s at the Stargate data center in Abilene, Texas, by the end of 2026.
+Oracle has also revealed that it is joining theNvidia DGX Cloud Lepton, Nvidia's recently announced AI platform, with a compute marketplace that connects developers with a global network of GPU compute.
+Other participants include CoreWeave, Crusoe, Firmus, Foxconn, GMI Cloud, Lambda, Nebius, Nscale, SoftBank Corp., and Yotta Data Services.
+
+## Seekr selects Oracle and AMD for AI training
+
+AI company Seekr has signed a multi-year agreement with OCI to use the cloud platform and AMD's MI300X GPUs.
+Seekr will use OCI to expand its multi-node training capabilities for the next generation of large language models and AI agents designed for Edge deployments and vision-language foundation model training.
+“OCI was the obvious choice as our international infrastructure partner,” said Rob Clark, president, Seekr. “Developing next-generation vision-language foundation models for top satellite providers and nation-states analyzing decades of imagery and sensor data requires massive raw GPU compute capacity. Oracle and AMD both came to the table with the infrastructure, top performance multi-node training compute, international presence, and the mindset that makes this possible.”
+“Running multi-node training and inference efficiently, without overspending or sacrificing performance, can be a challenge for AI companies,” said Chris Gandolfo, executive vice president, Oracle Cloud Infrastructure and AI. “With OCI’s purpose-built AI infrastructure, Seekr is able to train LLMs more efficiently at a lower cost. In addition, we’re working closely with Seekr’s team on performance optimization, rapid model iteration, and global infrastructure expansion.”
+Seekr and OCI are executing a joint go-to-market strategy.
+
+## More in Cloud & Hyperscale
+
+- Structure research report 2024 – 2025
+
+# Structure research report 2024 – 2025
+
+- 05 Mar 2025Proposal for .8bn data center put forward outside Spartanburg, South Carolina
+
+# Proposal for .8bn data center put forward outside Spartanburg, South Carolina
+
+- EpisodeThe data center energy challenge - What’s the role of investment?
+
+# EpisodeThe data center energy challenge - What’s the role of investment?
+
+## More in HPC & Quantum
+
+- 03 Feb 2025UK's Met Office looks to sell Science Park including data center
+
+# UK's Met Office looks to sell Science Park including data center
+
+- 15 Jan 2025Business case not established for new supercomputer that forms part of UK government AI plan
+
+# Business case not established for new supercomputer that forms part of UK government AI plan
+
+- 29 Apr 2025IBM to spend bn on quantum & mainframes, as part of bn US investment pledge
+
+# IBM to spend bn on quantum & mainframes, as part of bn US investment pledge
+
+### Tags
+
+- AMD Instinct MI355X
+- Chris Gandalfo
+- Forrest Norrod
+- Ian Buck
+- Karan Batta
+- MI355X
+- Mahesh Thiagarajan
+- OCI
+- Oracle
+- Oracle Cloud Infrastructure
+- Rob Clark
+- Seekr
+    "#
+  }
+}
