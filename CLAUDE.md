@@ -166,7 +166,7 @@ logger.error(f"Failed to process: {error}")
 
 ### Spark Development
 
-Use the following style guide [README.md](abzu/spark/README.md) for Spark development.
+Use the following style guide [README.md](abzu/spark/README.md) for Spark development: @abzu/spark/README.md
 
 In addition, when writing PySpark code:
 
