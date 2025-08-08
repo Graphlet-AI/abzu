@@ -165,7 +165,11 @@ logger.error(f"Failed to process: {error}")
 - BAML tests: Use `baml-cli test` for LLM extraction testing
 
 ### Spark Development
-When writing PySpark code:
+
+Use the following style guide [README.md](abzu/spark/README.md) for Spark development.
+
+In addition, when writing PySpark code:
+
 - Keep dataflows linear and simple
 - Don't check for column/path existence
 - Write single functions for complete dataflows

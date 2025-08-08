@@ -76,7 +76,14 @@ This file provides guidance to OpenAI Codex when working with code in this repos
 - Do not use 'rm' to remove files - use `git rm` to remove files from the repository. This will ensure that the files are removed from the git history as well.
 - Ask questions before mitigating a simple problem with a complex fix.
 
-## Alerts
+## Spark Development
 
-- BEEP only ONCE when you are done with something and prompt me, the user in your UI. I need to hear that you're done because I do more than one thing at once. Use the command `echo -ne '\007'` to beep. Do not keep beeping multiple times or continuously. Just beep once when you are done with a task.
-- Use the applescript-mcp server to send me a message when you are done with something. Say "Done with task X" where X is the task you are done with. Alternatively, use the command `osascript -e 'tell application "System Events" to display dialog "Done with task X"'` to send me a message. Send only ONE alert, not multiple alerts.
+Use the following style guide [README.md](abzu/spark/README.md) for Spark development.
+
+In addition, when writing PySpark code:
+
+- Keep dataflows linear and simple
+- Don't check for column/path existence
+- Write single functions for complete dataflows
+- Use DataFrame API over RDDs
+- Leverage Spark's lazy evaluation
