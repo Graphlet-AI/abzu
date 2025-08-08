@@ -15,7 +15,7 @@ from typing import Any, Coroutine, Dict, Literal, Optional, Set, cast
 
 # Import utilities without binding the patch-able classes/functions at module import
 # so that runtime monkey-patching (e.g. in the test-suite) is correctly respected.
-from abzu import utils as _abzu_utils
+import abzu.utils as _abzu_utils
 from abzu.utils import get_cache_mode, load_jsonl, save_jsonl
 
 logger = logging.getLogger(__name__)
