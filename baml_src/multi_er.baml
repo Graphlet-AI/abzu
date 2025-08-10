@@ -828,6 +828,18 @@ test WikiEnrichTest {
                     ceo "Masayoshi Son"
                     linkedin_url null
                 }
+                {
+                    name "CoreWeave"
+                    ticker null
+                    description "CoreWeave, Inc. is an American AI cloud-computing startup based in Livingston, New Jersey. It specializes in providing cloud-based graphics processing unit (GPU) infrastructure to artificial intelligence developers and enterprises, and also develops its own chip management software.\nFounded in 2017 and focused on high-performance computing, CoreWeave has its own data centers operating in the United States and Europe, with some dedicated to multiple companies and some to a single client. Its $1.6 billion supercomputer data center for Nvidia in Plano, Texas has been described by Nvidia as the fastest AI supercomputer in the world."
+                    website_url null
+                    headquarters_location "Livingston"
+                    revenue_usd null
+                    employees 550
+                    founded_year 2017
+                    ceo null
+                    linkedin_url null
+                }
             ]
         }
     }
