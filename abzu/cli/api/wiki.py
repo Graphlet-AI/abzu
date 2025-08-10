@@ -4,7 +4,7 @@ import json
 
 import click
 
-from abzu.api.wiki import crawl_company_wikipedia
+from abzu.api.wiki import crawl_company_structured
 from abzu.logs import get_logger
 
 logger = get_logger(__name__)
@@ -33,7 +33,14 @@ logger = get_logger(__name__)
     type=click.Path(),
     help="Output file path for JSON results",
 )
-def wiki(ticker: str, name: str, input: str, output: str) -> None:
+@click.option(
+    "--concurrent",
+    "-c",
+    type=int,
+    default=5,
+    help="Number of concurrent requests for batch processing",
+)
+def wiki(ticker: str, name: str, input: str, output: str, concurrent: int) -> None:
     """Crawl Wikipedia page for a company by ticker or name."""
     if not ticker and not name and not input:
         raise click.UsageError("Either --ticker, --name, or --input must be provided")
@@ -44,7 +51,7 @@ def wiki(ticker: str, name: str, input: str, output: str) -> None:
     # Process single company
     if ticker or name:
         try:
-            result = crawl_company_wikipedia(ticker=ticker, name=name)
+            result = crawl_company_structured(ticker=ticker, name=name)
 
             if output:
                 with open(output, "w") as f:
@@ -77,7 +84,7 @@ def wiki(ticker: str, name: str, input: str, output: str) -> None:
                         )
                         continue
 
-                    result = crawl_company_wikipedia(ticker=company_ticker, name=company_name)
+                    result = crawl_company_structured(ticker=company_ticker, name=company_name)
                     results.append(result)
 
                 except json.JSONDecodeError as e:
