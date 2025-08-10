@@ -52,6 +52,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **tests/** - Test suite
 
 ### Key Technologies
+
 - **LLM Integration**: BAML (Boundary AI Markup Language) for structured extraction
 - **Data Processing**: Apache Spark (PySpark) for ETL and graph operations
 - **Graph Database**: Kuzu for graph storage and queries
@@ -142,6 +143,7 @@ The `abzu/baml_client/` directory is auto-generated. Never edit files in this di
 3. Test with `baml-cli test`
 
 ### Configuration Management
+
 All configuration is centralized in `config.yml`. Access configuration values using:
 ```python
 from abzu.config import config
@@ -159,6 +161,7 @@ logger.error(f"Failed to process: {error}")
 ```
 
 ### Testing Approaches
+
 - Unit tests: Test individual functions/classes in isolation
 - Integration tests: Test with real services (Redis, S3, etc.)
 - Cache mode tests: Test different caching strategies
