@@ -373,7 +373,7 @@ def build_knowledge_graph(
     logger.info(f"Saved {technologies_df.count():,} technologies to {technologies_output_path}")
 
     #
-    # Now ETL deals - these are the deals mentioned in the articles, involving two Companies
+    # Now ETL Deals - these are the deals mentioned in the articles, involving two Companies
     #
 
     deals_raw_df = (
