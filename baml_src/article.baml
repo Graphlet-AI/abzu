@@ -73,6 +73,9 @@ class Ticker {
 }
 
 class Company {
+  id int
+  @description("A unique identifier for this object.")
+
   name string
   @description("Formal name of the company with company suffix")
 
@@ -98,6 +101,9 @@ class Company {
   @description("Full name of the company's CEO")
 
   linkedin_url string?
+
+  source_ids int[]?
+  @description("List of source Company ids that this Company originates from merges")
 }
 
 class Product {
@@ -239,7 +245,8 @@ function ExtractIndustryArticle(article_text: string) -> IndustryArticle {
 
   // The prompt uses Jinja syntax. Change the models or this text and watch the prompt preview change!
   prompt #"
-    Parse the following article, perform information extraction to return a structured representation of the data in the schema below. Include only the information that is explicitly stated in the article except in the description fields, where you can give a generic description of an entity. Skip all fields that would be null, unless they are REQUIRED.
+    Parse the following article, perform information extraction to return a structured representation of the data in the schema below. Include only the information that is explicitly stated in the article except in the description fields, where you can give a generic description of an entity. Skip all fields that would be null, unless they are REQUIRED. Assign each unique entity an integer identifier
+    in the id.integer field that appears wherever that entity is present in the output.
 
     {# special macro to print the output instructions. #}
     {{ ctx.output_format(hoist_classes=["Company", "Ticker", "Product", "Technology", "Partnership", "Customer", "Investor", "Deal", "NewsSource", "Author"]) }}

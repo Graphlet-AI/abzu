@@ -28,6 +28,7 @@ test BasicTest {
         company_list {
             companies [
                 {
+                    id 1
                     name "Oracle"
                     ticker null
                     description "A cloud computing company that offers Oracle Cloud Infrastructure (OCI) and provides large-scale AI infrastructure, superclusters, and services for AI training and inference."
@@ -40,6 +41,7 @@ test BasicTest {
                     linkedin_url null
                 }
                 {
+                    id 2
                     name "AMD"
                     ticker null
                     description "A company that designs and manufactures high-performance computing products, including the Instinct series of GPUs (like the MI355X) for AI and data centers."
@@ -52,6 +54,7 @@ test BasicTest {
                     linkedin_url null
                 }
                 {
+                    id 3
                     name "Nvidia"
                     ticker null
                     description "A company specializing in GPUs and full-stack AI computing platforms, including the GB200 and Blackwell series, and platforms like DGX Cloud."
@@ -64,6 +67,7 @@ test BasicTest {
                     linkedin_url null
                 }
                 {
+                    id 4
                     name "Seekr"
                     ticker null
                     description "An AI company that develops large language models and AI agents, particularly for Edge deployments and vision-language foundation model training. It is a customer of Oracle Cloud Infrastructure."
