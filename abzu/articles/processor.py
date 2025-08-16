@@ -6,6 +6,8 @@ import time
 from pathlib import Path
 from typing import Any
 
+from tqdm import tqdm
+
 from abzu.baml_client.async_client import b as async_b
 from abzu.baml_client.types import IndustryArticle
 from abzu.config import config
@@ -57,7 +59,7 @@ async def process_article_async(
     try:
         # Content is already extracted text, just pass it to BAML
         logger.info(
-            f"Processing article: {article.get('title', 'unknown')} ({len(article_text):,} chars)"
+            f"Processing article: {article.get('title', 'unknown')} posted at {article.get('posted_at', 'unknown')} ({len(article_text):,} chars)"
         )
 
         result = await async_b.ExtractIndustryArticle(article_text)
@@ -142,9 +144,9 @@ async def process_articles_async(
         output_file: Path to write results
         batch_size: Number of articles to process in each batch
     """
-    # Process in batches
+    # Process in batches - starting with the most recent articles
     all_results: list[IndustryArticle | BaseException | None] = []
-    for i in range(0, len(articles), batch_size):
+    for i in tqdm(reversed(range(0, len(articles), batch_size))):
         batch = articles[i : i + batch_size]
         logger.info(
             f"Processing batch {i // batch_size + 1}/{(len(articles) + batch_size - 1) // batch_size}"
