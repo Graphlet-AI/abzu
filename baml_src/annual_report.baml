@@ -71,6 +71,8 @@ class Investment {
 class SupplierRelationship {
   customer_company Company
   supplier_company Company
+  product Product?
+  technology Technology?
   supplied_good_or_service string
   @description("The product, component, or service being supplied.")
   source_text_snippet string?
@@ -79,7 +81,7 @@ class SupplierRelationship {
 
 
 function ExtractCompanyRelationshipsFromAnnualReport(report_text: string) -> AnnualReportData {
-  client CustomGeminiFallback
+  client GeminiFallback
 
   prompt #"
     Parse the following company annual report. Extract information related to subsidiaries, partnerships, investments (including acquisitions), and key suppliers of the reporting company.

@@ -62,8 +62,11 @@ class Author {
 }
 
 class Ticker {
-  name string
-  @description("Name of the company")
+  id int
+  @description("A unique identifier for this object.")
+
+  uuid string?
+  @description("A unique identifier for this object. Leave blank.")
 
   symbol string
   @description("Ticker symbol of the company if publicly traded")
@@ -75,6 +78,9 @@ class Ticker {
 class Company {
   id int
   @description("A unique identifier for this object.")
+
+  uuid string?
+  @description("A unique identifier for this object. Leave blank.")
 
   name string
   @description("Formal name of the company with company suffix")
@@ -107,6 +113,12 @@ class Company {
 }
 
 class Product {
+  id int
+  @description("A unique identifier for this object.")
+
+  uuid string?
+  @description("A unique identifier for this object. Leave blank.")
+
   name string
   @description("Name of the company's product")
 
@@ -118,6 +130,12 @@ class Product {
 }
 
 class Technology {
+  id int
+  @description("A unique identifier for this object.")
+
+  uuid string?
+  @description("A unique identifier for this object. Leave blank.")
+
   name string
   @description("Name of the technology")
 
@@ -138,6 +156,12 @@ class Partnership {
   value int?
   @description("Value of the partnership in currency. This is the amount of money that will flow through the partnership. This is not the valuation of the company.")
 
+  technologies Technology[]?
+  @description("Technologies involved in the partnership.")
+
+  products Product[]?
+  @description("Products involved in the partnership.")
+
   currency string?
   @description("Currency of the value of a partnership. ISO 4217 3-letter currency code")
 
@@ -146,7 +170,6 @@ class Partnership {
 
   description string
   @description("Description of the partnership. What is its purpose? Characterize the relationship between the pair of companies.")
-
 }
 
 class Customer {
@@ -215,16 +238,16 @@ class Deal {
   description string
   @description("Description of the deal. What was bought, sold or invested in and by who? For how much money in which currency?")
 
-  amount int
+  amount int?
   @description("Amount of the deal in currency. This is the amount of money that changed hands in the deal. This is not the valuation of the company. Expand millions, billions or trillions to whole figures.")
 
-  currency string
+  currency string?
   @description("Currency of the deal amount. ISO 4217 3-letter currency code")
 
   country string?
   @description("Country of the deal. This is the country where the deal took place. This may be the country of any dst_company in a Sale, Acquisition or Investment.")
 
-  date string
+  date string?
   @description("Date of the deal in ISO-8601 format")
 
   quarter string?
@@ -241,7 +264,7 @@ class NewsSource {
 
 function ExtractIndustryArticle(article_text: string) -> IndustryArticle {
   // see clients.baml
-  client CustomGeminiFallback
+  client Gemini25Flash
 
   // The prompt uses Jinja syntax. Change the models or this text and watch the prompt preview change!
   prompt #"

@@ -19,7 +19,7 @@ class EntityResolutionResponse {
 
 function EntityResolution(company_one: Company, company_two: Company) -> EntityResolutionResponse {
   // see clients.baml
-  client CustomGeminiFallback
+  client Gemini25Flash
 
   // The prompt uses Jinja syntax. Change the models or this text and watch the prompt preview change!
   prompt #"
@@ -41,17 +41,20 @@ test CombineDescriptionPositiveTest {
   functions [EntityResolution]
   args {
     company_one {
+        id 1
+        uuid "7558314c-0b3f-4db8-8895-4fea5b17fd27"
         name "Tesla, Inc."
         ticker {
             exchange "NASDAQ"
             symbol "TSLA"
-            name "Tesla, Inc."
       }
       description "Tesla is a leader in electric transportation and energy storage, producing high-performance EVs, solar solutions, battery systems, and pioneering autonomous driving software to accelerate the global shift toward sustainable energy."
       founded_year 2003
       ceo "Elon Musk"
     }
     company_two {
+        id 2
+        uuid "83b9df69-3449-4b1a-821a-d19914befac3"
         name "Tesla"
         ticker {
             symbol "TSLA"
@@ -67,6 +70,8 @@ test DifferentNameFullRecordNegativeTest {
   functions [EntityResolution]
   args {
     company_one {
+        id 1
+        uuid "dcba5279-d8df-452c-aac3-cef3b079af02"
         name "Applied Materials, Inc."
         ticker {
             symbol "AMAT"
@@ -75,6 +80,8 @@ test DifferentNameFullRecordNegativeTest {
         description "Applied Materials is a global leader in materials engineering solutions for semiconductor manufacturing, providing equipment, services and software for chip fabrication including deposition, etch, and inspection systems."
     }
     company_two {
+        id 2
+        uuid "f0fbc099-fae6-4cb6-ae3e-e29a02425651"
         name "Applied Material Sciences"
     }
   }
@@ -86,11 +93,12 @@ test DifferentFullRecordsNegativeTest {
   functions [EntityResolution]
   args {
     company_one {
+        id 1
+        uuid "3277a2d4-8645-4cc6-be34-79ebb851493d"
         name "Applied Materials, Inc."
         ticker {
             exchange "NASDAQ"
             symbol "AMAT"
-            name "Applied Materials, Inc."
         }
         description "Applied Materials is a global leader in materials engineering solutions for semiconductor manufacturing, providing equipment, services and software for chip fabrication including deposition, etch, and inspection systems."
         founded_year 1967
@@ -98,11 +106,12 @@ test DifferentFullRecordsNegativeTest {
         headquarters_location "Santa Clara, United States"
     }
     company_two {
+        id 2
+        uuid "5658a4e4-cfcb-4790-97fd-b8c26df1af1c"
         name "Applied Material Sciences"
         ticker {
             exchange "TSXV"
             symbol "AMS"
-            name "Applied Material Sciences"
         }
         description "Applied Material Sciences specializes in advanced composite materials and nanotechnology solutions for aerospace and defense applications, developing carbon fiber components and specialized coatings for extreme environments."
         founded_year 2008
@@ -118,9 +127,13 @@ test JustNameSameExceptPeriodTest {
     functions [EntityResolution]
     args {
         company_one {
+            id 1
+            uuid "7e8b2c35-21e7-4821-a8da-abe43387671e"
             name "ABB Ltd."
         }
         company_two {
+            id 2
+            uuid "9cb6bb96-16d8-4bc7-bfd8-de1b9b4754ae"
             name "ABB Ltd"
         }
     }
@@ -131,9 +144,13 @@ test JustNameSameExceptAbbreviationTest {
     functions [EntityResolution]
     args {
         company_one {
+            id 1
+            uuid "cc47e115-7e0f-4a34-886c-fadbd3f3e125"
             name "International Business Machines Corporation"
         }
         company_two {
+            id 2
+            uuid "4386b965-d60d-4815-8902-0394b1ee044c"
             name "IBM"
         }
     }

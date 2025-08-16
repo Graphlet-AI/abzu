@@ -16,7 +16,7 @@ client<llm> CustomGPT4o {
   }
 }
 
-client<llm> CustomGemini25Flash {
+client<llm> Gemini25Flash {
     provider google-ai
     retry_policy Constant
     options {
@@ -25,7 +25,7 @@ client<llm> CustomGemini25Flash {
     }
 }
 
-client<llm> CustomGemini25Pro {
+client<llm> Gemini25Pro {
     provider google-ai
     retry_policy Exponential
     options {
@@ -34,11 +34,11 @@ client<llm> CustomGemini25Pro {
     }
 }
 
-client<llm> CustomGeminiFallback {
+client<llm> GeminiFallback {
   provider fallback
   retry_policy Exponential
   options {
-    strategy [CustomGemini25Pro, CustomGemini25Flash]
+    strategy [Gemini25Pro, Gemini25Flash]
   }
 }
 
