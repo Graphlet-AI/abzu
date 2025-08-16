@@ -21,3 +21,4 @@ minio-data/*
 !minio-data/.gitkeep
 .claude/settings.json.bak
 abzu/spark/README_files
+abzu/spark/README.html
