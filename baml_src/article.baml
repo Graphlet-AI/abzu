@@ -109,7 +109,10 @@ class Company {
   linkedin_url string?
 
   source_ids int[]?
-  @description("List of source Company ids that this Company originates from merges")
+  @description("List of source Company ids that this Company originates from merges. Leave null if length is one.")
+
+  source_uuids string[]?
+  @description("Leave null at all times.")
 }
 
 class Product {
@@ -127,6 +130,12 @@ class Product {
 
   manufacturer Company
   @description("Name of the company that makes the product")
+
+  source_ids int[]?
+  @description("List of source Product ids that this Product originates from merges. Leave null if length is one.")
+
+  source_uuids string[]?
+  @description("Leave null at all times.")
 }
 
 class Technology {
@@ -144,6 +153,12 @@ class Technology {
 
   description string
   @description("Description of the technology. What does it do? What is it used for?")
+
+  source_ids int[]?
+  @description("List of source Technology ids that this Technology originates from merges. Leave null if length is one.")
+
+  source_uuids string[]?
+  @description("Leave null at all times.")
 }
 
 class Partnership {
@@ -170,6 +185,9 @@ class Partnership {
 
   description string
   @description("Description of the partnership. What is its purpose? Characterize the relationship between the pair of companies.")
+
+  source_text_snippet string?
+  @description("Maximum 90 character snippet from the article where this Partnership relationship appears.")
 }
 
 class Customer {
@@ -193,6 +211,9 @@ class Customer {
 
   description string
   @description("Description of the customer relationship: what is bought or sold? How much?")
+
+  source_text_snippet string?
+  @description("Maximum 90 character character snippet from the article where this Customer relationship appears.")
 }
 
 class Investor {
@@ -210,6 +231,9 @@ class Investor {
 
   description string
   @description("Description of the investment")
+
+  source_text_snippet string?
+  @description("Maximum 90 character snippet from the article where this Investor relationship appears.")
 }
 
 enum DealType {
@@ -252,6 +276,9 @@ class Deal {
 
   quarter string?
   @description("Actual or projected quarter of the deal in ISO-8601 format. This is the quarter of the year when the deal took place or will take place.")
+
+  source_text_snippet string?
+  @description("Maximum 90 character snippet from the article where this Deal relationship appears.")
 }
 
 class NewsSource {

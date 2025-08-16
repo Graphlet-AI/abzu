@@ -45,6 +45,8 @@ test CombineDescriptionPositiveTest {
         uuid "7558314c-0b3f-4db8-8895-4fea5b17fd27"
         name "Tesla, Inc."
         ticker {
+            id 3
+            uuid "6ed16ab0-59e9-41d7-918b-5334cf4f7dd2"
             exchange "NASDAQ"
             symbol "TSLA"
       }
@@ -57,6 +59,8 @@ test CombineDescriptionPositiveTest {
         uuid "83b9df69-3449-4b1a-821a-d19914befac3"
         name "Tesla"
         ticker {
+            id 4
+            uuid "028f26a1-a32b-44c1-a31b-19f793247930"
             symbol "TSLA"
             name "Tesla"
         }
@@ -74,6 +78,8 @@ test DifferentNameFullRecordNegativeTest {
         uuid "dcba5279-d8df-452c-aac3-cef3b079af02"
         name "Applied Materials, Inc."
         ticker {
+            id 3
+            uuid "41c64cfe-82b2-47c5-a90a-7861554c9151"
             symbol "AMAT"
             name "Applied Materials, Inc."
         }
@@ -97,6 +103,8 @@ test DifferentFullRecordsNegativeTest {
         uuid "3277a2d4-8645-4cc6-be34-79ebb851493d"
         name "Applied Materials, Inc."
         ticker {
+            id 3
+            uuid "a89535b3-dc06-4647-9511-0248f51fb225"
             exchange "NASDAQ"
             symbol "AMAT"
         }
@@ -110,6 +118,8 @@ test DifferentFullRecordsNegativeTest {
         uuid "5658a4e4-cfcb-4790-97fd-b8c26df1af1c"
         name "Applied Material Sciences"
         ticker {
+            id 4
+            uuid "990e686a-5caf-48dc-ac13-430775d9f254"
             exchange "TSXV"
             symbol "AMS"
         }

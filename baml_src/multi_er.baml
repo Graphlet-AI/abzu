@@ -35,10 +35,14 @@ test TwoCompanyTest {
             uuid null
             exchange "NASDAQ"
             symbol "TSLA"
+            source_text_snippet null
           }
           description "Tesla is a leader in electric transportation and energy storage, producing high-performance EVs, solar solutions, battery systems, and pioneering autonomous driving software to accelerate the global shift toward sustainable energy."
           founded_year 2003
           ceo "Elon Musk"
+          source_text_snippet null
+          source_ids null
+          source_uuids null
         }
         {
           id 2
@@ -48,9 +52,13 @@ test TwoCompanyTest {
             id 4
             uuid null
             symbol "TSLA"
+            source_text_snippet null
           }
           description "Tesla is known for its electric car innovations and has developed the Powerwall home battery, launched in 2015 to advance accessible solar energy storage and reliable backup power for homes"
           headquarters_location "Austin, United States"
+          source_text_snippet null
+          source_ids null
+          source_uuids null
         }
       ]
     }
@@ -75,6 +83,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null
                 }
                 {
                     id 2
@@ -89,6 +100,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null
                 }
                 {
                     id 3
@@ -103,6 +117,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null
                 }
                 {
                     id 4
@@ -131,7 +148,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 6
                     uuid null
@@ -145,7 +164,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 7
                     uuid null
@@ -159,7 +180,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 8
                     uuid null
@@ -173,7 +196,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 9
                     uuid null
@@ -187,7 +212,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 10
                     uuid null
@@ -201,7 +228,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 11
                     uuid null
@@ -215,7 +244,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 12
                     uuid null
@@ -229,7 +260,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 13
                     uuid null
@@ -243,7 +276,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 14
                     uuid null
@@ -257,7 +292,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 15
                     uuid null
@@ -271,7 +308,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 16
                     uuid null
@@ -285,7 +324,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 17
                     uuid null
@@ -299,7 +340,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 18
                     uuid null
@@ -313,7 +356,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 19
                     uuid null
@@ -327,7 +372,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 20
                     uuid null
@@ -341,7 +388,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 21
                     uuid null
@@ -355,7 +404,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 22
                     uuid null
@@ -369,7 +420,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 23
                     uuid null
@@ -383,7 +436,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 24
                     uuid null
@@ -397,7 +452,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 25
                     uuid null
@@ -411,7 +468,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 26
                     uuid null
@@ -425,7 +484,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 27
                     uuid null
@@ -439,7 +500,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 28
                     uuid null
@@ -453,7 +516,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 29
                     uuid null
@@ -467,7 +532,9 @@ test WikiEnrichTest {
                     founded_year 1993
                     ceo "Jensen Huang"
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 30
                     uuid null
@@ -481,7 +548,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 31
                     uuid null
@@ -495,7 +564,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 32
                     uuid null
@@ -509,7 +580,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 33
                     uuid null
@@ -523,7 +596,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 34
                     uuid null
@@ -537,7 +612,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 35
                     uuid null
@@ -551,7 +628,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 36
                     uuid null
@@ -565,7 +644,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 37
                     uuid null
@@ -579,7 +660,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 38
                     uuid null
@@ -593,7 +676,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 39
                     uuid null
@@ -607,7 +692,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 40
                     uuid null
@@ -621,7 +708,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 41
                     uuid null
@@ -635,7 +724,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 42
                     uuid null
@@ -649,7 +740,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 43
                     uuid null
@@ -663,7 +756,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 44
                     uuid null
@@ -677,7 +772,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 45
                     uuid null
@@ -691,7 +788,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 46
                     uuid null
@@ -705,7 +804,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 47
                     uuid null
@@ -719,7 +820,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 48
                     uuid null
@@ -733,7 +836,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 49
                     uuid null
@@ -747,7 +852,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 50
                     uuid null
@@ -761,7 +868,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 51
                     uuid null
@@ -775,7 +884,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 52
                     uuid null
@@ -789,7 +900,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 53
                     uuid null
@@ -803,7 +916,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 54
                     uuid null
@@ -817,7 +932,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 55
                     uuid null
@@ -831,7 +948,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 56
                     uuid null
@@ -845,7 +964,9 @@ test WikiEnrichTest {
                     founded_year 1975
                     ceo "Steve Ballmer"
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 57
                     uuid null
@@ -859,7 +980,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 58
                     uuid null
@@ -878,10 +1001,13 @@ test WikiEnrichTest {
                     founded_year 1993
                     ceo "Jensen Huang"
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 59
                     uuid null
+                    name "OpenAI, Inc."
                     ticker null
                     description "OpenAI, Inc. is an American artificial intelligence (AI) organization founded in December 2015 and headquartered in San Francisco, California. It aims to develop \"safe and beneficial\" artificial general intelligence (AGI), which it defines as \"highly autonomous systems that outperform humans at most economically valuable work\". As a leading organization in the ongoing AI boom, OpenAI is known for the GPT family of large language models, the DALL-E series of text-to-image models, and a text-to-video model named Sora. Its release of ChatGPT in November 2022 has been credited with catalyzing widespread interest in generative AI.\nThe organization has a complex corporate structure. As of April 2025, it is led by the non-profit OpenAI, Inc., registered in Delaware, and has multiple for-profit subsidiaries including OpenAI Holdings, LLC and OpenAI Global, LLC. Microsoft has invested US$13 billion in OpenAI, and is entitled to 49% of OpenAI Global, LLC's profits, capped at an estimated 10x their investment. Microsoft also provides computing resources to OpenAI through its cloud platform, Microsoft Azure.\nIn 2023 and 2024, OpenAI faced multiple lawsuits for alleged copyright infringement against authors and media companies whose work was used to train some of OpenAI's products. In November 2023, OpenAI's board removed Sam Altman as CEO, citing a lack of confidence in him, but reinstated him five days later following a reconstruction of the board. Throughout 2024, roughly half of then-employed AI safety researchers left OpenAI, citing the company's prominent role in an industry-wide problem.\n\n"
                     website_url null
@@ -891,7 +1017,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo "Sam Altman"
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 60
                     uuid null
@@ -905,7 +1033,9 @@ test WikiEnrichTest {
                     founded_year 1977
                     ceo "Phil White"
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 61
                     uuid null
@@ -919,7 +1049,9 @@ test WikiEnrichTest {
                     founded_year 2015
                     ceo "Tom Kalinske"
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 62
                     uuid null
@@ -933,7 +1065,9 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 63
                     uuid null
@@ -947,7 +1081,9 @@ test WikiEnrichTest {
                     founded_year 1865
                     ceo "Masayoshi Son"
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 64
                     uuid null
@@ -961,7 +1097,9 @@ test WikiEnrichTest {
                     founded_year 1865
                     ceo "Masayoshi Son"
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
                 {
                     id 65
                     uuid null
@@ -975,7 +1113,9 @@ test WikiEnrichTest {
                     founded_year 2017
                     ceo null
                     linkedin_url null
-                }
+                    source_text_snippet null
+                    source_ids null
+                    source_uuids null                }
             ]
         }
     }
