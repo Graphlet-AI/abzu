@@ -7,7 +7,6 @@ This opinionated guide to PySpark code style presents common situations we've en
 Beyond PySpark specifics, the general practices of clean code are important in PySpark repositories- the Google [PyGuide](https://github.com/google/styleguide/blob/gh-pages/pyguide.md) is a strong starting point for learning more about these practices.
 
 
-
 # Prefer implicit column selection to direct access, except for disambiguation
 
 ```python
@@ -33,11 +32,14 @@ In many situations the first style can be simpler, shorter and visually less pol
 Additionally, the dot syntax encourages use of short and non-descriptive variable names for the dataframes, which we have found to be harmful for maintainability. Remember that dataframes are containers for data, and descriptive names is a helpful way to quickly set expectations about what's contained within. 
 
 By contrast, `F.col('colA')` will always reference a column designated `colA` in the dataframe being operated on, named `df`, in this case. It does not require keeping track of other dataframes' states at all, so the code becomes more local and less susceptible to "spooky interaction at a distance," which is often challenging to debug.
-
 ### Caveats
 
 In some contexts there may be access to columns from more than one dataframe, and there may be an overlap in names. A common example is in matching expressions like `df.join(df2, on=(df.key == df2.key), how='left')`. In such cases it is fine to reference columns by their dataframe directly. You can also disambiguate joins using dataframe aliases (see more in the **Joins** section in this guide).
 
+# Make Assumptions About Input Data
+
+1. Assume the schema for a DataFrame is followed, which means all fields that should be there WILL be there. Do not implement conditionals to check.
+2. Assume that the data is clean and does not contain any nulls, unless explicitly stated otherwise. If you need to handle nulls, do so in a separate step.
 
 # Refactor complex logical operations
 
@@ -218,7 +220,7 @@ for c in cols:
 
 # UDFs (user defined functions)
 
-It is highly recommended to avoid UDFs in all situations, as they are dramatically less performant than native PySpark. In most situations, logic that seems to necessitate a UDF can be refactored to use only native PySpark functions.
+If you can do something without a UDF, try to do so unless I say otherwise. In most situations, logic that seems to necessitate a UDF can be refactored to use only native PySpark functions.
 
 # Joins
 
@@ -525,26 +527,20 @@ df = (
 ```
 
 
-
-
 # Other Considerations and Recommendations
 
+0. Do not split a single file's dataflow into multiple functions. Just implement a linear dataflow. If you have to repeat the same code of more than three lines more than two times, implement a function for that logic.
 1. Be wary of functions that grow too large. As a general rule, a file
     should not be over 250 lines, and a function should not be over 70 lines.
 2. Try to keep your code in logical blocks. For example, if you have
     multiple lines referencing the same things, try to keep them
     together. Separating them reduces context and readability.
-3. Test your code! If you *can* run the local tests, do so and make
-    sure that your new code is covered by the tests. If you can't run
-    the local tests, build the datasets on your branch and manually
-    verify that the data looks as expected.
 4. Avoid `.otherwise(value)` as a general fallback. If you are mapping
     a list of keys to a list of values and a number of unknown keys appear,
     using `otherwise` will mask all of these into one value.
 5. Do not keep commented out code checked in the repository. This applies
     to single line of codes, functions, classes or modules. Rely on git
     and its capabilities of branching or looking at history instead.
-6. When encountering a large single transformation composed of integrating multiple different source tables, split it into the natural sub-steps and extract the logic to functions. This allows for easier higher level readability and allows for code re-usability and consistency between transforms.
 7. Try to be as explicit and descriptive as possible when naming functions
     or variables. Strive to capture what the function is actually doing
     as opposed to naming it based the objects used inside of it.
