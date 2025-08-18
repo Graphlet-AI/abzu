@@ -37,7 +37,7 @@ class IndustryArticle {
   technologies Technology[]?
   @description("Technologies mentioned in the article. Technologies does not include products.")
 
-  relationships CompanyRelationship[]?
+  relationships Relationship[]?
   @description("Commercial deals and relationships mentioned in the article.")
 
   cited_sources NewsSource[]?
@@ -119,11 +119,11 @@ class Product {
   description string
   @description("Description of the product. What does it do? What is it used for?")
 
-  manufacturer Company?
-  @description("Name of the company that manufactures or sells the product")
+  manufacturer int?
+  @description("ID of the company that manufactures or sells the product")
 
-  technologies Technology[]?
-  @description("Name of one or more technologies used in this product.")
+  technologies int[]?
+  @description("IDs of one or more technologies used in this product.")
 
   source_ids int[]?
   @description("List of source Product ids that this Product originates from merges. Leave null if length is one.")
@@ -142,8 +142,8 @@ class Technology {
   name string
   @description("Full name of the technology")
 
-  developer Company?
-  @description("Name of the Company that invented or developed this technology")
+  developer int?
+  @description("ID of the Company that invented or developed this technology")
 
   description string
   @description("Description of the technology. What does it do? What is it used for?")
@@ -163,7 +163,7 @@ class Nation {
   gdp float? @description("Gross Domestic Product of the country")
 }
 
-enum CompanyRelationshipType {
+enum RelationshipType {
   Supplier @description("Sells a product or technology to another company")
   Acquisition @description("One company buys another company")
   Financing @description("Financing of a deal between companies")
@@ -173,20 +173,20 @@ enum CompanyRelationshipType {
   Subsidiary @description("One company is owned by another company and operates independently")
 }
 
-class CompanyRelationship {
-  src_company Company
-  @description("Source company in the deal.")
+class Relationship {
+  src_company int
+  @description("Source company id in the deal.")
 
-  dst_company Company?
-  @description("Target company in the deal.")
+  dst_company int?
+  @description("Target company id in the deal.")
 
-  type CompanyRelationshipType
+  type RelationshipType
 
-  technologies Technology[]?
-  @description("Technologies involved in the deal.")
+  technologies int[]?
+  @description("Technology ids involved in the deal.")
 
-  products Product[]?
-  @description("Products involved in the deal.")
+  products int[]?
+  @description("Product ids involved in the deal.")
 
   description string
 
@@ -223,10 +223,10 @@ function ExtractIndustryArticle(article_text: string) -> IndustryArticle {
 
   // The prompt uses Jinja syntax. Change the models or this text and watch the prompt preview change!
   prompt #"
-    Parse the following article, perform information extraction to return a structured representation of the data in the schema below. Include only the information that is explicitly stated in the article except in the description fields, where you can give a generic description of an entity. Skip all fields that would be null, unless they are REQUIRED. Assign each unique entity an integer identifier in the id.integer field that appears wherever that entity is present in the output.
+    Parse the following article, perform information extraction to return a structured representation of the data in the schema below. Include only the information that is explicitly stated in the article except in the description fields, where you can give a generic description of an entity. Skip all fields that would be null, unless they are REQUIRED. Assign each unique entity in the entire document a unique integer identifier in the id field.
 
     {# special macro to print the output instructions. #}
-    {{ ctx.output_format(hoist_classes=["Company", "Ticker", "Product", "Technology", "CompanyRelationship", "NewsSource", "Author"]) }}
+    {{ ctx.output_format(hoist_classes=["Company", "Ticker", "Product", "Technology", "Relationship", "NewsSource", "Author"]) }}
 
     {{ _.role("user") }}
     {{ article_text }}

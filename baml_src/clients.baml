@@ -22,6 +22,9 @@ client<llm> Gemini25Flash {
     options {
         model "gemini-2.5-flash"
         api_key env.GEMINI_API_KEY
+        generationConfig {
+            temperature 0.7
+        }
     }
 }
 
