@@ -54,7 +54,7 @@ class Author {
 
 class Ticker {
   id int
-  @description("A unique identifier for this object.")
+  @description("Unique among all objects.")
 
   uuid string?
   @description("A unique identifier for this object. Leave blank.")
@@ -68,7 +68,7 @@ class Ticker {
 
 class Company {
   id int
-  @description("A unique identifier for this object.")
+  @description("Unique among all objects.")
 
   uuid string?
   @description("A unique identifier for this object. Leave blank.")
@@ -108,7 +108,7 @@ class Company {
 
 class Product {
   id int
-  @description("A unique identifier for this object.")
+  @description("Unique among all objects.")
 
   uuid string?
   @description("A unique identifier for this object. Leave blank.")
@@ -134,7 +134,7 @@ class Product {
 
 class Technology {
   id int
-  @description("A unique identifier for this object.")
+  @description("Unique among all objects.")
 
   uuid string?
   @description("A unique identifier for this object. Leave blank.")
@@ -223,7 +223,7 @@ function ExtractIndustryArticle(article_text: string) -> IndustryArticle {
 
   // The prompt uses Jinja syntax. Change the models or this text and watch the prompt preview change!
   prompt #"
-    Parse the following article, perform information extraction to return a structured representation of the data in the schema below. Include only the information that is explicitly stated in the article except in the description fields, where you can give a generic description of an entity. Skip all fields that would be null, unless they are REQUIRED. Assign each unique entity in the entire document a unique integer identifier in the id field.
+    Parse the following article, perform information extraction to return a structured representation of the data in the schema below. Include only the information that is explicitly stated in the article except in the description fields, where you can give a generic description of an entity. Skip all fields that would be null, unless they are REQUIRED. Assign each entity in the entire document a unique integer identifier in the id field.
 
     {# special macro to print the output instructions. #}
     {{ ctx.output_format(hoist_classes=["Company", "Ticker", "Product", "Technology", "Relationship", "NewsSource", "Author"]) }}
