@@ -119,8 +119,8 @@ class Product {
   description string
   @description("Description of the product. What does it do? What is it used for?")
 
-  manufacturers Company[]?
-  @description("Name of one or more companies that manufacture or sell the product")
+  manufacturer Company?
+  @description("Name of the company that manufactures or sells the product")
 
   technologies Technology[]?
   @description("Name of one or more technologies used in this product.")
@@ -142,8 +142,8 @@ class Technology {
   name string
   @description("Full name of the technology")
 
-  developers Company[]?
-  @description("Name of one or more Companies that invented or developed this technology")
+  developer Company?
+  @description("Name of the Company that invented or developed this technology")
 
   description string
   @description("Description of the technology. What does it do? What is it used for?")
