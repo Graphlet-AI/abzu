@@ -190,6 +190,9 @@ class CompanyRelationship {
 
   description string
 
+  percentage float?
+  @description("Percentage of ownership or involvement in the deal.")
+
   amount float?
   @description("Currency. Expand millions, billions or trillions to whole figures.")
 
