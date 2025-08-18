@@ -58,7 +58,7 @@ class AnnualReportPartnership {
 class Investment {
   investor_company Company?
   invested_company Company?
-  investment_type DealType
+  investment_type CompanyRelationshipType
   amount int?
   currency string?
   date string?

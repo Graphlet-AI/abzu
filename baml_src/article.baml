@@ -31,23 +31,14 @@ class IndustryArticle {
   tickers Ticker[]?
   @description("Ticker symbols of the companies mentioned in the article")
 
-  partnerships Partnership[]?
-  @description("Partnerships between two companies mentioned in the article. A partnership is a business relationship between two companies that is not a customer relationship or an investment.")
-
-  customers Customer[]?
-  @description("Customer relationships mentioned in the article")
-
-  investors Investor[]?
-  @description("Investor relationships mentioned in the article")
-
   products Product[]?
   @description("Products mentioned in the article")
 
   technologies Technology[]?
   @description("Technologies mentioned in the article. Technologies does not include products.")
 
-  deals Deal[]?
-  @description("Commercial deals mentioned in the article: sales, acquisitions, financing or investments.")
+  relationships CompanyRelationship[]?
+  @description("Commercial deals and relationships mentioned in the article.")
 
   cited_sources NewsSource[]?
   @description("News sources mentioned in the article. This is a news source that was quoted or linked to. This is not the source of the article.")
@@ -131,6 +122,9 @@ class Product {
   manufacturers Company[]?
   @description("Name of one or more companies that manufacture or sell the product")
 
+  technologies Technology[]?
+  @description("Name of one or more technologies used in this product.")
+
   source_ids int[]?
   @description("List of source Product ids that this Product originates from merges. Leave null if length is one.")
 
@@ -161,96 +155,55 @@ class Technology {
   @description("Leave null at all times.")
 }
 
-class Supplier {
-  src_company Company
-  @description("Selling or supplying company")
-
-  dst_company Company
-  @description("Buying company")
-
-  value int?
-  @description("Value of the buyer's account in currency to the selling company. This is a valuation of the relationship.")
-
-  currency string?
-  @description("Currency of the customer relationship's transactions. ISO 4217 3-letter currency code")
-
-  technologies Technology[]?
-  @description("Technologies involved in the customer relationship. This is a technology that was bought or sold.")
-
-  products Product[]?
-  @description("Products involved in the customer relationship. This is a product that was bought, licensed or sold.")
-
-  description string
-  @description("Description of the customer relationship: what is bought or sold? How much?")
-
-//   source_text_snippet string?
-//   @description("Maximum 90 character character snippet from the article where this Customer relationship appears.")
+class Nation {
+  common_name string @description("Common name of country")
+  full_name string? @description("Official name of country")
+  iso_2 string?
+  iso_3 string?
+  gdp float? @description("Gross Domestic Product of the country")
 }
 
-class Investor {
-  src_company Company
-  @description("Company making the investment")
-
-  dst_company Company
-  @description("Company receiving the investment")
-
-  amount int?
-  @description("Amount of the investment in currency. This is the amount of money that changed hands in the investment. This is not the valuation of the company.")
-
-  currency string?
-  @description("Currency of the investment amount. ISO 4217 3-letter currency code")
-
-  description string
-  @description("Description of the investment")
-
-//   source_text_snippet string?
-//   @description("Maximum 90 character snippet from the article where this Investor relationship appears.")
-}
-
-enum DealType {
-  Sale @description("Sale of a product or technology")
-  Acquisition @description("Acquisition of a company")
-  Financing @description("Financing of a company or deal between companies)
+enum CompanyRelationshipType {
+  Supplier @description("Sells a product or technology to another company")
+  Acquisition @description("One company buys another company")
+  Financing @description("Financing of a deal between companies")
   Investment @description("Investment in a company or country")
   Partnership @description("Partnership between two companies")
+  Licensing @description("One company licenses a technology to another company")
+  Subsidiary @description("One company is owned by another company and operates independently")
 }
 
-class Deal {
+class CompanyRelationship {
   src_company Company
-  @description("Source company in the deal. This is the company that sold a product or technology (Sale type), acquired another company (Acquisition type) or made an investment (Investment type).")
+  @description("Source company in the deal.")
 
   dst_company Company?
-  @description("Target company in the deal. This is the company that bought a product or technology (Sale type), the company that was acquired (Acquisition type) or received investment (Investment type). Some investments don't have recipients if they relate only to a location.")
+  @description("Target company in the deal.")
+
+  type CompanyRelationshipType
 
   technologies Technology[]?
-  @description("Technologies involved in the deal. This is the technology that was sold, acquired or invested in.")
+  @description("Technologies involved in the deal.")
 
   products Product[]?
-  @description("Products involved in the deal. This is the product that was sold, acquired or invested in.")
-
-  type DealType?
-  @description("Type of the deal: Sale, Acquisition, Financing, Investment or Partnership.")
+  @description("Products involved in the deal.")
 
   description string
-  @description("Description of the deal. What was bought, sold or invested in and by who? For how much money in which currency?")
 
-  amount int?
-  @description("Amount of the deal in currency. This is the amount of money that changed hands in the deal. This is not the valuation of the company. Expand millions, billions or trillions to whole figures.")
+  amount float?
+  @description("Currency. Expand millions, billions or trillions to whole figures.")
 
   currency string?
-  @description("Currency of the deal amount. ISO 4217 3-letter currency code")
+  @description("ISO 4217 3-letter currency code")
 
-  country string?
-  @description("Country of the deal. This is the country where the deal took place. This may be the country of any dst_company in a Sale, Acquisition or Investment.")
+  country Nation?
+  @description("Country where the relationship occurs. Sometimes articles announce investments made by companies in specific countries.")
 
   date string?
-  @description("Date of the deal in ISO-8601 format")
+  @description("Date of the relationship in ISO-8601 format")
 
   quarter string?
-  @description("Actual or projected quarter of the deal in ISO-8601 format. This is the quarter of the year when the deal took place or will take place.")
-
-//   source_text_snippet string?
-//   @description("Maximum 90 character snippet from the article where this Deal relationship appears.")
+  @description("Actual or projected financial quarter of the deal in ISO-8601 format. This is the quarter of the year when a relationship took place or will take place.")
 }
 
 class NewsSource {
@@ -267,11 +220,10 @@ function ExtractIndustryArticle(article_text: string) -> IndustryArticle {
 
   // The prompt uses Jinja syntax. Change the models or this text and watch the prompt preview change!
   prompt #"
-    Parse the following article, perform information extraction to return a structured representation of the data in the schema below. Include only the information that is explicitly stated in the article except in the description fields, where you can give a generic description of an entity. Skip all fields that would be null, unless they are REQUIRED. Assign each unique entity an integer identifier
-    in the id.integer field that appears wherever that entity is present in the output.
+    Parse the following article, perform information extraction to return a structured representation of the data in the schema below. Include only the information that is explicitly stated in the article except in the description fields, where you can give a generic description of an entity. Skip all fields that would be null, unless they are REQUIRED. Assign each unique entity an integer identifier in the id.integer field that appears wherever that entity is present in the output.
 
     {# special macro to print the output instructions. #}
-    {{ ctx.output_format(hoist_classes=["Company", "Ticker", "Product", "Technology", "Customer", "Investor", "Deal", "NewsSource", "Author"]) }}
+    {{ ctx.output_format(hoist_classes=["Company", "Ticker", "Product", "Technology", "CompanyRelationship", "NewsSource", "Author"]) }}
 
     {{ _.role("user") }}
     {{ article_text }}
