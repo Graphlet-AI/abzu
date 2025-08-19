@@ -4,6 +4,7 @@ import uuid
 from typing import Optional
 
 import pyspark.sql.functions as F
+import pyspark.sql.types as T
 from pyspark.sql import DataFrame, Row, SparkSession
 
 from abzu.config import config
@@ -47,7 +48,62 @@ def build_knowledge_graph(
     # Technology and Product entities with random UUIDs. The UUIDs must be consistent per integer
     # across each article.
 
-    @F.udf(returnType=articles_df.schema)
+    # Create a modified schema where integer references are converted to string UUIDs
+    def create_uuid_schema(original_schema):
+        """Create a schema where integer ID references are changed to string UUIDs."""
+        fields = []
+        for field in original_schema.fields:
+            if field.name == "products":
+                # Modify products array to change manufacturer from long to string
+                # and technologies array from array<long> to array<string>
+                product_fields = []
+                for prod_field in field.dataType.elementType.fields:
+                    if prod_field.name == "manufacturer":
+                        # Change manufacturer from long to string (UUID)
+                        product_fields.append(T.StructField("manufacturer", T.StringType(), True))
+                    elif prod_field.name == "technologies":
+                        # Change technologies from array<long> to array<string> (UUIDs)
+                        product_fields.append(
+                            T.StructField("technologies", T.ArrayType(T.StringType()), True)
+                        )
+                    else:
+                        product_fields.append(prod_field)
+                new_product_type = T.StructType(product_fields)
+                fields.append(T.StructField("products", T.ArrayType(new_product_type), True))
+            elif field.name == "technologies":
+                # Modify technologies array to change developer from long to string
+                tech_fields = []
+                for tech_field in field.dataType.elementType.fields:
+                    if tech_field.name == "developer":
+                        # Change developer from long to string (UUID)
+                        tech_fields.append(T.StructField("developer", T.StringType(), True))
+                    else:
+                        tech_fields.append(tech_field)
+                new_tech_type = T.StructType(tech_fields)
+                fields.append(T.StructField("technologies", T.ArrayType(new_tech_type), True))
+            elif field.name == "relationships":
+                # Modify relationships array to change company refs and arrays to strings
+                rel_fields = []
+                for rel_field in field.dataType.elementType.fields:
+                    if rel_field.name in ["src_company", "dst_company"]:
+                        # Change company refs from long to string (UUID)
+                        rel_fields.append(T.StructField(rel_field.name, T.StringType(), True))
+                    elif rel_field.name in ["technologies", "products"]:
+                        # Change arrays from array<long> to array<string> (UUIDs)
+                        rel_fields.append(
+                            T.StructField(rel_field.name, T.ArrayType(T.StringType()), True)
+                        )
+                    else:
+                        rel_fields.append(rel_field)
+                new_rel_type = T.StructType(rel_fields)
+                fields.append(T.StructField("relationships", T.ArrayType(new_rel_type), True))
+            else:
+                fields.append(field)
+        return T.StructType(fields)
+
+    uuid_schema = create_uuid_schema(articles_df.schema)
+
+    @F.udf(returnType=uuid_schema)
     def replace_ids_with_uuids(row: Row) -> Row:
         """
         Replace integer IDs with UUIDs in all entity references within an article row.
@@ -70,8 +126,6 @@ def build_knowledge_graph(
 
         # Helper function to get or create UUID for an integer ID
         def get_or_create_uuid(int_id):
-            if int_id is None:
-                return None
             if int_id not in id_to_uuid_map:
                 id_to_uuid_map[int_id] = str(uuid.uuid4())
             return id_to_uuid_map[int_id]
