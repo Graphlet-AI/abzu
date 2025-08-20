@@ -324,4 +324,4 @@ def build_knowledge_graph(
 
     relationships_output_path = f"{output_path}/relationships.parquet"
     relationships_df.repartition(1).write.mode("overwrite").parquet(relationships_output_path)
-    logger.info(f"Saved {relationships_df.count():,} deals to {relationships_output_path}")
+    logger.info(f"Saved {relationships_df.count():,} relationships to {relationships_output_path}")
