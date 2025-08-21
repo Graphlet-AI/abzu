@@ -1,6 +1,6 @@
 // Learn more about clients at https://docs.boundaryml.com/docs/snippets/clients/overview
 
-client<llm> CustomO3Mini {
+client<llm> O3Mini {
     provider openai
     options {
         model "o3-mini"
@@ -8,7 +8,7 @@ client<llm> CustomO3Mini {
     }
 }
 
-client<llm> CustomGPT4o {
+client<llm> GPT4o {
   provider openai
   options {
     model "gpt-4o"
@@ -23,7 +23,7 @@ client<llm> Gemini25Flash {
         model "gemini-2.5-flash"
         api_key env.GEMINI_API_KEY
         generationConfig {
-            temperature 0.7
+            temperature 0.0
         }
     }
 }
@@ -34,6 +34,9 @@ client<llm> Gemini25Pro {
     options {
         model "gemini-2.5-pro"
         api_key env.GEMINI_API_KEY
+        generationConfig {
+            temperature 0.0
+        }
     }
 }
 
@@ -51,7 +54,7 @@ client<llm> OpenAIFallback {
   retry_policy Constant
   options {
     // This will try the clients in order until one succeeds
-    strategy [CustomO3Mini, CustomGPT4o]
+    strategy [O3Mini, GPT4o]
   }
 }
 
