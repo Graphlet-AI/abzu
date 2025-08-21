@@ -6,6 +6,8 @@ import time
 from pathlib import Path
 from typing import Any
 
+from baml_py import ClientRegistry
+from baml_py.internal_monkeypatch import BamlValidationError
 from tqdm import tqdm
 
 from abzu.baml_client.async_client import b as async_b
@@ -39,6 +41,40 @@ def load_articles(file_path: str) -> list[dict[str, Any]]:
     return deduped_articles
 
 
+def get_client_registry() -> ClientRegistry:
+
+    cr: ClientRegistry = ClientRegistry()
+
+    cr.add_llm_client(
+        name="Gemini25Flash",
+        provider="google-ai",
+        options={
+            "model": "gemini-2.5-flash",
+            "api_key": os.environ.get("GEMINI_API_KEY"),
+            "generationConfig": {
+                "temperature": 0.0,
+            },
+        },
+    )
+
+    cr.add_llm_client(
+        name="Gemini25Pro",
+        provider="google-ai",
+        options={
+            "model": "gemini-2.5-pro",
+            "api_key": os.environ.get("GEMINI_API_KEY"),
+            "generationConfig": {
+                "temperature": 0.0,
+            },
+        },
+    )
+
+    # Start with cheaper Gemini 2.5 Flash, fall back to 2.5 Pro
+    cr.set_primary("Gemini25Flash")
+
+    return cr
+
+
 async def process_article_async(
     article: dict[str, Any],
 ) -> IndustryArticle | BaseException | None:
@@ -50,6 +86,8 @@ async def process_article_async(
     Returns:
         Processed IndustryArticle object or None if processing failed
     """
+    # cr: ClientRegistry = get_client_registry()
+
     article_text = article.get("content", "")
 
     if not article_text:
@@ -62,7 +100,25 @@ async def process_article_async(
             f"Processing article: {article.get('title', 'unknown')} posted at {article.get('posted_at', 'unknown')} ({len(article_text):,} chars)"
         )
 
-        result = await async_b.ExtractIndustryArticle(article_text)
+        #
+        # Will try this later...
+        #
+
+        # try:
+        #     result = await async_b.ExtractIndustryArticle(article_text, {"client_registry": cr})
+        # except BamlValidationError as e:
+        #     logger.error(f"BAML validation error: {e}")
+        #     # Retry exceptions with Gemini 2.5 Pro
+        #     cr.set_primary("Gemini25Pro")
+        #     result = await async_b.ExtractIndustryArticle(article_text, {"client_registry": cr})
+        # finally:
+        #     cr.set_primary("Gemini25Flash")
+
+        try:
+            result = await async_b.ExtractIndustryArticle(article_text)
+        except BamlValidationError as e:
+            logger.error(f"BAML validation error: {e}")
+            return None
 
         # Pass through timestamps from the original article
         result.collected_at = article.get("collected_at", None)
