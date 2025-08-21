@@ -89,6 +89,7 @@ test DifferentNameFullRecordNegativeTest {
         id 2
         uuid "f0fbc099-fae6-4cb6-ae3e-e29a02425651"
         name "Applied Material Sciences"
+        description null
     }
   }
   @@assert( verify_no_match, {{ this.match == "NO_MATCH" }} )
@@ -140,11 +141,13 @@ test JustNameSameExceptPeriodTest {
             id 1
             uuid "7e8b2c35-21e7-4821-a8da-abe43387671e"
             name "ABB Ltd."
+            description null
         }
         company_two {
             id 2
             uuid "9cb6bb96-16d8-4bc7-bfd8-de1b9b4754ae"
             name "ABB Ltd"
+            description null
         }
     }
     @@assert( verify_match, {{ this.match == "MATCH" }} )
@@ -157,11 +160,13 @@ test JustNameSameExceptAbbreviationTest {
             id 1
             uuid "cc47e115-7e0f-4a34-886c-fadbd3f3e125"
             name "International Business Machines Corporation"
+            description null
         }
         company_two {
             id 2
             uuid "4386b965-d60d-4815-8902-0394b1ee044c"
             name "IBM"
+            description null
         }
     }
     @@assert( verify_match, {{ this.match == "MATCH" }} )
