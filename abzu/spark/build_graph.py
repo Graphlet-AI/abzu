@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 """Build a knowledge graph from pre-processed articles."""
-import uuid
 from typing import Optional
 
 import pyspark.sql.functions as F
@@ -10,6 +9,12 @@ from pyspark.sql import DataFrame, Row, SparkSession
 from abzu.config import config
 from abzu.logs import get_logger
 from abzu.spark.config import get_spark_session
+from abzu.spark.utils import (
+    create_uuid_schema,
+    get_or_create_uuid,
+    update_entity_with_uuid,
+    validate_referential_integrity,
+)
 
 logger = get_logger(__name__)
 
@@ -48,63 +53,41 @@ def build_knowledge_graph(
     # Technology and Product entities with random UUIDs. The UUIDs must be consistent per integer
     # across each article.
 
-    # Create a modified schema where integer references are converted to string UUIDs
-    def create_uuid_schema(original_schema):
-        """Create a schema where integer ID references are changed to string UUIDs."""
-        fields = []
-        for field in original_schema.fields:
-            if field.name == "products":
-                # Modify products array to change manufacturer from long to string
-                # and technologies array from array<long> to array<string>
-                product_fields = []
-                for prod_field in field.dataType.elementType.fields:
-                    if prod_field.name == "manufacturer":
-                        # Change manufacturer from long to string (UUID)
-                        product_fields.append(T.StructField("manufacturer", T.StringType(), True))
-                    elif prod_field.name == "technologies":
-                        # Change technologies from array<long> to array<string> (UUIDs)
-                        product_fields.append(
-                            T.StructField("technologies", T.ArrayType(T.StringType()), True)
-                        )
-                    else:
-                        product_fields.append(prod_field)
-                new_product_type = T.StructType(product_fields)
-                fields.append(T.StructField("products", T.ArrayType(new_product_type), True))
-            elif field.name == "technologies":
-                # Modify technologies array to change developer from long to string
-                tech_fields = []
-                for tech_field in field.dataType.elementType.fields:
-                    if tech_field.name == "developer":
-                        # Change developer from long to string (UUID)
-                        tech_fields.append(T.StructField("developer", T.StringType(), True))
-                    else:
-                        tech_fields.append(tech_field)
-                new_tech_type = T.StructType(tech_fields)
-                fields.append(T.StructField("technologies", T.ArrayType(new_tech_type), True))
-            elif field.name == "relationships":
-                # Modify relationships array to change company refs and arrays to strings
-                rel_fields = []
-                for rel_field in field.dataType.elementType.fields:
-                    if rel_field.name in ["src_company", "dst_company"]:
-                        # Change company refs from long to string (UUID)
-                        rel_fields.append(T.StructField(rel_field.name, T.StringType(), True))
-                    elif rel_field.name in ["technologies", "products"]:
-                        # Change arrays from array<long> to array<string> (UUIDs)
-                        rel_fields.append(
-                            T.StructField(rel_field.name, T.ArrayType(T.StringType()), True)
-                        )
-                    else:
-                        rel_fields.append(rel_field)
-                new_rel_type = T.StructType(rel_fields)
-                fields.append(T.StructField("relationships", T.ArrayType(new_rel_type), True))
-            else:
-                fields.append(field)
-        return T.StructType(fields)
+    validate_referential_integrity_udf = F.udf(validate_referential_integrity, T.BooleanType())
 
-    uuid_schema = create_uuid_schema(articles_df.schema)
+    # Filter out records with references in relationships to non-existent companies.
+    clean_articles_df = articles_df.filter(
+        validate_referential_integrity_udf(
+            F.struct([articles_df[x] for x in articles_df.columns])
+        ).alias("data")
+    )
+    # Set aside all badly processed articles for re-processing
+    bad_articles_df = articles_df.exceptAll(clean_articles_df)
 
-    @F.udf(returnType=uuid_schema)
-    def replace_ids_with_uuids(row: Row) -> Row:
+    bad_article_json_path, bad_article_parquet_path, bad_article_csv_path = (
+        f"{output_path}/bad_articles.jsonl",
+        f"{output_path}/bad_articles.parquet",
+        f"{output_path}/bad_articles.csv",
+    )
+    bad_articles_df.repartition(1).write.mode("overwrite").json(bad_article_json_path)
+    bad_articles_df.repartition(1).write.mode("overwrite").parquet(bad_article_parquet_path)
+    bad_articles_df.select(
+        "title",
+        "url",
+        "posted_at",
+        "collected_at",
+    ).repartition(1).write.mode(
+        "overwrite"
+    ).csv(bad_article_csv_path)
+
+    logger.info(
+        f"{clean_articles_df.count():,} good articles. {bad_articles_df.count():,} bad articles."
+    )
+    logger.info(
+        f"Saved bad articles to {bad_article_json_path}, {bad_article_parquet_path}, and {bad_article_csv_path}"
+    )
+
+    def replace_ids_with_uuids_impl(row: Row) -> Row:
         """
         Replace integer IDs with UUIDs in all entity references within an article row.
 
@@ -122,77 +105,70 @@ def build_knowledge_graph(
         row_dict = row.asDict()
 
         # Create mapping from integer IDs to UUIDs for this article
-        id_to_uuid_map = {}
+        id_to_uuid_map: dict[int, str] = {}
 
-        # Helper function to get or create UUID for an integer ID
-        def get_or_create_uuid(int_id):
-            if int_id not in id_to_uuid_map:
-                id_to_uuid_map[int_id] = str(uuid.uuid4())
-            return id_to_uuid_map[int_id]
-
-        # Helper function to update entity with UUID
-        def update_entity_with_uuid(entity):
-            if entity is None:
-                return None
-            # Convert to dict if it's a Row
-            entity_dict = entity.asDict() if hasattr(entity, "asDict") else entity.copy()
-
-            # Update uuid field if id exists
-            if "id" in entity_dict and entity_dict["id"] is not None:
-                entity_dict["uuid"] = get_or_create_uuid(entity_dict["id"])
-
-            return entity_dict
-
-        # First pass: collect all entity IDs to build the complete mapping
-        # This ensures consistent UUIDs across all references
+        # 1st Pass: collect all entity IDs to build the complete mapping. Ensures consistent UUIDs
+        # across all references
 
         # Collect IDs from companies
         if row_dict.get("companies"):
             for comp in row_dict["companies"]:
                 comp_dict = comp.asDict() if hasattr(comp, "asDict") else comp
                 if "id" in comp_dict and comp_dict["id"] is not None:
-                    get_or_create_uuid(comp_dict["id"])
+                    get_or_create_uuid(comp_dict["id"], id_to_uuid_map)
 
         # Collect IDs from products
         if row_dict.get("products"):
             for product in row_dict["products"]:
                 product_dict = product.asDict() if hasattr(product, "asDict") else product
                 if "id" in product_dict and product_dict["id"] is not None:
-                    get_or_create_uuid(product_dict["id"])
+                    get_or_create_uuid(product_dict["id"], id_to_uuid_map)
 
         # Collect IDs from technologies
         if row_dict.get("technologies"):
             for tech in row_dict["technologies"]:
                 tech_dict = tech.asDict() if hasattr(tech, "asDict") else tech
                 if "id" in tech_dict and tech_dict["id"] is not None:
-                    get_or_create_uuid(tech_dict["id"])
+                    get_or_create_uuid(tech_dict["id"], id_to_uuid_map)
 
         # Collect IDs from tickers
         if row_dict.get("tickers"):
             for ticker in row_dict["tickers"]:
                 ticker_dict = ticker.asDict() if hasattr(ticker, "asDict") else ticker
                 if "id" in ticker_dict and ticker_dict["id"] is not None:
-                    get_or_create_uuid(ticker_dict["id"])
+                    get_or_create_uuid(ticker_dict["id"], id_to_uuid_map)
+
+        # Collect IDs from relationships to ensure company references get consistent UUIDs
+        # This is critical - without this, relationships get different UUIDs than companies
+        if row_dict.get("relationships"):
+            for rel in row_dict["relationships"]:
+                rel_dict = rel.asDict() if hasattr(rel, "asDict") else rel
+                if "src_company" in rel_dict and rel_dict["src_company"] is not None:
+                    get_or_create_uuid(rel_dict["src_company"], id_to_uuid_map)
+                if "dst_company" in rel_dict and rel_dict["dst_company"] is not None:
+                    get_or_create_uuid(rel_dict["dst_company"], id_to_uuid_map)
 
         # Second pass: update entities with UUIDs and convert integer references
 
         # Process companies array - add UUIDs to each company
         if row_dict.get("companies"):
             row_dict["companies"] = [
-                update_entity_with_uuid(comp) for comp in row_dict["companies"]
+                update_entity_with_uuid(comp, id_to_uuid_map) for comp in row_dict["companies"]
             ]
 
         # Process products array - add UUIDs to products and convert manufacturer references
         if row_dict.get("products"):
             updated_products = []
             for product in row_dict["products"]:
-                product_dict = update_entity_with_uuid(product)
+                product_dict = update_entity_with_uuid(product, id_to_uuid_map)
                 # Convert manufacturer field from integer ID to UUID reference
                 if "manufacturer" in product_dict and product_dict["manufacturer"] is not None:
-                    product_dict["manufacturer"] = get_or_create_uuid(product_dict["manufacturer"])
+                    product_dict["manufacturer"] = get_or_create_uuid(
+                        product_dict["manufacturer"], id_to_uuid_map
+                    )
                 if "technologies" in product_dict and product_dict["technologies"]:
                     product_dict["technologies"] = [
-                        get_or_create_uuid(tech_id)
+                        get_or_create_uuid(tech_id, id_to_uuid_map)
                         for tech_id in product_dict["technologies"]
                         if tech_id is not None
                     ]
@@ -203,17 +179,19 @@ def build_knowledge_graph(
         if row_dict.get("technologies"):
             updated_technologies = []
             for tech in row_dict["technologies"]:
-                tech_dict = update_entity_with_uuid(tech)
+                tech_dict = update_entity_with_uuid(tech, id_to_uuid_map)
                 # Convert developer field from integer ID to UUID reference
                 if "developer" in tech_dict and tech_dict["developer"] is not None:
-                    tech_dict["developer"] = get_or_create_uuid(tech_dict["developer"])
+                    tech_dict["developer"] = get_or_create_uuid(
+                        tech_dict["developer"], id_to_uuid_map
+                    )
                 updated_technologies.append(tech_dict)
             row_dict["technologies"] = updated_technologies
 
         # Process tickers array - add UUIDs to tickers
         if row_dict.get("tickers"):
             row_dict["tickers"] = [
-                update_entity_with_uuid(ticker) for ticker in row_dict["tickers"]
+                update_entity_with_uuid(ticker, id_to_uuid_map) for ticker in row_dict["tickers"]
             ]
 
         # Process relationships array - convert all integer references to UUIDs
@@ -224,14 +202,18 @@ def build_knowledge_graph(
 
                 # Convert src_company and dst_company from integer IDs to UUID references
                 if "src_company" in rel_dict and rel_dict["src_company"] is not None:
-                    rel_dict["src_company"] = get_or_create_uuid(rel_dict["src_company"])
+                    rel_dict["src_company"] = get_or_create_uuid(
+                        rel_dict["src_company"], id_to_uuid_map
+                    )
                 if "dst_company" in rel_dict and rel_dict["dst_company"] is not None:
-                    rel_dict["dst_company"] = get_or_create_uuid(rel_dict["dst_company"])
+                    rel_dict["dst_company"] = get_or_create_uuid(
+                        rel_dict["dst_company"], id_to_uuid_map
+                    )
 
                 # Convert technologies array from integer IDs to UUID references
                 if "technologies" in rel_dict and rel_dict["technologies"]:
                     rel_dict["technologies"] = [
-                        get_or_create_uuid(tech_id)
+                        get_or_create_uuid(tech_id, id_to_uuid_map)
                         for tech_id in rel_dict["technologies"]
                         if tech_id is not None
                     ]
@@ -239,7 +221,7 @@ def build_knowledge_graph(
                 # Convert products array from integer IDs to UUID references
                 if "products" in rel_dict and rel_dict["products"]:
                     rel_dict["products"] = [
-                        get_or_create_uuid(prod_id)
+                        get_or_create_uuid(prod_id, id_to_uuid_map)
                         for prod_id in rel_dict["products"]
                         if prod_id is not None
                     ]
@@ -250,17 +232,29 @@ def build_knowledge_graph(
         # Return the modified row as a Row object
         return Row(**row_dict)
 
+    # Create the non-deterministic UDF
+    replace_ids_with_uuids = F.udf(
+        replace_ids_with_uuids_impl, returnType=create_uuid_schema(articles_df.schema)
+    ).asNondeterministic()
+
     # Apply the UDF to transform articles_df
     logger.info("Replacing integer IDs with UUIDs for all entities...")
-    articles_uuid_df = articles_df.select(
-        replace_ids_with_uuids(F.struct([articles_df[x] for x in articles_df.columns])).alias(
-            "data"
-        )
+    articles_uuid_df = clean_articles_df.select(
+        replace_ids_with_uuids(
+            F.struct([clean_articles_df[x] for x in clean_articles_df.columns])
+        ).alias("data")
     ).select("data.*")
+
+    # CRITICAL: Cache the transformed data to prevent UDF re-evaluation during extractions
+    # This ensures UUID consistency across all entity extractions
+    articles_uuid_df = articles_uuid_df.cache()
+
+    # Force evaluation to materialize the cache
+    logger.info(f"Transformed {articles_uuid_df.count():,} articles with UUID replacements")
 
     # Show sample to verify transformation
     logger.info("Sample article with UUID replacements:")
-    articles_uuid_df.show(1, truncate=False, vertical=True)
+    articles_uuid_df.show(1, truncate=100, vertical=True)
 
     # Extract entities into separate dataframes
     logger.info("Extracting entities from documents ...")
@@ -268,11 +262,17 @@ def build_knowledge_graph(
     # Extract companies and assign a random UUID id
     logger.info("Extracting companies ...")
     companies_df = (
-        articles_uuid_df.select(F.explode_outer(F.col("companies")).alias("company"))
+        articles_uuid_df.select("url", F.explode_outer(F.col("companies")).alias("company"))
         .filter("company IS NOT NULL")
-        .select("company.*")
+        .select("url", "company.*")
     )
     companies_df.show(5, truncate=100, vertical=True)
+
+    # Put the uuid and url columns first
+    companies_df = companies_df.select(
+        ["uuid", "url", "name", "description"]
+        + [col for col in companies_df.columns if col not in ["uuid", "url", "name", "description"]]
+    )
 
     # Store the original records with their UUIDs - they can be matched at the field level to nested
     # companies from the same post, such as Product.manufacturer or Technology.developer
@@ -280,20 +280,34 @@ def build_knowledge_graph(
     companies_df.repartition(1).write.mode("overwrite").parquet(companies_output_path)
     logger.info(f"Saved {companies_df.count():,} companies to {companies_output_path}")
 
+    companies_jsonl_output_path = f"{output_path}/companies.jsonl"
+    companies_df.repartition(1).write.mode("overwrite").json(companies_jsonl_output_path)
+    logger.info(f"Saved companies to {companies_jsonl_output_path}")
+
     #
     # Now ETL Products - these are the products mentioned in the articles, manufactured by a Company
     #
     logger.info("Extracting products ...")
     products_df = (
-        articles_uuid_df.select(F.explode_outer(F.col("products")).alias("product"))
+        articles_uuid_df.select("url", F.explode_outer(F.col("products")).alias("product"))
         .filter("product IS NOT NULL")
-        .select("product.*")
+        .select("url", "product.*")
     )
     products_df.show(5, truncate=100, vertical=True)
+
+    # Put the uuid and url columns first
+    products_df = products_df.select(
+        ["uuid", "url", "name", "description"]
+        + [col for col in products_df.columns if col not in ["uuid", "url", "name", "description"]]
+    )
 
     products_output_path = f"{output_path}/products.parquet"
     products_df.repartition(1).write.mode("overwrite").parquet(products_output_path)
     logger.info(f"Saved {products_df.count():,} products to {products_output_path}")
+
+    products_jsonl_output_path = f"{output_path}/products.jsonl"
+    products_df.repartition(1).write.mode("overwrite").json(products_jsonl_output_path)
+    logger.info(f"Saved products to {products_jsonl_output_path}")
 
     #
     # Now ETL Technologies - these are the technologies mentioned in the articles, developed by a Company
@@ -301,27 +315,93 @@ def build_knowledge_graph(
 
     logger.info("Extracting technologies ...")
     technologies_df = (
-        articles_uuid_df.select(F.explode_outer(F.col("technologies")).alias("technology"))
+        articles_uuid_df.select("url", F.explode_outer(F.col("technologies")).alias("technology"))
         .filter("technology IS NOT NULL")
-        .select("technology.*")
+        .select("url", "technology.*")
     )
     technologies_df.show(5, truncate=100, vertical=True)
+
+    # Put the uuid and url columns first
+    technologies_df = technologies_df.select(
+        ["uuid", "url", "name", "description"]
+        + [
+            col
+            for col in technologies_df.columns
+            if col not in ["uuid", "url", "name", "description"]
+        ]
+    )
 
     technologies_output_path = f"{output_path}/technologies.parquet"
     technologies_df.repartition(1).write.mode("overwrite").parquet(technologies_output_path)
     logger.info(f"Saved {technologies_df.count():,} technologies to {technologies_output_path}")
+
+    technologies_jsonl_output_path = f"{output_path}/technologies.jsonl"
+    technologies_df.repartition(1).write.mode("overwrite").json(technologies_jsonl_output_path)
+    logger.info(f"Saved technologies to {technologies_jsonl_output_path}")
 
     #
     # Now ETL Deals - these are the deals mentioned in the articles, involving two Companies
     #
 
     relationships_df = (
-        articles_uuid_df.select(F.explode_outer(F.col("relationships")).alias("relationship"))
+        articles_uuid_df.select(
+            "url", F.explode_outer(F.col("relationships")).alias("relationship")
+        )
         .filter("relationship IS NOT NULL")
-        .select("relationship.*")
+        .select("url", "relationship.*")
     )
     relationships_df.show(5, truncate=100, vertical=True)
 
+    relationship_count = relationships_df.count()
+
+    rel_cols = [
+        "src_company AS src",
+        "dst_company AS dst",
+        "type AS relationship",
+        "description",
+        "url",
+    ] + [
+        col
+        for col in relationships_df.columns
+        if col not in ["url", "src_company", "dst_company", "description", "type"]
+    ]
+    # Put the uuid and url columns first
+    relationships_named_df = relationships_df.selectExpr(rel_cols)
+
+    #
+    # Only take relationships with non-null src/dst companies
+    #
+    relationships_clean_df = relationships_named_df.filter(
+        F.col("src").isNotNull() & F.col("dst").isNotNull()
+    )
+
     relationships_output_path = f"{output_path}/relationships.parquet"
-    relationships_df.repartition(1).write.mode("overwrite").parquet(relationships_output_path)
+    relationships_clean_df.repartition(1).write.mode("overwrite").parquet(relationships_output_path)
     logger.info(f"Saved {relationships_df.count():,} relationships to {relationships_output_path}")
+
+    relationships_jsonl_output_path = f"{output_path}/relationships.jsonl"
+    relationships_clean_df.repartition(1).write.mode("overwrite").json(
+        relationships_jsonl_output_path
+    )
+    logger.info(f"Saved relationships to {relationships_jsonl_output_path}")
+
+    #
+    # Validate that all src/dst fields in relationships refer to real companies
+    #
+    valid_companies = companies_df.select("uuid").distinct()
+
+    # Use INNER joins to only keep matching rows
+    valid_relationships_df = relationships_clean_df.join(
+        valid_companies.withColumnRenamed("uuid", "src_uuid"),
+        relationships_clean_df.src == F.col("src_uuid"),
+        "inner",
+    ).join(
+        valid_companies.withColumnRenamed("uuid", "dst_uuid"),
+        relationships_clean_df.dst == F.col("dst_uuid"),
+        "inner",
+    )
+
+    valid_relationship_count = valid_relationships_df.count()
+    logger.info(
+        f"Found {(valid_relationship_count / relationship_count) * 100:.1f}% {valid_relationship_count:,} valid relationships out of {relationship_count:,}"
+    )

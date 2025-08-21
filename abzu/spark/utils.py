@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
 """Utility functions for Spark operations."""
+import uuid
 from typing import Optional
 
 import pyspark.sql.functions as F
-from pyspark.sql import DataFrame
+import pyspark.sql.types as T
+from pyspark.sql import DataFrame, Row
 from pyspark.sql.window import Window
+
+from abzu.logs import get_logger
+
+logger = get_logger(__name__)
 
 
 def select_most_common_property(
@@ -78,3 +84,116 @@ def select_most_common_property(
     )
 
     return result_df
+
+
+# Create a modified schema where integer references are converted to string UUIDs
+def create_uuid_schema(original_schema):
+    """Create a schema where integer ID references are changed to string UUIDs."""
+    fields = []
+    for field in original_schema.fields:
+        if field.name == "products":
+            # Modify products array to change manufacturer from long to string
+            # and technologies array from array<long> to array<string>
+            product_fields = []
+            for prod_field in field.dataType.elementType.fields:
+                if prod_field.name == "manufacturer":
+                    # Change manufacturer from long to string (UUID)
+                    product_fields.append(T.StructField("manufacturer", T.StringType(), True))
+                elif prod_field.name == "technologies":
+                    # Change technologies from array<long> to array<string> (UUIDs)
+                    product_fields.append(
+                        T.StructField("technologies", T.ArrayType(T.StringType()), True)
+                    )
+                else:
+                    product_fields.append(prod_field)
+            new_product_type = T.StructType(product_fields)
+            fields.append(T.StructField("products", T.ArrayType(new_product_type), True))
+        elif field.name == "technologies":
+            # Modify technologies array to change developer from long to string
+            tech_fields = []
+            for tech_field in field.dataType.elementType.fields:
+                if tech_field.name == "developer":
+                    # Change developer from long to string (UUID)
+                    tech_fields.append(T.StructField("developer", T.StringType(), True))
+                else:
+                    tech_fields.append(tech_field)
+            new_tech_type = T.StructType(tech_fields)
+            fields.append(T.StructField("technologies", T.ArrayType(new_tech_type), True))
+        elif field.name == "relationships":
+            # Modify relationships array to change company refs and arrays to strings
+            rel_fields = []
+            for rel_field in field.dataType.elementType.fields:
+                if rel_field.name in ["src_company", "dst_company"]:
+                    # Change company refs from long to string (UUID)
+                    rel_fields.append(T.StructField(rel_field.name, T.StringType(), True))
+                elif rel_field.name in ["technologies", "products"]:
+                    # Change arrays from array<long> to array<string> (UUIDs)
+                    rel_fields.append(
+                        T.StructField(rel_field.name, T.ArrayType(T.StringType()), True)
+                    )
+                else:
+                    rel_fields.append(rel_field)
+            new_rel_type = T.StructType(rel_fields)
+            fields.append(T.StructField("relationships", T.ArrayType(new_rel_type), True))
+        else:
+            fields.append(field)
+    return T.StructType(fields)
+
+
+def validate_referential_integrity(row: Row) -> bool:
+
+    # Convert Row to dict for easier manipulation
+    row_dict = row.asDict()
+
+    # Validate that relationships only reference existing company IDs
+    company_ids = set()
+    if row_dict.get("companies"):
+        for comp in row_dict["companies"]:
+            comp_dict = comp.asDict() if hasattr(comp, "asDict") else comp
+            if "id" in comp_dict and comp_dict["id"] is not None:
+                company_ids.add(comp_dict["id"])
+
+    try:
+        # Check all relationships reference valid company IDs
+        if row_dict.get("relationships"):
+            for idx, rel in enumerate(row_dict["relationships"]):
+                rel_dict = rel.asDict() if hasattr(rel, "asDict") else rel
+                if "src_company" in rel_dict and rel_dict["src_company"] is not None:
+                    if rel_dict["src_company"] not in company_ids:
+                        raise ValueError(
+                            f"Relationship {idx} from {row_dict['url']} references non-existent src_company ID: {rel_dict['src_company']}. "
+                            f"Available company IDs: {sorted(company_ids)}"
+                        )
+                if "dst_company" in rel_dict and rel_dict["dst_company"] is not None:
+                    if rel_dict["dst_company"] not in company_ids:
+                        raise ValueError(
+                            f"Relationship {idx} from {row_dict['url']} references non-existent dst_company ID: {rel_dict['dst_company']}. "
+                            f"Available company IDs: {sorted(company_ids)}"
+                        )
+
+    except ValueError as e:
+        logger.error(f"Referential integrity check failed for article {row_dict['url']}: {e}")
+        return False
+
+    return True
+
+
+# Helper function to get or create UUID for an integer ID
+def get_or_create_uuid(int_id: int, id_to_uuid_map: dict[int, str]) -> str:
+    if int_id not in id_to_uuid_map:
+        id_to_uuid_map[int_id] = str(uuid.uuid4())
+    return id_to_uuid_map[int_id]
+
+
+# Helper function to update entity with UUID
+def update_entity_with_uuid(entity: Row | dict, id_to_uuid_map: dict[int, str]) -> dict:
+    if entity is None:
+        return None
+    # Convert to dict if it's a Row
+    entity_dict = entity.asDict() if hasattr(entity, "asDict") else entity.copy()
+
+    # Update uuid field if id exists
+    if "id" in entity_dict and entity_dict["id"] is not None:
+        entity_dict["uuid"] = get_or_create_uuid(entity_dict["id"], id_to_uuid_map)
+
+    return entity_dict
