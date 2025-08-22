@@ -2,6 +2,7 @@
 
 import click
 
+from abzu.cli.process.kg.er import er
 from abzu.cli.process.kg.raw import raw
 from abzu.cli.process.kg.refine import refine
 
@@ -14,3 +15,4 @@ def kg():
 
 kg.add_command(raw)
 kg.add_command(refine)
+kg.add_command(er)
