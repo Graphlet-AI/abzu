@@ -340,6 +340,33 @@ def build_knowledge_graph(
     logger.info(f"Saved technologies to {technologies_jsonl_output_path}")
 
     #
+    # Now ETL Tickers - these are the ticker symbols mentioned in the articles
+    #
+    logger.info("Extracting tickers ...")
+    tickers_df = (
+        articles_uuid_df.select("url", F.explode_outer(F.col("tickers")).alias("ticker"))
+        .filter("ticker IS NOT NULL")
+        .select("url", "ticker.*")
+    )
+    tickers_df.show(5, truncate=100, vertical=True)
+
+    # Put the uuid and url columns first
+    tickers_df = tickers_df.select(
+        "uuid",
+        "symbol",
+        "exchange",
+        "url",
+    )
+
+    tickers_output_path = f"{output_path}/tickers.parquet"
+    tickers_df.repartition(1).write.mode("overwrite").parquet(tickers_output_path)
+    logger.info(f"Saved {tickers_df.count():,} tickers to {tickers_output_path}")
+
+    tickers_jsonl_output_path = f"{output_path}/tickers.jsonl"
+    tickers_df.repartition(1).write.mode("overwrite").json(tickers_jsonl_output_path)
+    logger.info(f"Saved tickers to {tickers_jsonl_output_path}")
+
+    #
     # Now ETL Deals - these are the deals mentioned in the articles, involving two Companies
     #
 
