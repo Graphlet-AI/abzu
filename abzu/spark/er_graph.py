@@ -34,8 +34,9 @@ def get_acronym(name: str) -> str | None:
     return get_acronyms(name)
 
 
-def analyze_blocking_strategies(
-    companies_path: str = "data/knowledge_graph/companies.parquet",
+def build_blocks(
+    companies_path: str = f"{config.get('process.kg.er.input')}/companies.parquet",
+    output_path: str = config.get("process.kg.er.output"),
     local_mode: Optional[bool] = None,
 ) -> None:
     """
@@ -47,7 +48,7 @@ def analyze_blocking_strategies(
     """
     # Create SparkSession with appropriate configuration
     spark: SparkSession = get_spark_session(
-        app_name="er_blocking_analysis",
+        app_name="build_er_blocks",
         local_mode=local_mode,
     )
 
@@ -196,32 +197,168 @@ def analyze_blocking_strategies(
     )
     logger.info("=" * 60)
 
+    # Filter out 1-size blocks for actual entity resolution
+    logger.info("Filtering blocks with size > 1 for entity resolution...")
+
+    # Get first word blocks with size > 1
+    first_word_multi_blocks = first_word_dist_df.filter(F.col("block_size") > 1).select(
+        "first_word_block"
+    )
+
+    # Get acronym blocks with size > 1
+    acronym_multi_blocks = acronym_dist_df.filter(F.col("block_size") > 1).select("acronym_block")
+
+    # Filter companies to only include those in multi-company blocks
+    first_word_companies_filtered = companies_with_block_keys_df.join(
+        first_word_multi_blocks,
+        "first_word_block",
+        "inner",
+    ).select(
+        "uuid",
+        F.col("first_word_block").alias("block_key"),
+        F.lit("first_word").alias("block_key_type"),
+    )
+
+    acronym_companies_filtered = companies_with_block_keys_df.join(
+        acronym_multi_blocks,
+        "acronym_block",
+        "inner",
+    ).select(
+        "uuid",
+        F.col("acronym_block").alias("block_key"),
+        F.lit("acronym").alias("block_key_type"),
+    )
+
+    first_word_filtered_count = first_word_companies_filtered.count()
+    acronym_filtered_count = acronym_companies_filtered.count()
+
+    logger.info(f"First word blocks after filtering: {first_word_filtered_count:,} companies")
+    logger.info(f"Acronym blocks after filtering: {acronym_filtered_count:,} companies")
+
+    # Get complete company records and group by blocking keys
+    logger.info("Grouping complete company records by blocking keys...")
+
+    # Join filtered companies back with full company data
+    full_companies_df = spark.read.parquet(companies_path)
+
+    # Identify overlapping block_keys between first_word and acronym strategies
+    logger.info("Identifying overlapping block_keys for merging...")
+
+    # Union first_word and acronym companies
+    all_companies_with_blocks = first_word_companies_filtered.union(acronym_companies_filtered)
+
+    # Find overlapping block_keys by counting distinct block_key_types per block_key
+    overlapping_keys = (
+        all_companies_with_blocks.groupBy("block_key")
+        .agg(F.countDistinct("block_key_type").alias("strategy_count"))
+        .filter(F.col("strategy_count") > 1)
+        .select("block_key")
+    )
+
+    overlapping_count = overlapping_keys.count()
+    logger.info(f"Found {overlapping_count:,} overlapping block_keys between strategies")
+
+    # Create combined blocks for overlapping keys
+    combined_blocks = (
+        all_companies_with_blocks.join(
+            overlapping_keys, "block_key", "inner"
+        )  # Only overlapping keys
+        .join(full_companies_df, "uuid", "inner")
+        .groupBy("block_key")
+        .agg(
+            F.collect_list(F.struct("*")).alias("companies"),
+            F.countDistinct("uuid").alias("total_companies"),
+        )
+        .withColumn("block_key_type", F.lit("combined"))
+        .select("block_key", "block_key_type", "companies", "total_companies")
+    )
+
+    # Show top 20 overlapping block_keys by company count
+    logger.info("Top 20 overlapping block_keys by company count:")
+    combined_blocks.select("block_key", "total_companies").orderBy(F.desc("total_companies")).show(
+        20, truncate=False
+    )
+
+    # Create separate blocks for non-overlapping keys
+    first_word_only_blocks = (
+        all_companies_with_blocks.join(
+            overlapping_keys, "block_key", "left_anti"
+        )  # Exclude overlapping keys
+        .filter(F.col("block_key_type") == "first_word")
+        .join(full_companies_df, "uuid", "inner")
+        .groupBy("block_key", "block_key_type")
+        .agg(
+            F.collect_list(F.struct("*")).alias("companies"),
+            F.countDistinct("uuid").alias("total_companies"),
+        )
+    )
+
+    acronym_only_blocks = (
+        all_companies_with_blocks.join(
+            overlapping_keys, "block_key", "left_anti"
+        )  # Exclude overlapping keys
+        .filter(F.col("block_key_type") == "acronym")
+        .join(full_companies_df, "uuid", "inner")
+        .groupBy("block_key", "block_key_type")
+        .agg(
+            F.collect_list(F.struct("*")).alias("companies"),
+            F.countDistinct("uuid").alias("total_companies"),
+        )
+    )
+
+    # Combine all the blocks and sort by smallest first as those are easy
+    all_blocks = (
+        combined_blocks.select("block_key", "block_key_type", "companies", "total_companies")
+        .union(
+            first_word_only_blocks.select(
+                "block_key", "block_key_type", "companies", "total_companies"
+            )
+        )
+        .union(
+            acronym_only_blocks.select(
+                "block_key", "block_key_type", "companies", "total_companies"
+            )
+        )
+        .orderBy("total_companies")
+    )
+
+    # Write all the blocks together in one place
+    logger.info(f"Persisting blocking groups to {output_path}/all_blocks.json")
+    all_blocks.repartition(1).write.mode("overwrite").json(f"{output_path}/all_blocks.json")
+    all_blocks.repartition(1).write.mode("overwrite").parquet(f"{output_path}/all_blocks.parquet")
+
+    # Count blocks by type
+    combined_block_count = combined_blocks.count()
+    first_word_only_count = first_word_only_blocks.count()
+    acronym_only_count = acronym_only_blocks.count()
+    total_blocks = all_blocks.count()
+
+    # Count companies in each block type
+    combined_companies_count = combined_blocks.agg(F.sum("total_companies")).collect()[0][0]
+    first_word_only_companies_count = first_word_only_blocks.agg(
+        F.sum("total_companies")
+    ).collect()[0][0]
+    acronym_only_companies_count = acronym_only_blocks.agg(F.sum("total_companies")).collect()[0][0]
+
+    logger.info("=" * 60)
+    logger.info("ENTITY RESOLUTION BLOCKS CREATED")
+    logger.info("=" * 60)
+    logger.info(
+        f"Combined Blocks (overlapping keys): {combined_block_count:,} blocks with {combined_companies_count:,} companies"
+    )
+    logger.info(
+        f"First Word Only Blocks: {first_word_only_count:,} blocks with {first_word_only_companies_count:,} companies"
+    )
+    logger.info(
+        f"Acronym Only Blocks: {acronym_only_count:,} blocks with {acronym_only_companies_count:,} companies"
+    )
+    logger.info(f"Total Blocks: {total_blocks:,} blocks")
+    logger.info("=" * 60)
+
     # Clean up
     companies_with_block_keys_df.unpersist()
     spark.stop()
 
 
-def build_knowledge_graph(
-    input_path: list[str] = config.get("process.kg.raw.input"),
-    output_path: str = config.get("process.kg.raw.output"),
-    local_mode: Optional[bool] = None,
-) -> None:
-    """
-    Build a knowledge graph from pre-processed articles.
-
-    Args:
-        input_path: Path(s) to the input JSON files
-        output_path: Path to save the output parquet files
-        local_mode: Whether to run in local mode. If None, will be determined by environment
-    """
-    # Create SparkSession with appropriate configuration
-    spark: SparkSession = get_spark_session(
-        app_name="build_graph",
-        local_mode=local_mode,
-    )
-    # TODO: Implement knowledge graph building logic
-    _ = spark  # Placeholder to mark spark as used
-
-
 if __name__ == "__main__":
-    analyze_blocking_strategies()
+    build_blocks()

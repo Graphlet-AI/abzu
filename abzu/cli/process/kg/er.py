@@ -3,7 +3,7 @@
 import click
 
 from abzu.config import config
-from abzu.spark.er_graph import analyze_blocking_strategies
+from abzu.spark.er_graph import build_blocks
 
 
 @click.command(context_settings={"show_default": True})
@@ -20,7 +20,7 @@ from abzu.spark.er_graph import analyze_blocking_strategies
 )
 def er(companies_path: str, local_mode: bool | None) -> None:
     """Analyze company entity resolution blocking strategies."""
-    analyze_blocking_strategies(
+    build_blocks(
         companies_path=companies_path,
         local_mode=local_mode,
     )

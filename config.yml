@@ -121,6 +121,10 @@ process:
         - "${process.rss.output_dir}/processed_wsj-tech.jsonl"
         - "${chat.start.processed_articles}"
       output: "${base_dir}/knowledge_graph"
+    
+    er:
+      input: "${process.kg.raw.output}"
+      output: "${base_dir}/er/"
 
     refine:
       input: "${process.kg.raw.output}"
