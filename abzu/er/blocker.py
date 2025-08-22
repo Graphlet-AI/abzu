@@ -1,16 +1,27 @@
+from typing import Literal
+
 import numpy as np
 import pandas as pd
+import torch
 from sentence_transformers import SentenceTransformer
 from sentence_transformers.util import cos_sim
 from sklearn.cluster import AgglomerativeClustering
 
 
 class E5EntityBlocker:
-    def __init__(self, model_name="intfloat/multilingual-e5-large"):
+
+    def __init__(self, model_name="Qwen/Qwen3-Embedding-4B"):
         """
         E5EntityBlocker blocks data and returns agglomerative clusters. Initialize with the large E5 model.
         """
-        self.model = SentenceTransformer(model_name)
+        device: Literal["cpu", "cuda", "mps"]
+        if torch.cuda.is_available():
+            device = "cuda"
+        elif torch.backends.mps.is_available():
+            device = "mps"
+        else:
+            device = "cpu"
+        self.model = SentenceTransformer(model_name, device=device)
 
     def encode_companies(self, company_names):
         """
