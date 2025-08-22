@@ -7985,6 +7985,17 @@ typing-extensions = {version = ">=4.10.0", markers = "python_version < \"3.13\""
 full = ["httpx (>=0.27.0,<0.29.0)", "itsdangerous", "jinja2", "python-multipart (>=0.0.18)", "pyyaml"]
 
 [[package]]
+name = "stop-words"
+version = "2018.7.23"
+description = "Get list of common stop words in various languages in Python"
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "stop-words-2018.7.23.tar.gz", hash = "sha256:6df3ad5f5de697daa437e4445c86c73604e6bc138dd0dc0fac55664aa4e6b03e"},
+]
+
+[[package]]
 name = "sympy"
 version = "1.14.0"
 description = "Computer algebra system (CAS) in Python"
@@ -9202,4 +9213,4 @@ cffi = ["cffi (>=1.17) ; python_version >= \"3.13\" and platform_python_implemen
 [metadata]
 lock-version = "2.1"
 python-versions = "3.12.*"
-content-hash = "2dd57dcd828171f625940d89976dc6de4ce8026183cfdf3bbff09808640dee08"
+content-hash = "5b1570840a6f7d0a9a82bec1716f042bb9758e04463d24d662528cda6197fc60"
