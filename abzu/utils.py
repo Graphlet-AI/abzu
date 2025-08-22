@@ -185,7 +185,7 @@ class DaprStateStore:
             result = self.client.get_state(self.store_name, key, state_metadata=metadata)
             if not result or not result.data:
                 return None
-            return cast(bytes, result.data).decode("utf-8")
+            return result.data.decode("utf-8")
         except Exception as e:
             logger.error(f"Failed to get state for key {key}: {e}")
             return None
