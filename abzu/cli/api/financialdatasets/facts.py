@@ -2,6 +2,7 @@
 
 import click
 
+from abzu.api.financialdatasets import financialdatasets_facts_main
 from abzu.config import config
 
 
@@ -12,7 +13,7 @@ from abzu.config import config
     "-f",
     "--file",
     "input_file",
-    type=click.Path(exists=True, file_okay=True, dir_okay=False),
+    type=click.Path(exists=True, file_okay=True, dir_okay=True),
     default=config.get("api.financialdatasets.facts.input"),
     help="Path to JSONL or Parquet file with records containing 'ticker', 'symbol', or 'cik' field",
 )
@@ -91,8 +92,6 @@ def facts(
             )
         # Clear input_file if we're doing single company lookup
         input_file = None
-
-    from abzu.api.financialdatasets import financialdatasets_facts_main
 
     # Handle special case for stdout output
     if output_file == "-":
