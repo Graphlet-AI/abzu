@@ -59,7 +59,7 @@ stop-words = "^2018.7.23"
 [tool.poetry.group.dev.dependencies]
 flake8 = "^7.2.0"
 isort = "^5.13.2"
-mypy = "^1.16.0"
+mypy = "1.16.0"
 pytest = "^8.3.4"
 ipython = "^8.31.0"
 pandas-stubs = "^2.2.3.241126"
@@ -98,7 +98,8 @@ src_paths = ["abzu", "tests"]
 
 [tool.mypy]
 python_version = "3.12"
-mypy_path = ["abzu", "tests"]
+files = ["abzu"]
+exclude = ["abzu/baml_client", "tests"]
 warn_return_any = true
 warn_unused_configs = true
 warn_redundant_casts = true
