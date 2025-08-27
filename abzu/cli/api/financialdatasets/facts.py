@@ -12,6 +12,7 @@ from abzu.config import config
 @click.option(
     "-f",
     "--file",
+    "--input",
     "input_file",
     type=click.Path(exists=True, file_okay=True, dir_okay=True),
     default=config.get("api.financialdatasets.facts.input"),
