@@ -18,7 +18,7 @@ from abzu.spark.er_graph import build_blocks
     default=None,
     help="Force local mode for Spark session",
 )
-def er(companies_path: str, local_mode: bool | None) -> None:
+def block(companies_path: str, local_mode: bool | None) -> None:
     """Analyze company entity resolution blocking strategies."""
     build_blocks(
         companies_path=companies_path,

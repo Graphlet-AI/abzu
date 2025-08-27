@@ -3,6 +3,7 @@
 import click
 
 from abzu.cli.process.articles import articles
+from abzu.cli.process.er import er
 from abzu.cli.process.kg import kg
 from abzu.cli.process.rss import rss
 
@@ -14,5 +15,6 @@ def process():
 
 
 process.add_command(articles)
+process.add_command(er)
 process.add_command(kg)
 process.add_command(rss)
