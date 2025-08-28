@@ -9,7 +9,6 @@ from abzu.er.match import match_entities
 @click.command(context_settings={"show_default": True})
 @click.option(
     "--blocks-path",
-    "-b",
     default=config.get("er.paths.blocks", "data/er/all_blocks.parquet"),
     help="Path to blocks parquet file",
 )
@@ -20,18 +19,28 @@ from abzu.er.match import match_entities
     help="Path to save matched entities",
 )
 @click.option(
-    "--local-mode/--no-local-mode",
+    "--batch-size",
+    "-b",
+    default=5,
+    help="Number of concurrent API calls to make",
+)
+@click.option(
+    "--limit",
+    "-n",
     default=None,
-    help="Force local mode for Spark session",
+    type=int,
+    help="Maximum number of blocks to process (for testing)",
 )
 def match(
     blocks_path: str,
     output_path: str,
-    local_mode: bool | None,
+    batch_size: int,
+    limit: int | None,
 ) -> None:
     """Match entities within blocks using similarity metrics."""
     match_entities(
         blocks_path=blocks_path,
         output_path=output_path,
-        local_mode=local_mode,
+        batch_size=batch_size,
+        limit=limit,
     )
