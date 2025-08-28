@@ -100,6 +100,9 @@ class Company {
   headquarters_location string?
   @description("Location of the company's headquarters, city, state and country")
 
+  jurisdiction string?
+  @description("State or country where the company is incorporated")
+
   revenue_usd int?
   @description("Revenue of the company in USD")
 
