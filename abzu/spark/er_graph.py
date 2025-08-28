@@ -263,6 +263,7 @@ def build_blocks(
         all_companies_with_blocks.join(
             overlapping_keys, "block_key", "inner"
         )  # Only overlapping keys
+        .dropDuplicates(["block_key", "uuid"])  # Remove duplicate UUIDs within each block
         .join(full_companies_df, "uuid", "inner")
         .groupBy("block_key")
         .agg(
@@ -285,6 +286,7 @@ def build_blocks(
             overlapping_keys, "block_key", "left_anti"
         )  # Exclude overlapping keys
         .filter(F.col("block_key_type") == "first_word")
+        .dropDuplicates(["block_key", "uuid"])  # Remove any duplicate UUIDs
         .join(full_companies_df, "uuid", "inner")
         .groupBy("block_key", "block_key_type")
         .agg(
@@ -298,6 +300,7 @@ def build_blocks(
             overlapping_keys, "block_key", "left_anti"
         )  # Exclude overlapping keys
         .filter(F.col("block_key_type") == "acronym")
+        .dropDuplicates(["block_key", "uuid"])  # Remove any duplicate UUIDs
         .join(full_companies_df, "uuid", "inner")
         .groupBy("block_key", "block_key_type")
         .agg(
@@ -307,6 +310,7 @@ def build_blocks(
     )
 
     # Combine all the blocks and sort by smallest first as those are easy
+    # Filter out any blocks that ended up with only 1 company after processing
     all_blocks = (
         combined_blocks.select("block_key", "block_key_type", "companies", "total_companies")
         .union(
@@ -319,6 +323,7 @@ def build_blocks(
                 "block_key", "block_key_type", "companies", "total_companies"
             )
         )
+        .filter(F.col("total_companies") > 1)  # Ensure we only keep blocks with 2+ companies
         .orderBy("total_companies")
     )
 
