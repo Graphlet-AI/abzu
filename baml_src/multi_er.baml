@@ -8,7 +8,7 @@ function MultiEntityResolution(company_list: CompanyList) -> CompanyList {
 
   // The prompt uses Jinja syntax. Change the models or this text and watch the prompt preview change!
   prompt #"
-    Examine the following set of companies and determine which ones are the same entity. If two or more companies are the same, merge them and return the resolved company with all combined attributes filled out. If a record has a valid field and the other doesn't, add it. If there are multiple company descriptions, combine and summarize them into a single description of less than 60 words.
+    Examine the following set of companies and determine which ones are the same entity. If two or more companies are the same, merge them and return the resolved company with all combined attributes filled out. If a record has a valid field and the other doesn't, add it. Consider both the company name and description when making matches. If there are multiple company descriptions, combine and summarize them into a single description of less than 60 words. Keep track of the source companies and their attributes throughout the process. Maintain the uuid field and track the records merged in the 'source_uuids' field.
 
     Return a merged set of companies with all combined attributes from the source companies filled out.
 
