@@ -86,6 +86,9 @@ class Company {
   name string
   @description("Formal name of the company with company suffix")
 
+  cik string?
+  @description("Central Index Key for the company")
+
   ticker Ticker?
   @description("Ticker symbol of the company if publicly traded")
 
@@ -114,6 +117,8 @@ class Company {
 
   source_uuids string[]?
   @description("Leave null at all times.")
+
+  @@assert(valid_cik, {{ this.cik is not defined or this.cik is none or this.cik | length <= 10 }})
 }
 
 class Product {
