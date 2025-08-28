@@ -118,7 +118,7 @@ class Company {
   source_uuids string[]?
   @description("Leave null at all times.")
 
-  @@assert(valid_cik, {{ this.cik is not defined or this.cik is none or this.cik | length <= 10 }})
+  @@assert(valid_cik, {{ this.cik is not defined or this.cik is none or (this.cik | length <= 10 and this.cik | regex_match("^[0-9]+$")) }})
 }
 
 class Product {
