@@ -28,6 +28,18 @@ client<llm> Gemini25Flash {
     }
 }
 
+client<llm> Gemini20Flash {
+    provider google-ai
+    retry_policy Constant
+    options {
+        model "gemini-2.0-flash"
+        api_key env.GEMINI_API_KEY
+        generationConfig {
+            temperature 0.0
+        }
+    }
+}
+
 client<llm> Gemini25Pro {
     provider google-ai
     retry_policy Exponential
