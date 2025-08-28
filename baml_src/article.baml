@@ -62,6 +62,25 @@ class Author {
   @description("URL of the author's profile")
 }
 
+enum Exchange {
+  NYSE @description("New York Stock Exchange")
+  NASDAQ @description("NASDAQ Stock Market")
+  AMEX @description("American Stock Exchange")
+  LSE @description("London Stock Exchange")
+  TSE @description("Tokyo Stock Exchange")
+  HKEX @description("Hong Kong Stock Exchange")
+  SGX @description("Singapore Exchange")
+  BSE @description("Bombay Stock Exchange")
+  ASX @description("Australian Securities Exchange")
+  SSE @description("Shanghai Stock Exchange")
+  MSE @description("Malta Stock Exchange")
+  CSE @description("Cyprus Stock Exchange")
+  BMV @description("Bolsa Mexicana de Valores")
+  OSE @description("Oslo Stock Exchange")
+  BME @description("Bolsas y Mercados Españoles")
+  SWX @description("SIX Swiss Exchange")
+}
+
 class Ticker {
   id int
   @description("Unique among all objects.")
@@ -119,7 +138,7 @@ class Company {
   @description("List of source Company ids that this Company originates from merges. Leave null if length is one.")
 
   source_uuids string[]?
-  @description("Leave null at all times.")
+  @description("Leave null until entity resolution.")
 
   @@assert(valid_cik, {{ this.cik is not defined or this.cik is none or (this.cik | length <= 10 and this.cik | regex_match("^[0-9]+$")) }})
 }
@@ -147,7 +166,7 @@ class Product {
   @description("List of source Product ids that this Product originates from merges. Leave null if length is one.")
 
   source_uuids string[]?
-  @description("Leave null at all times.")
+  @description("Leave null until entity resolution.")
 }
 
 class Technology {
@@ -170,7 +189,7 @@ class Technology {
   @description("List of source Technology ids that this Technology originates from merges. Leave null if length is one.")
 
   source_uuids string[]?
-  @description("Leave null at all times.")
+  @description("Leave null until entity resolution.")
 }
 
 class Nation {
@@ -189,6 +208,7 @@ enum RelationshipType {
   Partnership @description("Partnership between two companies")
   Licensing @description("One company licenses a technology to another company")
   Subsidiary @description("One company is owned by another company and operates independently")
+  OEM @description("Original Equipment Manufacturer relationship")
 }
 
 class Relationship {
