@@ -102,6 +102,7 @@ process:
   kg:
     raw:
       input:
+        - "${process.articles.dcbyte.output}"
         - "${process.articles.datacenter.output}"
         - "${process.articles.reddit.output}"
         - "${process.articles.semianalysis.output}"
