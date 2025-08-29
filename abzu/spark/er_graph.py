@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Entity resolution blocking strategies for company matching."""
-from typing import Optional
+from typing import Any, Optional
 
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
@@ -113,9 +113,7 @@ def build_blocks(
             F.col("block_size"),
         )
         .groupBy("block_size_range")
-        .agg(
-            F.count("*").alias("num_blocks"), F.sum("block_size").alias("total_companies_in_range")
-        )
+        .agg(F.count("*").alias("num_blocks"), F.sum("block_size").alias("companies_in_range"))
         .orderBy(
             F.when(F.col("block_size_range") == "1", 1)
             .when(F.col("block_size_range") == "2-5", 2)
@@ -163,9 +161,7 @@ def build_blocks(
             F.col("block_size"),
         )
         .groupBy("block_size_range")
-        .agg(
-            F.count("*").alias("num_blocks"), F.sum("block_size").alias("total_companies_in_range")
-        )
+        .agg(F.count("*").alias("num_blocks"), F.sum("block_size").alias("companies_in_range"))
         .orderBy(
             F.when(F.col("block_size_range") == "1", 1)
             .when(F.col("block_size_range") == "2-5", 2)
@@ -268,15 +264,15 @@ def build_blocks(
         .groupBy("block_key")
         .agg(
             F.collect_list(F.struct("*")).alias("companies"),
-            F.countDistinct("uuid").alias("total_companies"),
+            F.countDistinct("uuid").alias("block_size"),
         )
         .withColumn("block_key_type", F.lit("combined"))
-        .select("block_key", "block_key_type", "companies", "total_companies")
+        .select("block_key", "block_key_type", "companies", "block_size")
     )
 
     # Show top 20 overlapping block_keys by company count
     logger.info("Top 20 overlapping block_keys by company count:")
-    combined_blocks.select("block_key", "total_companies").orderBy(F.desc("total_companies")).show(
+    combined_blocks.select("block_key", "block_size").orderBy(F.desc("block_size")).show(
         20, truncate=False
     )
 
@@ -291,7 +287,7 @@ def build_blocks(
         .groupBy("block_key", "block_key_type")
         .agg(
             F.collect_list(F.struct("*")).alias("companies"),
-            F.countDistinct("uuid").alias("total_companies"),
+            F.countDistinct("uuid").alias("block_size"),
         )
     )
 
@@ -305,45 +301,140 @@ def build_blocks(
         .groupBy("block_key", "block_key_type")
         .agg(
             F.collect_list(F.struct("*")).alias("companies"),
-            F.countDistinct("uuid").alias("total_companies"),
+            F.countDistinct("uuid").alias("block_size"),
         )
     )
 
-    # Combine all the blocks and sort by smallest first as those are easy
-    # Filter out any blocks that ended up with only 1 company after processing
-    all_blocks = (
-        combined_blocks.select("block_key", "block_key_type", "companies", "total_companies")
-        .union(
-            first_word_only_blocks.select(
-                "block_key", "block_key_type", "companies", "total_companies"
-            )
+    # Filter blocks before saving
+    combined_blocks_filtered = combined_blocks.filter(F.col("block_size") > 1)
+    first_word_blocks_filtered = first_word_only_blocks.filter(F.col("block_size") > 1)
+    acronym_blocks_filtered = acronym_only_blocks.filter(F.col("block_size") > 1)
+
+    acronym_blocks_filtered.printSchema()
+
+    # Split large blocks (> 150 companies) into smaller chunks
+    logger.info("Splitting large blocks (> 150 companies) into smaller chunks...")
+
+    # 1) Define the class
+    class _SplitLargeBlocks:
+        def eval(self, block_key: str, block_key_type: str, companies: list, block_size: int):
+            max_size = 150
+            if block_size <= max_size:
+                yield (block_key, block_key_type, companies, block_size)
+            else:
+                chunk_num = 1
+                for i in range(0, len(companies), max_size):
+                    chunk_companies = companies[i : i + max_size]
+                    chunk_key = f"{block_key}_chunk_{chunk_num}"
+                    yield (chunk_key, block_key_type, chunk_companies, len(chunk_companies))
+                    chunk_num += 1
+
+    # 2) Build the UDTF object (give it a new name)
+    SplitLargeBlocks: Any = F.udtf(
+        returnType=(
+            "block_key: string, block_key_type: string, "
+            "companies: array<struct<uuid:string,block_key:string,block_key_type:string,"
+            "url:string,name:string,description:string,ceo:string,employees:long,"
+            "founded_year:long,headquarters_location:string,id:long,linkedin_url:string,"
+            "revenue_usd:long,source_ids:array<long>,source_uuids:array<string>,"
+            "ticker:struct<exchange:string,id:long,name:string,symbol:string,uuid:string>,"
+            "website_url:string>>, "
+            "block_size: long"
         )
-        .union(
-            acronym_only_blocks.select(
-                "block_key", "block_key_type", "companies", "total_companies"
-            )
+    )(_SplitLargeBlocks)
+
+    # 3) Call it with columns from the SAME DF and alias all outputs
+    combined_blocks_final = (
+        combined_blocks_filtered.select(
+            SplitLargeBlocks(
+                F.col("block_key"), F.col("block_key_type"), F.col("companies"), F.col("block_size")
+            ).alias("block_key", "block_key_type", "companies", "block_size")
         )
-        .filter(F.col("total_companies") > 1)  # Ensure we only keep blocks with 2+ companies
-        .orderBy("total_companies")
+        .orderBy(F.col("block_size"))
+        .cache()
+    )
+    first_word_blocks_final = (
+        first_word_blocks_filtered.select(
+            SplitLargeBlocks(
+                F.col("block_key"), F.col("block_key_type"), F.col("companies"), F.col("block_size")
+            ).alias("block_key", "block_key_type", "companies", "block_size")
+        )
+        .orderBy(F.col("block_size"))
+        .cache()
     )
 
-    # Write all the blocks together in one place
-    logger.info(f"Persisting blocking groups to {output_path}/all_blocks.json")
-    all_blocks.repartition(1).write.mode("overwrite").json(f"{output_path}/all_blocks.json")
-    all_blocks.repartition(1).write.mode("overwrite").parquet(f"{output_path}/all_blocks.parquet")
+    acronym_blocks_final = (
+        acronym_blocks_filtered.select(
+            SplitLargeBlocks(
+                F.col("block_key"), F.col("block_key_type"), F.col("companies"), F.col("block_size")
+            ).alias("block_key", "block_key_type", "companies", "block_size")
+        )
+        .orderBy(F.col("block_size"))
+        .cache()
+    )
 
-    # Count blocks by type
-    combined_block_count = combined_blocks.count()
-    first_word_only_count = first_word_only_blocks.count()
-    acronym_only_count = acronym_only_blocks.count()
-    total_blocks = all_blocks.count()
+    # Save combined blocks separately
+    logger.info(f"Persisting combined blocks to {output_path}/combined_blocks.json and .parquet")
+    combined_blocks_final.repartition(1).write.mode("overwrite").json(
+        f"{output_path}/combined_blocks.json"
+    )
+    combined_blocks_final.repartition(1).write.mode("overwrite").parquet(
+        f"{output_path}/combined_blocks.parquet"
+    )
 
-    # Count companies in each block type
-    combined_companies_count = combined_blocks.agg(F.sum("total_companies")).collect()[0][0]
-    first_word_only_companies_count = first_word_only_blocks.agg(
-        F.sum("total_companies")
-    ).collect()[0][0]
-    acronym_only_companies_count = acronym_only_blocks.agg(F.sum("total_companies")).collect()[0][0]
+    # Save first_word_only blocks separately
+    logger.info(
+        f"Persisting first word blocks to {output_path}/first_word_blocks.json and .parquet"
+    )
+    first_word_blocks_final.repartition(1).write.mode("overwrite").json(
+        f"{output_path}/first_word_blocks.json"
+    )
+    first_word_blocks_final.repartition(1).write.mode("overwrite").parquet(
+        f"{output_path}/first_word_blocks.parquet"
+    )
+
+    # Save acronym_only blocks separately
+    logger.info(f"Persisting acronym blocks to {output_path}/acronym_blocks.json and .parquet")
+    acronym_blocks_final.repartition(1).write.mode("overwrite").json(
+        f"{output_path}/acronym_blocks.json"
+    )
+    acronym_blocks_final.repartition(1).write.mode("overwrite").parquet(
+        f"{output_path}/acronym_blocks.parquet"
+    )
+
+    # Count blocks by type (after filtering and splitting)
+    combined_block_count = combined_blocks_final.count()
+    first_word_only_count = first_word_blocks_final.count()
+    acronym_only_count = acronym_blocks_final.count()
+    total_blocks = combined_block_count + first_word_only_count + acronym_only_count
+
+    # Debug: Show schema and sample data for verification
+    logger.info("Combined blocks final schema:")
+    combined_blocks_final.printSchema()
+    logger.info("Sample combined blocks:")
+    combined_blocks_final.select("block_key", "block_size").show(5)
+
+    # Count companies in each block type (after filtering and splitting)
+    # Use coalesce to handle nulls properly
+    combined_sum_result = combined_blocks_final.agg(
+        F.coalesce(F.sum("block_size"), F.lit(0)).alias("total")
+    ).collect()
+    combined_companies_count = combined_sum_result[0]["total"]
+
+    first_word_sum_result = first_word_blocks_final.agg(
+        F.coalesce(F.sum("block_size"), F.lit(0)).alias("total")
+    ).collect()
+    first_word_only_companies_count = first_word_sum_result[0]["total"]
+
+    acronym_sum_result = acronym_blocks_final.agg(
+        F.coalesce(F.sum("block_size"), F.lit(0)).alias("total")
+    ).collect()
+    acronym_only_companies_count = acronym_sum_result[0]["total"]
+
+    # Get original counts before splitting for comparison
+    original_combined_count = combined_blocks_filtered.count()
+    original_first_word_count = first_word_blocks_filtered.count()
+    original_acronym_count = acronym_blocks_filtered.count()
 
     logger.info("=" * 60)
     logger.info("ENTITY RESOLUTION BLOCKS CREATED")
@@ -351,13 +442,22 @@ def build_blocks(
     logger.info(
         f"Combined Blocks (overlapping keys): {combined_block_count:,} blocks with {combined_companies_count:,} companies"
     )
+    if combined_block_count != original_combined_count:
+        logger.info(f"  (Split from {original_combined_count:,} original blocks)")
+    logger.info(f"  Saved to: {output_path}/combined_blocks.json and .parquet")
     logger.info(
         f"First Word Only Blocks: {first_word_only_count:,} blocks with {first_word_only_companies_count:,} companies"
     )
+    if first_word_only_count != original_first_word_count:
+        logger.info(f"  (Split from {original_first_word_count:,} original blocks)")
+    logger.info(f"  Saved to: {output_path}/first_word_blocks.json and .parquet")
     logger.info(
         f"Acronym Only Blocks: {acronym_only_count:,} blocks with {acronym_only_companies_count:,} companies"
     )
-    logger.info(f"Total Blocks: {total_blocks:,} blocks")
+    if acronym_only_count != original_acronym_count:
+        logger.info(f"  (Split from {original_acronym_count:,} original blocks)")
+    logger.info(f"  Saved to: {output_path}/acronym_blocks.json and .parquet")
+    logger.info(f"Total Blocks: {total_blocks:,} blocks (all blocks ≤ 150 companies)")
     logger.info("=" * 60)
 
     # Clean up
