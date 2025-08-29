@@ -1,1 +1,1 @@
-Commit only the changes I have already run 'git add' on.
+Run pre-commit to find any outstanding problems with the changes already added to git. Once they are taken care of, you may git add only the original files I already added to re-run pre-commit. DO NOT add any other files to git. When pre-commit passes, commit the code.
