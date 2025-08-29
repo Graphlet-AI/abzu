@@ -38,6 +38,9 @@ crawl:
   theinformation:
     output: "${base_dir}/articles/theinformation.jsonl"
 
+  dcbyte:
+    output: "${base_dir}/articles/dcbyte.jsonl"
+
   datacenter:
     output: "${base_dir}/articles/datacenter.jsonl"
 
@@ -83,6 +86,10 @@ process:
     theinformation:
       input: "${crawl.theinformation.output}"
       output: "${base_dir}/articles/processed_theinformation.jsonl"
+
+    dcbyte:
+      input: "${crawl.dcbyte.output}"
+      output: "${base_dir}/articles/processed_dcbyte.jsonl"
 
     reddit:
       input: "${crawl.reddit.output}"
