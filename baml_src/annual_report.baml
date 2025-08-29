@@ -26,7 +26,7 @@ class AnnualReportData {
 
 
 function ExtractCompanyRelationshipsFromAnnualReport(report_text: string) -> AnnualReportData {
-  client GeminiFallback
+  client Gemini20Flash
 
   prompt #"
     Parse the following company annual report. Extract information related to subsidiaries, partnerships, investments (including acquisitions), and key suppliers of the reporting company.
