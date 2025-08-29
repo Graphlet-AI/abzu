@@ -228,11 +228,9 @@ def test_get_acronyms_punctuation():
     result = get_acronyms("Tesla, Inc.")
     assert result is None  # "Tesla" is single word
 
-    # Hyphens might be handled differently depending on how split() works
+    # Hyphens should be split for acronym generation
     result = get_acronyms("Coca-Cola Company")
-    # This depends on whether "Coca-Cola" is treated as one word or split
-    # We test the actual behavior
-    assert result is None or isinstance(result, str)
+    assert result == "CC"  # "Coca" and "Cola" should be split
 
 
 def test_get_acronyms_no_meaningful_words():
@@ -302,6 +300,37 @@ def test_get_acronyms_empty_after_cleaning():
 
     result = get_acronyms("   Inc.   ")
     assert result is None  # Only corporate ending, no base name
+
+
+def test_get_acronyms_hyphenated_names():
+    """Test hyphenated company names."""
+    # Simple hyphenated name
+    result = get_acronyms("X-FAB")
+    assert result == "XF"  # Should create acronym from parts
+
+    # Hyphenated name with corporate ending
+    result = get_acronyms("Coca-Cola Company")
+    assert result == "CC"  # Should split on hyphen
+
+    # Multiple hyphens
+    result = get_acronyms("Jean-Luc-Picard Corporation")
+    assert result == "JLP"  # Should split all hyphen parts
+
+    # Mixed spaces and hyphens
+    result = get_acronyms("Advanced Micro-Devices Inc.")
+    assert result == "AMD"  # Should handle both separators
+
+    # Hyphen with stop words
+    result = get_acronyms("The Coca-Cola Company")
+    assert result == "CC"  # "The" filtered, hyphen split
+
+    # Single hyphenated word after cleaning should return None
+    result = get_acronyms("Jean-Luc Corporation")
+    assert result == "JL"  # Should split even though it's from one original word
+
+    # All uppercase hyphenated name
+    result = get_acronyms("IBM-HP Corporation")
+    assert result == "IH"  # Both parts are uppercase, should create acronym
 
 
 def test_get_acronyms_long_names():

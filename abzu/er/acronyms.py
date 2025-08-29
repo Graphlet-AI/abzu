@@ -1,3 +1,5 @@
+import re
+
 import cleanco
 import pandas as pd
 from stop_words import AVAILABLE_LANGUAGES, get_stop_words
@@ -55,8 +57,10 @@ def get_acronyms(name: str) -> str | None:
 
     acronym: str | None = None
     if cleaned_name:
-        # Split into words and filter
-        words: list[str] = cleaned_name.split()
+        # Split into words on both spaces and hyphens for acronym generation
+        words: list[str] = re.split(r"[ -]+", cleaned_name)
+        # Remove empty strings that might result from splitting
+        words = [w for w in words if w]
 
         # Filter out common words and lowercase single letters (keep uppercase single letters)
         stop_words: set[str] = get_multilingual_stop_words()
