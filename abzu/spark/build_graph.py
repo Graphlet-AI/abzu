@@ -262,16 +262,22 @@ def build_knowledge_graph(
     # Extract companies and assign a random UUID id
     logger.info("Extracting companies ...")
     companies_df = (
-        articles_uuid_df.select("url", F.explode_outer(F.col("companies")).alias("company"))
+        articles_uuid_df.select(
+            "url", "posted_at", F.explode_outer(F.col("companies")).alias("company")
+        )
         .filter("company IS NOT NULL")
-        .select("url", "company.*")
+        .select("url", "posted_at", "company.*")
     )
     companies_df.show(5, truncate=100, vertical=True)
 
-    # Put the uuid and url columns first
+    # Put the uuid, url, and posted_at columns first
     companies_df = companies_df.select(
-        ["uuid", "url", "name", "description"]
-        + [col for col in companies_df.columns if col not in ["uuid", "url", "name", "description"]]
+        ["uuid", "url", "posted_at", "name", "description"]
+        + [
+            col
+            for col in companies_df.columns
+            if col not in ["uuid", "url", "posted_at", "name", "description"]
+        ]
     )
 
     # Store the original records with their UUIDs - they can be matched at the field level to nested
