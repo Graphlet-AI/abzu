@@ -33,6 +33,7 @@ def process(ctx, all):
             ("articles semianalysis", articles.commands["semianalysis"]),
             ("articles theinformation", articles.commands["theinformation"]),
             ("articles datacenter", articles.commands["datacenter"]),
+            ("articles dcbyte", articles.commands["dcbyte"]),
             ("articles reddit", articles.commands["reddit"]),
             ("rss processing", rss),
             ("kg raw", kg.commands["raw"]),
