@@ -15,13 +15,15 @@ logger = get_logger(__name__)
 @click.option(
     "--all",
     is_flag=True,
-    help="Run the full processing pipeline: articles -> kg raw -> er block -> er match",
+    help="Run the full processing pipeline: articles -> rss -> kg raw -> er block -> er match",
 )
 @click.pass_context
 def process(ctx, all):
     """Process data for knowledge extraction."""
     if all:
-        logger.info("Starting full processing pipeline: articles -> kg raw -> er block -> er match")
+        logger.info(
+            "Starting full processing pipeline: articles -> rss -> kg raw -> er block -> er match"
+        )
 
         # Track results
         results = {}
@@ -32,6 +34,7 @@ def process(ctx, all):
             ("articles theinformation", articles.commands["theinformation"]),
             ("articles datacenter", articles.commands["datacenter"]),
             ("articles reddit", articles.commands["reddit"]),
+            ("rss processing", rss),
             ("kg raw", kg.commands["raw"]),
             ("er block", er.commands["block"]),
             ("er match", er.commands["match"]),
