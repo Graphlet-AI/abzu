@@ -29,7 +29,7 @@ function ExtractCompanyRelationshipsFromAnnualReport(report_text: string) -> Ann
   client Gemini20Flash
 
   prompt #"
-    Parse the following company annual report. Extract information related to subsidiaries, partnerships, investments (including acquisitions), and key suppliers of the reporting company.
+    Parse the following company annual report. Extract information related to subsidiaries, partnerships, investments (including acquisitions), and key suppliers of the reporting company. Leave fields out that are null unless they are REQUIRED.
 
     Annual Report Text:
     ---
