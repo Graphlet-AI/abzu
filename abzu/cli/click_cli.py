@@ -7,6 +7,7 @@ import click
 from abzu.cli.api import api
 from abzu.cli.chat import chat
 from abzu.cli.crawl import crawl
+from abzu.cli.data import data
 from abzu.cli.dump import dump
 from abzu.cli.process import process
 from abzu.cli.steps import steps
@@ -25,6 +26,7 @@ def cli():
 cli.add_command(api)
 cli.add_command(chat)
 cli.add_command(crawl)
+cli.add_command(data)
 cli.add_command(process)
 cli.add_command(steps)
 cli.add_command(dump)
