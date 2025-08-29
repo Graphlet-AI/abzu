@@ -20,6 +20,7 @@ async def _crawl_theinformation_async(
     output_file: str,
     cookie: Optional[str] = None,
     user_agent: str = DEFAULT_USER_AGENT,
+    bypass_cf: bool = False,
 ) -> int:
     """Async implementation of TheInformation crawling using Playwright."""
     try:
@@ -33,7 +34,9 @@ async def _crawl_theinformation_async(
         if output_dir and not output_dir.exists():
             output_dir.mkdir(parents=True, exist_ok=True)
 
-        await parse_rss_and_save(RSS_URL, output_file, browser, min_year)
+        await parse_rss_and_save(
+            RSS_URL, output_file, browser, min_year, bypass_cf, cookie, user_agent
+        )
         await browser.close()
         return 0
     except Exception as e:  # noqa: BLE001
@@ -48,4 +51,4 @@ def crawl_theinformation(
     bypass_cf: bool = False,
 ) -> int:
     """Crawl TheInformation RSS feed and save articles."""
-    return asyncio.run(_crawl_theinformation_async(output_file, cookie, user_agent))
+    return asyncio.run(_crawl_theinformation_async(output_file, cookie, user_agent, bypass_cf))

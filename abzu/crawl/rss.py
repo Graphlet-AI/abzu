@@ -10,10 +10,16 @@ from typing import Optional
 
 import dateutil.parser
 import feedparser
-import requests
 from playwright.async_api import Browser
 from playwright.async_api import Error as PlaywrightError
 from playwright.async_api import async_playwright
+
+try:
+    import cloudscraper
+
+    CLOUDSCRAPER_AVAILABLE = True
+except ImportError:
+    CLOUDSCRAPER_AVAILABLE = False
 
 from abzu.config import config
 from abzu.html_extractor import HTMLExtractor
@@ -38,23 +44,89 @@ async def setup_browser(
     playwright = await async_playwright().start()
     browser = await playwright.chromium.launch(headless=True)
 
-    # Create context with user agent
-    context = await browser.new_context(user_agent=user_agent)
+    # Create context with user agent and additional headers to look more like a real browser
+    context = await browser.new_context(
+        user_agent=user_agent,
+        extra_http_headers={
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.5",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Connection": "keep-alive",
+            "Upgrade-Insecure-Requests": "1",
+            "Sec-Fetch-Dest": "document",
+            "Sec-Fetch-Mode": "navigate",
+            "Sec-Fetch-Site": "none",
+        },
+    )
 
     # Add cookies if provided
     if cookie_string:
         cookies = []
+        # Parse cookies more carefully to handle different domains
         for pair in cookie_string.split(";"):
             if "=" in pair:
                 key, val = pair.strip().split("=", 1)
-                cookies.append({"name": key, "value": val, "domain": "example.com", "path": "/"})
-        await context.add_cookies(cookies)  # type: ignore[arg-type]
+                # Use both the main domain and subdomain variations
+                cookies.extend(
+                    [
+                        {"name": key, "value": val, "domain": "theinformation.com", "path": "/"},
+                        {"name": key, "value": val, "domain": ".theinformation.com", "path": "/"},
+                    ]
+                )
+        try:
+            await context.add_cookies(cookies)  # type: ignore
+        except Exception as e:
+            logger.warning(f"Failed to add some cookies: {e}")
+            # Try adding cookies one by one
+            for cookie in cookies:
+                try:
+                    await context.add_cookies([cookie])  # type: ignore
+                except Exception:
+                    logger.debug(f"Failed to add cookie {cookie['name']}")
+                    continue
 
     return browser
 
 
+def fetch_rss_with_cloudscraper(
+    rss_url: str, cookie_string: Optional[str] = None, user_agent: str = DEFAULT_USER_AGENT
+) -> str:
+    """Fetch RSS feed using cloudscraper to bypass Cloudflare protection."""
+    if not CLOUDSCRAPER_AVAILABLE:
+        raise ImportError("cloudscraper not available. Install with: pip install cloudscraper")
+
+    # Create cloudscraper session
+    session = cloudscraper.create_scraper(browser={"custom": user_agent})
+
+    # Add cookies if provided
+    if cookie_string:
+        cookie_dict = {}
+        for pair in cookie_string.split(";"):
+            if "=" in pair:
+                key, val = pair.strip().split("=", 1)
+                cookie_dict[key] = val
+        session.cookies.update(cookie_dict)
+
+    # Fetch the RSS feed
+    response = session.get(rss_url, timeout=15)
+    response.raise_for_status()
+
+    # Handle encoding
+    content_bytes: bytes = response.content
+    try:
+        return content_bytes.decode("utf-8")
+    except UnicodeDecodeError:
+        return content_bytes.decode("utf-8", errors="ignore")
+
+
 async def parse_rss_and_save(
-    rss_url: str, output_file: str, browser: Browser, min_year: Optional[int] = None
+    rss_url: str,
+    output_file: str,
+    browser: Browser,
+    min_year: Optional[int] = None,
+    bypass_cf: bool = False,
+    cookie_string: Optional[str] = None,
+    user_agent: str = DEFAULT_USER_AGENT,
 ) -> None:
     """Parse an RSS feed and write entries with full text to JSONL.
 
@@ -76,22 +148,49 @@ async def parse_rss_and_save(
     # Initialize URLExtractor
     url_extractor = URLExtractor()
 
-    # Still use requests for RSS feed parsing since feedparser works better with plain text
-    try:
-        logger.info(f"Fetching RSS feed from: {rss_url}")
-        resp = requests.get(rss_url, timeout=15)
-        if resp.status_code != 200:
-            logger.warning(f"RSS feed response status: {resp.status_code}")
-        resp.raise_for_status()
-    except Exception as e:  # noqa: BLE001
-        logger.error(f"Error fetching RSS feed from {rss_url}: {e}")
-        return
+    # Choose fetch method based on bypass_cf option
+    text = ""
+    if bypass_cf:
+        try:
+            logger.info(f"Fetching RSS feed with cloudscraper from: {rss_url}")
+            text = fetch_rss_with_cloudscraper(rss_url, cookie_string, user_agent)
+        except Exception as e:  # noqa: BLE001
+            logger.error(f"Error fetching RSS feed with cloudscraper from {rss_url}: {e}")
+            return
+    else:
+        # Use Playwright to fetch RSS feed to avoid 403 errors
+        try:
+            logger.info(f"Fetching RSS feed with Playwright from: {rss_url}")
+            page = await browser.new_page()
+            response = await page.goto(rss_url, timeout=15000)
 
-    raw = resp.content
-    try:
-        text = raw.decode("utf-8")
-    except UnicodeDecodeError:
-        text = raw.decode("utf-8", errors="ignore")
+            if response and response.status != 200:
+                logger.warning(f"RSS feed response status: {response.status}")
+
+            if not response or response.status != 200:
+                logger.error(
+                    f"Failed to fetch RSS feed from {rss_url}: HTTP {response.status if response else 'No response'}"
+                )
+                await page.close()
+                return
+
+            # Get the text content
+            text = await page.content()
+            await page.close()
+
+            # If the content looks like HTML instead of RSS/XML, try getting just the text
+            if text.strip().startswith("<!DOCTYPE html>") or text.strip().startswith("<html"):
+                # The page might be returning HTML instead of raw RSS
+                # Try to get the raw response body
+                page = await browser.new_page()
+                response = await page.goto(rss_url, timeout=15000)
+                if response:
+                    text = await response.text()
+                await page.close()
+
+        except Exception as e:  # noqa: BLE001
+            logger.error(f"Error fetching RSS feed from {rss_url}: {e}")
+            return
     feed = feedparser.parse(text)
     entries = feed.entries
     if not entries:
@@ -225,15 +324,13 @@ def crawl_rss(
         Optional raw cookie header string used when fetching the feeds.
     user_agent:
         User agent string for HTTP requests.
-    bypass_cf:
-        Whether to use ``cloudscraper`` to bypass Cloudflare (ignored, kept for compatibility).
 
     Returns
     -------
     int
         ``0`` on success, ``1`` on failure.
     """
-    return asyncio.run(_crawl_rss_async(feeds_file, output_dir, cookie, user_agent))
+    return asyncio.run(_crawl_rss_async(feeds_file, output_dir, cookie, user_agent, bypass_cf))
 
 
 async def _crawl_rss_async(
@@ -241,6 +338,7 @@ async def _crawl_rss_async(
     output_dir: str = config.get("crawl.rss.output_dir"),
     cookie: Optional[str] = None,
     user_agent: str = DEFAULT_USER_AGENT,
+    bypass_cf: bool = False,
 ) -> int:
     """Async implementation of RSS crawling using Playwright."""
     try:
@@ -282,7 +380,9 @@ async def _crawl_rss_async(
             output_file = Path(output_dir) / f"{source}.jsonl"
             logger.info("Processing feed %s -> %s", url, output_file)
             try:
-                await parse_rss_and_save(url, str(output_file), browser, min_year)
+                await parse_rss_and_save(
+                    url, str(output_file), browser, min_year, bypass_cf, cookie, user_agent
+                )
             except PlaywrightError as e:
                 logger.error("Failed to process feed %s: %s", url, e)
     else:
@@ -302,7 +402,9 @@ async def _crawl_rss_async(
             output_file = Path(output_dir) / f"{source}.jsonl"
             logger.info("Processing feed %s -> %s", url, output_file)
             try:
-                await parse_rss_and_save(url, str(output_file), browser, min_year)
+                await parse_rss_and_save(
+                    url, str(output_file), browser, min_year, bypass_cf, cookie, user_agent
+                )
             except PlaywrightError as e:
                 logger.error("Failed to process feed %s: %s", url, e)
 
