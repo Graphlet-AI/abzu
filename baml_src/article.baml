@@ -66,6 +66,9 @@ enum Exchange {
   NYSE @description("New York Stock Exchange")
   NASDAQ @description("NASDAQ Stock Market")
   AMEX @description("American Stock Exchange")
+  ARCA @description("NYSE Arca")
+  TSXV @description("TSX Venture Exchange")
+  NYSEMKT @description("NYSE American")
   LSE @description("London Stock Exchange")
   TSE @description("Tokyo Stock Exchange")
   HKEX @description("Hong Kong Stock Exchange")
@@ -91,7 +94,7 @@ class Ticker {
   symbol string
   @description("Ticker symbol of the company if publicly traded")
 
-  exchange string?
+  exchange Exchange?
   @description("Exchange where the company is traded")
 }
 
