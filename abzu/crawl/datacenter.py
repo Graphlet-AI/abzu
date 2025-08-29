@@ -6,10 +6,11 @@ from scrapy.http.response import Response
 
 from abzu.config import config
 from abzu.crawl.base import BaseArticleCrawler, crawl_site
+from abzu.crawl.datacenter_playwright import crawl_datacenter_playwright
 
 
 class DataCenterCrawler(BaseArticleCrawler):
-    """Crawler for DataCenter Dynamics articles."""
+    """Legacy Scrapy-based crawler for DataCenter Dynamics articles (blocked by anti-bot protection)."""
 
     name = "datacenter_crawler"
 
@@ -49,26 +50,22 @@ def crawl_datacenter(
     batch_size: int = 1,
     concurrent_requests: int = 1,
 ) -> int:
-    """Crawl articles from DataCenter Dynamics website in batch mode.
+    """Crawl articles from DataCenter Dynamics website using Playwright to bypass anti-bot protection.
 
     Args:
-        url: Optional specific URL to crawl
+        url: Optional specific URL to crawl (ignored for Playwright version)
         output_path: Path to save crawled articles
         pages: Number of archive pages to crawl
-        batch_size: Number of URLs to process in each batch
-        concurrent_requests: Number of concurrent requests per spider
+        batch_size: Number of URLs to process in each batch (ignored for Playwright version)
+        concurrent_requests: Number of concurrent requests per spider (ignored for Playwright version)
 
     Returns:
-        0 on success, 1 on failure
+        Number of articles processed
     """
-    return crawl_site(
-        crawler_class=DataCenterCrawler,
-        get_archive_urls_func=get_datacenter_archive_urls,
+    # Use Playwright crawler to bypass anti-bot protection
+    return crawl_datacenter_playwright(
         output_path=output_path,
-        url=url,
         pages=pages,
-        batch_size=batch_size,
-        concurrent_requests=concurrent_requests,
     )
 
 
