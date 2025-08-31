@@ -23,7 +23,7 @@ logging.basicConfig(
 )
 
 
-def get_logger(name=None):
+def get_logger(name: str | None = None) -> logging.Logger:
     """Get a logger instance.
 
     Parameters
