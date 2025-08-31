@@ -11,16 +11,20 @@ from abzu.baml_client.types import Company, CompanyList, Ticker, TickerList
 
 
 @pytest.mark.asyncio
-async def test_add_tickers_to_companies():
-    """Test AddTickersToCompanies function with real ticker and company data."""
+@pytest.mark.parametrize("max_tickers", [None])  # Set to an integer to limit, or None for all
+async def test_add_tickers_to_companies(max_tickers):
+    """Test AddTickersToCompanies function with real ticker and company data.
+
+    Set max_tickers to an integer to limit the number of tickers loaded for testing,
+    or None to load all tickers.
+    """
     # Load ticker data
     ticker_file = Path("data/financialdatasets/all_tickers_facts_baml.jsonl")
     tickers = []
     with open(ticker_file, "r") as f:
-        # Load first 100 tickers for testing
         for i, line in enumerate(f):
-            # if i >= 100:
-            #     break
+            if max_tickers is not None and i >= max_tickers:
+                break
             ticker_data = json.loads(line)
             ticker = Ticker(
                 name=ticker_data["name"],
