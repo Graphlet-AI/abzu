@@ -34,10 +34,12 @@
       "Bash(touch:*__init__.py)",
       "Bash(echo:*)",
       "Bash(echo -ne:*)",
-      "Write(*/__init__.py)",
       "Write(__init__.py)",
       "Bash(abzu:*)",
       "WebFetch(domain:*.readthedocs.io)",
+      "WebFetch(domain:*.google.com"),
+      "Bash(git log:*)",
+      "Bash(mkdir:*)",
       "Bash(python -c:*)",
       "WebFetch",
       "Bash(poetry run abzu:*)",
@@ -50,6 +52,7 @@
     ],
     "deny": [
       "Bash(pip install:*)"
-    ]
+    ],
+    "ask": []
   }
 }
