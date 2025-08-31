@@ -344,9 +344,7 @@ def build_blocks(
             "website_url:string>>, "
             "block_size: long"
         )
-    )(
-        _SplitLargeBlocks
-    )  # type: ignore
+    )(_SplitLargeBlocks)
 
     # 3) Call it with columns from the SAME DF and alias all outputs
     combined_blocks_final = (
