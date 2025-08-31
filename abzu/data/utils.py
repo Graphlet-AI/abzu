@@ -33,6 +33,13 @@ def collect_output_paths() -> set[str]:
                                 resolved_path = config.expand_variables(item)
                                 output_paths.add(resolved_path)
                                 logger.debug(f"Found output path: {resolved_path}")
+                    elif isinstance(value, dict):
+                        # Handle output maps like {jsonl: "path1", parquet: "path2"}
+                        for format_key, format_path in value.items():
+                            if isinstance(format_path, str):
+                                resolved_path = config.expand_variables(format_path)
+                                output_paths.add(resolved_path)
+                                logger.debug(f"Found output path ({format_key}): {resolved_path}")
                 elif key == "input" and isinstance(value, list):
                     # Some input lists contain output paths from other steps
                     for item in value:

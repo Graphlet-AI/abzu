@@ -131,8 +131,11 @@ process:
       output: "${base_dir}/knowledge_graph"
     
     er:
-      input: "${process.kg.raw.output}"
-      output: "${base_dir}/er/"
+      paths:
+        input: "${process.kg.raw.output}"
+        output: "${base_dir}/er/"
+        matches: "${base_dir}/er/matches.parquet"
+        eval: "${base_dir}/er/"
 
     refine:
       input: "${process.kg.raw.output}"
@@ -166,6 +169,10 @@ api:
       annual_reports: "${base_dir}/sec/annual_reports"
       form_type: "10-Q"
       ticker: null
+    annual_reports:
+      output:
+        jsonl: "${base_dir}/sec/annual_reports.jsonl"
+        parquet: "${base_dir}/sec/annual_reports.parquet"
     build_kuzu:
       output_dir: "${base_dir}/sec/kuzu"
 
