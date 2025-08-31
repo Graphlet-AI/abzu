@@ -333,7 +333,7 @@ def build_blocks(
                     chunk_num += 1
 
     # 2) Build the UDTF object (give it a new name)
-    SplitLargeBlocks: Any = F.udtf(  # type: ignore
+    SplitLargeBlocks: Any = F.udtf(
         returnType=(
             "block_key: string, block_key_type: string, "
             "companies: array<struct<uuid:string,block_key:string,block_key_type:string,"
@@ -344,7 +344,9 @@ def build_blocks(
             "website_url:string>>, "
             "block_size: long"
         )
-    )(_SplitLargeBlocks)
+    )(
+        _SplitLargeBlocks
+    )  # type: ignore
 
     # 3) Call it with columns from the SAME DF and alias all outputs
     combined_blocks_final = (
