@@ -41,7 +41,7 @@ The easiest way to get started with Abzu is using Docker and Taskfile. This ensu
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/Graphlet-AI/abzu.git
+git clone https://github.com/abzuc/abzu.git
 cd abzu
 ```
 
