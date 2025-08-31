@@ -187,6 +187,7 @@ In addition, when writing PySpark code:
 ## Additional Context
 
 ### Python Dependencies
+
 - Python 3.12 required
 - Core packages: pyspark==3.5.5, scrapy==2.11, baml, kuzu, discord.py
 - Development tools: poetry, black, isort, flake8, mypy, pytest
