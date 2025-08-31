@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Build a knowledge graph from pre-processed articles."""
+import os
 from typing import Optional
 
 import pyspark.sql.functions as F
@@ -65,9 +66,9 @@ def build_knowledge_graph(
     bad_articles_df = articles_df.exceptAll(clean_articles_df)
 
     bad_article_json_path, bad_article_parquet_path, bad_article_csv_path = (
-        f"{output_path}/bad_articles.jsonl",
-        f"{output_path}/bad_articles.parquet",
-        f"{output_path}/bad_articles.csv",
+        os.path.join(output_path, "bad_articles.jsonl"),
+        os.path.join(output_path, "bad_articles.parquet"),
+        os.path.join(output_path, "bad_articles.csv"),
     )
     bad_articles_df.repartition(1).write.mode("overwrite").json(bad_article_json_path)
     bad_articles_df.repartition(1).write.mode("overwrite").parquet(bad_article_parquet_path)
@@ -282,11 +283,11 @@ def build_knowledge_graph(
 
     # Store the original records with their UUIDs - they can be matched at the field level to nested
     # companies from the same post, such as Product.manufacturer or Technology.developer
-    companies_output_path = f"{output_path}/companies.parquet"
+    companies_output_path = os.path.join(output_path, "companies.parquet")
     companies_df.repartition(1).write.mode("overwrite").parquet(companies_output_path)
     logger.info(f"Saved {companies_df.count():,} companies to {companies_output_path}")
 
-    companies_jsonl_output_path = f"{output_path}/companies.jsonl"
+    companies_jsonl_output_path = os.path.join(output_path, "companies.jsonl")
     companies_df.repartition(1).write.mode("overwrite").json(companies_jsonl_output_path)
     logger.info(f"Saved companies to {companies_jsonl_output_path}")
 
@@ -307,11 +308,11 @@ def build_knowledge_graph(
         + [col for col in products_df.columns if col not in ["uuid", "url", "name", "description"]]
     )
 
-    products_output_path = f"{output_path}/products.parquet"
+    products_output_path = os.path.join(output_path, "products.parquet")
     products_df.repartition(1).write.mode("overwrite").parquet(products_output_path)
     logger.info(f"Saved {products_df.count():,} products to {products_output_path}")
 
-    products_jsonl_output_path = f"{output_path}/products.jsonl"
+    products_jsonl_output_path = os.path.join(output_path, "products.jsonl")
     products_df.repartition(1).write.mode("overwrite").json(products_jsonl_output_path)
     logger.info(f"Saved products to {products_jsonl_output_path}")
 
@@ -337,11 +338,11 @@ def build_knowledge_graph(
         ]
     )
 
-    technologies_output_path = f"{output_path}/technologies.parquet"
+    technologies_output_path = os.path.join(output_path, "technologies.parquet")
     technologies_df.repartition(1).write.mode("overwrite").parquet(technologies_output_path)
     logger.info(f"Saved {technologies_df.count():,} technologies to {technologies_output_path}")
 
-    technologies_jsonl_output_path = f"{output_path}/technologies.jsonl"
+    technologies_jsonl_output_path = os.path.join(output_path, "technologies.jsonl")
     technologies_df.repartition(1).write.mode("overwrite").json(technologies_jsonl_output_path)
     logger.info(f"Saved technologies to {technologies_jsonl_output_path}")
 
@@ -364,11 +365,11 @@ def build_knowledge_graph(
         "url",
     )
 
-    tickers_output_path = f"{output_path}/tickers.parquet"
+    tickers_output_path = os.path.join(output_path, "tickers.parquet")
     tickers_df.repartition(1).write.mode("overwrite").parquet(tickers_output_path)
     logger.info(f"Saved {tickers_df.count():,} tickers to {tickers_output_path}")
 
-    tickers_jsonl_output_path = f"{output_path}/tickers.jsonl"
+    tickers_jsonl_output_path = os.path.join(output_path, "tickers.jsonl")
     tickers_df.repartition(1).write.mode("overwrite").json(tickers_jsonl_output_path)
     logger.info(f"Saved tickers to {tickers_jsonl_output_path}")
 
@@ -408,11 +409,11 @@ def build_knowledge_graph(
         F.col("src").isNotNull() & F.col("dst").isNotNull()
     )
 
-    relationships_output_path = f"{output_path}/relationships.parquet"
+    relationships_output_path = os.path.join(output_path, "relationships.parquet")
     relationships_clean_df.repartition(1).write.mode("overwrite").parquet(relationships_output_path)
     logger.info(f"Saved {relationships_df.count():,} relationships to {relationships_output_path}")
 
-    relationships_jsonl_output_path = f"{output_path}/relationships.jsonl"
+    relationships_jsonl_output_path = os.path.join(output_path, "relationships.jsonl")
     relationships_clean_df.repartition(1).write.mode("overwrite").json(
         relationships_jsonl_output_path
     )

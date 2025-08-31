@@ -3,6 +3,7 @@
 import click
 
 from abzu.cli.process.er.block import block
+from abzu.cli.process.er.eval import eval
 from abzu.cli.process.er.match import match
 
 
@@ -13,4 +14,5 @@ def er():
 
 
 er.add_command(block)
+er.add_command(eval)
 er.add_command(match)

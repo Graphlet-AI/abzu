@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Entity resolution blocking strategies for company matching."""
+import os
 from typing import Any, Optional
 
 import pyspark.sql.functions as F
@@ -35,8 +36,10 @@ def get_acronym(name: str) -> str | None:
 
 
 def build_blocks(
-    companies_path: str = f"{config.get('process.kg.er.input')}/companies.parquet",
-    output_path: str = config.get("process.kg.er.output"),
+    companies_path: str = os.path.join(
+        config.get("process.kg.er.paths.input"), "companies.parquet"
+    ),
+    output_path: str = config.get("process.kg.er.paths.output"),
     local_mode: Optional[bool] = None,
 ) -> None:
     """
@@ -330,7 +333,7 @@ def build_blocks(
                     chunk_num += 1
 
     # 2) Build the UDTF object (give it a new name)
-    SplitLargeBlocks: Any = F.udtf(
+    SplitLargeBlocks: Any = F.udtf(  # type: ignore
         returnType=(
             "block_key: string, block_key_type: string, "
             "companies: array<struct<uuid:string,block_key:string,block_key_type:string,"
@@ -374,33 +377,31 @@ def build_blocks(
     )
 
     # Save combined blocks separately
-    logger.info(f"Persisting combined blocks to {output_path}/combined_blocks.json and .parquet")
-    combined_blocks_final.repartition(1).write.mode("overwrite").json(
-        f"{output_path}/combined_blocks.json"
+    combined_blocks_json_path = os.path.join(output_path, "combined_blocks.json")
+    combined_blocks_parquet_path = os.path.join(output_path, "combined_blocks.parquet")
+    logger.info(
+        f"Persisting combined blocks to {combined_blocks_json_path} and {combined_blocks_parquet_path}"
     )
+    combined_blocks_final.repartition(1).write.mode("overwrite").json(combined_blocks_json_path)
     combined_blocks_final.repartition(1).write.mode("overwrite").parquet(
-        f"{output_path}/combined_blocks.parquet"
+        combined_blocks_parquet_path
     )
 
     # Save first_word_only blocks separately
+    first_word_json_path = os.path.join(output_path, "first_word_blocks.json")
+    first_word_parquet_path = os.path.join(output_path, "first_word_blocks.parquet")
     logger.info(
-        f"Persisting first word blocks to {output_path}/first_word_blocks.json and .parquet"
+        f"Persisting first word blocks to {first_word_json_path} and {first_word_parquet_path}"
     )
-    first_word_blocks_final.repartition(1).write.mode("overwrite").json(
-        f"{output_path}/first_word_blocks.json"
-    )
-    first_word_blocks_final.repartition(1).write.mode("overwrite").parquet(
-        f"{output_path}/first_word_blocks.parquet"
-    )
+    first_word_blocks_final.repartition(1).write.mode("overwrite").json(first_word_json_path)
+    first_word_blocks_final.repartition(1).write.mode("overwrite").parquet(first_word_parquet_path)
 
     # Save acronym_only blocks separately
-    logger.info(f"Persisting acronym blocks to {output_path}/acronym_blocks.json and .parquet")
-    acronym_blocks_final.repartition(1).write.mode("overwrite").json(
-        f"{output_path}/acronym_blocks.json"
-    )
-    acronym_blocks_final.repartition(1).write.mode("overwrite").parquet(
-        f"{output_path}/acronym_blocks.parquet"
-    )
+    acronym_json_path = os.path.join(output_path, "acronym_blocks.json")
+    acronym_parquet_path = os.path.join(output_path, "acronym_blocks.parquet")
+    logger.info(f"Persisting acronym blocks to {acronym_json_path} and {acronym_parquet_path}")
+    acronym_blocks_final.repartition(1).write.mode("overwrite").json(acronym_json_path)
+    acronym_blocks_final.repartition(1).write.mode("overwrite").parquet(acronym_parquet_path)
 
     # Count blocks by type (after filtering and splitting)
     combined_block_count = combined_blocks_final.count()
@@ -444,19 +445,19 @@ def build_blocks(
     )
     if combined_block_count != original_combined_count:
         logger.info(f"  (Split from {original_combined_count:,} original blocks)")
-    logger.info(f"  Saved to: {output_path}/combined_blocks.json and .parquet")
+    logger.info(f"  Saved to: {combined_blocks_json_path} and {combined_blocks_parquet_path}")
     logger.info(
         f"First Word Only Blocks: {first_word_only_count:,} blocks with {first_word_only_companies_count:,} companies"
     )
     if first_word_only_count != original_first_word_count:
         logger.info(f"  (Split from {original_first_word_count:,} original blocks)")
-    logger.info(f"  Saved to: {output_path}/first_word_blocks.json and .parquet")
+    logger.info(f"  Saved to: {first_word_json_path} and {first_word_parquet_path}")
     logger.info(
         f"Acronym Only Blocks: {acronym_only_count:,} blocks with {acronym_only_companies_count:,} companies"
     )
     if acronym_only_count != original_acronym_count:
         logger.info(f"  (Split from {original_acronym_count:,} original blocks)")
-    logger.info(f"  Saved to: {output_path}/acronym_blocks.json and .parquet")
+    logger.info(f"  Saved to: {acronym_json_path} and {acronym_parquet_path}")
     logger.info(f"Total Blocks: {total_blocks:,} blocks (all blocks ≤ 150 companies)")
     logger.info("=" * 60)
 

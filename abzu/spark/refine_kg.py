@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Refine the knowledge graph by creating bidirectional relationships and a unified edge list."""
 
+import os
 from pathlib import Path
 
 import pyspark.sql.functions as F
@@ -37,21 +38,21 @@ def refine_knowledge_graph(
 
     # Load entity dataframes
     logger.info(f"Loading knowledge graph entities from {input_path}...")
-    company_df: DataFrame = spark.read.parquet(f"{input_path}/companies.parquet")
-    product_df: DataFrame = spark.read.parquet(f"{input_path}/products.parquet")
-    technology_df: DataFrame = spark.read.parquet(f"{input_path}/technologies.parquet")
-    ticker_df = spark.read.parquet(f"{input_path}/tickers.parquet")
+    company_df: DataFrame = spark.read.parquet(os.path.join(input_path, "companies.parquet"))
+    product_df: DataFrame = spark.read.parquet(os.path.join(input_path, "products.parquet"))
+    technology_df: DataFrame = spark.read.parquet(os.path.join(input_path, "technologies.parquet"))
+    ticker_df = spark.read.parquet(os.path.join(input_path, "tickers.parquet"))
 
     # Load relationship dataframes
     logger.info(f"Loading knowledge graph relationships from {input_path}...")
     product_company_df: DataFrame = spark.read.parquet(
-        f"{input_path}/product_company_relationships.parquet"
+        os.path.join(input_path, "product_company_relationships.parquet")
     )
     company_ticker_df: DataFrame = spark.read.parquet(
-        f"{input_path}/company_ticker_relationships.parquet"
+        os.path.join(input_path, "company_ticker_relationships.parquet")
     )
     tech_company_df: DataFrame = spark.read.parquet(
-        f"{input_path}/tech_company_relationships.parquet"
+        os.path.join(input_path, "tech_company_relationships.parquet")
     )
 
     # Print entity counts
@@ -92,8 +93,8 @@ def refine_knowledge_graph(
         )
         ticker_df = ticker_df.unionByName(new_tickers_df).dropDuplicates(["symbol"])
 
-    company_df.write.mode("overwrite").parquet(f"{output_path}/companies.parquet")
-    ticker_df.write.mode("overwrite").parquet(f"{output_path}/tickers.parquet")
+    company_df.write.mode("overwrite").parquet(os.path.join(output_path, "companies.parquet"))
+    ticker_df.write.mode("overwrite").parquet(os.path.join(output_path, "tickers.parquet"))
 
     # Create bidirectional Company->Product edges
     logger.info("Creating bidirectional company-product relationships...")
@@ -172,16 +173,16 @@ def refine_knowledge_graph(
 
     # Save unified edge list
     logger.info(f"Saving unified edge list ({edge_df.count():,} edges)...")
-    edge_df.write.mode("overwrite").parquet(f"{output_path}/edges.parquet")
+    edge_df.write.mode("overwrite").parquet(os.path.join(output_path, "edges.parquet"))
 
     # Save unified vertex list
     logger.info(f"Saving unified vertex list ({vertices_df.count():,} vertices)...")
-    vertices_df.write.mode("overwrite").parquet(f"{output_path}/vertices.parquet")
+    vertices_df.write.mode("overwrite").parquet(os.path.join(output_path, "vertices.parquet"))
 
     # Save original entities for reference
     logger.info("Saving original entities for reference...")
-    product_df.write.mode("overwrite").parquet(f"{output_path}/products.parquet")
-    technology_df.write.mode("overwrite").parquet(f"{output_path}/technologies.parquet")
+    product_df.write.mode("overwrite").parquet(os.path.join(output_path, "products.parquet"))
+    technology_df.write.mode("overwrite").parquet(os.path.join(output_path, "technologies.parquet"))
 
     # Log summary
     logger.info("Refined Knowledge Graph Statistics:")
