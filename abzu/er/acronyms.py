@@ -53,7 +53,6 @@ def get_acronyms(name: str) -> str | None:
 
     # Clean the company name using cleanco
     cleaned_name = cleanco.basename(name)
-    # ending = get_corporate_ending(name)
 
     acronym: str | None = None
     if cleaned_name:
@@ -73,19 +72,6 @@ def get_acronyms(name: str) -> str | None:
         if meaningful_words and len(meaningful_words) > 1:  # Only process if more than one word
             # Create standard abbreviation (first letter of each word that is uppercase)
             acronym = "".join([w[0].upper() for w in meaningful_words])
-
-            # if len(acronym) > 1:  # Only add if abbreviation is meaningful
-            #     return abbreviation
-            # if ending:
-            #     # Add abbreviation with suffix
-            #     pairs.append({"original": name, "abbreviated": f"{abbreviation} {ending}"})
-
-            # # Add dotted version
-            # dotted = ".".join([w[0].upper() for w in meaningful_words]) + "."
-            # pairs.append({"original": name, "abbreviated": dotted})
-            # if ending:
-            #     # Add dotted version with suffix
-            #     pairs.append({"original": name, "abbreviated": f"{dotted} {ending}"})
 
         # If there's only one meaningful uppercase word, add it as the abbreviation
         if len(meaningful_words) == 1 and meaningful_words[0].isupper():
