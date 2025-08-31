@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Entity resolution blocking strategies for company matching."""
+import logging
 import os
 from typing import Any, Optional
 
@@ -62,8 +63,9 @@ def build_blocks(
     logger.info(f"Loaded {total_companies:,} companies")
 
     # Show sample of the data
-    logger.info("Sample companies:")
-    companies_df.show(5, truncate=False)
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug("Sample companies:")
+        companies_df.show(5, truncate=False)
 
     # Apply blocking strategies
     logger.info("Computing blocking keys...")
@@ -78,8 +80,9 @@ def build_blocks(
     companies_with_block_keys_df = companies_with_block_keys_df.cache()
 
     # Show sample with blocking keys
-    logger.info("Sample companies with blocking keys:")
-    companies_with_block_keys_df.show(10, truncate=False)
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug("Sample companies with blocking keys:")
+        companies_with_block_keys_df.show(10, truncate=False)
 
     # Compute first word blocking distribution
     logger.info("Computing first word blocking distribution...")

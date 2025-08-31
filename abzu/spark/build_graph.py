@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Build a knowledge graph from pre-processed articles."""
+import logging
 import os
 from typing import Optional
 
@@ -44,7 +45,8 @@ def build_knowledge_graph(
     logger.info(f"Loaded {articles_df.count():,} processed articles")
 
     # Show a sample record
-    articles_df.show(1, truncate=100, vertical=True)
+    if logger.isEnabledFor(logging.DEBUG):
+        articles_df.show(1, truncate=100, vertical=True)
 
     #
     # Replace the integer IDs for Company entities within each article using a UDF
@@ -254,8 +256,9 @@ def build_knowledge_graph(
     logger.info(f"Transformed {articles_uuid_df.count():,} articles with UUID replacements")
 
     # Show sample to verify transformation
-    logger.info("Sample article with UUID replacements:")
-    articles_uuid_df.show(1, truncate=100, vertical=True)
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.info("Sample article with UUID replacements:")
+        articles_uuid_df.show(1, truncate=100, vertical=True)
 
     # Extract entities into separate dataframes
     logger.info("Extracting entities from documents ...")
@@ -269,7 +272,8 @@ def build_knowledge_graph(
         .filter("company IS NOT NULL")
         .select("url", "posted_at", "company.*")
     )
-    companies_df.show(5, truncate=100, vertical=True)
+    if logger.isEnabledFor(logging.DEBUG):
+        companies_df.show(5, truncate=100, vertical=True)
 
     # Put the uuid, url, and posted_at columns first
     companies_df = companies_df.select(
@@ -300,7 +304,8 @@ def build_knowledge_graph(
         .filter("product IS NOT NULL")
         .select("url", "product.*")
     )
-    products_df.show(5, truncate=100, vertical=True)
+    if logger.isEnabledFor(logging.DEBUG):
+        products_df.show(5, truncate=100, vertical=True)
 
     # Put the uuid and url columns first
     products_df = products_df.select(
@@ -326,7 +331,8 @@ def build_knowledge_graph(
         .filter("technology IS NOT NULL")
         .select("url", "technology.*")
     )
-    technologies_df.show(5, truncate=100, vertical=True)
+    if logger.isEnabledFor(logging.DEBUG):
+        technologies_df.show(5, truncate=100, vertical=True)
 
     # Put the uuid and url columns first
     technologies_df = technologies_df.select(
@@ -355,7 +361,8 @@ def build_knowledge_graph(
         .filter("ticker IS NOT NULL")
         .select("url", "ticker.*")
     )
-    tickers_df.show(5, truncate=100, vertical=True)
+    if logger.isEnabledFor(logging.DEBUG):
+        tickers_df.show(5, truncate=100, vertical=True)
 
     # Put the uuid and url columns first
     tickers_df = tickers_df.select(
@@ -384,7 +391,8 @@ def build_knowledge_graph(
         .filter("relationship IS NOT NULL")
         .select("url", "relationship.*")
     )
-    relationships_df.show(5, truncate=100, vertical=True)
+    if logger.isEnabledFor(logging.DEBUG):
+        relationships_df.show(5, truncate=100, vertical=True)
 
     relationship_count = relationships_df.count()
 

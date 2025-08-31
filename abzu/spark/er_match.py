@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Entity resolution match evaluation using PySpark."""
+import logging
 import os
 from typing import Optional
 
@@ -53,8 +54,9 @@ def evaluate_er_matches(
     logger.info(f"Loaded {total_blocks:,} blocks from matches")
 
     # Show sample of matches data
-    logger.info("Sample matches data:")
-    matches_df.show(3, truncate=False)
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.info("Sample matches data:")
+        matches_df.show(3, truncate=False)
 
     # Explode resolved companies from blocks
     logger.info("Exploding resolved companies from blocks...")
