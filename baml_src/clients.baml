@@ -1,6 +1,6 @@
 // Learn more about clients at https://docs.boundaryml.com/docs/snippets/clients/overview
 
-client<llm> CustomO3Mini {
+client<llm> O3Mini {
     provider openai
     options {
         model "o3-mini"
@@ -8,7 +8,7 @@ client<llm> CustomO3Mini {
     }
 }
 
-client<llm> CustomGPT4o {
+client<llm> GPT4o {
   provider openai
   options {
     model "gpt-4o"
@@ -16,30 +16,47 @@ client<llm> CustomGPT4o {
   }
 }
 
-client<llm> CustomGemini20Flash {
+client<llm> Gemini25Flash {
     provider google-ai
     retry_policy Constant
     options {
-        // model "gemini-2.5-pro-preview-03-25"
-        model "gemini-2.0-flash"
+        model "gemini-2.5-flash"
         api_key env.GEMINI_API_KEY
+        generationConfig {
+            temperature 0.0
+        }
     }
 }
 
-client<llm> CustomGemini25Pro {
+client<llm> Gemini20Flash {
+    provider google-ai
+    retry_policy Constant
+    options {
+        model "gemini-2.0-flash"
+        api_key env.GEMINI_API_KEY
+        generationConfig {
+            temperature 0.0
+        }
+    }
+}
+
+client<llm> Gemini25Pro {
     provider google-ai
     retry_policy Exponential
     options {
-        model "gemini-2.5-pro-preview-06-05"
+        model "gemini-2.5-pro"
         api_key env.GEMINI_API_KEY
+        generationConfig {
+            temperature 0.0
+        }
     }
 }
 
-client<llm> CustomGeminiFallback {
+client<llm> GeminiFallback {
   provider fallback
   retry_policy Exponential
   options {
-    strategy [CustomGemini25Pro,CustomGemini20Flash]
+    strategy [Gemini25Pro, Gemini25Flash]
   }
 }
 
@@ -49,7 +66,7 @@ client<llm> OpenAIFallback {
   retry_policy Constant
   options {
     // This will try the clients in order until one succeeds
-    strategy [CustomO3Mini, CustomGPT4o]
+    strategy [O3Mini, GPT4o]
   }
 }
 

@@ -36,9 +36,7 @@ class SemiAnalysisCrawler(BaseArticleCrawler):
 def get_semianalysis_archive_urls(pages: int) -> list[str]:
     """Generate SemiAnalysis archive URLs."""
     # SemiAnalysis uses reversed order for archive pages
-    return list(
-        reversed([f"https://semianalysis.com/archives/page/{n}/" for n in range(1, pages + 1)])
-    )
+    return list([f"https://semianalysis.com/archives/page/{n}/" for n in range(1, pages + 1)])
 
 
 def crawl_semianalysis(

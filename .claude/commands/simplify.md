@@ -1,1 +1,1 @@
-Look at the outstanding changes and find ways to simplify the code without removing essential features.
+Look at the outstanding changes and find ways to simplify the code without removing essential features. Ignore `baml_client/` directory.

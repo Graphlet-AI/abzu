@@ -29,8 +29,7 @@ from abzu.config import config
     ),
     help="User-Agent header",
 )
-@click.option("--bypass-cf", is_flag=True, help="Use cloudscraper to bypass Cloudflare")
-def rss(feeds_file, output_dir, cookie, user_agent, bypass_cf):
+def rss(feeds_file, output_dir, cookie, user_agent):
     """Crawl RSS feeds from configuration or a feeds file.
 
     By default, uses feeds defined in config.yml under crawl.rss.feeds.
@@ -43,5 +42,4 @@ def rss(feeds_file, output_dir, cookie, user_agent, bypass_cf):
         output_dir=output_dir,
         cookie=cookie,
         user_agent=user_agent,
-        bypass_cf=bypass_cf,
     )

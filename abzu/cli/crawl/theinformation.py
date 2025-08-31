@@ -15,7 +15,7 @@ from abzu.config import config
 )
 @click.option(
     "--cookie",
-    help="Raw Cookie header string; defaults to browser cookies",
+    help="Raw Cookie header string for authentication (REQUIRED for TheInformation RSS feed)",
 )
 @click.option(
     "--user-agent",
@@ -26,7 +26,11 @@ from abzu.config import config
     ),
     help="User-Agent header",
 )
-@click.option("--bypass-cf", is_flag=True, help="Use cloudscraper to bypass Cloudflare")
+@click.option(
+    "--bypass-cf",
+    is_flag=True,
+    help="Use cloudscraper to bypass Cloudflare protection",
+)
 def theinformation(output_file, cookie, user_agent, bypass_cf):
     """Crawl TheInformation RSS feed."""
     from abzu.crawl.information import crawl_theinformation

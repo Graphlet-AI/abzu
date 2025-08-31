@@ -21,9 +21,10 @@ logger = get_logger(__name__)
 @click.option(
     "-f",
     "--file",
+    "--input",
     "input_file",
     type=click.Path(exists=True, file_okay=True, dir_okay=True),
-    flag_value=config.get("api.financialdatasets.metrics.input"),
+    default=config.get("api.financialdatasets.metrics.input"),
     help="Path to JSONL or Parquet file with records containing 'ticker', 'symbol', or 'cik' field. Use as flag to use default file from config.",
 )
 @click.option(
@@ -115,7 +116,7 @@ def metrics(
         logger.info(
             f"No ticker or input file specified, using default input file: {config.get('api.financialdatasets.metrics.input')}"
         )
-
+        print(str(input_file))
         if not os.path.exists(str(input_file)):
             logger.error(f"Default input file does not exist: {input_file}")
             return 1

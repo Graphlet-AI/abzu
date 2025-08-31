@@ -23,7 +23,7 @@ def test_enrich_company_tickers() -> None:
         ],
     }
 
-    sec_map = {
+    sec_map: dict[str, str] = {
         "alpha": "ALP",
         "beta": "BET",
         "gamma": "GAM",

@@ -1,7 +1,6 @@
 """URL extraction and filtering utility."""
 
 import re
-from typing import List, Set
 from urllib.parse import urlparse
 
 from lxml import html as lxml_html
@@ -71,7 +70,7 @@ class URLExtractor:
             logger.warning(f"Failed to parse URL '{url}': {e}")
             return False
 
-    def extract_urls_from_html(self, html: str) -> List[str]:
+    def extract_urls_from_html(self, html: str) -> list[str]:
         """
         Extract all URLs from HTML content and filter out ignored domains.
 
@@ -82,7 +81,7 @@ class URLExtractor:
 
         Returns
         -------
-        List[str]
+        list[str]
             List of URLs that are not in the ignore list
         """
         try:
@@ -92,7 +91,7 @@ class URLExtractor:
             logger.warning(f"Failed to parse HTML: {e}")
             return []
 
-        urls: Set[str] = set()
+        urls: set[str] = set()
 
         # Extract URLs from href attributes
         for element in tree.xpath("//*[@href]"):

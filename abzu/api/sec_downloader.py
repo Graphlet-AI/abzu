@@ -1301,7 +1301,7 @@ def process_all_tickers(
     if ticker:
         tickers = [ticker]
     else:
-        logger.info("Reading tickers file", tickers_file)
+        logger.info("Reading tickers file: {tickers_file}")
         df = pd.read_parquet(tickers_file)
         tickers = df["symbol"].dropna().unique().tolist()
 

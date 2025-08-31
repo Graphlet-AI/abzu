@@ -3,6 +3,8 @@
 import click
 
 from abzu.cli.process.articles.datacenter import process_datacenter
+from abzu.cli.process.articles.dcbyte import process_dcbyte
+from abzu.cli.process.articles.reddit import process_reddit
 from abzu.cli.process.articles.semianalysis import process_semianalysis
 from abzu.cli.process.articles.theinformation import process_theinformation
 
@@ -16,3 +18,5 @@ def articles():
 articles.add_command(process_semianalysis, name="semianalysis")
 articles.add_command(process_theinformation, name="theinformation")
 articles.add_command(process_datacenter, name="datacenter")
+articles.add_command(process_dcbyte, name="dcbyte")
+articles.add_command(process_reddit, name="reddit")

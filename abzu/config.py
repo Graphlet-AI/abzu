@@ -169,6 +169,23 @@ class Config:
 
         return Path(value)
 
+    def expand_variables(self, value: str) -> str:
+        """Expand variables in a string value.
+
+        Parameters
+        ----------
+        value : str
+            String that may contain variable references like ${key.path}
+
+        Returns
+        -------
+        str
+            String with variables expanded
+        """
+        if isinstance(value, str):
+            return self._resolve_value(value)
+        return str(value)
+
 
 # Singleton instance for convenience
 config = Config()
