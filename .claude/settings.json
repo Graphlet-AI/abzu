@@ -1,4 +1,41 @@
 {
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [[ \"$CLAUDE_TOOL_FILE_PATH\" == *.py ]]; then black \"$CLAUDE_TOOL_FILE_PATH\" 2>/dev/null || true; fi"
+          },
+          {
+            "type": "command",
+            "command": "if [[ \"$CLAUDE_TOOL_FILE_PATH\" == *.py ]]; then isort \"$CLAUDE_TOOL_FILE_PATH\" 2>/dev/null || true; fi"
+          }
+        ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if command -v osascript >/dev/null 2>&1; then osascript -e 'beep 1'; elif command -v notify-send >/dev/null 2>&1; then notify-send 'Claude Code' \"Tool: $CLAUDE_TOOL_NAME completed\"; fi"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"[$(date)] Tool: $CLAUDE_TOOL_NAME | File: $CLAUDE_TOOL_FILE_PATH\" >> ~/.claude/command-log.txt"
+          }
+        ]
+      }
+    ]
+  },
   "permissions": {
     "allow": [
       "Bash(git status:*)",
@@ -50,5 +87,9 @@
       "Bash(pip install:*)"
     ],
     "ask": []
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "bash -c 'input=$(cat); MODEL=$(echo \"$input\" | jq -r \".model.display_name\"); DIR=$(echo \"$input\" | jq -r \".workspace.current_dir\"); BRANCH=\"\"; if git rev-parse --git-dir >/dev/null 2>&1; then BRANCH=\" | 🌿 $(git branch --show-current 2>/dev/null)\"; fi; echo \"[$MODEL] 📁 ${DIR##*/}$BRANCH\"'"
   }
 }
