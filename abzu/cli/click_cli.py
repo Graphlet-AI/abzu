@@ -4,32 +4,45 @@ import sys
 
 import click
 
-from abzu.cli.api import api
-from abzu.cli.chat import chat
-from abzu.cli.crawl import crawl
-from abzu.cli.data import data
-from abzu.cli.dump import dump
-from abzu.cli.process import process
-from abzu.cli.steps import steps
 from abzu.logs import get_logger
 
 logger = get_logger(__name__)
 
 
-@click.group()
+class LazyGroup(click.Group):
+    """A Click group that loads subcommands lazily."""
+
+    def __init__(self, *args, lazy_subcommands=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.lazy_subcommands = lazy_subcommands or {}
+
+    def list_commands(self, ctx):
+        return sorted(self.lazy_subcommands.keys())
+
+    def get_command(self, ctx, name):
+        if name in self.lazy_subcommands:
+            import_path = self.lazy_subcommands[name]
+            module_name, attr_name = import_path.rsplit(":", 1)
+            module = __import__(module_name, fromlist=[attr_name])
+            return getattr(module, attr_name)
+        return None
+
+
+@click.command(
+    cls=LazyGroup,
+    lazy_subcommands={
+        "api": "abzu.cli.api:api",
+        "chat": "abzu.cli.chat:chat",
+        "crawl": "abzu.cli.crawl:crawl",
+        "data": "abzu.cli.data:data",
+        "dump": "abzu.cli.dump:dump",
+        "process": "abzu.cli.process:process",
+        "steps": "abzu.cli.steps:steps",
+    },
+)
 def cli():
     """Abzu - Industry knowledge extraction."""
     pass
-
-
-# Register main commands
-cli.add_command(api)
-cli.add_command(chat)
-cli.add_command(crawl)
-cli.add_command(data)
-cli.add_command(process)
-cli.add_command(steps)
-cli.add_command(dump)
 
 
 def main() -> int:
