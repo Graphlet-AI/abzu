@@ -143,9 +143,6 @@ class Company {
   source_uuids string[]?
   @description("Leave null until entity resolution.")
 
-  posted_at string?
-  @description("Date when the article was posted")
-
   @@assert(valid_cik, {{ this.cik is not defined or this.cik is none or (this.cik | length <= 10 and this.cik | regex_match("^[0-9]+$")) }})
 }
 
