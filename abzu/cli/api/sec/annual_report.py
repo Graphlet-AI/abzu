@@ -39,6 +39,7 @@ def annual_report(ticker: str, year: int, output_dir: str, bfs: bool, batch_size
     """Download and process a 10-K filing, with optional BFS for related tickers."""
 
     if bfs:
+        logger.warning("The --year parameter is ignored in BFS mode; the latest filing for each ticker will be used.")
         # For BFS mode, we'll save the consolidated output with appropriate names
         jsonl_path = os.path.join(output_dir, f"bfs_{ticker}_annual_reports.jsonl")
         parquet_path = os.path.join(output_dir, f"bfs_{ticker}_annual_reports.parquet")
