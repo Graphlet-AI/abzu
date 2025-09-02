@@ -2,7 +2,7 @@
 """Entity resolution blocking strategies for company matching."""
 import logging
 import os
-from typing import Any, Optional
+from typing import Optional
 
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
@@ -321,8 +321,22 @@ def build_blocks(
     # Split large blocks (> 150 companies) into smaller chunks
     logger.info("Splitting large blocks (> 150 companies) into smaller chunks...")
 
-    # 1) Define the class
-    class _SplitLargeBlocks:
+    # 1) Define the UDTF using the @udtf decorator
+    from pyspark.sql.functions import udtf
+
+    @udtf(  # type: ignore
+        returnType=(
+            "block_key: string, block_key_type: string, "
+            "companies: array<struct<uuid:string,block_key:string,block_key_type:string,"
+            "url:string,name:string,description:string,ceo:string,employees:long,"
+            "founded_year:long,headquarters_location:string,id:long,linkedin_url:string,"
+            "revenue_usd:long,source_ids:array<long>,source_uuids:array<string>,"
+            "ticker:struct<exchange:string,id:long,name:string,symbol:string,uuid:string>,"
+            "website_url:string>>, "
+            "block_size: long"
+        )
+    )
+    class SplitLargeBlocks:
         def eval(self, block_key: str, block_key_type: str, companies: list, block_size: int):
             max_size = 150
             if block_size <= max_size:
@@ -335,45 +349,43 @@ def build_blocks(
                     yield (chunk_key, block_key_type, chunk_companies, len(chunk_companies))
                     chunk_num += 1
 
-    # 2) Build the UDTF object (give it a new name)
-    SplitLargeBlocks: Any = F.udtf(
-        returnType=(
-            "block_key: string, block_key_type: string, "
-            "companies: array<struct<uuid:string,block_key:string,block_key_type:string,"
-            "url:string,name:string,description:string,ceo:string,employees:long,"
-            "founded_year:long,headquarters_location:string,id:long,linkedin_url:string,"
-            "revenue_usd:long,source_ids:array<long>,source_uuids:array<string>,"
-            "ticker:struct<exchange:string,id:long,name:string,symbol:string,uuid:string>,"
-            "website_url:string>>, "
-            "block_size: long"
-        )
-    )(_SplitLargeBlocks)
+    # 2) Register the UDTF for SQL use
+    spark.udtf.register("split_large_blocks", SplitLargeBlocks)  # type: ignore
 
-    # 3) Call it with columns from the SAME DF and alias all outputs
+    # 3) Create temp views for the DataFrames
+    combined_blocks_filtered.createOrReplaceTempView("combined_blocks_temp")
+    first_word_blocks_filtered.createOrReplaceTempView("first_word_blocks_temp")
+    acronym_blocks_filtered.createOrReplaceTempView("acronym_blocks_temp")
+
+    # 4) Apply the UDTF using SQL with LATERAL syntax - only select UDTF output columns
     combined_blocks_final = (
-        combined_blocks_filtered.select(
-            SplitLargeBlocks(
-                F.col("block_key"), F.col("block_key_type"), F.col("companies"), F.col("block_size")
-            ).alias("block_key", "block_key_type", "companies", "block_size")
+        spark.sql(
+            """
+            SELECT udtf_output.* FROM combined_blocks_temp,
+            LATERAL split_large_blocks(block_key, block_key_type, companies, block_size) AS udtf_output
+        """
         )
         .orderBy(F.col("block_size"))
         .cache()
     )
+
     first_word_blocks_final = (
-        first_word_blocks_filtered.select(
-            SplitLargeBlocks(
-                F.col("block_key"), F.col("block_key_type"), F.col("companies"), F.col("block_size")
-            ).alias("block_key", "block_key_type", "companies", "block_size")
+        spark.sql(
+            """
+            SELECT udtf_output.* FROM first_word_blocks_temp,
+            LATERAL split_large_blocks(block_key, block_key_type, companies, block_size) AS udtf_output
+        """
         )
         .orderBy(F.col("block_size"))
         .cache()
     )
 
     acronym_blocks_final = (
-        acronym_blocks_filtered.select(
-            SplitLargeBlocks(
-                F.col("block_key"), F.col("block_key_type"), F.col("companies"), F.col("block_size")
-            ).alias("block_key", "block_key_type", "companies", "block_size")
+        spark.sql(
+            """
+            SELECT udtf_output.* FROM acronym_blocks_temp,
+            LATERAL split_large_blocks(block_key, block_key_type, companies, block_size) AS udtf_output
+        """
         )
         .orderBy(F.col("block_size"))
         .cache()
