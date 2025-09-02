@@ -260,6 +260,27 @@ def build_blocks(
     overlapping_count = overlapping_keys.count()
     logger.info(f"Found {overlapping_count:,} overlapping block_keys between strategies")
 
+    # Define columns to include in the struct
+    company_columns = [
+        "uuid",
+        "block_key",
+        "block_key_type",
+        "url",
+        "name",
+        "description",
+        "ceo",
+        "employees",
+        "founded_year",
+        "headquarters_location",
+        "id",
+        "linkedin_url",
+        "revenue_usd",
+        "source_ids",
+        "source_uuids",
+        "ticker",
+        "website_url",
+    ]
+
     # Create combined blocks for overlapping keys
     combined_blocks = (
         all_companies_with_blocks.join(
@@ -267,9 +288,10 @@ def build_blocks(
         )  # Only overlapping keys
         .dropDuplicates(["block_key", "uuid"])  # Remove duplicate UUIDs within each block
         .join(full_companies_df, "uuid", "inner")
+        .select("block_key", *[F.col(c) for c in company_columns])
         .groupBy("block_key")
         .agg(
-            F.collect_list(F.struct("*")).alias("companies"),
+            F.collect_list(F.struct(*company_columns)).alias("companies"),
             F.countDistinct("uuid").alias("block_size"),
         )
         .withColumn("block_key_type", F.lit("combined"))
@@ -290,9 +312,10 @@ def build_blocks(
         .filter(F.col("block_key_type") == "first_word")
         .dropDuplicates(["block_key", "uuid"])  # Remove any duplicate UUIDs
         .join(full_companies_df, "uuid", "inner")
+        .select("block_key", "block_key_type", *[F.col(c) for c in company_columns])
         .groupBy("block_key", "block_key_type")
         .agg(
-            F.collect_list(F.struct("*")).alias("companies"),
+            F.collect_list(F.struct(*company_columns)).alias("companies"),
             F.countDistinct("uuid").alias("block_size"),
         )
     )
@@ -304,9 +327,10 @@ def build_blocks(
         .filter(F.col("block_key_type") == "acronym")
         .dropDuplicates(["block_key", "uuid"])  # Remove any duplicate UUIDs
         .join(full_companies_df, "uuid", "inner")
+        .select("block_key", "block_key_type", *[F.col(c) for c in company_columns])
         .groupBy("block_key", "block_key_type")
         .agg(
-            F.collect_list(F.struct("*")).alias("companies"),
+            F.collect_list(F.struct(*company_columns)).alias("companies"),
             F.countDistinct("uuid").alias("block_size"),
         )
     )
