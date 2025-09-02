@@ -48,15 +48,16 @@ def annual_report(ticker: str, year: int, output_dir: str, bfs: bool, batch_size
             [ticker], output_dir, jsonl_path, parquet_path, batch_size
         )
 
-        logger.info(
-            f"Completed BFS annual report processing for {len(processed_tickers)} companies"
+        num_companies = len(processed_tickers)
+        completion_message = (
+            f"Completed BFS annual report processing for {num_companies} companies"
         )
-        logger.info(f"Saved consolidated data to {jsonl_path} and {parquet_path}")
-        click.secho(
-            f"Completed BFS annual report processing for {len(processed_tickers)} companies",
-            fg="green",
-        )
-        click.secho(f"Saved consolidated data to {jsonl_path} and {parquet_path}", fg="green")
+        data_saved_message = f"Saved consolidated data to {jsonl_path} and {parquet_path}"
+
+        logger.info(completion_message)
+        logger.info(data_saved_message)
+        click.secho(completion_message, fg="green")
+        click.secho(data_saved_message, fg="green")
     else:
         processed_path = process_annual_report(ticker, year, output_dir)
         logger.info(f"Saved processed annual report to {processed_path}")
