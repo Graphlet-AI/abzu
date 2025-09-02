@@ -36,7 +36,7 @@ __all__ = ["annual_report"]
     help="Number of concurrent processing tasks (for BFS mode)",
 )
 def annual_report(ticker: str, year: int, output_dir: str, bfs: bool, batch_size: int) -> None:
-    """Download a 10-K filing and process it with BAML."""
+    """Download and process a 10-K filing, with optional BFS for related tickers."""
 
     if bfs:
         # For BFS mode, we'll save the consolidated output with appropriate names
