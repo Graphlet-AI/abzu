@@ -1,10 +1,12 @@
 """CLI command to download and process SEC annual reports."""
 
+import os
+
 import click
 
 from abzu.api.annual_report_processor import (
     process_annual_report,
-    process_annual_reports_bfs,
+    process_annual_reports_bfs_bulk_consolidated,
 )
 from abzu.config import config
 from abzu.logs import get_logger
@@ -28,13 +30,34 @@ __all__ = ["annual_report"]
     default=False,
     help="Follow related tickers in breadth-first order",
 )
-def annual_report(ticker: str, year: int, output_dir: str, bfs: bool) -> None:
-    """Download a 10-K filing and process it with BAML."""
+@click.option(
+    "--batch-size",
+    default=1,
+    help="Number of concurrent processing tasks (for BFS mode)",
+)
+def annual_report(ticker: str, year: int, output_dir: str, bfs: bool, batch_size: int) -> None:
+    """Download and process a 10-K filing, with optional BFS for related tickers."""
 
     if bfs:
-        process_annual_reports_bfs(ticker, year, output_dir)
-        logger.info("Completed BFS annual report processing")
-        click.secho("Completed BFS annual report processing", fg="green")
+        logger.warning("The --year parameter is ignored in BFS mode; the latest filing for each ticker will be used.")
+        # For BFS mode, we'll save the consolidated output with appropriate names
+        jsonl_path = os.path.join(output_dir, f"bfs_{ticker}_annual_reports.jsonl")
+        parquet_path = os.path.join(output_dir, f"bfs_{ticker}_annual_reports.parquet")
+
+        processed_tickers = process_annual_reports_bfs_bulk_consolidated(
+            [ticker], output_dir, jsonl_path, parquet_path, batch_size
+        )
+
+        num_companies = len(processed_tickers)
+        completion_message = (
+            f"Completed BFS annual report processing for {num_companies} companies"
+        )
+        data_saved_message = f"Saved consolidated data to {jsonl_path} and {parquet_path}"
+
+        logger.info(completion_message)
+        logger.info(data_saved_message)
+        click.secho(completion_message, fg="green")
+        click.secho(data_saved_message, fg="green")
     else:
         processed_path = process_annual_report(ticker, year, output_dir)
         logger.info(f"Saved processed annual report to {processed_path}")

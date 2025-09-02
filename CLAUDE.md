@@ -171,6 +171,8 @@ logger.error(f"Failed to process: {error}")
 
 Use the following style guide [README.md](abzu/spark/README.md) for Spark development: @abzu/spark/README.md
 
+For PySpark UDTF (User-Defined Table Functions) usage, refer to the [UDTF Guide](abzu/spark/UDTF.md): @abzu/spark/UDTF.md
+
 In addition, when writing PySpark code:
 
 - Keep dataflows linear and simple
@@ -178,10 +180,10 @@ In addition, when writing PySpark code:
 - Write single functions for complete dataflows
 - Use DataFrame API over RDDs
 - Leverage Spark's lazy evaluation
+- For UDTFs, follow the patterns in UDTF.md to avoid column resolution errors
 
 ## Alerts
 
-- For short tasks, play three audible BEEPs when you are done with a task. I need to hear that you're done because I do more than one thing at once. Use the `osascript -e 'beep 3'` bash command three times to play three beep characters/sounds.
 - For long running tasks, use the applescript-mcp server to send me a message when you are done with something. Say "Done with task X" where X is the task you are done with. Alternatively, use the command `osascript -e 'tell application "System Events" to display dialog "Done with task X"'` to send me a message. Send only ONE alert, not multiple alerts.
 
 ## Additional Context

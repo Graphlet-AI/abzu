@@ -266,23 +266,17 @@ def build_knowledge_graph(
     # Extract companies and assign a random UUID id
     logger.info("Extracting companies ...")
     companies_df = (
-        articles_uuid_df.select(
-            "url", "posted_at", F.explode_outer(F.col("companies")).alias("company")
-        )
+        articles_uuid_df.select("url", F.explode_outer(F.col("companies")).alias("company"))
         .filter("company IS NOT NULL")
-        .select("url", "posted_at", "company.*")
+        .select("url", "company.*")
     )
     if logger.isEnabledFor(logging.DEBUG):
         companies_df.show(5, truncate=100, vertical=True)
 
-    # Put the uuid, url, and posted_at columns first
+    # Put the uuid, url columns first
     companies_df = companies_df.select(
-        ["uuid", "url", "posted_at", "name", "description"]
-        + [
-            col
-            for col in companies_df.columns
-            if col not in ["uuid", "url", "posted_at", "name", "description"]
-        ]
+        ["uuid", "url", "name", "description"]
+        + [col for col in companies_df.columns if col not in ["uuid", "url", "name", "description"]]
     )
 
     # Store the original records with their UUIDs - they can be matched at the field level to nested
@@ -386,10 +380,16 @@ def build_knowledge_graph(
 
     relationships_df = (
         articles_uuid_df.select(
-            "url", F.explode_outer(F.col("relationships")).alias("relationship")
+            F.col("url").alias("article_url"),
+            F.col("posted_at").alias("article_posted_at"),
+            F.explode_outer(F.col("relationships")).alias("relationship"),
         )
         .filter("relationship IS NOT NULL")
-        .select("url", "relationship.*")
+        .select(
+            F.col("article_url").alias("url"),
+            F.col("article_posted_at").alias("posted_at"),
+            "relationship.*",
+        )
     )
     if logger.isEnabledFor(logging.DEBUG):
         relationships_df.show(5, truncate=100, vertical=True)
@@ -402,10 +402,11 @@ def build_knowledge_graph(
         "type AS relationship",
         "description",
         "url",
+        "posted_at",
     ] + [
         col
         for col in relationships_df.columns
-        if col not in ["url", "src_company", "dst_company", "description", "type"]
+        if col not in ["url", "posted_at", "src_company", "dst_company", "description", "type"]
     ]
     # Put the uuid and url columns first
     relationships_named_df = relationships_df.selectExpr(rel_cols)
