@@ -12,7 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Test all: `poetry run pytest tests/`
 - Test single: `poetry run pytest tests/path_to_test.py::test_name`
 - Test specific cache modes: `poetry run pytest -e ABZU_CACHE_MODE=hybrid tests/test_sync.py`
-- Lint: `pre-commit run --all-files`, `poetry run flake8 abzu tests`
+- Lint: `pre-commit`, `poetry run flake8 abzu tests`
 - Format: `poetry run black abzu tests`, `poetry run isort abzu tests`
 - Type check: `poetry run mypy abzu tests`
 
