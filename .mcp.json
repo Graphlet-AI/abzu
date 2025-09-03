@@ -57,10 +57,18 @@
             }
         },
         "pyspark-mcp": {
-            "command": "npx",
+            "command": "uvx",
             "args": [
+                "--with",
+                "pyspark",
+                "--with",
+                "fastmcp",
+                "--with",
+                "loguru",
+                "--with",
+                "pandas",
                 "--from",
-                "/Users/rjurney/Software/pyspark-mcp-server",
+                "git+https://github.com/rjurney/pyspark-mcp-server@rjurney/1",
                 "pyspark-mcp-server",
                 "--host",
                 "127.0.0.1",
