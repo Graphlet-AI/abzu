@@ -61,8 +61,10 @@ def evaluate_er_matches(
     # Explode resolved companies from blocks, keeping block metadata
     logger.info("Exploding resolved companies from blocks...")
     resolved_companies_df = matches_df.select(
-        "block_key", "block_key_type", F.explode("resolved_companies").alias("company")
-    ).select("block_key", "block_key_type", "company.*")
+        F.col("block_key").alias("match_block_key"),
+        F.col("block_key_type").alias("match_block_key_type"),
+        F.explode("resolved_companies").alias("company"),
+    ).select("match_block_key", "match_block_key_type", "company.*")
 
     # Get counts for comparison - raw first, then resolved
     total_raw_companies = raw_companies_df.count()
@@ -103,8 +105,8 @@ def evaluate_er_matches(
     ).select(
         "uuid",
         "name",
-        "block_key",
-        "block_key_type",
+        "match_block_key",
+        "match_block_key_type",
         F.explode("source_uuids").alias("source_uuid"),
     )
 
