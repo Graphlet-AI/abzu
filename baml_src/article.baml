@@ -138,10 +138,10 @@ class Company {
   linkedin_url string?
 
   source_ids int[]?
-  @description("List of source Company ids that this Company originates from merges. Leave null if length is one.")
+  @description("List of source Company ids that this Company originates from via merging records.")
 
   source_uuids string[]?
-  @description("Leave null until entity resolution.")
+  @description("List of source Company uuids that this Company originates from via merging records.")
 
   @@assert(valid_cik, {{ this.cik is not defined or this.cik is none or (this.cik | length <= 10 and this.cik | regex_match("^[0-9]+$")) }})
 }
