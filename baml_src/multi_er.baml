@@ -11,7 +11,11 @@ function MultiEntityResolution(company_list: CompanyList) -> CompanyList {
 
   // The prompt uses Jinja syntax. Change the models or this text and watch the prompt preview change!
   prompt #"
-    Examine the following set of companies and determine which ones are the same entity. If two or more companies are the same, merge them and return the resolved company with all combined attributes filled out. If a record has a valid field and the other doesn't, add it. Consider both the company name and description when making matches. If there are multiple company descriptions, rewrite the description to summarize them into a single description of less than 60 words. Keep track of the source companies and their attributes throughout the process. Maintain the uuid field and track the records merged in the 'source_uuids' field. Do not create a new 'uuid' field for the new, merged record, leave that field null. Choose the most complete corporate name when merging names, including the organization type ending. Company names without organization types can be merged with those that have them. Company names with different corporate endings are probably not the same company, depending on the description. Maintain any existing 'source_uuids' and append new ones as needed. Input records with the same UUID should be merged and only one UUID should be added to 'source_uuids'. Skip all fields that would be in the input and output data, unless they are REQUIRED. If there is 1 source_uuid in the output, do fill out the 'uuid' field with that value.
+    Examine the following set of companies and determine which ones are the same entity. If two or more companies are the same, merge them and return the resolved company with all combined attributes filled out. If a record has a valid field and the other doesn't, add it. Consider both the company name and description when making matches. If there are multiple company descriptions, rewrite the description to summarize them into a single description of less than 60 words. Keep track of the source companies and their attributes throughout the process. 
+    
+    IMPORTANT UUID HANDLING: When merging companies, you MUST collect ALL the uuid values from the input companies and store them in the 'source_uuids' field of the merged output. For example, if merging two companies with uuids 'abc-123' and 'def-456', the output source_uuids should be ['abc-123', 'def-456']. Always populate source_uuids with the input UUIDs - never leave it null if the input companies have UUIDs. The merged record should have uuid set to null (it will get a new UUID assigned later). 
+    
+    Choose the most complete corporate name when merging names, including the organization type ending. Company names without organization types can be merged with those that have them. Company names with different corporate endings are probably not the same company, depending on the description. Input records with the same UUID should be merged and only one UUID should be added to 'source_uuids'. Skip all fields that would be in the input and output data, unless they are REQUIRED. If there is only 1 company in the input (no merging needed), copy its uuid to source_uuids and set the output uuid to null.
 
     Return a merged set of companies with all combined attributes from the source companies filled out.
 
@@ -50,6 +54,50 @@ test TwoCompanyTest {
         {
           id 2
           uuid null
+          name "Tesla"
+          ticker {
+            id 4
+            uuid null
+            symbol "TSLA"
+            source_text_snippet null
+          }
+          description "Tesla is known for its electric car innovations and has developed the Powerwall home battery, launched in 2015 to advance accessible solar energy storage and reliable backup power for homes"
+          headquarters_location "Austin, United States"
+          source_text_snippet null
+          source_ids null
+          source_uuids null
+        }
+      ]
+    }
+  }
+}
+
+test UUIDTrackingTest {
+  functions [MultiEntityResolution]
+  args {
+    company_list {
+      companies [
+        {
+          id 1
+          uuid "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          name "Tesla, Inc."
+          ticker {
+            id 3
+            uuid null
+            exchange "NASDAQ"
+            symbol "TSLA"
+            source_text_snippet null
+          }
+          description "Tesla is a leader in electric transportation and energy storage, producing high-performance EVs, solar solutions, battery systems, and pioneering autonomous driving software to accelerate the global shift toward sustainable energy."
+          founded_year 2003
+          ceo "Elon Musk"
+          source_text_snippet null
+          source_ids null
+          source_uuids null
+        }
+        {
+          id 2
+          uuid "b2c3d4e5-f6a7-8901-bcde-f23456789012"
           name "Tesla"
           ticker {
             id 4
