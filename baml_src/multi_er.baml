@@ -116,6 +116,64 @@ test UUIDTrackingTest {
   }
 }
 
+test MultipleSourceUUIDsTest {
+  functions [MultiEntityResolution]
+  args {
+    company_list {
+      companies [
+        {
+          id 1
+          uuid "company1-uuid-123"
+          name "Nvidia Corporation"
+          ticker {
+            id 1
+            uuid null
+            exchange "NASDAQ"
+            symbol "NVDA"
+            source_text_snippet null
+          }
+          description "Leading AI and GPU technology company specializing in artificial intelligence computing and graphics processing"
+          headquarters_location "Santa Clara, CA"
+          founded_year 1993
+          ceo "Jensen Huang"
+          source_text_snippet null
+          source_ids null
+          source_uuids ["original-doc-uuid-456", "article-uuid-789"]
+        }
+        {
+          id 2
+          uuid "company2-uuid-abc"
+          name "NVIDIA"
+          ticker {
+            id 2
+            uuid null
+            symbol "NVDA"
+            source_text_snippet null
+          }
+          description "Graphics processing unit manufacturer and AI computing leader known for GeForce, Quadro, and data center products"
+          website_url "https://nvidia.com"
+          revenue_usd 26974000000
+          employees 22473
+          source_text_snippet null
+          source_ids null
+          source_uuids ["news-uuid-def", "report-uuid-ghi", "blog-uuid-jkl"]
+        }
+        {
+          id 3
+          uuid "company3-uuid-xyz"
+          name "Nvidia Corp"
+          ticker null
+          description "Technology company that designs GPUs for gaming and professional markets, as well as system on a chip units"
+          linkedin_url "https://www.linkedin.com/company/nvidia/"
+          source_text_snippet null
+          source_ids null
+          source_uuids ["wiki-uuid-mno", "sec-filing-uuid-pqr"]
+        }
+      ]
+    }
+  }
+}
+
 test WikiEnrichTest {
     functions [MultiEntityResolution]
     args {
