@@ -81,7 +81,8 @@
       "Bash(jq:*)",
       "Bash(length:*)",
       "Bash(head:*)",
-      "Bash(poetry run:*)"
+      "Bash(poetry run:*)",
+      "Bash(baml-cli:*)"
     ],
     "deny": [
       "Bash(pip install:*)"
