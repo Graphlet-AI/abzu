@@ -352,7 +352,8 @@ def build_blocks(
     first_word_blocks_filtered = first_word_only_blocks.filter(F.col("block_size") > 1)
     acronym_blocks_filtered = acronym_only_blocks.filter(F.col("block_size") > 1)
 
-    acronym_blocks_filtered.printSchema()
+    if logger.isEnabledFor(logging.DEBUG):
+        acronym_blocks_filtered.printSchema()
 
     # Split large blocks (> 150 companies) into smaller chunks
     logger.info("Splitting large blocks (> 150 companies) into smaller chunks...")
@@ -483,10 +484,11 @@ def build_blocks(
     total_blocks = combined_block_count + first_word_only_count + acronym_only_count
 
     # Debug: Show schema and sample data for verification
-    logger.info("Combined blocks final schema:")
-    combined_blocks_final.printSchema()
-    logger.info("Sample combined blocks:")
-    combined_blocks_final.select("block_key", "block_size").show(5)
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug("Combined blocks final schema:")
+        combined_blocks_final.printSchema()
+        logger.debug("Sample combined blocks:")
+        combined_blocks_final.select("block_key", "block_size").show(5)
 
     # Count companies in each block type (after filtering and splitting)
     # Use coalesce to handle nulls properly
