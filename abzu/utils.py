@@ -17,6 +17,8 @@ from typing import (
     cast,
 )
 
+import pandas as pd
+
 from abzu.logs import get_logger
 
 logger = get_logger(__name__)
@@ -502,13 +504,15 @@ def backup_file(file_path: Union[str, Path]) -> bool:
 
 
 def save_jsonl(
-    data: list[dict[str, Any]], file_path: Union[str, Path], create_backup: bool = True
+    data: list[dict[str, Any]] | pd.DataFrame,
+    file_path: Union[str, Path],
+    create_backup: bool = True,
 ) -> bool:
     """
     Save data to a JSONL file with backup option.
 
     Args:
-        data: List of dictionaries to save
+        data: List of dictionaries or pandas DataFrame to save
         file_path: Path to save the file
         create_backup: Whether to create a backup of the file if it exists
 
@@ -525,9 +529,14 @@ def save_jsonl(
         backup_file(path)
 
     try:
-        with open(path, "w", encoding="utf-8") as f:
-            for item in data:
-                f.write(json.dumps(item, ensure_ascii=False) + "\n")
+        if isinstance(data, pd.DataFrame):
+            # Use pandas to_json with lines=True for JSONL format
+            data.to_json(path, orient="records", lines=True, force_ascii=False)
+        else:
+            # Handle list of dictionaries
+            with open(path, "w", encoding="utf-8") as f:
+                for item in data:
+                    f.write(json.dumps(item, ensure_ascii=False) + "\n")
         return True
     except Exception as e:
         logger.error(f"Failed to save data to {path}: {e}")
