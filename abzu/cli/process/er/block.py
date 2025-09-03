@@ -3,7 +3,7 @@
 import click
 
 from abzu.config import config
-from abzu.spark.er_graph import build_blocks
+from abzu.spark.er_block import build_blocks
 
 
 @click.command(context_settings={"show_default": True})

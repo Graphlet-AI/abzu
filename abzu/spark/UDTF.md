@@ -187,7 +187,7 @@ spark.conf.set("spark.sql.execution.pythonUDTF.arrow.enabled", "true")
 
 ## Complex Structure Example
 
-For UDTFs that process complex nested structures (like in er_graph.py):
+For UDTFs that process complex nested structures (like in er_block.py):
 
 ```python
 from pyspark.sql import functions as F

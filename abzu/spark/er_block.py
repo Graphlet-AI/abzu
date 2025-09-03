@@ -78,6 +78,15 @@ def build_blocks(
         get_acronym(F.col("name")).alias("acronym_block"),
     )
 
+    # Filter out any UNKNOWN block keys
+    companies_with_block_keys_df = companies_with_block_keys_df.filter(
+        (F.col("first_word_block") != "UNKNOWN") & (F.col("acronym_block") != "UNKNOWN")
+    )
+
+    unknown_count = companies_df.count() - companies_with_block_keys_df.count()
+    if unknown_count > 0:
+        logger.warning(f"Filtered out {unknown_count} companies with UNKNOWN block keys")
+
     # Cache for multiple operations
     companies_with_block_keys_df = companies_with_block_keys_df.cache()
 
@@ -89,7 +98,9 @@ def build_blocks(
     # Compute first word blocking distribution
     logger.info("Computing first word blocking distribution...")
     first_word_dist_df = (
-        companies_with_block_keys_df.filter(F.col("first_word_block").isNotNull())
+        companies_with_block_keys_df.filter(
+            F.col("first_word_block").isNotNull() & (F.col("first_word_block") != "UNKNOWN")
+        )
         .groupBy("first_word_block")
         .agg(F.count("*").alias("block_size"))
         .orderBy(F.desc("block_size"))
@@ -137,7 +148,9 @@ def build_blocks(
     # Compute acronym blocking distribution
     logger.info("Computing acronym blocking distribution...")
     acronym_dist_df = (
-        companies_with_block_keys_df.filter(F.col("acronym_block").isNotNull())
+        companies_with_block_keys_df.filter(
+            F.col("acronym_block").isNotNull() & (F.col("acronym_block") != "UNKNOWN")
+        )
         .groupBy("acronym_block")
         .agg(F.count("*").alias("block_size"))
         .orderBy(F.desc("block_size"))
