@@ -19,6 +19,13 @@ from abzu.er.match import match_entities
     help="Path to save matched entities",
 )
 @click.option(
+    "--iteration",
+    "-i",
+    default=1,
+    type=int,
+    help="Iteration number for multi-round ER processing",
+)
+@click.option(
     "--batch-size",
     "-b",
     default=5,
@@ -40,11 +47,18 @@ from abzu.er.match import match_entities
 def match(
     blocks_path: str,
     output_path: str,
+    iteration: int,
     batch_size: int,
     limit: int | None,
     size_range: str | None,
 ) -> None:
     """Match entities within blocks using similarity metrics."""
+    # Override paths based on iteration
+    if not blocks_path.startswith("data/er/iterations/"):
+        blocks_path = f"data/er/iterations/{iteration}/all_blocks.parquet"
+    if not output_path.startswith("data/er/iterations/"):
+        output_path = f"data/er/iterations/{iteration}/matches.parquet"
+
     # Parse size range if provided
     min_size = None
     max_size = None

@@ -442,6 +442,28 @@ def build_blocks(
     acronym_blocks_final.repartition(1).write.mode("overwrite").json(acronym_json_path)
     acronym_blocks_final.repartition(1).write.mode("overwrite").parquet(acronym_parquet_path)
 
+    # Create unified all_blocks output by combining all block types
+    logger.info("Creating unified all_blocks output...")
+    all_blocks_df = combined_blocks_final.unionByName(first_word_blocks_final).unionByName(
+        acronym_blocks_final
+    )
+
+    # Save all_blocks to both JSON and Parquet formats
+    all_blocks_json_path = os.path.join(output_path, "all_blocks.json")
+    all_blocks_parquet_path = os.path.join(output_path, "all_blocks.parquet")
+
+    logger.info(f"Persisting all blocks to {all_blocks_json_path} and {all_blocks_parquet_path}")
+    all_blocks_df.repartition(1).write.mode("overwrite").json(all_blocks_json_path)
+    all_blocks_df.repartition(1).write.mode("overwrite").parquet(all_blocks_parquet_path)
+
+    # Count total blocks and companies in unified output
+    all_blocks_count = all_blocks_df.count()
+    all_blocks_companies = all_blocks_df.agg(
+        F.coalesce(F.sum("block_size"), F.lit(0)).alias("total")
+    ).collect()[0]["total"]
+
+    logger.info(f"Unified all_blocks: {all_blocks_count} blocks, {all_blocks_companies} companies")
+
     # Count blocks by type (after filtering and splitting)
     combined_block_count = combined_blocks_final.count()
     first_word_only_count = first_word_blocks_final.count()

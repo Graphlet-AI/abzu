@@ -1,7 +1,6 @@
 """Entity resolution matching module using BAML async client."""
 
 import asyncio
-import json
 import shutil
 import uuid
 from datetime import datetime
@@ -16,6 +15,7 @@ from abzu.baml_client.async_client import BamlAsyncClient
 from abzu.baml_client.runtime import DoNotUseDirectlyCallManager
 from abzu.baml_client.types import Company, CompanyList
 from abzu.logs import get_logger
+from abzu.utils import save_jsonl
 
 logger = get_logger(__name__)
 
@@ -217,23 +217,6 @@ def backup_file(file_path: Path) -> None:
         logger.info(f"Created backup: {backup_path}")
 
 
-def save_to_jsonl(data_df: pd.DataFrame, output_path: Path) -> None:
-    """Save DataFrame to JSON Lines format.
-
-    Args:
-        data_df: DataFrame to save
-        output_path: Path to save the JSON Lines file
-    """
-    with open(output_path, "w") as f:
-        for _, row in data_df.iterrows():
-            # Convert row to dict and handle any non-serializable types
-            row_dict = row.to_dict()
-            # Write each row as a JSON line
-            json.dump(row_dict, f, default=str)
-            f.write("\n")
-    logger.info(f"Saved {len(data_df)} records to JSON Lines: {output_path}")
-
-
 def match_entities(
     blocks_path: str,
     output_path: str,
@@ -266,13 +249,13 @@ def match_entities(
     logger.info(f"Loaded {len(df)} blocks")
 
     # Filter to blocks with multiple companies
-    multi_company_blocks = df[df["total_companies"] > 1].copy()
+    multi_company_blocks = df[df["block_size"] > 1].copy()
     logger.info(f"Found {len(multi_company_blocks)} blocks with multiple companies")
 
     # Apply size range filter if specified
     if min_block_size is not None:
         multi_company_blocks = multi_company_blocks[
-            multi_company_blocks["total_companies"] >= min_block_size
+            multi_company_blocks["block_size"] >= min_block_size
         ]
         logger.info(f"After min size filter ({min_block_size}): {len(multi_company_blocks)} blocks")
 
@@ -282,7 +265,7 @@ def match_entities(
 
     if max_block_size is not None:
         multi_company_blocks = multi_company_blocks[
-            multi_company_blocks["total_companies"] <= max_block_size
+            multi_company_blocks["block_size"] <= max_block_size
         ]
         logger.info(f"After max size filter ({max_block_size}): {len(multi_company_blocks)} blocks")
 
@@ -330,7 +313,7 @@ def match_entities(
     backup_file(json_output_path)
 
     # Save to JSON Lines
-    save_to_jsonl(results_df, json_output_path)
+    save_jsonl(results_df, json_output_path)
 
     # Print summary statistics
     resolved_blocks = (
