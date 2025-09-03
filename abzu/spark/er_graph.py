@@ -288,6 +288,10 @@ def build_blocks(
         )  # Only overlapping keys
         .dropDuplicates(["block_key", "uuid"])  # Remove duplicate UUIDs within each block
         .join(full_companies_df, "uuid", "inner")
+        # Drop existing block_key and block_key_type from full_companies_df if they exist
+        .drop(full_companies_df.block_key)
+        .drop(full_companies_df.block_key_type)
+        # Now select with the new block_key from all_companies_with_blocks
         .select("block_key", *[F.col(c) for c in company_columns])
         .groupBy("block_key")
         .agg(
@@ -312,6 +316,10 @@ def build_blocks(
         .filter(F.col("block_key_type") == "first_word")
         .dropDuplicates(["block_key", "uuid"])  # Remove any duplicate UUIDs
         .join(full_companies_df, "uuid", "inner")
+        # Drop existing block_key and block_key_type from full_companies_df if they exist
+        .drop(full_companies_df.block_key)
+        .drop(full_companies_df.block_key_type)
+        # Now select with the new block_key and block_key_type from all_companies_with_blocks
         .select("block_key", "block_key_type", *[F.col(c) for c in company_columns])
         .groupBy("block_key", "block_key_type")
         .agg(
@@ -327,6 +335,10 @@ def build_blocks(
         .filter(F.col("block_key_type") == "acronym")
         .dropDuplicates(["block_key", "uuid"])  # Remove any duplicate UUIDs
         .join(full_companies_df, "uuid", "inner")
+        # Drop existing block_key and block_key_type from full_companies_df if they exist
+        .drop(full_companies_df.block_key)
+        .drop(full_companies_df.block_key_type)
+        # Now select with the new block_key and block_key_type from all_companies_with_blocks
         .select("block_key", "block_key_type", *[F.col(c) for c in company_columns])
         .groupBy("block_key", "block_key_type")
         .agg(
