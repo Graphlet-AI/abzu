@@ -16,8 +16,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Lint: `pre-commit`
 - Format: `poetry run black abzu tests`, `poetry run isort abzu tests`
 - Type check: `poetry run mypy abzu tests`
+- Place temporary scripts for debugging in the `scripts/` directory.
 
 ### Docker Development (via Taskfile)
+
 - Setup: `task setup` (builds container)
 - Start services: `task up` (runs all services in background)
 - Stop services: `task down`
@@ -28,6 +30,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - See all tasks: `task help`
 
 ### Common Workflows
+
 - Crawl articles: `abzu crawl semianalysis`, `abzu crawl theinformation`, `abzu crawl rss -f feeds.txt`
 - Process articles: `abzu process articles semianalysis`
 - Build KG: `abzu process kg raw`, then `abzu process kg refine`
@@ -37,6 +40,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Architecture Overview
 
 ### Project Structure
+
 - **abzu/** - Core application code
   - **api/** - External API integrations (SEC, FinancialDatasets)
   - **articles/** - Article processing logic
@@ -64,6 +68,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - hybrid: Dapr state store (Redis) + S3/MinIO
 
 ### Data Flow
+
 1. **Crawling**: Fetch articles → JSONL files
 2. **Processing**: Extract entities via BAML/LLM → processed JSONL
 3. **KG Raw**: Build initial graph → Parquet files (vertices/edges)
