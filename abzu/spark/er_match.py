@@ -19,7 +19,7 @@ def evaluate_er_matches(
     raw_companies_path: str = os.path.join(
         config.get("process.kg.raw.output"), "companies.parquet"
     ),
-    output_path: str = config.get("process.kg.er.paths.eval", "data/er/"),
+    output_path: str = config.get("process.kg.er.paths.eval"),
     local_mode: Optional[bool] = None,
 ) -> None:
     """
@@ -61,8 +61,8 @@ def evaluate_er_matches(
     # Explode resolved companies from blocks
     logger.info("Exploding resolved companies from blocks...")
     resolved_companies_df = matches_df.select(
-        "block_key", "block_key_type", F.explode("resolved_companies").alias("company")
-    ).select("block_key", "block_key_type", "company.*")
+        F.explode("resolved_companies").alias("company")
+    ).select("company.*")
 
     # Get counts for comparison - raw first, then resolved
     total_raw_companies = raw_companies_df.count()
