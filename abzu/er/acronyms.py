@@ -48,8 +48,6 @@ def get_basename(name: str) -> str | None:
 
 
 def get_acronyms(name: str) -> str | None:
-    if pd.isna(name) or name is None:
-        return None
 
     # Clean the company name using cleanco
     cleaned_name = cleanco.basename(name)

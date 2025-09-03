@@ -19,21 +19,23 @@ logger = get_logger(__name__)
 @F.udf(T.StringType())
 def get_first_word(name: str) -> str | None:
     """Extract first word if it's at least 1 character."""
-    if not name or len(name.strip()) == 0:
-        return None
-
+    if not name or not name.strip():
+        return "UNKNOWN"  # Fallback for empty names
     words = name.strip().split()
-    if words and len(words[0]) >= 1:
-        return words[0].upper()
-    return None
+    return words[0].upper() if words else "UNKNOWN"
 
 
 @F.udf(T.StringType())
 def get_acronym(name: str) -> str | None:
-    """Generate acronyms from company names."""
-    if not name:
-        return None
-    return get_acronyms(name)
+    """Generate acronyms from company names, fallback to first word if no acronym."""
+    if not name or not name.strip():
+        return "UNKNOWN"  # Fallback for empty names
+    acronym = get_acronyms(name)
+    if acronym:
+        return acronym
+    # Fallback to first word if no acronym can be generated
+    words = name.strip().split()
+    return words[0].upper() if words else "UNKNOWN"
 
 
 def build_blocks(
@@ -199,16 +201,14 @@ def build_blocks(
     )
     logger.info("=" * 60)
 
-    # Filter out 1-size blocks for actual entity resolution
-    logger.info("Filtering blocks with size > 1 for entity resolution...")
+    # Keep ALL blocks (including single-record blocks)
+    logger.info("Processing all blocks (including single-record blocks)...")
 
-    # Get first word blocks with size > 1
-    first_word_multi_blocks = first_word_dist_df.filter(F.col("block_size") > 1).select(
-        "first_word_block"
-    )
+    # Get all first word blocks (including size = 1)
+    first_word_multi_blocks = first_word_dist_df.select("first_word_block")
 
-    # Get acronym blocks with size > 1
-    acronym_multi_blocks = acronym_dist_df.filter(F.col("block_size") > 1).select("acronym_block")
+    # Get all acronym blocks (including size = 1)
+    acronym_multi_blocks = acronym_dist_df.select("acronym_block")
 
     # Filter companies to only include those in multi-company blocks
     first_word_companies_filtered = companies_with_block_keys_df.join(
@@ -234,8 +234,8 @@ def build_blocks(
     first_word_filtered_count = first_word_companies_filtered.count()
     acronym_filtered_count = acronym_companies_filtered.count()
 
-    logger.info(f"First word blocks after filtering: {first_word_filtered_count:,} companies")
-    logger.info(f"Acronym blocks after filtering: {acronym_filtered_count:,} companies")
+    logger.info(f"First word blocks: {first_word_filtered_count:,} companies")
+    logger.info(f"Acronym blocks: {acronym_filtered_count:,} companies")
 
     # Get complete company records and group by blocking keys
     logger.info("Grouping complete company records by blocking keys...")
@@ -282,15 +282,22 @@ def build_blocks(
     ]
 
     # Create combined blocks for overlapping keys
-    combined_blocks = (
+    combined_blocks_temp = (
         all_companies_with_blocks.join(
             overlapping_keys, "block_key", "inner"
         )  # Only overlapping keys
         .dropDuplicates(["block_key", "uuid"])  # Remove duplicate UUIDs within each block
         .join(full_companies_df, "uuid", "inner")
-        # Drop existing block_key and block_key_type from full_companies_df if they exist
-        .drop(full_companies_df.block_key)
-        .drop(full_companies_df.block_key_type)
+    )
+
+    # Drop block_key and block_key_type if they exist in full_companies_df
+    if "block_key" in full_companies_df.columns:
+        combined_blocks_temp = combined_blocks_temp.drop(full_companies_df.block_key)
+    if "block_key_type" in full_companies_df.columns:
+        combined_blocks_temp = combined_blocks_temp.drop(full_companies_df.block_key_type)
+
+    combined_blocks = (
+        combined_blocks_temp
         # Now select with the new block_key from all_companies_with_blocks
         .select("block_key", *[F.col(c) for c in company_columns])
         .groupBy("block_key")
@@ -309,16 +316,23 @@ def build_blocks(
     )
 
     # Create separate blocks for non-overlapping keys
-    first_word_only_blocks = (
+    first_word_blocks_temp = (
         all_companies_with_blocks.join(
             overlapping_keys, "block_key", "left_anti"
         )  # Exclude overlapping keys
         .filter(F.col("block_key_type") == "first_word")
         .dropDuplicates(["block_key", "uuid"])  # Remove any duplicate UUIDs
         .join(full_companies_df, "uuid", "inner")
-        # Drop existing block_key and block_key_type from full_companies_df if they exist
-        .drop(full_companies_df.block_key)
-        .drop(full_companies_df.block_key_type)
+    )
+
+    # Drop block_key and block_key_type if they exist in full_companies_df
+    if "block_key" in full_companies_df.columns:
+        first_word_blocks_temp = first_word_blocks_temp.drop(full_companies_df.block_key)
+    if "block_key_type" in full_companies_df.columns:
+        first_word_blocks_temp = first_word_blocks_temp.drop(full_companies_df.block_key_type)
+
+    first_word_only_blocks = (
+        first_word_blocks_temp
         # Now select with the new block_key and block_key_type from all_companies_with_blocks
         .select("block_key", "block_key_type", *[F.col(c) for c in company_columns])
         .groupBy("block_key", "block_key_type")
@@ -328,16 +342,23 @@ def build_blocks(
         )
     )
 
-    acronym_only_blocks = (
+    acronym_blocks_temp = (
         all_companies_with_blocks.join(
             overlapping_keys, "block_key", "left_anti"
         )  # Exclude overlapping keys
         .filter(F.col("block_key_type") == "acronym")
         .dropDuplicates(["block_key", "uuid"])  # Remove any duplicate UUIDs
         .join(full_companies_df, "uuid", "inner")
-        # Drop existing block_key and block_key_type from full_companies_df if they exist
-        .drop(full_companies_df.block_key)
-        .drop(full_companies_df.block_key_type)
+    )
+
+    # Drop block_key and block_key_type if they exist in full_companies_df
+    if "block_key" in full_companies_df.columns:
+        acronym_blocks_temp = acronym_blocks_temp.drop(full_companies_df.block_key)
+    if "block_key_type" in full_companies_df.columns:
+        acronym_blocks_temp = acronym_blocks_temp.drop(full_companies_df.block_key_type)
+
+    acronym_only_blocks = (
+        acronym_blocks_temp
         # Now select with the new block_key and block_key_type from all_companies_with_blocks
         .select("block_key", "block_key_type", *[F.col(c) for c in company_columns])
         .groupBy("block_key", "block_key_type")
@@ -347,13 +368,8 @@ def build_blocks(
         )
     )
 
-    # Filter blocks before saving
-    combined_blocks_filtered = combined_blocks.filter(F.col("block_size") > 1)
-    first_word_blocks_filtered = first_word_only_blocks.filter(F.col("block_size") > 1)
-    acronym_blocks_filtered = acronym_only_blocks.filter(F.col("block_size") > 1)
-
     if logger.isEnabledFor(logging.DEBUG):
-        acronym_blocks_filtered.printSchema()
+        acronym_only_blocks.printSchema()
 
     # Split large blocks (> 150 companies) into smaller chunks
     logger.info("Splitting large blocks (> 150 companies) into smaller chunks...")
@@ -390,9 +406,9 @@ def build_blocks(
     spark.udtf.register("split_large_blocks", SplitLargeBlocks)  # type: ignore
 
     # 3) Create temp views for the DataFrames
-    combined_blocks_filtered.createOrReplaceTempView("combined_blocks_temp")
-    first_word_blocks_filtered.createOrReplaceTempView("first_word_blocks_temp")
-    acronym_blocks_filtered.createOrReplaceTempView("acronym_blocks_temp")
+    combined_blocks.createOrReplaceTempView("combined_blocks_temp")
+    first_word_only_blocks.createOrReplaceTempView("first_word_blocks_temp")
+    acronym_only_blocks.createOrReplaceTempView("acronym_blocks_temp")
 
     # 4) Apply the UDTF using SQL with LATERAL syntax - only select UDTF output columns
     combined_blocks_final = (
@@ -508,9 +524,9 @@ def build_blocks(
     acronym_only_companies_count = acronym_sum_result[0]["total"]
 
     # Get original counts before splitting for comparison
-    original_combined_count = combined_blocks_filtered.count()
-    original_first_word_count = first_word_blocks_filtered.count()
-    original_acronym_count = acronym_blocks_filtered.count()
+    original_combined_count = combined_blocks.count()
+    original_first_word_count = first_word_only_blocks.count()
+    original_acronym_count = acronym_only_blocks.count()
 
     logger.info("=" * 60)
     logger.info("ENTITY RESOLUTION BLOCKS CREATED")
