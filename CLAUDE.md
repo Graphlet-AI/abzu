@@ -5,6 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ### Development
+
 - Install Dependencies: `poetry install`
 - Run CLI: `poetry run abzu`
 - Build/Generate abzu/baml_client code: `baml-cli generate`
@@ -12,7 +13,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Test all: `poetry run pytest tests/`
 - Test single: `poetry run pytest tests/path_to_test.py::test_name`
 - Test specific cache modes: `poetry run pytest -e ABZU_CACHE_MODE=hybrid tests/test_sync.py`
-- Lint: `pre-commit`, `poetry run flake8 abzu tests`
+- Lint: `pre-commit`
 - Format: `poetry run black abzu tests`, `poetry run isort abzu tests`
 - Type check: `poetry run mypy abzu tests`
 
@@ -132,6 +133,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Git Log - use the `git log` command to view the commit history to understand the context or recent changes to the codebase. This will help you understand the project better and make informed decisions when writing code.
 - Do not use 'rm' to remove files - use `git rm` to remove files from the repository. This will ensure that the files are removed from the git history as well.
 - I repeat, NEVER TALK ABOUT YOURSELF IN COMMIT MESSAGES. Do not put "Generated with [Claude Code](https://claude.ai/code)" or anything else relating to Claude or Anthropic in commit messages. Commit messages should only describe the code changes made, not the tool used to make them.
+- Do not put 'Co-Authored-By: Claude <noreply@anthropic.com>' in your commit messages.
 - Ask questions before mitigating a simple problem with a complex fix.
 
 ## Important Notes
