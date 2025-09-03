@@ -55,6 +55,18 @@
             "env": {
                 "YOUR_API_TOKEN_HERE": "8a7dc2059cc49ee2a9845b1bc1fdc2fa06dbaaff4deab22c8e8fbd5ef4337227"
             }
+        },
+        "pyspark-mcp": {
+            "command": "npx",
+            "args": [
+                "--from",
+                "/Users/rjurney/Software/pyspark-mcp-server",
+                "pyspark-mcp-server",
+                "--host",
+                "127.0.0.1",
+                "--port",
+                "8090"
+            ]
         }
     }
 }
