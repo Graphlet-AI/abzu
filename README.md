@@ -172,14 +172,11 @@ If you prefer not to use Docker, you can set up the project directly on your mac
 
 ### Installation Steps
 
-0. Install TA-Lib (if not already installed):
+0. Install pqrs (if not already installed) to inspect Parquet files:
 
 ```bash
-# 1. On an Intel / AMD x86 machine
-brew install ta-lib
-
-# 2. On an Apple Silicon M1 / M2 machine
-arch -arm64 brew install ta-lib
+# Install Rust util pqrs to inspect Parquet files
+brew install manojkarthick/tap/pqrs
 ```
 
 1. Create a Python environment:

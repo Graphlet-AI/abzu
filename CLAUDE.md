@@ -17,6 +17,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Format: `poetry run black abzu tests`, `poetry run isort abzu tests`
 - Type check: `poetry run mypy abzu tests`
 - Place temporary scripts for debugging in the `scripts/` directory.
+- Use the `pqrs` utility to inspect Parquet files: `pqrs schema <path_to_parquet_file>`, `pqrs row-count <path_to_parquet_file>`, `pqrs head <path_to_parquet_file>`
 
 ### Docker Development (via Taskfile)
 
