@@ -49,6 +49,13 @@ def get_basename(name: str) -> str | None:
 
 def get_acronyms(name: str) -> str | None:
 
+    # Remove any starting dollar sign
+    if name.startswith("$"):
+        name = name[1:]
+
+    # Remove any parenthesis
+    name = re.sub(r"\(.*?\)", "", name)
+
     # Clean the company name using cleanco
     cleaned_name = cleanco.basename(name)
 
