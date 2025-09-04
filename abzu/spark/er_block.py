@@ -287,7 +287,9 @@ def build_blocks(
         combined_blocks_temp = combined_blocks_temp.drop(full_companies_df.block_key_type)
 
     combined_blocks = (
-        combined_blocks_temp.drop("block_key_type")
+        combined_blocks_temp.withColumn(
+            "block_key_type", F.lit("combined")
+        )  # Set block_key_type before grouping
         .groupBy("block_key")
         .agg(
             F.collect_list(F.struct("*")).alias("companies"),
