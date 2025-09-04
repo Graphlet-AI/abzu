@@ -132,7 +132,7 @@ process:
     
     er:
       paths:
-        input: "${process.kg.raw.output}"
+        input: "${process.kg.raw.output}/companies.parquet"
         output: "${base_dir}/er/"
         matches: "${base_dir}/er/matches.parquet"
         eval: "${base_dir}/er/"

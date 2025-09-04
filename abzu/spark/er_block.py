@@ -39,9 +39,7 @@ def get_acronym(name: str) -> str | None:
 
 
 def build_blocks(
-    companies_path: str = os.path.join(
-        config.get("process.kg.er.paths.input"), "companies.parquet"
-    ),
+    companies_path: str = config.get("process.kg.er.paths.input"),
     output_path: str = config.get("process.kg.er.paths.output"),
     local_mode: Optional[bool] = None,
 ) -> None:
@@ -273,27 +271,6 @@ def build_blocks(
     overlapping_count = overlapping_keys.count()
     logger.info(f"Found {overlapping_count:,} overlapping block_keys between strategies")
 
-    # Define columns to include in the struct
-    company_columns = [
-        "uuid",
-        "block_key",
-        "block_key_type",
-        "url",
-        "name",
-        "description",
-        "ceo",
-        "employees",
-        "founded_year",
-        "headquarters_location",
-        "id",
-        "linkedin_url",
-        "revenue_usd",
-        "source_ids",
-        "source_uuids",
-        "ticker",
-        "website_url",
-    ]
-
     # Create combined blocks for overlapping keys
     combined_blocks_temp = (
         all_companies_with_blocks.join(
@@ -310,12 +287,10 @@ def build_blocks(
         combined_blocks_temp = combined_blocks_temp.drop(full_companies_df.block_key_type)
 
     combined_blocks = (
-        combined_blocks_temp
-        # Now select with the new block_key from all_companies_with_blocks
-        .select("block_key", *[F.col(c) for c in company_columns])
+        combined_blocks_temp.drop("block_key_type")
         .groupBy("block_key")
         .agg(
-            F.collect_list(F.struct(*company_columns)).alias("companies"),
+            F.collect_list(F.struct("*")).alias("companies"),
             F.countDistinct("uuid").alias("block_size"),
         )
         .withColumn("block_key_type", F.lit("combined"))
@@ -347,10 +322,8 @@ def build_blocks(
     first_word_only_blocks = (
         first_word_blocks_temp
         # Now select with the new block_key and block_key_type from all_companies_with_blocks
-        .select("block_key", "block_key_type", *[F.col(c) for c in company_columns])
-        .groupBy("block_key", "block_key_type")
-        .agg(
-            F.collect_list(F.struct(*company_columns)).alias("companies"),
+        .groupBy("block_key", "block_key_type").agg(
+            F.collect_list(F.struct("*")).alias("companies"),
             F.countDistinct("uuid").alias("block_size"),
         )
     )
@@ -373,10 +346,8 @@ def build_blocks(
     acronym_only_blocks = (
         acronym_blocks_temp
         # Now select with the new block_key and block_key_type from all_companies_with_blocks
-        .select("block_key", "block_key_type", *[F.col(c) for c in company_columns])
-        .groupBy("block_key", "block_key_type")
-        .agg(
-            F.collect_list(F.struct(*company_columns)).alias("companies"),
+        .groupBy("block_key", "block_key_type").agg(
+            F.collect_list(F.struct("*")).alias("companies"),
             F.countDistinct("uuid").alias("block_size"),
         )
     )
@@ -387,16 +358,13 @@ def build_blocks(
     # Split large blocks (> 150 companies) into smaller chunks
     logger.info("Splitting large blocks (> 150 companies) into smaller chunks...")
 
-    # 1) Define the UDTF using the @udtf decorator
-    from pyspark.sql.functions import udtf
-
-    @udtf(  # type: ignore
+    @F.udtf(  # type: ignore
         returnType=(
             "block_key: string, block_key_type: string, "
             "companies: array<struct<uuid:string,block_key:string,block_key_type:string,"
-            "url:string,name:string,description:string,ceo:string,employees:long,"
-            "founded_year:long,headquarters_location:string,id:long,linkedin_url:string,"
-            "revenue_usd:long,source_ids:array<long>,source_uuids:array<string>,"
+            "url:string,name:string,description:string,ceo:string,cik:string,employees:long,"
+            "founded_year:long,headquarters_location:string,id:long,jurisdiction:string,linkedin_url:string,"
+            "posted_at:string,revenue_usd:long,source_ids:array<long>,source_uuids:array<string>,"
             "ticker:struct<exchange:string,id:long,name:string,symbol:string,uuid:string>,"
             "website_url:string>>, "
             "block_size: long"
