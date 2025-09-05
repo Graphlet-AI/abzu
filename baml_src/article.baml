@@ -143,7 +143,7 @@ class Company {
   source_uuids string[]?
   @description("List of source Company uuids that this Company originates from via merging records.")
 
-  @@assert(valid_cik, {{ this.cik is not defined or this.cik is none or (this.cik | length <= 10 and this.cik | regex_match("^[0-9]+$")) }})
+  @@check(valid_cik, {{ this.cik is not defined or this.cik is none or (this.cik | length <= 10 and this.cik | regex_match("^[0-9]+$")) }})
 }
 
 class Product {
