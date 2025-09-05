@@ -7,7 +7,7 @@ class CompanyList {
 
 function MultiEntityResolution(company_list: CompanyList) -> CompanyList {
   // see clients.baml
-  client Gemini20Flash
+  client Gemini25FlashLite
 
   // The prompt uses Jinja syntax. Change the models or this text and watch the prompt preview change!
   prompt #"
@@ -1228,4 +1228,9 @@ test WikiEnrichTest {
             ]
         }
     }
+    @@assert(uuid_preservation, {{ 
+    this.companies|selectattr('uuid')|map(attribute='uuid')|list|
+    select('in', this.companies|selectattr('source_uuids')|map(attribute='source_uuids')|sum(start=[])|list)|list|length == 
+    this.companies|selectattr('uuid')|map(attribute='uuid')|list|length
+  }})
 }

@@ -260,7 +260,7 @@ class NewsSource {
 
 function ExtractIndustryArticle(article_text: string) -> IndustryArticle {
   // see clients.baml
-  client Gemini20Flash
+  client Gemini25FlashLite
 
   // The prompt uses Jinja syntax. Change the models or this text and watch the prompt preview change!
   prompt #"
