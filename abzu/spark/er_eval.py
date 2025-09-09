@@ -171,7 +171,9 @@ def evaluate_er_matches(
     cleaned_resolved_companies.write.mode("overwrite").parquet(companies_resolved_parquet)
 
     logger.info(f"Saving companies_resolved.json to {companies_resolved_json}")
-    cleaned_resolved_companies.coalesce(1).write.mode("overwrite").json(companies_resolved_json)
+    cleaned_resolved_companies.coalesce(1).write.mode("overwrite").option(
+        "ignoreNullFields", "false"
+    ).json(companies_resolved_json)
 
     # Create and save evaluation metrics - both Parquet and single JSON file
     metrics_data = [

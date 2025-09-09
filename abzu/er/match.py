@@ -70,20 +70,22 @@ async def process_block(
             for comp_data in companies_data:
                 # Create Company object - id, uuid, and name are required
                 company = Company(
-                    id=comp_data["id"],  # Required - will raise KeyError if missing
                     uuid=comp_data["uuid"],  # Required - will raise KeyError if missing
                     name=comp_data["name"],  # Required - will raise KeyError if missing
                     description=comp_data.get("description", ""),
                     ceo=comp_data.get("ceo"),
+                    cik=comp_data.get("cik"),
                     employees=comp_data.get("employees"),
                     founded_year=comp_data.get("founded_year"),
                     headquarters_location=comp_data.get("headquarters_location"),
+                    id=comp_data["id"],  # Required - will raise KeyError if missing
+                    jurisdiction=comp_data.get("jurisdiction"),
                     linkedin_url=comp_data.get("linkedin_url"),
                     revenue_usd=comp_data.get("revenue_usd"),
-                    website_url=comp_data.get("website_url"),
-                    ticker=comp_data.get("ticker"),
                     source_ids=comp_data.get("source_ids"),
                     source_uuids=comp_data.get("source_uuids"),
+                    ticker=comp_data.get("ticker"),
+                    website_url=comp_data.get("website_url"),
                 )
                 companies.append(company)
 
@@ -107,20 +109,26 @@ async def process_block(
                 new_uuid = str(uuid.uuid4())
 
                 resolved_dict = {
-                    "id": company.id,
                     "uuid": new_uuid,  # Use the newly generated UUID
+                    "block_key": block_key,  # Preserve block_key from the block
+                    "block_key_type": block_key_type,  # Preserve block_key_type from the block
+                    "url": None,  # Set to None for now
                     "name": company.name,
                     "description": company.description,
                     "ceo": company.ceo,
+                    "cik": company.cik,
                     "employees": company.employees,
                     "founded_year": company.founded_year,
                     "headquarters_location": company.headquarters_location,
+                    "id": company.id,
+                    "jurisdiction": company.jurisdiction,
                     "linkedin_url": company.linkedin_url,
+                    "posted_at": None,  # Set to None for now
                     "revenue_usd": company.revenue_usd,
-                    "website_url": company.website_url,
-                    "ticker": company.ticker.__dict__ if company.ticker else None,
                     "source_ids": company.source_ids,
                     "source_uuids": company.source_uuids,  # Keep original UUIDs for reference
+                    "ticker": company.ticker.__dict__ if company.ticker else None,
+                    "website_url": company.website_url,
                 }
                 resolved_companies.append(resolved_dict)
 
