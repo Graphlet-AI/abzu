@@ -7,7 +7,7 @@ class CompanyList {
 
 function MultiEntityResolution(company_list: CompanyList) -> CompanyList {
   // see clients.baml
-  client Gemini25FlashLite
+  client Gemini20Flash
 
   // The prompt uses Jinja syntax. Change the models or this text and watch the prompt preview change!
   prompt #"
