@@ -136,6 +136,11 @@ process:
         output: "${base_dir}/er/"
         matches: "${base_dir}/er/matches.parquet"
         eval: "${base_dir}/er/"
+        # UUID blocking output - ALL blocks including size 1
+        uuid_blocks: "${base_dir}/er/uuid_blocks.parquet"
+        # After matching UUID blocks, resolved companies go here
+        uuid_resolved: "${base_dir}/er/uuid_resolved.parquet"
+      max_block_size: 50
 
     refine:
       input: "${process.kg.raw.output}"
