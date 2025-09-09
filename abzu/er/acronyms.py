@@ -49,6 +49,9 @@ def get_basename(name: str) -> str | None:
 
 def get_acronyms(name: str) -> str | None:
 
+    if pd.isna(name) or name is None:
+        return None
+
     # Remove any starting dollar sign
     if name.startswith("$"):
         name = name[1:]
