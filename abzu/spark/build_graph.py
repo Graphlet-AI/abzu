@@ -279,13 +279,29 @@ def build_knowledge_graph(
         + [col for col in companies_df.columns if col not in ["uuid", "url", "name", "description"]]
     )
 
-    # Check for null UUIDs and log a warning
+    # Check for null UUIDs and IDs - filter them out
     null_uuid_count = companies_df.filter(F.col("uuid").isNull()).count()
+    null_id_count = companies_df.filter(F.col("id").isNull()).count()
+
     if null_uuid_count > 0:
-        logger.warning(f"Found {null_uuid_count:,} companies with null UUIDs!")
+        logger.warning(f"Found {null_uuid_count:,} companies with null UUIDs - filtering them out")
         # Show some examples for debugging
         logger.warning("Sample companies with null UUIDs:")
         companies_df.filter(F.col("uuid").isNull()).show(5, truncate=False)
+
+    if null_id_count > 0:
+        logger.warning(f"Found {null_id_count:,} companies with null IDs - filtering them out")
+        # Show some examples for debugging
+        logger.warning("Sample companies with null IDs:")
+        companies_df.filter(F.col("id").isNull()).show(5, truncate=False)
+
+    # Filter out companies with null UUIDs or IDs
+    companies_df = companies_df.filter(F.col("uuid").isNotNull() & F.col("id").isNotNull())
+    logger.info(f"After filtering nulls: {companies_df.count():,} companies remain")
+
+    # Explicitly cast id to ensure it's a non-null integer and uuid to ensure it's a non-null string
+    companies_df = companies_df.withColumn("id", F.col("id").cast(T.LongType()))
+    companies_df = companies_df.withColumn("uuid", F.col("uuid").cast(T.StringType()))
 
     # Store the original records with their UUIDs - they can be matched at the field level to nested
     # companies from the same post, such as Product.manufacturer or Technology.developer
