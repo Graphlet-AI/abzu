@@ -367,8 +367,8 @@ def build_blocks(
     if logger.isEnabledFor(logging.DEBUG):
         acronym_only_blocks.printSchema()
 
-    # Split large blocks (> 150 companies) into smaller chunks
-    logger.info("Splitting large blocks (> 150 companies) into smaller chunks...")
+    # Split large blocks (> 50 companies) into smaller chunks
+    logger.info(f"Splitting large blocks (> {MAX_BLOCK_SIZE} companies) into smaller chunks...")
 
     @F.udtf(  # type: ignore
         returnType=(
@@ -541,7 +541,7 @@ def build_blocks(
     if acronym_only_count != original_acronym_count:
         logger.info(f"  (Split from {original_acronym_count:,} original blocks)")
     logger.info(f"  Saved to: {acronym_json_path} and {acronym_parquet_path}")
-    logger.info(f"Total Blocks: {total_blocks:,} blocks (all blocks ≤ 150 companies)")
+    logger.info(f"Total Blocks: {total_blocks:,} blocks (all blocks ≤ {MAX_BLOCK_SIZE} companies)")
     logger.info("=" * 60)
 
     # Clean up
