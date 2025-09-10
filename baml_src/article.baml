@@ -103,7 +103,7 @@ class Company {
   @description("Unique among all objects.")
 
   uuid string?
-  @description("A unique identifier for this object. Leave blank.")
+  @description("A unique identifier for this object.")
 
   name string
   @description("Formal name of the company with company suffix")
@@ -112,7 +112,7 @@ class Company {
   @description("Central Index Key for the company")
 
   ticker Ticker?
-  @description("Ticker symbol of the company if publicly traded")
+  @description("If publicly traded")
 
   description string
   @description("What does the company do? What is it known for?")
@@ -120,13 +120,12 @@ class Company {
   website_url string?
 
   headquarters_location string?
-  @description("Location of the company's headquarters, city, state and country")
+  @description("City, state, country")
 
   jurisdiction string?
   @description("State or country where the company is incorporated")
 
   revenue_usd int?
-  @description("Revenue of the company in USD")
 
   employees int?
 
@@ -138,10 +137,10 @@ class Company {
   linkedin_url string?
 
   source_ids int[]?
-  @description("List of source Company ids that this Company originates from via merging records.")
+  @description("List of source Company.id that this Company originates from via merging records.")
 
   source_uuids string[]?
-  @description("List of source Company uuids that this Company originates from via merging records.")
+  @description("List of source Company.uuid that this Company originates from via merging records.")
 }
 
 class Product {
