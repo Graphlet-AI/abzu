@@ -54,7 +54,7 @@ def get_acronyms(name: str) -> str | None:
         name = name[1:]
 
     # Remove any parenthesis
-    name = re.sub(r"\(.*?\)", "", name)
+    name = re.sub(r"[()]", "", name)
 
     # Clean the company name using cleanco
     cleaned_name = cleanco.basename(name)
