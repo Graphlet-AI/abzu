@@ -92,7 +92,7 @@ async def process_block(
             result = await baml_client.MultiEntityResolution(
                 company_list=company_list, baml_options={"collector": collector}
             )
-            logger.info(str(collector.last.usage))  # type: ignore
+            # logger.info(str(collector.last.usage))  # type: ignore
 
             # Convert resolved companies back to dictionaries
             resolved_companies = []
