@@ -279,6 +279,14 @@ def build_knowledge_graph(
         + [col for col in companies_df.columns if col not in ["uuid", "url", "name", "description"]]
     )
 
+    # Check for null UUIDs and log a warning
+    null_uuid_count = companies_df.filter(F.col("uuid").isNull()).count()
+    if null_uuid_count > 0:
+        logger.warning(f"Found {null_uuid_count:,} companies with null UUIDs!")
+        # Show some examples for debugging
+        logger.warning("Sample companies with null UUIDs:")
+        companies_df.filter(F.col("uuid").isNull()).show(5, truncate=False)
+
     # Store the original records with their UUIDs - they can be matched at the field level to nested
     # companies from the same post, such as Product.manufacturer or Technology.developer
     companies_output_path = os.path.join(output_path, "companies.parquet")

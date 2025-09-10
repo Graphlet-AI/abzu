@@ -192,8 +192,12 @@ def update_entity_with_uuid(entity: Row | dict, id_to_uuid_map: dict[int, str]) 
     # Convert to dict if it's a Row
     entity_dict = entity.asDict() if hasattr(entity, "asDict") else entity.copy()
 
-    # Update uuid field if id exists
+    # Always ensure a UUID exists
     if "id" in entity_dict and entity_dict["id"] is not None:
+        # If entity has an ID, use consistent UUID mapping
         entity_dict["uuid"] = get_or_create_uuid(entity_dict["id"], id_to_uuid_map)
+    else:
+        # If no ID or ID is null, generate a new UUID directly
+        entity_dict["uuid"] = str(uuid.uuid4())
 
     return entity_dict
