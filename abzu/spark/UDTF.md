@@ -76,7 +76,7 @@ spark.sql("SELECT * FROM my_udtf('input_value')")
 ```python
 class _SplitLargeBlocks:
     def eval(self, block_key: str, block_type: str, items: list, size: int):
-        max_size = 150
+        max_size = 50
         if size <= max_size:
             yield (block_key, block_type, items, size)
         else:
