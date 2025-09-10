@@ -42,19 +42,23 @@ def get_acronym(name: str) -> str | None:
 
 def build_blocks(
     input_path: str = config.get("process.kg.er.paths.input"),
-    output_path: str = config.get("process.kg.er.paths.output"),
-    use_uuid_blocks: bool = True,
+    output_path: str = config.get("process.kg.er.paths.names.blocks_dir"),
     local_mode: Optional[bool] = None,
 ) -> None:
     """
     Analyze company blocking strategies by computing size distributions.
 
     Args:
-        input_path: Path to the input data (UUID blocks or companies parquet)
+        input_path: Path to the input companies parquet
         output_path: Path to save the output blocks
-        use_uuid_blocks: If True, input is UUID blocks; if False, input is raw companies
         local_mode: Whether to run in local mode. If None, will be determined by environment
     """
+    # If output_path has {format} placeholder, remove it (this should be a directory)
+    if "{format}" in output_path:
+        # Extract the directory path by removing the filename part with {format}
+        output_path = os.path.dirname(output_path)
+        logger.info(f"Extracted directory from path with format placeholder: {output_path}")
+
     # Create SparkSession with appropriate configuration
     spark: SparkSession = get_spark_session(
         app_name="build_er_blocks",

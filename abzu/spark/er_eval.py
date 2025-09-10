@@ -20,6 +20,7 @@ def evaluate_er_matches(
         config.get("process.kg.raw.output"), "companies.parquet"
     ),
     output_path: str = config.get("process.kg.er.paths.names.eval"),
+    iteration: int = 1,
     local_mode: Optional[bool] = None,
 ) -> None:
     """
@@ -44,8 +45,10 @@ def evaluate_er_matches(
         local_mode=local_mode,
     )
 
-    logger.info(f"Loading matches from {matches_path}")
-    matches_df: DataFrame = spark.read.parquet(matches_path)
+    # Format matches_path for reading (should have {iteration} and {format} placeholders)
+    matches_parquet_path = matches_path.format(iteration=iteration, format="parquet")
+    logger.info(f"Loading matches from {matches_parquet_path}")
+    matches_df: DataFrame = spark.read.parquet(matches_parquet_path)
 
     logger.info(f"Loading raw companies from {raw_companies_path}")
     raw_companies_df: DataFrame = spark.read.parquet(raw_companies_path)
@@ -163,9 +166,10 @@ def evaluate_er_matches(
         .drop("valid_source_uuids")
     )
 
-    # Save companies_resolved files - both Parquet and single JSON file
-    companies_resolved_parquet = os.path.join(output_path, "companies_resolved.parquet")
-    companies_resolved_json = os.path.join(output_path, "companies_resolved.json")
+    # Save companies_resolved files - both Parquet and JSON
+    # Format the output path with iteration and format
+    companies_resolved_parquet = output_path.format(iteration=iteration, format="parquet")
+    companies_resolved_json = output_path.format(iteration=iteration, format="json")
 
     logger.info(f"Saving companies_resolved.parquet to {companies_resolved_parquet}")
     cleaned_resolved_companies.write.mode("overwrite").parquet(companies_resolved_parquet)
@@ -214,8 +218,10 @@ def evaluate_er_matches(
     ]
     metrics_df = spark.createDataFrame(metrics_data, metrics_schema)
 
-    metrics_parquet_path = os.path.join(output_path, "er_evaluation_metrics.parquet")
-    metrics_json_path = os.path.join(output_path, "er_evaluation_metrics.json")
+    # Get the directory for metrics files
+    output_dir = os.path.dirname(output_path)
+    metrics_parquet_path = os.path.join(output_dir, "er_evaluation_metrics.parquet")
+    metrics_json_path = os.path.join(output_dir, "er_evaluation_metrics.json")
 
     logger.info(f"Saving evaluation metrics (Parquet) to {metrics_parquet_path}")
     metrics_df.write.mode("overwrite").parquet(metrics_parquet_path)

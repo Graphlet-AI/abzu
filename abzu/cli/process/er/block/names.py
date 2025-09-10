@@ -17,14 +17,16 @@ from abzu.spark.er_block import build_blocks
 @click.option(
     "--companies-path",
     "-c",
-    default=None,
-    help="Path to companies parquet file (overrides config)",
+    default=config.get("process.kg.er.paths.input"),
+    type=click.Path(exists=True, file_okay=True, dir_okay=True),
+    help="Path to companies parquet file or directory",
 )
 @click.option(
     "--output-path",
     "-o",
     default=None,
-    help="Path to save name blocks (overrides config)",
+    type=click.Path(file_okay=False, dir_okay=True),
+    help="Path to save name blocks directory (defaults to config path with iteration)",
 )
 @click.option(
     "--max-block-size",
@@ -41,37 +43,28 @@ from abzu.spark.er_block import build_blocks
 )
 def names(
     iteration: int,
-    companies_path: str | None,
+    companies_path: str,
     output_path: str | None,
     max_block_size: int,
     local_mode: bool,
 ) -> None:
     """Build name similarity-based blocks for entity resolution."""
-    # Use config paths if not overridden
-    if companies_path is None:
-        # For iteration 1, use raw companies from knowledge graph
+    # Handle iteration-based paths
+    if iteration > 1:
         # For later iterations, use previous iteration's resolved companies
-        if iteration == 1:
-            companies_path = config.get("process.kg.er.paths.input")
-        else:
-            prev_iteration = iteration - 1
-            companies_path = (
-                config.get("process.kg.er.paths.names.eval").replace(
-                    "{iteration}", str(prev_iteration)
-                )
-                + "companies_resolved.parquet"
-            )
-
-    if output_path is None:
-        output_path = config.get("process.kg.er.paths.names.blocks").replace(
-            "{iteration}", str(iteration)
+        prev_iteration = iteration - 1
+        companies_path = config.get("process.kg.er.paths.names.eval").format(
+            iteration=prev_iteration, format="parquet"
         )
+
+    # Set output path if not provided
+    if output_path is None:
+        output_path = config.get("process.kg.er.paths.names.blocks_dir").format(iteration=iteration)
 
     # Note: max_block_size is configured via config.yml, not passed as parameter
     # The build_blocks function will use the configured value
     build_blocks(
         input_path=companies_path,
         output_path=output_path,
-        use_uuid_blocks=False,  # We're not using UUID blocks anymore
         local_mode=local_mode if local_mode else None,
     )

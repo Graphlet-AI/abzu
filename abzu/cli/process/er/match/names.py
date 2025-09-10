@@ -17,14 +17,16 @@ from abzu.er.match import match_entities
 @click.option(
     "--blocks-path",
     "-p",
-    default=None,
-    help="Path to names blocks parquet file (overrides config)",
+    default=config.get("process.kg.er.paths.names.blocks"),
+    type=click.Path(exists=False, file_okay=True, dir_okay=True),
+    help="Path to names blocks file (with {format} placeholder)",
 )
 @click.option(
     "--output-path",
     "-o",
-    default=None,
-    help="Path to save matched entities (overrides config)",
+    default=config.get("process.kg.er.paths.names.matches"),
+    type=click.Path(exists=False, file_okay=True, dir_okay=False),
+    help="Path to save matched entities (with {format} placeholder)",
 )
 @click.option(
     "--batch-size",
@@ -47,22 +49,13 @@ from abzu.er.match import match_entities
 )
 def names(
     iteration: int,
-    blocks_path: str | None,
-    output_path: str | None,
+    blocks_path: str,
+    output_path: str,
     batch_size: int,
     limit: int | None,
     size_range: str | None,
 ) -> None:
     """Match entities within name similarity-based blocks."""
-    # Use config paths if not overridden
-    if blocks_path is None:
-        blocks_path = config.get("process.kg.er.paths.names.blocks").replace(
-            "{iteration}", str(iteration)
-        )
-    if output_path is None:
-        output_path = config.get("process.kg.er.paths.names.matches").replace(
-            "{iteration}", str(iteration)
-        )
 
     # Parse size range if provided
     min_size = None
@@ -92,6 +85,7 @@ def names(
     match_entities(
         blocks_path=blocks_path,
         output_path=output_path,
+        iteration=iteration,
         batch_size=batch_size,
         limit=limit,
         min_block_size=min_size,

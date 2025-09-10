@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Utility functions for Spark operations."""
+import random
 import uuid
 from typing import Optional
 
@@ -194,10 +195,14 @@ def update_entity_with_uuid(entity: Row | dict, id_to_uuid_map: dict[int, str]) 
 
     # Always ensure a UUID exists
     if "id" in entity_dict and entity_dict["id"] is not None:
+        entity_dict["id"] = random.randint(1, 50)
+
+    if "uuid" in entity_dict and entity_dict["uuid"] is not None:
         # If entity has an ID, use consistent UUID mapping
         entity_dict["uuid"] = get_or_create_uuid(entity_dict["id"], id_to_uuid_map)
     else:
-        # If no ID or ID is null, generate a new UUID directly
+        # If no ID or ID is null, generate a new UUID and assign a random ID
         entity_dict["uuid"] = str(uuid.uuid4())
+        # Assign a random integer between 1 and 50 for the ID
 
     return entity_dict

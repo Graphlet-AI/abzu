@@ -17,20 +17,23 @@ from abzu.spark.er_eval import evaluate_er_matches
 @click.option(
     "--matches-path",
     "-m",
-    default=None,
-    help="Path to names matches parquet file (overrides config)",
+    default=config.get("process.kg.er.paths.names.matches"),
+    type=click.Path(exists=False, file_okay=True, dir_okay=True),
+    help="Path to names matches file (with {format} placeholder)",
 )
 @click.option(
     "--raw-companies-path",
     "-r",
-    default=None,
-    help="Path to raw companies parquet file (overrides config)",
+    default=config.get("process.kg.er.paths.input"),
+    type=click.Path(exists=True, file_okay=True, dir_okay=True),
+    help="Path to raw companies parquet file",
 )
 @click.option(
     "--output-path",
     "-o",
-    default=None,
-    help="Directory path to save evaluation results (overrides config)",
+    default=config.get("process.kg.er.paths.names.eval"),
+    type=click.Path(exists=False, file_okay=True, dir_okay=False),
+    help="Path to save evaluation results (with {format} placeholder)",
 )
 @click.option(
     "--local-mode",
@@ -40,28 +43,17 @@ from abzu.spark.er_eval import evaluate_er_matches
 )
 def names(
     iteration: int,
-    matches_path: str | None,
-    raw_companies_path: str | None,
-    output_path: str | None,
+    matches_path: str,
+    raw_companies_path: str,
+    output_path: str,
     local_mode: bool,
 ) -> None:
     """Evaluate name similarity-based entity resolution matches."""
-    # Use config paths if not overridden
-    if matches_path is None:
-        matches_path = config.get("process.kg.er.paths.names.matches").replace(
-            "{iteration}", str(iteration)
-        )
-    if raw_companies_path is None:
-        # Always use raw companies from knowledge graph as baseline for comparison
-        raw_companies_path = config.get("process.kg.er.paths.input")
-    if output_path is None:
-        output_path = config.get("process.kg.er.paths.names.eval").replace(
-            "{iteration}", str(iteration)
-        )
 
     evaluate_er_matches(
         matches_path=matches_path,
         raw_companies_path=raw_companies_path,
         output_path=output_path,
+        iteration=iteration,
         local_mode=local_mode if local_mode else None,
     )

@@ -14,6 +14,7 @@ from tqdm import tqdm
 from abzu.baml_client.async_client import BamlAsyncClient
 from abzu.baml_client.runtime import DoNotUseDirectlyCallManager
 from abzu.baml_client.types import Company, CompanyList
+from abzu.config import config
 from abzu.logs import get_logger
 from abzu.utils import save_jsonl
 
@@ -43,17 +44,8 @@ async def process_block(
         block_key_type = block["block_key_type"]
         companies_data = block["companies"]
 
-        # Skip blocks with only one company but still generate new UUID
+        # Skip blocks with only one company - return unchanged
         if len(companies_data) <= 1:
-            # Generate new UUID even for single-company blocks for consistency
-            if companies_data:
-                companies_with_new_uuid = []
-                for comp in companies_data:
-                    comp_copy = comp.copy()
-                    comp_copy["uuid"] = str(uuid.uuid4())
-                    companies_with_new_uuid.append(comp_copy)
-                companies_data = companies_with_new_uuid
-
             return {
                 "block_key": block_key,
                 "block_key_type": block_key_type,
@@ -148,35 +140,23 @@ async def process_block(
 
         except KeyError as e:
             logger.error(f"Missing required field in block {block_key}: {e}")
-            # Return original companies on error but with new UUIDs
-            companies_with_new_uuid = []
-            for comp in companies_data:
-                comp_copy = comp.copy()
-                comp_copy["uuid"] = str(uuid.uuid4())
-                companies_with_new_uuid.append(comp_copy)
-
+            # Return original companies unchanged on error
             return {
                 "block_key": block_key,
                 "block_key_type": block["block_key_type"],
-                "resolved_companies": companies_with_new_uuid,
-                "total_companies": len(companies_with_new_uuid),
+                "resolved_companies": companies_data,
+                "total_companies": len(companies_data),
                 "was_resolved": False,
                 "error": f"Missing required field: {e}",
             }
         except Exception as e:
             logger.error(f"Error processing block {block_key}: {e}")
-            # Return original companies on error but with new UUIDs
-            companies_with_new_uuid = []
-            for comp in companies_data:
-                comp_copy = comp.copy()
-                comp_copy["uuid"] = str(uuid.uuid4())
-                companies_with_new_uuid.append(comp_copy)
-
+            # Return original companies unchanged on error
             return {
                 "block_key": block_key,
                 "block_key_type": block["block_key_type"],
-                "resolved_companies": companies_with_new_uuid,
-                "total_companies": len(companies_with_new_uuid),
+                "resolved_companies": companies_data,
+                "total_companies": len(companies_data),
                 "was_resolved": False,
                 "error": str(e),
             }
@@ -226,8 +206,9 @@ def backup_file(file_path: Path) -> None:
 
 
 def match_entities(
-    blocks_path: str,
-    output_path: str,
+    blocks_path: str = config.get("process.kg.er.paths.names.blocks"),
+    output_path: str = config.get("process.kg.er.paths.names.matches"),
+    iteration: int = 1,
     batch_size: int = 5,
     limit: Optional[int] = None,
     min_block_size: Optional[int] = None,
@@ -237,8 +218,9 @@ def match_entities(
     Match entities within blocks using BAML MultiEntityResolution.
 
     Args:
-        blocks_path: Path to the blocks parquet file
-        output_path: Path to save the matched entities
+        blocks_path: Path to the blocks parquet file (with {iteration} and {format} placeholders)
+        output_path: Path to save the matched entities (with {iteration} and {format} placeholders)
+        iteration: Iteration number for multi-round ER processing
         batch_size: Number of concurrent API calls
         limit: Maximum number of blocks to process (for testing)
         min_block_size: Minimum block size to process (inclusive)
@@ -252,8 +234,9 @@ def match_entities(
     if min_block_size is not None or max_block_size is not None:
         logger.info(f"Block size range: {min_block_size or 'any'}:{max_block_size or 'any'}")
 
-    # Load blocks from parquet
-    df = pd.read_parquet(blocks_path)
+    # Load blocks from parquet (format the path with iteration and parquet extension)
+    blocks_parquet_path = blocks_path.format(iteration=iteration, format="parquet")
+    df = pd.read_parquet(blocks_parquet_path)
     logger.info(f"Loaded {len(df)} blocks")
 
     # Filter to blocks with multiple companies
@@ -302,8 +285,12 @@ def match_entities(
     # Convert results to DataFrame
     results_df = pd.DataFrame(results)
 
+    # Format output paths for both formats with iteration
+    output_parquet_path = output_path.format(iteration=iteration, format="parquet")
+    output_json_path = output_path.format(iteration=iteration, format="json")
+
     # Create output directory if it doesn't exist
-    output_path_obj = Path(output_path)
+    output_path_obj = Path(output_parquet_path)
     output_dir = output_path_obj.parent
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -311,17 +298,15 @@ def match_entities(
     backup_file(output_path_obj)
 
     # Save results to parquet
-    results_df.to_parquet(output_path, index=False)
-    logger.info(f"Saved {len(results_df)} resolved blocks to {output_path}")
+    results_df.to_parquet(output_parquet_path, index=False)
+    logger.info(f"Saved {len(results_df)} resolved blocks to {output_parquet_path}")
 
-    # Also save to JSON Lines format
-    json_output_path = output_dir / "matches.jsonl"
+    # Backup existing JSON file if it exists
+    json_output_path_obj = Path(output_json_path)
+    backup_file(json_output_path_obj)
 
-    # Backup existing JSON Lines file if it exists
-    backup_file(json_output_path)
-
-    # Save to JSON Lines
-    save_jsonl(results_df, json_output_path)
+    # Save to JSON format
+    save_jsonl(results_df, json_output_path_obj)
 
     # Print summary statistics
     resolved_blocks = (
@@ -339,7 +324,9 @@ def match_entities(
     logger.info(f"  Total blocks processed: {len(results_df)}")
     logger.info(f"  Successfully resolved: {len(resolved_blocks)}")
     logger.info(f"  Errors: {len(error_blocks)}")
-    logger.info("  Note: All records have been assigned new random UUIDs")
+    logger.info(
+        "  Note: Resolved companies have new UUIDs; single-company blocks retain original UUIDs"
+    )
 
     if len(resolved_blocks) > 0:
         total_original = resolved_blocks["original_count"].sum()
