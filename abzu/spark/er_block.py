@@ -15,6 +15,8 @@ from abzu.spark.config import get_spark_session
 
 logger = get_logger(__name__)
 
+MAX_BLOCK_SIZE = config.get("process.kg.er.max_block_size", 50)
+
 
 @F.udf(T.StringType())
 def get_first_word(name: str) -> str | None:
@@ -39,15 +41,18 @@ def get_acronym(name: str) -> str | None:
 
 
 def build_blocks(
-    companies_path: str = config.get("process.kg.er.paths.input"),
+    input_path: str = config.get("process.kg.er.paths.input"),
     output_path: str = config.get("process.kg.er.paths.output"),
+    use_uuid_blocks: bool = True,
     local_mode: Optional[bool] = None,
 ) -> None:
     """
     Analyze company blocking strategies by computing size distributions.
 
     Args:
-        companies_path: Path to the companies parquet file
+        input_path: Path to the input data (UUID blocks or companies parquet)
+        output_path: Path to save the output blocks
+        use_uuid_blocks: If True, input is UUID blocks; if False, input is raw companies
         local_mode: Whether to run in local mode. If None, will be determined by environment
     """
     # Create SparkSession with appropriate configuration
@@ -56,8 +61,9 @@ def build_blocks(
         local_mode=local_mode,
     )
 
-    logger.info(f"Loading companies from {companies_path}")
-    companies_df: DataFrame = spark.read.parquet(companies_path)
+    # Load companies (always in regular format after UUID resolution)
+    logger.info(f"Loading companies from {input_path}")
+    companies_df: DataFrame = spark.read.parquet(input_path)
 
     total_companies = companies_df.count()
     logger.info(f"Loaded {total_companies:,} companies")
@@ -252,7 +258,7 @@ def build_blocks(
     logger.info("Grouping complete company records by blocking keys...")
 
     # Join filtered companies back with full company data
-    full_companies_df = spark.read.parquet(companies_path)
+    full_companies_df = spark.read.parquet(input_path)
 
     # Identify overlapping block_keys between first_word and acronym strategies
     logger.info("Identifying overlapping block_keys for merging...")
@@ -374,13 +380,12 @@ def build_blocks(
     )
     class SplitLargeBlocks:
         def eval(self, block_key: str, block_key_type: str, companies: list, block_size: int):
-            max_size = 150
-            if block_size <= max_size:
+            if block_size <= MAX_BLOCK_SIZE:
                 yield (block_key, block_key_type, companies, block_size)
             else:
                 chunk_num = 1
-                for i in range(0, len(companies), max_size):
-                    chunk_companies = companies[i : i + max_size]
+                for i in range(0, len(companies), MAX_BLOCK_SIZE):
+                    chunk_companies = companies[i : i + MAX_BLOCK_SIZE]
                     chunk_key = f"{block_key}_chunk_{chunk_num}"
                     yield (chunk_key, block_key_type, chunk_companies, len(chunk_companies))
                     chunk_num += 1

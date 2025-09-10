@@ -134,12 +134,6 @@ process:
       paths:
         input: "${process.kg.raw.output}/companies.parquet"
         output: "${base_dir}/er/"
-        # UUID workflow paths (single pass)
-        uuid:
-          blocks: "${base_dir}/er/uuid_blocks.parquet"
-          matches: "${base_dir}/er/uuid_matches.parquet"
-          resolved: "${base_dir}/er/uuid_resolved.parquet"
-          eval: "${base_dir}/er/uuid_eval/"
         # Names workflow paths (supports iterations)
         names:
           # Use iteration subdirectories for multi-round processing

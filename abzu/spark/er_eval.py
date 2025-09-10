@@ -15,11 +15,11 @@ logger = get_logger(__name__)
 
 
 def evaluate_er_matches(
-    matches_path: str = config.get("process.kg.er.paths.matches", "data/er/matches.parquet"),
+    matches_path: str = config.get("process.kg.er.paths.names.matches"),
     raw_companies_path: str = os.path.join(
         config.get("process.kg.raw.output"), "companies.parquet"
     ),
-    output_path: str = config.get("process.kg.er.paths.eval"),
+    output_path: str = config.get("process.kg.er.paths.names.eval"),
     local_mode: Optional[bool] = None,
 ) -> None:
     """

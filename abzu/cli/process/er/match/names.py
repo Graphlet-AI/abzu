@@ -1,4 +1,4 @@
-"""CLI for entity resolution matching."""
+"""CLI for name similarity-based entity resolution matching."""
 
 import click
 
@@ -8,22 +8,23 @@ from abzu.er.match import match_entities
 
 @click.command(context_settings={"show_default": True})
 @click.option(
-    "--blocks-path",
-    default=config.get("er.paths.blocks", "data/er/all_blocks.parquet"),
-    help="Path to blocks parquet file",
-)
-@click.option(
-    "--output-path",
-    "-o",
-    default=config.get("er.paths.matches", "data/er/matches.parquet"),
-    help="Path to save matched entities",
-)
-@click.option(
     "--iteration",
     "-i",
     default=1,
     type=int,
     help="Iteration number for multi-round ER processing",
+)
+@click.option(
+    "--blocks-path",
+    "-p",
+    default=None,
+    help="Path to names blocks parquet file (overrides config)",
+)
+@click.option(
+    "--output-path",
+    "-o",
+    default=None,
+    help="Path to save matched entities (overrides config)",
 )
 @click.option(
     "--batch-size",
@@ -44,20 +45,24 @@ from abzu.er.match import match_entities
     default=None,
     help="Range of block sizes to process (e.g., 50:100)",
 )
-def match(
-    blocks_path: str,
-    output_path: str,
+def names(
     iteration: int,
+    blocks_path: str | None,
+    output_path: str | None,
     batch_size: int,
     limit: int | None,
     size_range: str | None,
 ) -> None:
-    """Match entities within blocks using similarity metrics."""
-    # Override paths based on iteration
-    if not blocks_path.startswith("data/er/iterations/"):
-        blocks_path = f"data/er/iterations/{iteration}/all_blocks.parquet"
-    if not output_path.startswith("data/er/iterations/"):
-        output_path = f"data/er/iterations/{iteration}/matches.parquet"
+    """Match entities within name similarity-based blocks."""
+    # Use config paths if not overridden
+    if blocks_path is None:
+        blocks_path = config.get("process.kg.er.paths.names.blocks").replace(
+            "{iteration}", str(iteration)
+        )
+    if output_path is None:
+        output_path = config.get("process.kg.er.paths.names.matches").replace(
+            "{iteration}", str(iteration)
+        )
 
     # Parse size range if provided
     min_size = None
