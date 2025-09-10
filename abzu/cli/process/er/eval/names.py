@@ -3,7 +3,6 @@
 import click
 
 from abzu.config import config
-from abzu.spark.er_eval import evaluate_er_matches
 
 
 @click.command(context_settings={"show_default": True})
@@ -49,6 +48,8 @@ def names(
     local_mode: bool,
 ) -> None:
     """Evaluate name similarity-based entity resolution matches."""
+    # Import heavy Spark module only when command is executed
+    from abzu.spark.er_eval import evaluate_er_matches
 
     evaluate_er_matches(
         matches_path=matches_path,

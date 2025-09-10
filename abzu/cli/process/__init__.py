@@ -2,16 +2,38 @@
 
 import click
 
-from abzu.cli.process.articles import articles
-from abzu.cli.process.er import er
-from abzu.cli.process.kg import kg
-from abzu.cli.process.rss import rss
-from abzu.logs import get_logger
 
-logger = get_logger(__name__)
+# Lazy loading group that only imports subcommands when needed
+class LazyGroup(click.Group):
+    """A Click group that loads subcommands lazily."""
+
+    def __init__(self, *args, lazy_subcommands=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.lazy_subcommands = lazy_subcommands or {}
+
+    def list_commands(self, ctx):
+        return sorted(self.lazy_subcommands.keys())
+
+    def get_command(self, ctx, name):
+        if name in self.lazy_subcommands:
+            # Import the subcommand module only when accessed
+            import_path = self.lazy_subcommands[name]
+            module_name, attr_name = import_path.rsplit(":", 1)
+            module = __import__(module_name, fromlist=[attr_name])
+            return getattr(module, attr_name)
+        return None
 
 
-@click.group(invoke_without_command=True)
+@click.command(
+    cls=LazyGroup,
+    lazy_subcommands={
+        "articles": "abzu.cli.process.articles:articles",
+        "er": "abzu.cli.process.er:er",
+        "kg": "abzu.cli.process.kg:kg",
+        "rss": "abzu.cli.process.rss:rss",
+    },
+    invoke_without_command=True,
+)
 @click.option(
     "--all",
     is_flag=True,
@@ -21,6 +43,17 @@ logger = get_logger(__name__)
 def process(ctx, all):
     """Process data for knowledge extraction."""
     if all:
+        # Import logger only when needed
+        from abzu.logs import get_logger
+
+        logger = get_logger(__name__)
+
+        # Import subcommands only when --all is used
+        from abzu.cli.process.articles import articles
+        from abzu.cli.process.er import er
+        from abzu.cli.process.kg import kg
+        from abzu.cli.process.rss import rss
+
         logger.info(
             "Starting full processing pipeline: articles -> rss -> kg raw -> er block -> er match"
         )
@@ -62,9 +95,3 @@ def process(ctx, all):
         return results
     elif ctx.invoked_subcommand is None:
         click.echo(ctx.get_help())
-
-
-process.add_command(articles)
-process.add_command(er)
-process.add_command(kg)
-process.add_command(rss)

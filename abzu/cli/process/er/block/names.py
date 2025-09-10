@@ -3,7 +3,6 @@
 import click
 
 from abzu.config import config
-from abzu.spark.er_block import build_blocks
 
 
 @click.command(context_settings={"show_default": True})
@@ -49,6 +48,9 @@ def names(
     local_mode: bool,
 ) -> None:
     """Build name similarity-based blocks for entity resolution."""
+    # Import heavy Spark module only when command is executed
+    from abzu.spark.er_block import build_blocks
+
     # Handle iteration-based paths
     if iteration > 1:
         # For later iterations, use previous iteration's resolved companies

@@ -4,10 +4,6 @@ import sys
 
 import click
 
-from abzu.logs import get_logger
-
-logger = get_logger(__name__)
-
 
 class LazyGroup(click.Group):
     """A Click group that loads subcommands lazily."""

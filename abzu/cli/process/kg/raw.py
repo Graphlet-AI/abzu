@@ -3,7 +3,6 @@
 import click
 
 from abzu.config import config
-from abzu.kg.processor import process_raw_kg
 
 
 @click.command(context_settings={"show_default": True})
@@ -27,6 +26,8 @@ from abzu.kg.processor import process_raw_kg
 )
 def raw(input_file, output_dir):
     """Extract raw knowledge graph from processed articles."""
+    # Import heavy module only when command is executed
+    from abzu.kg.processor import process_raw_kg
 
     return process_raw_kg(
         input_file=list(input_file),

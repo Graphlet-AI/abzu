@@ -3,7 +3,6 @@
 import click
 
 from abzu.config import config
-from abzu.kg.processor import process_refine_kg
 
 
 @click.command(context_settings={"show_default": True})
@@ -25,6 +24,8 @@ from abzu.kg.processor import process_refine_kg
 )
 def refine(input_dir, output_dir):
     """Refine knowledge graph by creating bidirectional relationships."""
+    # Import heavy module only when command is executed
+    from abzu.kg.processor import process_refine_kg
 
     return process_refine_kg(
         input_dir=input_dir,
