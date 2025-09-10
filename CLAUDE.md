@@ -46,12 +46,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - **api/** - External API integrations (SEC, FinancialDatasets)
   - **articles/** - Article processing logic
   - **chat/** - Discord bot functionality
-  - **cli/** - Click-based CLI commands (no business logic here)
+  - **cli/** - Click-based CLI commands (no business logic here). See @markdown/COMMANDS.md and @markdown/OPTIMIZATION_SUMMARY.md
   - **crawl/** - Web crawlers (Scrapy-based)
   - **dump/** - Data export utilities
   - **kg/** - Knowledge graph processing (Spark/GraphFrames)
   - **reddit/** - Reddit data fetching
-  - **spark/** - PySpark data processing utilities
+  - **spark/** - PySpark data processing utilities. See @abzu/spark/README.md and @markdown/UDTF.md
   - **workflows/** - Dapr workflow definitions
 - **baml_src/** - BAML templates for LLM extraction
 - **data/** - Default data storage directory
@@ -179,7 +179,7 @@ logger.error(f"Failed to process: {error}")
 
 Use the following style guide [README.md](abzu/spark/README.md) for Spark development: @abzu/spark/README.md
 
-For PySpark UDTF (User-Defined Table Functions) usage, refer to the [UDTF Guide](abzu/spark/UDTF.md): @abzu/spark/UDTF.md
+For PySpark UDTF (User-Defined Table Functions) usage, refer to the [UDTF Guide](markdown/UDTF.md): @markdown/UDTF.md
 
 In addition, when writing PySpark code:
 
