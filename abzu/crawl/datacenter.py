@@ -449,6 +449,7 @@ def crawl_datacenter(
     url: Optional[str] = None,
     output_path: str = config.get("crawl.datacenter.output"),
     pages: int = 10,
+    batch_size: int = 10,
 ) -> int:
     """Crawl articles from DataCenter Dynamics website using Playwright to bypass anti-bot protection.
 
@@ -456,6 +457,7 @@ def crawl_datacenter(
         url: Optional specific URL to crawl (ignored for Playwright version)
         output_path: Path to save crawled articles
         pages: Number of archive pages to crawl
+        batch_size: Number of pages to process concurrently (currently uses Playwright sequentially)
 
     Returns:
         Number of articles processed

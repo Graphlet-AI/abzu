@@ -310,6 +310,7 @@ def crawl_rss(
     cookie: Optional[str] = None,
     user_agent: str = DEFAULT_USER_AGENT,
     bypass_cf: bool = False,
+    batch_size: int = 1,
 ) -> int:
     """Crawl multiple RSS feeds defined in configuration or file.
 
@@ -324,12 +325,15 @@ def crawl_rss(
         Optional raw cookie header string used when fetching the feeds.
     user_agent:
         User agent string for HTTP requests.
+    batch_size:
+        Number of feeds to crawl concurrently (for API consistency).
 
     Returns
     -------
     int
         ``0`` on success, ``1`` on failure.
     """
+    # Note: batch_size is accepted for API consistency but RSS uses async internally
     return asyncio.run(_crawl_rss_async(feeds_file, output_dir, cookie, user_agent, bypass_cf))
 
 

@@ -29,7 +29,14 @@ from abzu.config import config
     ),
     help="User-Agent header",
 )
-def rss(feeds_file, output_dir, cookie, user_agent):
+@click.option(
+    "-b",
+    "--batch-size",
+    type=int,
+    default=1,
+    help="Number of feeds to crawl concurrently",
+)
+def rss(feeds_file, output_dir, cookie, user_agent, batch_size):
     """Crawl RSS feeds from configuration or a feeds file.
 
     By default, uses feeds defined in config.yml under crawl.rss.feeds.
@@ -42,4 +49,5 @@ def rss(feeds_file, output_dir, cookie, user_agent):
         output_dir=output_dir,
         cookie=cookie,
         user_agent=user_agent,
+        batch_size=batch_size,
     )

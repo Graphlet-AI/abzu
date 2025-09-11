@@ -49,6 +49,8 @@ def crawl_theinformation(
     cookie: Optional[str] = None,
     user_agent: str = DEFAULT_USER_AGENT,
     bypass_cf: bool = False,
+    batch_size: int = 1,
 ) -> int:
     """Crawl TheInformation RSS feed and save articles."""
+    # Note: batch_size is accepted for API consistency but TheInformation uses async internally
     return asyncio.run(_crawl_theinformation_async(output_file, cookie, user_agent, bypass_cf))

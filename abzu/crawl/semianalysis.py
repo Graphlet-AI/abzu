@@ -43,8 +43,7 @@ def crawl_semianalysis(
     url: Optional[str] = None,
     output_path: str = config.get("crawl.semianalysis.output"),
     pages: int = 24,
-    batch_size: int = 1,
-    concurrent_requests: int = 1,
+    batch_size: int = 10,
 ) -> int:
     """Crawl articles from SemiAnalysis website in batch mode.
 
@@ -52,8 +51,7 @@ def crawl_semianalysis(
         url: Optional specific URL to crawl
         output_path: Path to save crawled articles
         pages: Number of archive pages to crawl
-        batch_size: Number of URLs to process in each batch
-        concurrent_requests: Number of concurrent requests per spider
+        batch_size: Number of concurrent requests (default: 10)
 
     Returns:
         0 on success, 1 on failure
@@ -65,13 +63,13 @@ def crawl_semianalysis(
         url=url,
         pages=pages,
         batch_size=batch_size,
-        concurrent_requests=concurrent_requests,
+        concurrent_requests=batch_size,  # Use batch_size for concurrent requests
     )
 
 
-def main(batch_size: int = 1, concurrent_requests: int = 1):
+def main(batch_size: int = 10):
     """Run crawlers in batches."""
-    return crawl_semianalysis(batch_size=batch_size, concurrent_requests=concurrent_requests)
+    return crawl_semianalysis(batch_size=batch_size)
 
 
 if __name__ == "__main__":

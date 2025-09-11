@@ -31,7 +31,14 @@ from abzu.config import config
     is_flag=True,
     help="Use cloudscraper to bypass Cloudflare protection",
 )
-def theinformation(output_file, cookie, user_agent, bypass_cf):
+@click.option(
+    "-b",
+    "--batch-size",
+    type=int,
+    default=1,
+    help="Number of pages to crawl concurrently",
+)
+def theinformation(output_file, cookie, user_agent, bypass_cf, batch_size):
     """Crawl TheInformation RSS feed."""
     from abzu.crawl.information import crawl_theinformation
 
@@ -40,4 +47,5 @@ def theinformation(output_file, cookie, user_agent, bypass_cf):
         cookie=cookie,
         user_agent=user_agent,
         bypass_cf=bypass_cf,
+        batch_size=batch_size,
     )

@@ -21,17 +21,10 @@ from abzu.config import config
     "-b",
     "--batch-size",
     type=int,
-    default=1,
-    help="Number of pages to crawl sequentially (default: 1)",
+    default=10,
+    help="Number of pages to crawl concurrently (default: 10)",
 )
-@click.option(
-    "-c",
-    "--concurrent-requests",
-    type=int,
-    default=1,
-    help="Number of concurrent requests per spider (default: 1)",
-)
-def semianalysis(url, output_path, pages, batch_size, concurrent_requests):
+def semianalysis(url, output_path, pages, batch_size):
     """Crawl SemiAnalysis website."""
     from abzu.crawl.semianalysis import crawl_semianalysis
 
@@ -40,5 +33,4 @@ def semianalysis(url, output_path, pages, batch_size, concurrent_requests):
         output_path=output_path,
         pages=pages,
         batch_size=batch_size,
-        concurrent_requests=concurrent_requests,
     )

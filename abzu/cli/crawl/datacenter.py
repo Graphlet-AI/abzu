@@ -17,7 +17,14 @@ from abzu.config import config
     help="Output JSONL file path",
 )
 @click.option("--pages", type=int, default=300, help="Number of pages to crawl (default: 300)")
-def datacenter(url, output_path, pages):
+@click.option(
+    "-b",
+    "--batch-size",
+    type=int,
+    default=10,
+    help="Number of pages to crawl concurrently (default: 10)",
+)
+def datacenter(url, output_path, pages, batch_size):
     """Crawl DataCenter Dynamics website."""
     from abzu.crawl.datacenter import crawl_datacenter
 
@@ -25,4 +32,5 @@ def datacenter(url, output_path, pages):
         url=url,
         output_path=output_path,
         pages=pages,
+        batch_size=batch_size,
     )

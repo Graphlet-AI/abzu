@@ -5,12 +5,13 @@ from typing import Optional
 from abzu.crawl.dcbyte.extract_html import main as extract_mhtml
 
 
-def crawl_dcbyte(output_path: Optional[str] = None, pages: int = 10) -> int:
+def crawl_dcbyte(output_path: Optional[str] = None, pages: int = 10, batch_size: int = 1) -> int:
     """Crawl DC Byte blog articles.
 
     Args:
         output_path: Path to save crawled articles (defaults to config)
         pages: Number of pages to load (for compatibility - not used in MHTML extraction)
+        batch_size: Number of pages to crawl concurrently (for API consistency)
 
     Returns:
         Number of articles processed

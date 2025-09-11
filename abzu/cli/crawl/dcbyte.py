@@ -19,8 +19,15 @@ from abzu.config import config
     default=10,
     help="Number of pages to load (each 'Load More' click is a page)",
 )
-def dcbyte(output_path, pages):
+@click.option(
+    "-b",
+    "--batch-size",
+    type=int,
+    default=1,
+    help="Number of pages to crawl concurrently",
+)
+def dcbyte(output_path, pages, batch_size):
     """Crawl DC Byte blog articles using Playwright."""
     from abzu.crawl.dcbyte import crawl_dcbyte
 
-    return crawl_dcbyte(output_path=output_path, pages=pages)
+    return crawl_dcbyte(output_path=output_path, pages=pages, batch_size=batch_size)
