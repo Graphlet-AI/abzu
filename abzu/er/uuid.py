@@ -110,6 +110,13 @@ async def process_block_with_uuid_mapping(
     block_key_type = block["block_key_type"]
     companies_data = block["companies"]
 
+    # Log the input companies and their source_uuids
+    logger.debug(f"Processing block {block_key} with {len(companies_data)} companies")
+    for i, comp in enumerate(companies_data):
+        logger.debug(
+            f"  Company {i}: uuid={comp.get('uuid')}, source_uuids={comp.get('source_uuids')}"
+        )
+
     # Skip blocks with only one company
     if len(companies_data) <= 1:
         # For single companies, ensure source_uuids contains the UUID
@@ -158,7 +165,8 @@ async def process_block_with_uuid_mapping(
                 and isinstance(comp_copy["source_uuids"], list)
                 and len(comp_copy["source_uuids"]) > 0
             ):
-                source_ids = mapper.map_uuids_to_ids(comp_copy["source_uuids"]) or []
+                # Map each source_uuid to an integer ID
+                source_ids = [mapper.add_uuid(uuid) for uuid in comp_copy["source_uuids"] if uuid]
 
             # Create Company object
             company = Company(
@@ -176,7 +184,7 @@ async def process_block_with_uuid_mapping(
                 founded_year=comp_copy.get("founded_year"),
                 ceo=comp_copy.get("ceo"),
                 linkedin_url=comp_copy.get("linkedin_url"),
-                source_ids=source_ids,
+                source_ids=source_ids,  # Send the mapped source_ids to BAML
                 source_uuids=[],
             )
             companies.append(company)
@@ -206,6 +214,38 @@ async def process_block_with_uuid_mapping(
         resolved_companies = []
         for company in result.companies:
 
+            # Map the source_ids from BAML back to UUIDs
+            # BAML should have accumulated all source_ids as per its prompt
+            source_uuids_list = mapper.map_ids_to_uuids(company.source_ids) or []
+
+            # BAML sometimes doesn't include the company IDs themselves in source_ids,
+            # only the historical source_ids. We need to add the company UUIDs.
+            # Check which companies were merged by looking at the source_ids
+            source_uuids_set = set(source_uuids_list) if source_uuids_list else set()
+
+            # Build a set of all IDs in the result for quick lookup
+            result_ids = set(company.source_ids) if company.source_ids else set()
+
+            # Add company UUIDs for companies that were merged
+            for comp_data in companies_data:
+                comp_uuid = comp_data.get("uuid")
+                comp_id = mapper.uuid_to_int.get(comp_uuid)
+
+                if comp_id:
+                    # Check if this company's ID is in the result
+                    if comp_id in result_ids:
+                        source_uuids_set.add(comp_uuid)
+                    # Also check if any of its historical source_ids are in the result
+                    elif "source_uuids" in comp_data and comp_data["source_uuids"]:
+                        for hist_uuid in comp_data["source_uuids"]:
+                            hist_id = mapper.uuid_to_int.get(hist_uuid)
+                            if hist_id and hist_id in result_ids:
+                                # This company was merged, add its UUID
+                                source_uuids_set.add(comp_uuid)
+                                break
+
+            source_uuids_final = sorted(list(source_uuids_set)) if source_uuids_set else None
+
             resolved_dict = {
                 "id": company.id,
                 "uuid": company.uuid,
@@ -222,21 +262,10 @@ async def process_block_with_uuid_mapping(
                 "ceo": company.ceo,
                 "linkedin_url": company.linkedin_url,
                 "source_ids": company.source_ids,
-                "source_uuids": mapper.map_ids_to_uuids(company.source_ids),
+                "source_uuids": source_uuids_final,
             }
 
-            # Log the mapping for debugging
-            if company.source_ids:
-                logger.debug(
-                    f"Mapped source_ids {company.source_ids} to source_uuids {resolved_dict['source_uuids']}"
-                )
-
             resolved_companies.append(resolved_dict)
-
-        logger.info(
-            f"Resolved block {block_key}: {len(companies_data)} -> {len(resolved_companies)} companies "
-            f"(UUID mapping restored)"
-        )
 
         return {
             "block_key": block_key,

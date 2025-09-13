@@ -60,11 +60,30 @@ def evaluate_er_matches(
     previous_iteration_df: Optional[DataFrame] = None
     if iteration > 1:
         prev_iteration = iteration - 1
-        prev_iteration_path = output_path.format(iteration=prev_iteration, format="parquet")
-        logger.info(
-            f"Loading previous iteration ({prev_iteration}) results from {prev_iteration_path}"
-        )
-        previous_iteration_df = spark.read.parquet(prev_iteration_path)
+        # Check if output_path has {iteration} placeholder
+        if "{iteration}" in output_path:
+            prev_iteration_path = output_path.format(iteration=prev_iteration, format="parquet")
+        else:
+            # If no iteration placeholder, construct path based on current path
+            # Replace current iteration with previous iteration in the path
+            import re
+
+            prev_iteration_path = re.sub(
+                f"iteration_{iteration}",
+                f"iteration_{prev_iteration}",
+                output_path.format(format="parquet"),
+            )
+
+        # Check if the previous iteration output exists
+        if os.path.exists(prev_iteration_path):
+            logger.info(
+                f"Loading previous iteration ({prev_iteration}) results from {prev_iteration_path}"
+            )
+            previous_iteration_df = spark.read.parquet(prev_iteration_path)
+        else:
+            logger.info(
+                f"Previous iteration ({prev_iteration}) output not found at {prev_iteration_path}, skipping comparison"
+            )
 
     total_blocks = matches_df.count()
     logger.info(f"Loaded {total_blocks:,} blocks from matches")
@@ -225,23 +244,10 @@ def evaluate_er_matches(
     logger.info(f"Valid source UUIDs: {valid_source_uuid_count:,}")
     logger.info(f"Invalid source UUIDs: {invalid_source_uuid_count:,} ({error_percentage:.2f}%)")
 
-    # Get list of valid source_uuids per resolved company
-    valid_source_uuids_per_company = valid_source_uuids.groupBy("resolved_uuid").agg(
-        F.collect_list("source_uuid").alias("valid_source_uuids")
-    )
-
-    # Update resolved companies with only valid source_uuids
-    cleaned_resolved_companies = (
-        resolved_companies_df.join(
-            valid_source_uuids_per_company,
-            resolved_companies_df.uuid == valid_source_uuids_per_company.resolved_uuid,
-            how="left",
-        )
-        .drop("source_uuids")
-        .drop("resolved_uuid")
-        .select("*", F.coalesce("valid_source_uuids", F.array()).alias("source_uuids"))
-        .drop("valid_source_uuids")
-    )
+    # Keep ALL source_uuids, not just validated ones
+    # This is important because source_uuids may contain historical references
+    # that aren't in our current dataset but are still valid
+    cleaned_resolved_companies = resolved_companies_df
 
     # Save companies_resolved files - both Parquet and JSON
     # Format the output path with iteration and format
@@ -397,4 +403,5 @@ def evaluate_er_matches(
     logger.info(f"  - {metrics_json_path}")
     logger.info("=" * 60)
 
-    spark.stop()
+    # Don't stop the SparkSession - let the caller manage its lifecycle
+    # This is important for tests and when the function is called multiple times

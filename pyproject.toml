@@ -135,3 +135,4 @@ extend-ignore = ["E203", "E266", "E501", "W503", "C901"]
 [tool.pytest.ini_options]
 asyncio_mode = "strict"
 asyncio_default_fixture_loop_scope = "function"
+include = ["tests"]
