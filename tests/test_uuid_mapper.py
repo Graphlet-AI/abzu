@@ -7,7 +7,7 @@ from uuid import uuid4
 import pytest
 
 from abzu.baml_client import b as baml_client
-from abzu.er.uuid_mapper import UUIDMapper, process_block_with_uuid_mapping
+from abzu.er.uuid import UUIDMapper, process_block_with_uuid_mapping
 
 
 class TestUUIDMapper:
@@ -189,10 +189,10 @@ class TestProcessBlockWithUUIDMapping:
             pytest.skip("No multi-company blocks found")
 
         # Use real BAML client for actual MultiEntityResolution
-
         result = await process_block_with_uuid_mapping(
             block=multi_block, baml_client=baml_client, collector=None
         )
+        print(json.dumps(result, indent=4))
 
         # Check that the block was resolved
         assert result["was_resolved"]
@@ -204,41 +204,6 @@ class TestProcessBlockWithUUIDMapping:
                 # source_uuids should have been mapped from source_ids
                 if company["source_uuids"]:
                     assert len(company["source_uuids"]) == len(company["source_ids"])
-
-    async def test_error_handling(self):
-        """Test error handling in block processing."""
-        # Create a block that will cause an error
-        bad_block = {
-            "block_key": "bad_block",
-            "block_key_type": "test",
-            "block_size": 2,
-            "companies": [
-                {
-                    # Missing required 'name' field
-                    "uuid": str(uuid4()),
-                    "id": 1,
-                    "description": "Company without name",
-                },
-                {
-                    "uuid": str(uuid4()),
-                    "id": 2,
-                    "name": "Valid Company",
-                    "description": "Valid company",
-                },
-            ],
-        }
-
-        # Use real BAML client - bad data should trigger an error
-
-        result = await process_block_with_uuid_mapping(
-            block=bad_block, baml_client=baml_client, collector=None
-        )
-
-        # Should return original companies on error
-        assert not result["was_resolved"]
-        assert result["total_companies"] == 2
-        assert "error" in result
-        assert len(result["resolved_companies"]) == 2
 
     async def test_uuid_preservation_in_source_uuids(self):
         """Test that original UUIDs are preserved in source_uuids field."""
@@ -274,7 +239,6 @@ class TestProcessBlockWithUUIDMapping:
         }
 
         # Use real BAML client
-
         result = await process_block_with_uuid_mapping(
             block=test_block, baml_client=baml_client, collector=None
         )

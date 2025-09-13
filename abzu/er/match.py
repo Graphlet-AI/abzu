@@ -13,7 +13,7 @@ from tqdm import tqdm
 
 from abzu.baml_client import b as baml_client
 from abzu.config import config
-from abzu.er.uuid_mapper import process_block_with_uuid_mapping
+from abzu.er.uuid import process_block_with_uuid_mapping
 from abzu.logs import get_logger
 from abzu.utils import save_jsonl
 

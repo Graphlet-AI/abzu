@@ -1,6 +1,7 @@
 """UUID to integer ID mapping wrapper for MultiEntityResolution API."""
 
 import copy
+import sys
 from typing import Any, Optional
 
 from abzu.baml_client.async_client import BamlAsyncClient
@@ -14,7 +15,7 @@ logger = get_logger(__name__)
 class UUIDMapper:
     """Maps UUIDs to integer IDs for BAML processing and back."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the UUID mapper."""
         self.uuid_to_int: dict[str, int] = {}
         self.int_to_uuid: dict[int, str] = {}
@@ -101,6 +102,7 @@ async def process_block_with_uuid_mapping(
         if len(companies_data) == 1:
             company = companies_data[0]
             if "uuid" in company and company["uuid"]:
+                # Map the record's uuid into the source_uuids field so we can do a simple join on the edges
                 if "source_uuids" not in company or not company["source_uuids"]:
                     company["source_uuids"] = [company["uuid"]]
                 elif (
@@ -125,46 +127,42 @@ async def process_block_with_uuid_mapping(
 
         # Convert companies to Company objects with integer IDs
         companies = []
-        original_uuid_mapping = {}  # Track original UUID for each company
 
         for comp_data in companies_data:
             # Deep copy to avoid modifying original data
             comp_copy = copy.deepcopy(comp_data)
 
-            # Map UUID to integer ID if present
-            original_uuid = comp_copy.get("uuid")
-            if original_uuid:
-                int_id = mapper.add_uuid(original_uuid)
-                original_uuid_mapping[int_id] = original_uuid
-                # Replace UUID with integer ID for BAML processing
-                comp_copy["id"] = int_id
-                # Clear UUID and source_uuids for BAML - it works better with integers
-                comp_copy["uuid"] = None
-                comp_copy["source_uuids"] = None
-            else:
-                # If no UUID, ensure we have an integer ID
-                if "id" not in comp_copy or comp_copy["id"] is None:
-                    comp_copy["id"] = mapper.next_id
-                    mapper.next_id += 1
+            # Replace UUIDs with integer IDs for BAML processing
+            comp_copy["id"] = mapper.add_uuid(comp_copy.get("uuid"))
+            comp_copy["uuid"] = None
+            comp_copy["source_ids"] = None
+
+            # Map old source_uuids to source_ids
+            source_ids = []
+            source_uuids = comp_copy.get("source_uuids", [])
+            for uuid in source_uuids:
+                if uuid:
+                    int_id = mapper.add_uuid(uuid)
+                    source_ids.append(int_id)
 
             # Create Company object
             company = Company(
                 id=comp_copy["id"],  # Use the integer ID
                 uuid=None,  # Clear UUID for BAML
                 name=comp_copy["name"],
-                description=comp_copy.get("description", ""),
-                ceo=comp_copy.get("ceo"),
                 cik=comp_copy.get("cik"),
-                employees=comp_copy.get("employees"),
-                founded_year=comp_copy.get("founded_year"),
+                ticker=comp_copy.get("ticker"),
+                description=comp_copy.get("description", ""),
+                website_url=comp_copy.get("website_url"),
                 headquarters_location=comp_copy.get("headquarters_location"),
                 jurisdiction=comp_copy.get("jurisdiction"),
-                linkedin_url=comp_copy.get("linkedin_url"),
                 revenue_usd=comp_copy.get("revenue_usd"),
-                source_ids=comp_copy.get("source_ids"),
-                source_uuids=None,  # Clear for BAML
-                ticker=comp_copy.get("ticker"),
-                website_url=comp_copy.get("website_url"),
+                employees=comp_copy.get("employees"),
+                founded_year=comp_copy.get("founded_year"),
+                ceo=comp_copy.get("ceo"),
+                linkedin_url=comp_copy.get("linkedin_url"),
+                source_ids=source_ids,
+                source_uuids=[],
             )
             companies.append(company)
 
@@ -192,28 +190,24 @@ async def process_block_with_uuid_mapping(
         # Convert resolved companies back to dictionaries with UUID mapping restored
         resolved_companies = []
         for company in result.companies:
+
             resolved_dict = {
-                "uuid": company.uuid,  # Will be assigned a new UUID later
-                "block_key": block_key,
-                "block_key_type": block_key_type,
-                "url": None,
+                "id": company.id,
+                "uuid": company.uuid,
                 "name": company.name,
-                "description": company.description,
-                "ceo": company.ceo,
                 "cik": company.cik,
+                "ticker": company.ticker.__dict__ if company.ticker else None,
+                "description": company.description,
+                "website_url": company.website_url,
+                "headquarters_location": company.headquarters_location,
+                "jurisdiction": company.jurisdiction,
+                "revenue_usd": company.revenue_usd,
                 "employees": company.employees,
                 "founded_year": company.founded_year,
-                "headquarters_location": company.headquarters_location,
-                "id": company.id,
-                "jurisdiction": company.jurisdiction,
+                "ceo": company.ceo,
                 "linkedin_url": company.linkedin_url,
-                "posted_at": None,
-                "revenue_usd": company.revenue_usd,
                 "source_ids": company.source_ids,
-                # Map source_ids back to source_uuids
                 "source_uuids": mapper.map_ids_to_uuids(company.source_ids),
-                "ticker": company.ticker.__dict__ if company.ticker else None,
-                "website_url": company.website_url,
             }
 
             # Log the mapping for debugging
@@ -223,6 +217,7 @@ async def process_block_with_uuid_mapping(
                 )
 
             resolved_companies.append(resolved_dict)
+        print(resolved_companies)
 
         logger.info(
             f"Resolved block {block_key}: {len(companies_data)} -> {len(resolved_companies)} companies "
@@ -241,6 +236,7 @@ async def process_block_with_uuid_mapping(
 
     except Exception as e:
         logger.error(f"Error processing block {block_key}: {e}")
+        e.with_traceback(sys.exc_info()[2])
         # Return original companies unchanged on error
         return {
             "block_key": block_key,
