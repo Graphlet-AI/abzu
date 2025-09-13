@@ -85,7 +85,7 @@ enum Exchange {
 }
 
 class Ticker {
-  id int
+  id int?
   @description("Unique among all objects.")
 
   uuid string?
