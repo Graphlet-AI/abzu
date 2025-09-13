@@ -12,6 +12,11 @@ from abzu.config import config
 from abzu.er.acronyms import get_acronyms
 from abzu.logs import get_logger
 from abzu.spark.config import get_spark_session
+from abzu.spark.schemas import (
+    build_udtf_return_type,
+    get_company_fields_without_blocks,
+    normalize_company_dataframe,
+)
 
 logger = get_logger(__name__)
 
@@ -44,6 +49,7 @@ def build_blocks(
     input_path: str = config.get("process.kg.er.paths.input"),
     output_path: str = config.get("process.kg.er.paths.names.blocks_dir"),
     local_mode: Optional[bool] = None,
+    stop_spark: bool = True,
 ) -> None:
     """
     Analyze company blocking strategies by computing size distributions.
@@ -67,10 +73,14 @@ def build_blocks(
 
     # Load companies (always in regular format after UUID resolution)
     logger.info(f"Loading companies from {input_path}")
-    companies_df: DataFrame = spark.read.parquet(input_path)
+    companies_df_raw: DataFrame = spark.read.parquet(input_path)
+
+    # Normalize schema to ensure consistency across iterations
+    logger.info("Normalizing company schema to match BAML definition...")
+    companies_df = normalize_company_dataframe(companies_df_raw, preserve_extra_fields=False)
 
     total_companies = companies_df.count()
-    logger.info(f"Loaded {total_companies:,} companies")
+    logger.info(f"Loaded and normalized {total_companies:,} companies")
 
     # Show sample of the data
     if logger.isEnabledFor(logging.DEBUG):
@@ -262,7 +272,11 @@ def build_blocks(
     logger.info("Grouping complete company records by blocking keys...")
 
     # Join filtered companies back with full company data
-    full_companies_df = spark.read.parquet(input_path)
+    full_companies_df_raw = spark.read.parquet(input_path)
+    # Normalize again to ensure consistency
+    full_companies_df = normalize_company_dataframe(
+        full_companies_df_raw, preserve_extra_fields=False
+    )
 
     # Identify overlapping block_keys between first_word and acronym strategies
     logger.info("Identifying overlapping block_keys for merging...")
@@ -290,19 +304,22 @@ def build_blocks(
         .join(full_companies_df, "uuid", "inner")
     )
 
-    # Drop block_key and block_key_type if they exist in full_companies_df
-    if "block_key" in full_companies_df.columns:
-        combined_blocks_temp = combined_blocks_temp.drop(full_companies_df.block_key)
-    if "block_key_type" in full_companies_df.columns:
-        combined_blocks_temp = combined_blocks_temp.drop(full_companies_df.block_key_type)
+    # Get company fields without block-related fields
+    company_fields = get_company_fields_without_blocks()
+
+    # Create struct with all company fields, using null for missing fields
+    # This ensures the struct matches the UDTF return type schema exactly
+    company_struct = F.struct(
+        *[
+            F.col(f) if f in combined_blocks_temp.columns else F.lit(None).alias(f)
+            for f in company_fields
+        ]
+    )
 
     combined_blocks = (
-        combined_blocks_temp.withColumn(
-            "block_key_type", F.lit("combined")
-        )  # Set block_key_type before grouping
-        .groupBy("block_key")
+        combined_blocks_temp.groupBy("block_key")
         .agg(
-            F.collect_list(F.struct("*")).alias("companies"),
+            F.collect_list(company_struct).alias("companies"),
             F.countDistinct("uuid").alias("block_size"),
         )
         .withColumn("block_key_type", F.lit("combined"))
@@ -325,19 +342,14 @@ def build_blocks(
         .join(full_companies_df, "uuid", "inner")
     )
 
-    # Drop block_key and block_key_type if they exist in full_companies_df
-    if "block_key" in full_companies_df.columns:
-        first_word_blocks_temp = first_word_blocks_temp.drop(full_companies_df.block_key)
-    if "block_key_type" in full_companies_df.columns:
-        first_word_blocks_temp = first_word_blocks_temp.drop(full_companies_df.block_key_type)
+    # Create struct with only company fields (reuse from above)
+    company_struct_first = F.struct(
+        *[F.col(f) for f in company_fields if f in first_word_blocks_temp.columns]
+    )
 
-    first_word_only_blocks = (
-        first_word_blocks_temp
-        # Now select with the new block_key and block_key_type from all_companies_with_blocks
-        .groupBy("block_key", "block_key_type").agg(
-            F.collect_list(F.struct("*")).alias("companies"),
-            F.countDistinct("uuid").alias("block_size"),
-        )
+    first_word_only_blocks = first_word_blocks_temp.groupBy("block_key", "block_key_type").agg(
+        F.collect_list(company_struct_first).alias("companies"),
+        F.countDistinct("uuid").alias("block_size"),
     )
 
     acronym_blocks_temp = (
@@ -349,19 +361,14 @@ def build_blocks(
         .join(full_companies_df, "uuid", "inner")
     )
 
-    # Drop block_key and block_key_type if they exist in full_companies_df
-    if "block_key" in full_companies_df.columns:
-        acronym_blocks_temp = acronym_blocks_temp.drop(full_companies_df.block_key)
-    if "block_key_type" in full_companies_df.columns:
-        acronym_blocks_temp = acronym_blocks_temp.drop(full_companies_df.block_key_type)
+    # Create struct with only company fields (reuse from above)
+    company_struct_acronym = F.struct(
+        *[F.col(f) for f in company_fields if f in acronym_blocks_temp.columns]
+    )
 
-    acronym_only_blocks = (
-        acronym_blocks_temp
-        # Now select with the new block_key and block_key_type from all_companies_with_blocks
-        .groupBy("block_key", "block_key_type").agg(
-            F.collect_list(F.struct("*")).alias("companies"),
-            F.countDistinct("uuid").alias("block_size"),
-        )
+    acronym_only_blocks = acronym_blocks_temp.groupBy("block_key", "block_key_type").agg(
+        F.collect_list(company_struct_acronym).alias("companies"),
+        F.countDistinct("uuid").alias("block_size"),
     )
 
     if logger.isEnabledFor(logging.DEBUG):
@@ -370,18 +377,11 @@ def build_blocks(
     # Split large blocks (> 50 companies) into smaller chunks
     logger.info(f"Splitting large blocks (> {MAX_BLOCK_SIZE} companies) into smaller chunks...")
 
-    @F.udtf(  # type: ignore
-        returnType=(
-            "block_key: string, block_key_type: string, "
-            "companies: array<struct<uuid:string,block_key:string,block_key_type:string,"
-            "url:string,name:string,description:string,ceo:string,cik:string,employees:long,"
-            "founded_year:long,headquarters_location:string,id:long,jurisdiction:string,linkedin_url:string,"
-            "posted_at:string,revenue_usd:long,source_ids:array<long>,source_uuids:array<string>,"
-            "ticker:struct<exchange:string,id:long,name:string,symbol:string,uuid:string>,"
-            "website_url:string>>, "
-            "block_size: long"
-        )
-    )
+    # Build the UDTF returnType dynamically from the Company model
+    udtf_return_type = build_udtf_return_type()
+    logger.debug(f"UDTF return type: {udtf_return_type}")
+
+    @F.udtf(returnType=udtf_return_type)  # type: ignore
     class SplitLargeBlocks:
         def eval(self, block_key: str, block_key_type: str, companies: list, block_size: int):
             if block_size <= MAX_BLOCK_SIZE:
@@ -546,7 +546,8 @@ def build_blocks(
 
     # Clean up
     companies_with_block_keys_df.unpersist()
-    spark.stop()
+    if stop_spark:
+        spark.stop()
 
 
 if __name__ == "__main__":
