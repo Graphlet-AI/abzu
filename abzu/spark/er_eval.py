@@ -257,6 +257,14 @@ def evaluate_er_matches(
     ).json(companies_resolved_json)
 
     # Create and save evaluation metrics - both Parquet and single JSON file
+    from pyspark.sql.types import (
+        DoubleType,
+        IntegerType,
+        LongType,
+        StructField,
+        StructType,
+    )
+
     metrics_data = [
         (
             iteration,
@@ -286,37 +294,43 @@ def evaluate_er_matches(
             error_percentage,
         )
     ]
-    metrics_schema = [
-        "iteration",
-        "total_blocks",
-        "total_original_companies",
-        "unique_original_companies",
-        "total_prev_iteration_companies",
-        "unique_prev_iteration_companies",
-        "total_resolved_companies",
-        "unique_resolved_companies",
-        "reduction_from_original_count",
-        "reduction_from_original_pct",
-        "reduction_from_prev_count",
-        "reduction_from_prev_pct",
-        "uuid_overlap_with_original_count",
-        "uuid_overlap_with_original_pct",
-        "uuid_overlap_with_prev_count",
-        "uuid_overlap_with_prev_pct",
-        "unique_source_uuids",
-        "tracked_original_uuids",
-        "original_coverage_pct",
-        "tracked_prev_uuids",
-        "prev_coverage_pct",
-        "total_source_uuid_refs",
-        "valid_source_uuid_count",
-        "invalid_source_uuid_count",
-        "source_uuid_error_pct",
-    ]
-    metrics_df = spark.createDataFrame(metrics_data, metrics_schema)
+
+    metrics_schema = StructType(
+        [
+            StructField("iteration", IntegerType(), False),
+            StructField("total_blocks", LongType(), False),
+            StructField("total_original_companies", LongType(), False),
+            StructField("unique_original_companies", LongType(), False),
+            StructField("total_prev_iteration_companies", LongType(), True),
+            StructField("unique_prev_iteration_companies", LongType(), True),
+            StructField("total_resolved_companies", LongType(), False),
+            StructField("unique_resolved_companies", LongType(), False),
+            StructField("reduction_from_original_count", LongType(), False),
+            StructField("reduction_from_original_pct", DoubleType(), False),
+            StructField("reduction_from_prev_count", LongType(), True),
+            StructField("reduction_from_prev_pct", DoubleType(), True),
+            StructField("uuid_overlap_with_original_count", LongType(), False),
+            StructField("uuid_overlap_with_original_pct", DoubleType(), False),
+            StructField("uuid_overlap_with_prev_count", LongType(), True),
+            StructField("uuid_overlap_with_prev_pct", DoubleType(), True),
+            StructField("unique_source_uuids", LongType(), False),
+            StructField("tracked_original_uuids", LongType(), False),
+            StructField("original_coverage_pct", DoubleType(), False),
+            StructField("tracked_prev_uuids", LongType(), True),
+            StructField("prev_coverage_pct", DoubleType(), True),
+            StructField("total_source_uuid_refs", LongType(), False),
+            StructField("valid_source_uuid_count", LongType(), False),
+            StructField("invalid_source_uuid_count", LongType(), False),
+            StructField("source_uuid_error_pct", DoubleType(), False),
+        ]
+    )
+
+    metrics_df = spark.createDataFrame(metrics_data, schema=metrics_schema)
 
     # Get the directory for metrics files
-    output_dir = os.path.dirname(output_path)
+    # Format the output_path first to get the actual directory with iteration number
+    formatted_output_path = output_path.format(iteration=iteration, format="parquet")
+    output_dir = os.path.dirname(formatted_output_path)
     metrics_parquet_path = os.path.join(output_dir, "er_evaluation_metrics.parquet")
     metrics_json_path = os.path.join(output_dir, "er_evaluation_metrics.json")
 
