@@ -11,8 +11,7 @@ import pandas as pd
 from baml_py import Collector
 from tqdm import tqdm
 
-from abzu.baml_client.async_client import BamlAsyncClient
-from abzu.baml_client.runtime import DoNotUseDirectlyCallManager
+from abzu.baml_client import b as baml_client
 from abzu.config import config
 from abzu.er.uuid_mapper import process_block_with_uuid_mapping
 from abzu.logs import get_logger
@@ -20,8 +19,7 @@ from abzu.utils import save_jsonl
 
 logger = get_logger(__name__)
 
-# Initialize the async client
-baml_client = BamlAsyncClient(DoNotUseDirectlyCallManager({}))
+# Initialize collector for BAML tracking
 collector = Collector()
 
 

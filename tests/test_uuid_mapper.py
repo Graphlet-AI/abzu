@@ -6,8 +6,7 @@ from uuid import uuid4
 
 import pytest
 
-from abzu.baml_client.async_client import BamlAsyncClient
-from abzu.baml_client.runtime import DoNotUseDirectlyCallManager
+from abzu.baml_client import b as baml_client
 from abzu.er.uuid_mapper import UUIDMapper, process_block_with_uuid_mapping
 
 
@@ -164,7 +163,6 @@ class TestProcessBlockWithUUIDMapping:
             pytest.skip("No single company blocks found")
 
         # Use real BAML client
-        baml_client = BamlAsyncClient(DoNotUseDirectlyCallManager({}))
 
         result = await process_block_with_uuid_mapping(
             block=single_block, baml_client=baml_client, collector=None
@@ -191,7 +189,6 @@ class TestProcessBlockWithUUIDMapping:
             pytest.skip("No multi-company blocks found")
 
         # Use real BAML client for actual MultiEntityResolution
-        baml_client = BamlAsyncClient(DoNotUseDirectlyCallManager({}))
 
         result = await process_block_with_uuid_mapping(
             block=multi_block, baml_client=baml_client, collector=None
@@ -232,7 +229,6 @@ class TestProcessBlockWithUUIDMapping:
         }
 
         # Use real BAML client - bad data should trigger an error
-        baml_client = BamlAsyncClient(DoNotUseDirectlyCallManager({}))
 
         result = await process_block_with_uuid_mapping(
             block=bad_block, baml_client=baml_client, collector=None
@@ -278,7 +274,6 @@ class TestProcessBlockWithUUIDMapping:
         }
 
         # Use real BAML client
-        baml_client = BamlAsyncClient(DoNotUseDirectlyCallManager({}))
 
         result = await process_block_with_uuid_mapping(
             block=test_block, baml_client=baml_client, collector=None
@@ -330,7 +325,6 @@ class TestProcessBlockWithUUIDMapping:
         }
 
         # Use real BAML client
-        baml_client = BamlAsyncClient(DoNotUseDirectlyCallManager({}))
 
         result = await process_block_with_uuid_mapping(
             block=test_block, baml_client=baml_client, collector=None
