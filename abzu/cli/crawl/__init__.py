@@ -19,11 +19,20 @@ logger = get_logger(__name__)
     is_flag=True,
     help="Crawl all sources: datacenter, semianalysis, theinformation, and rss",
 )
+@click.option(
+    "-b",
+    "--batch-size",
+    type=int,
+    default=10,
+    help="Number of pages/feeds to crawl concurrently (default: 10)",
+)
 @click.pass_context
-def crawl(ctx, all):
+def crawl(ctx, all, batch_size):
     """Crawl content from various sources."""
     if all:
-        logger.info("Starting crawl of all sources: datacenter, semianalysis, theinformation, rss")
+        logger.info(
+            f"Starting crawl of all sources with batch_size={batch_size}: datacenter, semianalysis, theinformation, rss"
+        )
 
         # Track results
         results = {}
@@ -37,9 +46,9 @@ def crawl(ctx, all):
         ]
 
         for source_name, command in sources:
-            logger.info(f"Crawling {source_name}...")
+            logger.info(f"Crawling {source_name} with batch_size={batch_size}...")
             try:
-                result = ctx.invoke(command)
+                result = ctx.invoke(command, batch_size=batch_size)
                 results[source_name] = result
                 logger.info(f"{source_name.title()} crawl completed: {result}")
             except Exception as e:

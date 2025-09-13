@@ -40,8 +40,9 @@ async def test_extract_simple_article_async():
 
     # Check company names
     company_names = [c.name for c in result.companies]
-    assert "AMD" in company_names
-    assert "NVIDIA" in company_names
+    # Check that AMD and NVIDIA are mentioned (may be full names)
+    assert any("AMD" in name or "Advanced Micro Devices" in name for name in company_names)
+    assert any("NVIDIA" in name for name in company_names)
 
 
 @pytest.mark.asyncio

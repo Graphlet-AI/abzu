@@ -8,6 +8,12 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
+# Skip the entire module if dapr extensions are not available
+try:
+    import dapr.ext.workflow  # noqa: F401
+except (ImportError, AttributeError):
+    pytest.skip("Dapr workflow extensions not available", allow_module_level=True)
+
 from abzu.cache import PipelineCache
 from abzu.workflows.cache_workflow import (
     check_cloud_cache,

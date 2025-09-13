@@ -5,6 +5,12 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+# Skip the entire module if dapr extensions are not available
+try:
+    import dapr.ext.workflow  # noqa: F401
+except (ImportError, AttributeError):
+    pytest.skip("Dapr workflow extensions not available", allow_module_level=True)
+
 # Remove the global pytest mark since we don't need async for these tests
 # pytestmark = pytest.mark.asyncio
 
