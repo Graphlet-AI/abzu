@@ -7841,22 +7841,26 @@ name = "sparkdantic"
 version = "2.6.0"
 description = "A pydantic -> spark schema library"
 optional = false
-python-versions = "<4.0.0,>3.9.1"
+python-versions = ">3.9.1,<4.0.0"
 groups = ["main"]
-files = [
-    {file = "sparkdantic-2.6.0-py3-none-any.whl", hash = "sha256:2e4756d65b0c13f290f7050c01b24eb8cf75b57c17692004752cf67671deeb37"},
-    {file = "sparkdantic-2.6.0.tar.gz", hash = "sha256:c285bd62ce61441607a2f105b32b36cbbde69250af4199f6389ff13e174a4563"},
-]
+files = []
+develop = false
 
 [package.dependencies]
-jmespath = ">=1.0.1,<2.0.0"
+jinja2 = ">=3.1.6"
+jmespath = "^1.0.1"
 packaging = ">=24.2,<26.0"
-pydantic = ">=2.1.1,<3.0.0"
-pyparsing = ">=3.1.1,<4.0.0"
-pyspark = {version = ">=3.3.0,<=4.0.0", optional = true, markers = "extra == \"pyspark\""}
+pydantic = "^2.1.1"
+pyparsing = "^3.1.1"
 
 [package.extras]
 pyspark = ["pyspark (>=3.3.0,<=4.0.0)"]
+
+[package.source]
+type = "git"
+url = "https://github.com/Graphlet-AI/sparkdantic.git"
+reference = "fix-forward-references"
+resolved_reference = "5ecd6e4d2d74448b57b0c006f332c6dc85d45b87"
 
 [[package]]
 name = "sqlalchemy"
@@ -9267,4 +9271,4 @@ cffi = ["cffi (>=1.17) ; python_version >= \"3.13\" and platform_python_implemen
 [metadata]
 lock-version = "2.1"
 python-versions = "3.12.*"
-content-hash = "276638c34c68fd76bd074726615c5d44625cc90aec629d95b209e3a0d2b11fb3"
+content-hash = "4492e106451cf5d5404e14e352091363cefb24dfd53a374c7259df728e24d279"
