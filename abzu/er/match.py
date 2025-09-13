@@ -13,8 +13,8 @@ from tqdm import tqdm
 
 from abzu.baml_client.async_client import BamlAsyncClient
 from abzu.baml_client.runtime import DoNotUseDirectlyCallManager
-from abzu.baml_client.types import Company, CompanyList
 from abzu.config import config
+from abzu.er.uuid_mapper import process_block_with_uuid_mapping
 from abzu.logs import get_logger
 from abzu.utils import save_jsonl
 
@@ -30,7 +30,7 @@ async def process_block(
     semaphore: asyncio.Semaphore,
 ) -> dict[str, Any]:
     """
-    Process a single block of companies using MultiEntityResolution.
+    Process a single block of companies using MultiEntityResolution with UUID mapping.
 
     Args:
         block: Dictionary containing block data with companies list
@@ -40,126 +40,21 @@ async def process_block(
         Dictionary with matched/resolved companies
     """
     async with semaphore:
-        block_key = block["block_key"]
-        block_key_type = block["block_key_type"]
-        companies_data = block["companies"]
+        # Use the UUID mapping wrapper to process the block
+        result = await process_block_with_uuid_mapping(
+            block=block,
+            baml_client=baml_client,
+            collector=collector,
+        )
 
-        # Skip blocks with only one company - return unchanged
-        if len(companies_data) <= 1:
-            return {
-                "block_key": block_key,
-                "block_key_type": block_key_type,
-                "resolved_companies": companies_data,
-                "total_companies": len(companies_data),
-                "was_resolved": False,
-            }
+        # If the block was resolved, generate new UUIDs for the resolved companies
+        if result.get("was_resolved") and "resolved_companies" in result:
+            for company in result["resolved_companies"]:
+                if "uuid" not in company or not company["uuid"]:
+                    company["uuid"] = str(uuid.uuid4())
+                    logger.debug(f"Generated new UUID for resolved company: {company['name']}")
 
-        try:
-            logger.info(f"Processing block '{block_key}' with {len(companies_data)} companies")
-
-            # Convert to Company objects
-            companies = []
-            for comp_data in companies_data:
-                # Create Company object - id, uuid, and name are required
-                company = Company(
-                    uuid=comp_data["uuid"],  # Required - will raise KeyError if missing
-                    name=comp_data["name"],  # Required - will raise KeyError if missing
-                    description=comp_data.get("description", ""),
-                    ceo=comp_data.get("ceo"),
-                    cik=comp_data.get("cik"),
-                    employees=comp_data.get("employees"),
-                    founded_year=comp_data.get("founded_year"),
-                    headquarters_location=comp_data.get("headquarters_location"),
-                    id=comp_data["id"],  # Required - will raise KeyError if missing
-                    jurisdiction=comp_data.get("jurisdiction"),
-                    linkedin_url=comp_data.get("linkedin_url"),
-                    revenue_usd=comp_data.get("revenue_usd"),
-                    source_ids=comp_data.get("source_ids"),
-                    source_uuids=comp_data.get("source_uuids"),
-                    ticker=comp_data.get("ticker"),
-                    website_url=comp_data.get("website_url"),
-                )
-                companies.append(company)
-
-            # Create CompanyList and call BAML function
-            company_list = CompanyList(
-                block_key=block_key,
-                block_key_type=block_key_type,
-                block_size=len(companies),
-                companies=companies,
-            )
-            logger.debug(f"Submitting block '{block_key}' to MultiEntityResolution API")
-            result = await baml_client.MultiEntityResolution(
-                company_list=company_list, baml_options={"collector": collector}
-            )
-            # logger.info(str(collector.last.usage))  # type: ignore
-
-            # Convert resolved companies back to dictionaries
-            resolved_companies = []
-            for company in result.companies:
-                # Generate a new random UUID for each merged record
-                new_uuid = str(uuid.uuid4())
-
-                resolved_dict = {
-                    "uuid": new_uuid,  # Use the newly generated UUID
-                    "block_key": block_key,  # Preserve block_key from the block
-                    "block_key_type": block_key_type,  # Preserve block_key_type from the block
-                    "url": None,  # Set to None for now
-                    "name": company.name,
-                    "description": company.description,
-                    "ceo": company.ceo,
-                    "cik": company.cik,
-                    "employees": company.employees,
-                    "founded_year": company.founded_year,
-                    "headquarters_location": company.headquarters_location,
-                    "id": company.id,
-                    "jurisdiction": company.jurisdiction,
-                    "linkedin_url": company.linkedin_url,
-                    "posted_at": None,  # Set to None for now
-                    "revenue_usd": company.revenue_usd,
-                    "source_ids": company.source_ids,
-                    "source_uuids": company.source_uuids,  # Keep original UUIDs for reference
-                    "ticker": company.ticker.__dict__ if company.ticker else None,
-                    "website_url": company.website_url,
-                }
-                resolved_companies.append(resolved_dict)
-
-            logger.info(
-                f"Resolved block {block_key}: {len(companies_data)} -> {len(resolved_companies)} companies (new UUIDs generated)"
-            )
-
-            return {
-                "block_key": block_key,
-                "block_key_type": block["block_key_type"],
-                "original_companies": companies_data,
-                "resolved_companies": resolved_companies,
-                "original_count": len(companies_data),
-                "resolved_count": len(resolved_companies),
-                "was_resolved": True,
-            }
-
-        except KeyError as e:
-            logger.error(f"Missing required field in block {block_key}: {e}")
-            # Return original companies unchanged on error
-            return {
-                "block_key": block_key,
-                "block_key_type": block["block_key_type"],
-                "resolved_companies": companies_data,
-                "total_companies": len(companies_data),
-                "was_resolved": False,
-                "error": f"Missing required field: {e}",
-            }
-        except Exception as e:
-            logger.error(f"Error processing block {block_key}: {e}")
-            # Return original companies unchanged on error
-            return {
-                "block_key": block_key,
-                "block_key_type": block["block_key_type"],
-                "resolved_companies": companies_data,
-                "total_companies": len(companies_data),
-                "was_resolved": False,
-                "error": str(e),
-            }
+        return result
 
 
 async def process_blocks_async(
