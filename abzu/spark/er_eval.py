@@ -30,13 +30,15 @@ def evaluate_er_matches(
     1. Explodes resolved companies from blocks
     2. Creates companies_resolved.json/parquet files
     3. Reports metrics on data reduction and UUID overlap
-    4. Validates source_uuids against raw companies data
+    4. Validates source_uuids against ORIGINAL raw companies data
     5. Removes invalid source_uuids and reports error percentage
+    6. For iteration 2+, tracks coverage against both original and previous iteration
 
     Args:
         matches_path: Path to the matches parquet file from ER matching
-        raw_companies_path: Path to the raw companies parquet file (unmerged records)
+        raw_companies_path: Path to the ORIGINAL raw companies parquet file (iteration 0)
         output_path: Directory path to save evaluation results
+        iteration: Iteration number (1, 2, 3, etc.)
         local_mode: Whether to run in local mode. If None, will be determined by environment
     """
     # Create SparkSession with appropriate configuration
@@ -50,8 +52,19 @@ def evaluate_er_matches(
     logger.info(f"Loading matches from {matches_parquet_path}")
     matches_df: DataFrame = spark.read.parquet(matches_parquet_path)
 
-    logger.info(f"Loading raw companies from {raw_companies_path}")
-    raw_companies_df: DataFrame = spark.read.parquet(raw_companies_path)
+    # Load the ORIGINAL raw companies (always the same, regardless of iteration)
+    logger.info(f"Loading ORIGINAL raw companies from {raw_companies_path}")
+    original_raw_companies_df: DataFrame = spark.read.parquet(raw_companies_path)
+
+    # For iteration 2+, also load the previous iteration's output for comparison
+    previous_iteration_df: Optional[DataFrame] = None
+    if iteration > 1:
+        prev_iteration = iteration - 1
+        prev_iteration_path = output_path.format(iteration=prev_iteration, format="parquet")
+        logger.info(
+            f"Loading previous iteration ({prev_iteration}) results from {prev_iteration_path}"
+        )
+        previous_iteration_df = spark.read.parquet(prev_iteration_path)
 
     total_blocks = matches_df.count()
     logger.info(f"Loaded {total_blocks:,} blocks from matches")
@@ -69,10 +82,20 @@ def evaluate_er_matches(
         F.explode("resolved_companies").alias("company"),
     ).select("match_block_key", "match_block_key_type", "company.*")
 
-    # Get counts for comparison - raw first, then resolved
-    total_raw_companies = raw_companies_df.count()
-    unique_raw_companies = raw_companies_df.select("uuid").distinct().count()
-    logger.info(f"Raw companies: {total_raw_companies:,} total, {unique_raw_companies:,} unique")
+    # Get counts for comparison - original raw first
+    total_original_companies = original_raw_companies_df.count()
+    unique_original_companies = original_raw_companies_df.select("uuid").distinct().count()
+    logger.info(
+        f"ORIGINAL raw companies (iteration 0): {total_original_companies:,} total, {unique_original_companies:,} unique"
+    )
+
+    # For iteration 2+, get previous iteration counts
+    if previous_iteration_df is not None:
+        total_prev_companies = previous_iteration_df.count()
+        unique_prev_companies = previous_iteration_df.select("uuid").distinct().count()
+        logger.info(
+            f"Previous iteration ({iteration - 1}) companies: {total_prev_companies:,} total, {unique_prev_companies:,} unique"
+        )
 
     total_resolved_companies = resolved_companies_df.count()
     unique_resolved_companies = resolved_companies_df.select("uuid").distinct().count()
@@ -80,26 +103,57 @@ def evaluate_er_matches(
         f"Resolved companies: {total_resolved_companies:,} total, {unique_resolved_companies:,} unique"
     )
 
-    # Calculate data reduction metrics
-    reduction_count = total_raw_companies - unique_resolved_companies
-    reduction_percentage = (
-        (reduction_count / total_raw_companies) * 100 if total_raw_companies > 0 else 0
+    # Calculate data reduction metrics - from original
+    reduction_from_original = total_original_companies - unique_resolved_companies
+    reduction_from_original_pct = (
+        (reduction_from_original / total_original_companies) * 100
+        if total_original_companies > 0
+        else 0
+    )
+    logger.info(
+        f"Data reduction from ORIGINAL: {reduction_from_original:,} companies ({reduction_from_original_pct:.2f}%)"
     )
 
-    logger.info(f"Data reduction: {reduction_count:,} companies ({reduction_percentage:.2f}%)")
+    # For iteration 2+, also calculate reduction from previous iteration
+    reduction_from_prev = 0
+    reduction_from_prev_pct = 0.0
+    if previous_iteration_df is not None:
+        reduction_from_prev = unique_prev_companies - unique_resolved_companies
+        reduction_from_prev_pct = (
+            (reduction_from_prev / unique_prev_companies) * 100 if unique_prev_companies > 0 else 0
+        )
+        logger.info(
+            f"Data reduction from PREVIOUS iteration: {reduction_from_prev:,} companies ({reduction_from_prev_pct:.2f}%)"
+        )
 
-    # Verify that resolved companies have new UUIDs (should be 0% overlap)
-    raw_uuids = raw_companies_df.select("uuid").distinct()
+    # Verify that resolved companies have new UUIDs (should be 0% overlap with ANY previous data)
+    original_uuids = original_raw_companies_df.select("uuid").distinct()
     resolved_uuids = resolved_companies_df.select("uuid").distinct()
 
-    overlapping_uuids = raw_uuids.intersect(resolved_uuids).count()
-    overlap_percentage = (
-        (overlapping_uuids / unique_raw_companies) * 100 if unique_raw_companies > 0 else 0
+    overlapping_with_original = original_uuids.intersect(resolved_uuids).count()
+    overlap_with_original_pct = (
+        (overlapping_with_original / unique_original_companies) * 100
+        if unique_original_companies > 0
+        else 0
+    )
+    logger.info(
+        f"UUID overlap with ORIGINAL: {overlapping_with_original:,} ({overlap_with_original_pct:.2f}%) - should be 0%"
     )
 
-    logger.info(
-        f"New UUID verification: {overlapping_uuids:,} ({overlap_percentage:.2f}%) resolved companies reuse raw UUIDs (should be 0%)"
-    )
+    # Check overlap with previous iteration
+    overlapping_with_prev = 0
+    overlap_with_prev_pct = 0.0
+    if previous_iteration_df is not None:
+        prev_uuids = previous_iteration_df.select("uuid").distinct()
+        overlapping_with_prev = prev_uuids.intersect(resolved_uuids).count()
+        overlap_with_prev_pct = (
+            (overlapping_with_prev / unique_prev_companies) * 100
+            if unique_prev_companies > 0
+            else 0
+        )
+        logger.info(
+            f"UUID overlap with PREVIOUS iteration: {overlapping_with_prev:,} ({overlap_with_prev_pct:.2f}%) - should be 0%"
+        )
 
     # Validate source_uuids - explode them first
     logger.info("Validating source UUIDs...")
@@ -116,21 +170,44 @@ def evaluate_er_matches(
     total_source_uuid_refs = resolved_with_source_uuids.count()
     logger.info(f"Total source UUID references: {total_source_uuid_refs:,}")
 
-    # Get unique source UUIDs to compare with raw companies
-    unique_source_uuids = resolved_with_source_uuids.select("source_uuid").distinct().count()
-    source_coverage_percentage = (
-        (unique_source_uuids / unique_raw_companies) * 100 if unique_raw_companies > 0 else 0
-    )
+    # Get unique source UUIDs and compare with ORIGINAL raw companies
+    unique_source_uuids_df = resolved_with_source_uuids.select("source_uuid").distinct()
+    unique_source_uuids = unique_source_uuids_df.count()
 
+    # Calculate coverage of ORIGINAL raw companies
+    tracked_original_uuids = unique_source_uuids_df.intersect(original_uuids).count()
+    original_coverage_pct = (
+        (tracked_original_uuids / unique_original_companies) * 100
+        if unique_original_companies > 0
+        else 0
+    )
     logger.info(
-        f"Unique source UUIDs: {unique_source_uuids:,} ({source_coverage_percentage:.2f}% coverage of raw companies)"
+        f"Source UUID coverage of ORIGINAL: {tracked_original_uuids:,}/{unique_original_companies:,} ({original_coverage_pct:.2f}%)"
     )
 
-    # INNER JOIN with raw companies to find valid source_uuids
-    raw_uuids_distinct = raw_companies_df.select("uuid").distinct().alias("raw")
+    # For iteration 2+, also check coverage of previous iteration
+    tracked_prev_uuids = 0
+    prev_coverage_pct = 0.0
+    if previous_iteration_df is not None:
+        tracked_prev_uuids = unique_source_uuids_df.intersect(prev_uuids).count()
+        prev_coverage_pct = (
+            (tracked_prev_uuids / unique_prev_companies) * 100 if unique_prev_companies > 0 else 0
+        )
+        logger.info(
+            f"Source UUID coverage of PREVIOUS iteration: {tracked_prev_uuids:,}/{unique_prev_companies:,} ({prev_coverage_pct:.2f}%)"
+        )
+
+    # Validate source_uuids against ALL historical UUIDs (original + all previous iterations)
+    # Build a union of all valid historical UUIDs
+    all_valid_uuids = original_uuids
+    if previous_iteration_df is not None:
+        # Include UUIDs from previous iteration
+        all_valid_uuids = all_valid_uuids.union(prev_uuids).distinct()
+
+    all_valid_uuids_distinct = all_valid_uuids.alias("valid")
     valid_source_uuids = resolved_with_source_uuids.join(
-        raw_uuids_distinct,
-        resolved_with_source_uuids.source_uuid == raw_uuids_distinct.uuid,
+        all_valid_uuids_distinct,
+        resolved_with_source_uuids.source_uuid == all_valid_uuids_distinct.uuid,
         how="inner",
     ).select(
         resolved_with_source_uuids.uuid.alias("resolved_uuid"),
@@ -182,17 +259,27 @@ def evaluate_er_matches(
     # Create and save evaluation metrics - both Parquet and single JSON file
     metrics_data = [
         (
+            iteration,
             total_blocks,
-            total_raw_companies,
-            unique_raw_companies,
+            total_original_companies,
+            unique_original_companies,
+            total_prev_companies if previous_iteration_df is not None else None,
+            unique_prev_companies if previous_iteration_df is not None else None,
             total_resolved_companies,
             unique_resolved_companies,
-            reduction_count,
-            reduction_percentage,
-            overlapping_uuids,
-            overlap_percentage,
+            reduction_from_original,
+            reduction_from_original_pct,
+            reduction_from_prev if previous_iteration_df is not None else None,
+            reduction_from_prev_pct if previous_iteration_df is not None else None,
+            overlapping_with_original,
+            overlap_with_original_pct,
+            overlapping_with_prev if previous_iteration_df is not None else None,
+            overlap_with_prev_pct if previous_iteration_df is not None else None,
             unique_source_uuids,
-            source_coverage_percentage,
+            tracked_original_uuids,
+            original_coverage_pct,
+            tracked_prev_uuids if previous_iteration_df is not None else None,
+            prev_coverage_pct if previous_iteration_df is not None else None,
             total_source_uuid_refs,
             valid_source_uuid_count,
             invalid_source_uuid_count,
@@ -200,21 +287,31 @@ def evaluate_er_matches(
         )
     ]
     metrics_schema = [
+        "iteration",
         "total_blocks",
-        "total_raw_companies",
-        "unique_raw_companies",
+        "total_original_companies",
+        "unique_original_companies",
+        "total_prev_iteration_companies",
+        "unique_prev_iteration_companies",
         "total_resolved_companies",
         "unique_resolved_companies",
-        "companies_reduction_count",
-        "companies_reduction_percentage",
-        "new_uuid_verification_overlap_count",
-        "new_uuid_verification_overlap_percentage",
+        "reduction_from_original_count",
+        "reduction_from_original_pct",
+        "reduction_from_prev_count",
+        "reduction_from_prev_pct",
+        "uuid_overlap_with_original_count",
+        "uuid_overlap_with_original_pct",
+        "uuid_overlap_with_prev_count",
+        "uuid_overlap_with_prev_pct",
         "unique_source_uuids",
-        "source_coverage_percentage",
+        "tracked_original_uuids",
+        "original_coverage_pct",
+        "tracked_prev_uuids",
+        "prev_coverage_pct",
         "total_source_uuid_refs",
         "valid_source_uuid_count",
         "invalid_source_uuid_count",
-        "source_uuid_error_percentage",
+        "source_uuid_error_pct",
     ]
     metrics_df = spark.createDataFrame(metrics_data, metrics_schema)
 
@@ -231,21 +328,53 @@ def evaluate_er_matches(
 
     # Print final summary
     logger.info("\n" + "=" * 60)
-    logger.info("ENTITY RESOLUTION EVALUATION SUMMARY")
+    logger.info(f"ENTITY RESOLUTION EVALUATION SUMMARY - ITERATION {iteration}")
     logger.info("=" * 60)
-    logger.info(f"Raw companies: {total_raw_companies:,} total, {unique_raw_companies:,} unique")
     logger.info(
-        f"Resolved companies: {total_resolved_companies:,} total, {unique_resolved_companies:,} unique"
+        f"Original raw companies (iteration 0): {total_original_companies:,} total, {unique_original_companies:,} unique"
     )
-    logger.info(f"Data reduction: {reduction_count:,} companies ({reduction_percentage:.2f}%)")
+    if previous_iteration_df is not None:
+        logger.info(
+            f"Previous iteration ({iteration - 1}) companies: {total_prev_companies:,} total, {unique_prev_companies:,} unique"
+        )
     logger.info(
-        f"New UUID verification: {overlapping_uuids:,} UUIDs ({overlap_percentage:.2f}%) reuse raw UUIDs"
+        f"Current iteration ({iteration}) resolved: {total_resolved_companies:,} total, {unique_resolved_companies:,} unique"
+    )
+    logger.info("")
+    logger.info("DATA REDUCTION:")
+    logger.info(
+        f"  From original: {reduction_from_original:,} companies ({reduction_from_original_pct:.2f}%)"
+    )
+    if previous_iteration_df is not None:
+        logger.info(
+            f"  From previous iteration: {reduction_from_prev:,} companies ({reduction_from_prev_pct:.2f}%)"
+        )
+    logger.info("")
+    logger.info("UUID VERIFICATION (should all be 0%):")
+    logger.info(
+        f"  Overlap with original: {overlapping_with_original:,} UUIDs ({overlap_with_original_pct:.2f}%)"
+    )
+    if previous_iteration_df is not None:
+        logger.info(
+            f"  Overlap with previous: {overlapping_with_prev:,} UUIDs ({overlap_with_prev_pct:.2f}%)"
+        )
+    logger.info("")
+    logger.info("SOURCE UUID COVERAGE:")
+    logger.info(
+        f"  Original companies tracked: {tracked_original_uuids:,}/{unique_original_companies:,} ({original_coverage_pct:.2f}%)"
+    )
+    if previous_iteration_df is not None:
+        logger.info(
+            f"  Previous iteration tracked: {tracked_prev_uuids:,}/{unique_prev_companies:,} ({prev_coverage_pct:.2f}%)"
+        )
+    logger.info(f"  Total unique source_uuids: {unique_source_uuids:,}")
+    logger.info("")
+    logger.info("SOURCE UUID VALIDATION:")
+    logger.info(
+        f"  Valid references: {valid_source_uuid_count:,}/{total_source_uuid_refs:,} ({100 - error_percentage:.2f}%)"
     )
     logger.info(
-        f"Source UUID coverage: {unique_source_uuids:,}/{unique_raw_companies:,} ({source_coverage_percentage:.2f}%)"
-    )
-    logger.info(
-        f"Source UUID validation: {valid_source_uuid_count:,}/{total_source_uuid_refs:,} valid ({error_percentage:.2f}% erroneous)"
+        f"  Invalid references: {invalid_source_uuid_count:,}/{total_source_uuid_refs:,} ({error_percentage:.2f}%)"
     )
     logger.info("Files saved:")
     logger.info(f"  - {companies_resolved_parquet}")
