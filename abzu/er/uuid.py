@@ -1,7 +1,6 @@
 """UUID to integer ID mapping wrapper for MultiEntityResolution API."""
 
 import copy
-import sys
 from typing import Any, Optional
 
 from abzu.baml_client.async_client import BamlAsyncClient
@@ -139,7 +138,7 @@ async def process_block_with_uuid_mapping(
 
             # Map old source_uuids to source_ids
             source_ids = []
-            source_uuids = comp_copy.get("source_uuids", [])
+            source_uuids = comp_copy.get("source_uuids") or []
             for uuid in source_uuids:
                 if uuid:
                     int_id = mapper.add_uuid(uuid)
@@ -217,7 +216,6 @@ async def process_block_with_uuid_mapping(
                 )
 
             resolved_companies.append(resolved_dict)
-        print(resolved_companies)
 
         logger.info(
             f"Resolved block {block_key}: {len(companies_data)} -> {len(resolved_companies)} companies "
@@ -235,8 +233,7 @@ async def process_block_with_uuid_mapping(
         }
 
     except Exception as e:
-        logger.error(f"Error processing block {block_key}: {e}")
-        e.with_traceback(sys.exc_info()[2])
+        logger.error(f"Error processing block {block_key}: {e}", exc_info=True)
         # Return original companies unchanged on error
         return {
             "block_key": block_key,

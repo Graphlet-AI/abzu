@@ -192,7 +192,6 @@ class TestProcessBlockWithUUIDMapping:
         result = await process_block_with_uuid_mapping(
             block=multi_block, baml_client=baml_client, collector=None
         )
-        print(json.dumps(result, indent=4))
 
         # Check that the block was resolved
         assert result["was_resolved"]
