@@ -12,7 +12,13 @@ class OrderedLazyGroup(click.Group):
 
     def list_commands(self, ctx):
         """Return commands in the order they were added."""
-        return ["block", "match", "eval", "clean"]
+        return [
+            "block",
+            "match",
+            "eval",
+            "clean",
+            "stage",
+        ]
 
     def get_command(self, ctx, name):
         if name in self.lazy_subcommands:
@@ -30,6 +36,7 @@ class OrderedLazyGroup(click.Group):
         "match": "abzu.cli.process.er.match:match",
         "eval": "abzu.cli.process.er.eval:eval",
         "clean": "abzu.cli.process.er.clean:clean",
+        "stage": "abzu.cli.process.er.stage:stage",
     },
 )
 def er():
