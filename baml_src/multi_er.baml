@@ -15,22 +15,7 @@ function MultiEntityResolution(company_list: CompanyList) -> CompanyList {
     
     IMPORTANT UUID HANDLING: When merging companies, you MUST collect ALL the Company.uuid values from the input companies and store them in the Company.source_uuids field of the Companies in the output CompanyList. For example, if merging two companies with uuids 'abc-123' and 'def-456', the output source_uuids should be ['abc-123', 'def-456']. Always populate source_uuids with the input UUIDs - never leave it null if the input companies have UUIDs. The merged record should have uuid set to null (it will get a new UUID assigned later). If there are already UUIDs in Company.source_uuids then preserve them and append the merged Company.uuid values to the existing list.
 
-    IMPORTANT SOURCE_IDS HANDLING: When merging companies, you MUST collect ALL integer IDs that represent the lineage of merged
-    records:
-    1. Add each input company's 'id' field to the output source_ids
-    2. Add ALL values from each input company's 'source_ids' array to the output source_ids (these represent previously merged
-    companies)
-    3. The final source_ids should contain the complete lineage: both the immediate parent IDs AND all historical IDs from 
-    previous merges
-
-    For example, if merging:
-    - Company A with id=1 and source_ids=[10, 11, 12]
-    - Company B with id=2 and source_ids=[20, 21]
-    The output should have source_ids=[1, 2, 10, 11, 12, 20, 21]
-
-    Company.id and Company.source_ids entries must always be integers (no decimal points). If there is only 1 company in the 
-    input (no merging needed), copy its id to source_ids and also include all of its existing source_ids in the output 
-    source_ids.
+    Company.id and Company.source_id entries must always be integers and never floats, so no decimal points. Collect all Company.id values as integers from the input companies and store them in the Company.source_ids field of the Companies in the output CompanyList. Make sure all Company records have a valid integer 'id' field and valid UUID 'uuid' field. Fill 'source_ids' field with the integer 'id' field values that make up this record. Duplicate integers in 'source_ids' are okay.
     
     Choose the most complete corporate name when merging names, including the organization type ending. Company names without organization types can be merged with those that have them. Company names with different corporate endings are probably not the same company, depending on the description. Input records with the same UUID should be merged and only one UUID should be added to 'source_uuids'. If there is only 1 company in the input (no merging needed), copy its Company.uuid to the output Company.source_uuids and set the output Company.uuid to the value of the input Company.uuid. Similarly, copy its Company.id to the output Company.source_ids and set the output Company.id to the value of the input Company.id.
 
