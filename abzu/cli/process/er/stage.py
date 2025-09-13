@@ -21,11 +21,11 @@ from abzu.config import config
     help="Maximum block size for entity resolution blocking",
 )
 @click.option(
-    "--batch-concurrency",
+    "--batch-size",
     "-b",
     type=int,
-    default=config.get("er.batch_concurrency", 10),
-    help="Number of concurrent batches for matching",
+    default=config.get("er.batch_size", 5),
+    help="Number of concurrent API calls for matching",
 )
 @click.option(
     "--local-mode",
@@ -33,14 +33,14 @@ from abzu.config import config
     help="Run Spark in local mode",
 )
 @click.pass_context
-def stage(ctx, iteration, block_size, batch_concurrency, local_mode):
+def stage(ctx, iteration, block_size, batch_size, local_mode):
     """Run complete entity resolution stage: block, match, and eval."""
     from abzu.logs import get_logger
 
     logger = get_logger(__name__)
 
     logger.info(f"Starting entity resolution stage for iteration {iteration}")
-    logger.info(f"Parameters: block_size={block_size}, batch_concurrency={batch_concurrency}")
+    logger.info(f"Parameters: block_size={block_size}, batch_size={batch_size}")
 
     # Import the commands we need to run
     from abzu.cli.process.er.block.names import names as block_names
@@ -63,8 +63,7 @@ def stage(ctx, iteration, block_size, batch_concurrency, local_mode):
         ctx.invoke(
             match_names,
             iteration=iteration,
-            batch_concurrency=batch_concurrency,
-            local_mode=local_mode,
+            batch_size=batch_size,
         )
         logger.info("Matching completed successfully")
 
