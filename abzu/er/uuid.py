@@ -122,15 +122,19 @@ async def process_block_with_uuid_mapping(
         # For single companies, ensure source_uuids contains the UUID
         if len(companies_data) == 1:
             company = companies_data[0]
+            company["all_ids"] = []
             if "uuid" in company and company["uuid"]:
+                company["all_ids"].append(company["uuid"])
                 # Map the record's uuid into the source_uuids field so we can do a simple join on the edges
                 if "source_uuids" not in company or not company["source_uuids"]:
                     company["source_uuids"] = [company["uuid"]]
+                    company["all_ids"] += company["source_uuids"]
                 elif (
                     isinstance(company["source_uuids"], list)
                     and company["uuid"] not in company["source_uuids"]
                 ):
                     company["source_uuids"].append(company["uuid"])
+                    company["all_ids"] += company["source_uuids"]
 
         return {
             "block_key": block_key,
@@ -186,6 +190,7 @@ async def process_block_with_uuid_mapping(
                 linkedin_url=comp_copy.get("linkedin_url"),
                 source_ids=source_ids,  # Send the mapped source_ids to BAML
                 source_uuids=[],
+                all_ids=company.get("all_ids", []),
             )
             companies.append(company)
 
@@ -236,7 +241,11 @@ async def process_block_with_uuid_mapping(
                     if comp_id in result_ids:
                         source_uuids_set.add(comp_uuid)
                     # Also check if any of its historical source_ids are in the result
-                    elif "source_uuids" in comp_data and comp_data["source_uuids"]:
+                    elif (
+                        "source_uuids" in comp_data
+                        and isinstance(comp_data["source_uuids"], list)
+                        and len(comp_data["source_uuids"]) > 0
+                    ):
                         for hist_uuid in comp_data["source_uuids"]:
                             hist_id = mapper.uuid_to_int.get(hist_uuid)
                             if hist_id and hist_id in result_ids:
@@ -263,6 +272,8 @@ async def process_block_with_uuid_mapping(
                 "linkedin_url": company.linkedin_url,
                 "source_ids": company.source_ids,
                 "source_uuids": source_uuids_final,
+                # Build all_ids from the id and source_ids - don't rely on the LLM
+                "all_ids": [company.id] + (company.source_ids or []),
             }
 
             resolved_companies.append(resolved_dict)
