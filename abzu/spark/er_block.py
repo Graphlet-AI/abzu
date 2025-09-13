@@ -523,6 +523,8 @@ def build_blocks(
     logger.info("=" * 60)
     logger.info("ENTITY RESOLUTION BLOCKS CREATED")
     logger.info("=" * 60)
+    logger.info(f"Total companies: {total_companies:,}")
+    logger.info("")
     logger.info(
         f"Combined Blocks (overlapping keys): {combined_block_count:,} blocks with {combined_companies_count:,} companies"
     )
