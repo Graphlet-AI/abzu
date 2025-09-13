@@ -69,6 +69,21 @@ class UUIDMapper:
                 logger.warning(f"No UUID found for integer ID {id_val}")
         return uuids if uuids else None
 
+    def map_uuids_to_ids(self, uuids: Optional[list[str]]) -> Optional[list[int]]:
+        """
+        Map a list of UUIDs to their integer IDs.
+
+        Args:
+            uuids: List of UUID strings
+
+        Returns:
+            List of integer IDs, or None if input is None
+        """
+        if uuids is None:
+            return None
+        ids = [self.add_uuid(uuid) for uuid in uuids if uuid]
+        return ids if ids else None
+
 
 async def process_block_with_uuid_mapping(
     block: dict[str, Any],
@@ -137,12 +152,13 @@ async def process_block_with_uuid_mapping(
             comp_copy["source_ids"] = None
 
             # Map old source_uuids to source_ids
-            source_ids = []
-            source_uuids = comp_copy.get("source_uuids") or []
-            for uuid in source_uuids:
-                if uuid:
-                    int_id = mapper.add_uuid(uuid)
-                    source_ids.append(int_id)
+            source_ids: list[int] = []
+            if (
+                "source_uuids" in comp_copy
+                and isinstance(comp_copy["source_uuids"], list)
+                and len(comp_copy["source_uuids"]) > 0
+            ):
+                source_ids = mapper.map_uuids_to_ids(comp_copy["source_uuids"]) or []
 
             # Create Company object
             company = Company(

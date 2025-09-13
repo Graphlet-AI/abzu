@@ -39,7 +39,7 @@ async def process_block(
     """
     async with semaphore:
         # Use the UUID mapping wrapper to process the block
-        result = await process_block_with_uuid_mapping(
+        result: dict[str, Any] = await process_block_with_uuid_mapping(
             block=block,
             baml_client=baml_client,
             collector=collector,
@@ -213,17 +213,23 @@ def match_entities(
         else pd.DataFrame()
     )
 
-    logger.info("\nSummary:")
-    logger.info(f"  Total blocks processed: {len(results_df)}")
-    logger.info(f"  Successfully resolved: {len(resolved_blocks)}")
-    logger.info(f"  Errors: {len(error_blocks)}")
+    logger.info("=" * 60)
+    logger.info("ENTITY RESOLUTION MATCHING SUMMARY")
+    logger.info("=" * 60)
+    logger.info(f"Total blocks processed: {len(results_df)}")
+    logger.info(f"Successfully resolved: {len(resolved_blocks)}")
+    logger.info(f"Errors: {len(error_blocks)}")
+    logger.info("")
     logger.info(
-        "  Note: Resolved companies have new UUIDs; single-company blocks retain original UUIDs"
+        "Note: Resolved companies have new UUIDs; single-company blocks retain original UUIDs"
     )
 
     if len(resolved_blocks) > 0:
         total_original = resolved_blocks["original_count"].sum()
         total_resolved = resolved_blocks["resolved_count"].sum()
-        logger.info(f"  Total companies before: {total_original}")
-        logger.info(f"  Total companies after: {total_resolved}")
-        logger.info(f"  Reduction: {total_original - total_resolved} companies merged")
+        logger.info("")
+        logger.info(f"Total companies before: {total_original}")
+        logger.info(f"Total companies after: {total_resolved}")
+        logger.info(f"Reduction: {total_original - total_resolved} companies merged")
+
+    logger.info("=" * 60)

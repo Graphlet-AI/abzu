@@ -63,10 +63,10 @@ def names(
     if output_path is None:
         output_path = config.get("process.kg.er.paths.names.blocks_dir").format(iteration=iteration)
 
-    # Note: max_block_size is configured via config.yml, not passed as parameter
-    # The build_blocks function will use the configured value
+    # Pass max_block_size to build_blocks
     build_blocks(
         input_path=companies_path,
         output_path=output_path,
         local_mode=local_mode if local_mode else None,
+        max_block_size=max_block_size,
     )

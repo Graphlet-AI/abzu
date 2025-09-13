@@ -50,6 +50,7 @@ def build_blocks(
     output_path: str = config.get("process.kg.er.paths.names.blocks_dir"),
     local_mode: Optional[bool] = None,
     stop_spark: bool = True,
+    max_block_size: Optional[int] = None,
 ) -> None:
     """
     Analyze company blocking strategies by computing size distributions.
@@ -58,7 +59,12 @@ def build_blocks(
         input_path: Path to the input companies parquet
         output_path: Path to save the output blocks
         local_mode: Whether to run in local mode. If None, will be determined by environment
+        stop_spark: Whether to stop the Spark session after processing
+        max_block_size: Maximum block size (blocks larger than this will be chunked). If None, uses config value
     """
+    # Use provided max_block_size or fall back to config
+    actual_max_block_size = max_block_size if max_block_size is not None else MAX_BLOCK_SIZE
+
     # If output_path has {format} placeholder, remove it (this should be a directory)
     if "{format}" in output_path:
         # Extract the directory path by removing the filename part with {format}
@@ -375,7 +381,9 @@ def build_blocks(
         acronym_only_blocks.printSchema()
 
     # Split large blocks (> 50 companies) into smaller chunks
-    logger.info(f"Splitting large blocks (> {MAX_BLOCK_SIZE} companies) into smaller chunks...")
+    logger.info(
+        f"Splitting large blocks (> {actual_max_block_size} companies) into smaller chunks..."
+    )
 
     # Build the UDTF returnType dynamically from the Company model
     udtf_return_type = build_udtf_return_type()
@@ -384,12 +392,12 @@ def build_blocks(
     @F.udtf(returnType=udtf_return_type)  # type: ignore
     class SplitLargeBlocks:
         def eval(self, block_key: str, block_key_type: str, companies: list, block_size: int):
-            if block_size <= MAX_BLOCK_SIZE:
+            if block_size <= actual_max_block_size:
                 yield (block_key, block_key_type, companies, block_size)
             else:
                 chunk_num = 1
-                for i in range(0, len(companies), MAX_BLOCK_SIZE):
-                    chunk_companies = companies[i : i + MAX_BLOCK_SIZE]
+                for i in range(0, len(companies), actual_max_block_size):
+                    chunk_companies = companies[i : i + actual_max_block_size]
                     chunk_key = f"{block_key}_chunk_{chunk_num}"
                     yield (chunk_key, block_key_type, chunk_companies, len(chunk_companies))
                     chunk_num += 1
@@ -543,7 +551,9 @@ def build_blocks(
     if acronym_only_count != original_acronym_count:
         logger.info(f"  (Split from {original_acronym_count:,} original blocks)")
     logger.info(f"  Saved to: {acronym_json_path} and {acronym_parquet_path}")
-    logger.info(f"Total Blocks: {total_blocks:,} blocks (all blocks ≤ {MAX_BLOCK_SIZE} companies)")
+    logger.info(
+        f"Total Blocks: {total_blocks:,} blocks (all blocks ≤ {actual_max_block_size} companies)"
+    )
     logger.info("=" * 60)
 
     # Clean up
