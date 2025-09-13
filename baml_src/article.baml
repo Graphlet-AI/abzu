@@ -141,9 +141,6 @@ class Company {
 
   source_uuids string[]?
   @description("List of source Company.uuid that this Company originates from via merging records.")
-
-  all_ids int[]?
-  @description("Combined list of id and source_ids")
 }
 
 class Product {
