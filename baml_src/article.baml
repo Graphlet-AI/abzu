@@ -63,25 +63,76 @@ class Author {
 }
 
 enum Exchange {
-  NYSE @description("New York Stock Exchange")
-  NASDAQ @description("NASDAQ Stock Market")
-  AMEX @description("American Stock Exchange")
-  ARCA @description("NYSE Arca")
-  TSXV @description("TSX Venture Exchange")
-  NYSEMKT @description("NYSE American")
-  LSE @description("London Stock Exchange")
-  TSE @description("Tokyo Stock Exchange")
-  HKEX @description("Hong Kong Stock Exchange")
-  SGX @description("Singapore Exchange")
-  BSE @description("Bombay Stock Exchange")
-  ASX @description("Australian Securities Exchange")
-  SSE @description("Shanghai Stock Exchange")
-  MSE @description("Malta Stock Exchange")
-  CSE @description("Cyprus Stock Exchange")
-  BMV @description("Bolsa Mexicana de Valores")
-  OSE @description("Oslo Stock Exchange")
-  BME @description("Bolsas y Mercados Españoles")
-  SWX @description("SIX Swiss Exchange")
+  // US Exchanges
+  UN @description("NYSE - New York Stock Exchange")
+  UQ @description("NASDAQ - NASDAQ Stock Market")
+  UA @description("AMEX - American Stock Exchange")
+  UR @description("ARCA - NYSE Arca")
+  UM @description("NYSE American")
+  UW @description("CBOE - Cboe Global Markets")
+  UV @description("IEX - Investors Exchange")
+  UP @description("OTC - OTC Markets")
+  
+  // Canadian
+  CT @description("TSX - Toronto Stock Exchange")
+  CV @description("TSXV - TSX Venture Exchange")
+  CN @description("CSE - Canadian Securities Exchange")
+  
+  // European
+  LN @description("LSE - London Stock Exchange")
+  GR @description("XETRA - Frankfurt Stock Exchange")
+  FP @description("Euronext Paris")
+  NA @description("Euronext Amsterdam")
+  BB @description("Euronext Brussels")
+  IM @description("Euronext Milan")
+  ID @description("Euronext Dublin")
+  PL @description("Euronext Lisbon")
+  NO @description("OSE - Oslo Stock Exchange")
+  SM @description("BME - Spanish Exchanges")
+  SW @description("SIX - Swiss Exchange")
+  DC @description("OMX Copenhagen")
+  SS @description("OMX Stockholm")
+  FH @description("OMX Helsinki")
+  PW @description("WSE - Warsaw Stock Exchange")
+  AV @description("VSE - Vienna Stock Exchange")
+  CP @description("PSE - Prague Stock Exchange")
+  GA @description("ATHEX - Athens Stock Exchange")
+  TI @description("BIST - Borsa Istanbul")
+  
+  // Asian
+  JT @description("TSE - Tokyo Stock Exchange")
+  HK @description("HKEX - Hong Kong Stock Exchange")
+  SP @description("SGX - Singapore Exchange")
+  CH @description("SSE - Shanghai Stock Exchange")
+  CZ @description("SZSE - Shenzhen Stock Exchange")
+  KS @description("KRX - Korea Exchange")
+  TT @description("TWSE - Taiwan Stock Exchange")
+  IB @description("BSE - Bombay Stock Exchange")
+  IN @description("NSE - National Stock Exchange of India")
+  IJ @description("IDX - Indonesia Stock Exchange")
+  TB @description("SET - Stock Exchange of Thailand")
+  PM @description("PSE - Philippine Stock Exchange")
+  MK @description("KLSE - Bursa Malaysia")
+  
+  // Oceania
+  AT @description("ASX - Australian Securities Exchange")
+  NZ @description("NZX - New Zealand Exchange")
+  
+  // Latin America
+  BZ @description("B3 - Brazil Stock Exchange")
+  MM @description("BMV - Bolsa Mexicana de Valores")
+  AR @description("BCBA - Buenos Aires Stock Exchange")
+  CB @description("BVC - Colombia Stock Exchange")
+  PE @description("BVL - Lima Stock Exchange")
+  
+  // Middle East & Africa
+  SJ @description("JSE - Johannesburg Stock Exchange")
+  IT @description("TASE - Tel Aviv Stock Exchange")
+  AB @description("TADAWUL - Saudi Stock Exchange")
+  DH @description("ADX - Abu Dhabi Securities Exchange")
+  DU @description("DFM - Dubai Financial Market")
+  QD @description("QSE - Qatar Stock Exchange")
+  EY @description("EGX - Egyptian Exchange")
 }
 
 class Ticker {
@@ -95,7 +146,7 @@ class Ticker {
   @description("Ticker symbol of the company if publicly traded")
 
   exchange Exchange?
-  @description("Exchange where the company is traded")
+  @description("Bloomberg exchange code where the ticker is listed")
 }
 
 class Company {
