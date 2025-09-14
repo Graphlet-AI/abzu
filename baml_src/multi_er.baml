@@ -42,7 +42,7 @@ test TwoCompanyTest {
           ticker {
             id 3
             uuid null
-            exchange "NASDAQ"
+            exchange "UQ"
             symbol "TSLA"
             source_text_snippet null
           }
@@ -86,7 +86,7 @@ test UUIDTrackingTest {
           ticker {
             id 3
             uuid null
-            exchange "NASDAQ"
+            exchange "UQ"
             symbol "TSLA"
             source_text_snippet null
           }
@@ -130,7 +130,7 @@ test MultipleSourceUUIDsTest {
           ticker {
             id 1
             uuid null
-            exchange "NASDAQ"
+            exchange "UQ"
             symbol "NVDA"
             source_text_snippet null
           }
@@ -1269,7 +1269,7 @@ test WikiEnrichTest {
                         id 66
                         uuid null
                         symbol "NVDA"
-                        exchange "NASDAQ"
+                        exchange "UQ"
                     }
                     cik null
                     jurisdiction null

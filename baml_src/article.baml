@@ -63,7 +63,6 @@ class Author {
 }
 
 enum Exchange {
-  // US Exchanges
   UN @description("NYSE - New York Stock Exchange")
   UQ @description("NASDAQ - NASDAQ Stock Market")
   UA @description("AMEX - American Stock Exchange")
@@ -72,13 +71,9 @@ enum Exchange {
   UW @description("CBOE - Cboe Global Markets")
   UV @description("IEX - Investors Exchange")
   UP @description("OTC - OTC Markets")
-  
-  // Canadian
   CT @description("TSX - Toronto Stock Exchange")
   CV @description("TSXV - TSX Venture Exchange")
   CN @description("CSE - Canadian Securities Exchange")
-  
-  // European
   LN @description("LSE - London Stock Exchange")
   GR @description("XETRA - Frankfurt Stock Exchange")
   FP @description("Euronext Paris")
@@ -98,8 +93,6 @@ enum Exchange {
   CP @description("PSE - Prague Stock Exchange")
   GA @description("ATHEX - Athens Stock Exchange")
   TI @description("BIST - Borsa Istanbul")
-  
-  // Asian
   JT @description("TSE - Tokyo Stock Exchange")
   HK @description("HKEX - Hong Kong Stock Exchange")
   SP @description("SGX - Singapore Exchange")
@@ -113,19 +106,13 @@ enum Exchange {
   TB @description("SET - Stock Exchange of Thailand")
   PM @description("PSE - Philippine Stock Exchange")
   MK @description("KLSE - Bursa Malaysia")
-  
-  // Oceania
   AT @description("ASX - Australian Securities Exchange")
   NZ @description("NZX - New Zealand Exchange")
-  
-  // Latin America
   BZ @description("B3 - Brazil Stock Exchange")
   MM @description("BMV - Bolsa Mexicana de Valores")
   AR @description("BCBA - Buenos Aires Stock Exchange")
   CB @description("BVC - Colombia Stock Exchange")
   PE @description("BVL - Lima Stock Exchange")
-  
-  // Middle East & Africa
   SJ @description("JSE - Johannesburg Stock Exchange")
   IT @description("TASE - Tel Aviv Stock Exchange")
   AB @description("TADAWUL - Saudi Stock Exchange")

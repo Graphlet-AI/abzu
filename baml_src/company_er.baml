@@ -47,7 +47,7 @@ test CombineDescriptionPositiveTest {
         ticker {
             id 3
             uuid "6ed16ab0-59e9-41d7-918b-5334cf4f7dd2"
-            exchange "NASDAQ"
+            exchange "UQ"
             symbol "TSLA"
       }
       description "Tesla is a leader in electric transportation and energy storage, producing high-performance EVs, solar solutions, battery systems, and pioneering autonomous driving software to accelerate the global shift toward sustainable energy."
@@ -106,7 +106,7 @@ test DifferentFullRecordsNegativeTest {
         ticker {
             id 3
             uuid "a89535b3-dc06-4647-9511-0248f51fb225"
-            exchange "NASDAQ"
+            exchange "UQ"
             symbol "AMAT"
         }
         description "Applied Materials is a global leader in materials engineering solutions for semiconductor manufacturing, providing equipment, services and software for chip fabrication including deposition, etch, and inspection systems."
@@ -121,7 +121,7 @@ test DifferentFullRecordsNegativeTest {
         ticker {
             id 4
             uuid "990e686a-5caf-48dc-ac13-430775d9f254"
-            exchange "TSXV"
+            exchange "CV"
             symbol "AMS"
         }
         description "Applied Material Sciences specializes in advanced composite materials and nanotechnology solutions for aerospace and defense applications, developing carbon fiber components and specialized coatings for extreme environments."

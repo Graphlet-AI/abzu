@@ -96,5112 +96,5112 @@ test BasicTest {
                 {
                     id 5
                     symbol "AMD"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 6
                     symbol "AAC"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 7
                     symbol "AACI"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 8
                     symbol "AACPF"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 9
                     symbol "AACT"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 10
                     symbol "AAI"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 11
                     symbol "AAI1"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 12
                     symbol "AAIIQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 13
                     symbol "AAL"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 14
                     symbol "AAM"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 15
                     symbol "AAMRQ"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 16
                     symbol "AAN"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 17
                     symbol "AAOI"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 18
                     symbol "AAPL"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 19
                     symbol "AAQC"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 20
                     symbol "AATC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 21
                     symbol "AATI"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 22
                     symbol "AATI1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 23
                     symbol "AATT"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 24
                     symbol "AAVVF"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 25
                     symbol "AAWHQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 26
                     symbol "AAWW"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 27
                     symbol "ABACQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 28
                     symbol "ABAT1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 29
                     symbol "ABBNY"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 30
                     symbol "ABCC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 31
                     symbol "ABDR1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 32
                     symbol "ABF"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 33
                     symbol "ABGBY"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 34
                     symbol "ABGI"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 35
                     symbol "ABHH"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 36
                     symbol "ABILF"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 37
                     symbol "ABIX"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 38
                     symbol "ABM"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 39
                     symbol "ABNB"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 40
                     symbol "ABNTQ"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 41
                     symbol "ABOV"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 42
                     symbol "ABRX1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 43
                     symbol "ABST"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 44
                     symbol "ABTE"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 45
                     symbol "ACA"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 46
                     symbol "ACAB"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 47
                     symbol "ACAC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 48
                     symbol "ACAH"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 49
                     symbol "ACAQ"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 50
                     symbol "ACAT"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 51
                     symbol "ACBA"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 52
                     symbol "ACCD1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 53
                     symbol "ACCL"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 54
                     symbol "ACCO"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 55
                     symbol "ACDC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 56
                     symbol "ACDI"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 57
                     symbol "ACEC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 58
                     symbol "ACEE"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 59
                     symbol "ACFN"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 60
                     symbol "ACHR"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 61
                     symbol "ACIA"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 62
                     symbol "ACII"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 63
                     symbol "ACIW"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 64
                     symbol "ACKIU"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 65
                     symbol "ACLA"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 66
                     symbol "ACLI"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 67
                     symbol "ACLNF"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 68
                     symbol "ACLO"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 69
                     symbol "ACLS"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 70
                     symbol "ACM"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 71
                     symbol "ACMM"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 72
                     symbol "ACMR"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 73
                     symbol "ACN"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 74
                     symbol "ACNAQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 75
                     symbol "ACO"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 76
                     symbol "ACOM"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 77
                     symbol "ACOM1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 78
                     symbol "ACQR"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 79
                     symbol "ACRO"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 80
                     symbol "ACRO1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 81
                     symbol "ACRUQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 82
                     symbol "ACS"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 83
                     symbol "ACSC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 84
                     symbol "ACSEF"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 85
                     symbol "ACTA"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 86
                     symbol "ACTG"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 87
                     symbol "ACTI"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 88
                     symbol "ACTI1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 89
                     symbol "ACTL1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 90
                     symbol "ACTRQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 91
                     symbol "ACTS"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 92
                     symbol "ACTV1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 93
                     symbol "ACTV2"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 94
                     symbol "ACVC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 95
                     symbol "AD"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 96
                     symbol "ADAL"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 97
                     symbol "ADAM"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 98
                     symbol "ADAPQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 99
                     symbol "ADAX"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 100
                     symbol "ADBE"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 101
                     symbol "ADBL"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 102
                     symbol "ADCC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 103
                     symbol "ADCT1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 104
                     symbol "ADEA"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 105
                     symbol "ADEP"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 106
                     symbol "ADER"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 107
                     symbol "ADEX1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 108
                     symbol "ADFC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 109
                     symbol "ADFS"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 110
                     symbol "ADGI1"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 111
                     symbol "ADI"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 112
                     symbol "ADIC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 113
                     symbol "ADK1"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 114
                     symbol "ADLTQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 115
                     symbol "ADNC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 116
                     symbol "ADO"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 117
                     symbol "ADP"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 118
                     symbol "ADPC"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 119
                     symbol "ADRT"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 120
                     symbol "ADSC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 121
                     symbol "ADSE"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 122
                     symbol "ADSI"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 123
                     symbol "ADSK"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 124
                     symbol "ADSO1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 125
                     symbol "ADSPQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 126
                     symbol "ADST"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 127
                     symbol "ADSW"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 128
                     symbol "ADT"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 129
                     symbol "ADT1"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 130
                     symbol "ADTCQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 131
                     symbol "ADTN"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 132
                     symbol "ADVS"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 133
                     symbol "ADZA"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 134
                     symbol "AE"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 135
                     symbol "AEAC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 136
                     symbol "AEAE"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 137
                     symbol "AEDC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 138
                     symbol "AEGN"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 139
                     symbol "AEHR"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 140
                     symbol "AEIC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 141
                     symbol "AEIS"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 142
                     symbol "AENZ"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 143
                     symbol "AEPI"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 144
                     symbol "AER"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 145
                     symbol "AERG"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 146
                     symbol "AERS1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 147
                     symbol "AERT"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 148
                     symbol "AESI"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 149
                     symbol "AESP"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 150
                     symbol "AETCQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 151
                     symbol "AETUF"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 152
                     symbol "AEYE"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 153
                     symbol "AEYGQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 154
                     symbol "AEZ"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 155
                     symbol "AFAC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 156
                     symbol "AFAQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 157
                     symbol "AFAR"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 158
                     symbol "AFCI"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 159
                     symbol "AFCO1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 160
                     symbol "AFCX"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 161
                     symbol "AFIS"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 162
                     symbol "AFJK"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 163
                     symbol "AFLX"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 164
                     symbol "AFOP"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 165
                     symbol "AFRM"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 166
                     symbol "AFTR"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 167
                     symbol "AFWY"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 168
                     symbol "AGACF"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 169
                     symbol "AGAI"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 170
                     symbol "AGAM1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 171
                     symbol "AGATQ"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 172
                     symbol "AGCB"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 173
                     symbol "AGCH"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 174
                     symbol "AGCO"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 175
                     symbol "AGD1"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 176
                     symbol "AGFY"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 177
                     symbol "AGGR"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 178
                     symbol "AGIL1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 179
                     symbol "AGILQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 180
                     symbol "AGIS"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 181
                     symbol "AGMH"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 182
                     symbol "AGNUQ"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 183
                     symbol "AGR1"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 184
                     symbol "AGS1"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 185
                     symbol "AGX"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 186
                     symbol "AGYS"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 187
                     symbol "AHAG"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 188
                     symbol "AHI"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 189
                     symbol "AHII"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 190
                     symbol "AHIZQ"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 191
                     symbol "AHLS"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 192
                     symbol "AHNA"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 193
                     symbol "AHNCQ"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 194
                     symbol "ORCL"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 195
                     symbol "AHRN"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 196
                     symbol "AHWY"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 197
                     symbol "AI"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 198
                     symbol "AICOQ"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 199
                     symbol "AIFF"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 200
                     symbol "AIH1"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 201
                     symbol "AIII1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 202
                     symbol "AIIXY"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 203
                     symbol "AILE"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 204
                     symbol "AILP"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 205
                     symbol "AIM1"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 206
                     symbol "AIMAU"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 207
                     symbol "AIMC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 208
                     symbol "AIND"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 209
                     symbol "AINN"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 210
                     symbol "AIOT"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 211
                     symbol "AIP"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 212
                     symbol "AIPN"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 213
                     symbol "AIR"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 214
                     symbol "AIRG"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 215
                     symbol "AIRI"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 216
                     symbol "AIRM"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 217
                     symbol "AIRO1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 218
                     symbol "AIRS1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 219
                     symbol "AIRT"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 220
                     symbol "AIRV"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 221
                     symbol "AISP"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 222
                     symbol "AIT"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 223
                     symbol "AITR"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 224
                     symbol "AIXI"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 225
                     symbol "AJRD"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 226
                     symbol "AKAM"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 227
                     symbol "AKIC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 228
                     symbol "AKLMQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 229
                     symbol "AKTS"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 230
                     symbol "AL"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 231
                     symbol "ALAB"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 232
                     symbol "ALAC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 233
                     symbol "ALAN"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 234
                     symbol "ALAR"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 235
                     symbol "ALCY"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 236
                     symbol "ALDN"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 237
                     symbol "ALDV1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 238
                     symbol "ALDW"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 239
                     symbol "ALF"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 240
                     symbol "ALFIQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 241
                     symbol "ALFO"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 242
                     symbol "ALG"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 243
                     symbol "ALGM"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 244
                     symbol "ALGR"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 245
                     symbol "ALGT"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 246
                     symbol "ALIT"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 247
                     symbol "ALJ"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 248
                     symbol "ALJJ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 249
                     symbol "ALK"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 250
                     symbol "ALKT"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 251
                     symbol "ALLE"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 252
                     symbol "ALLR1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 253
                     symbol "ALLT"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 254
                     symbol "ALN1"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 255
                     symbol "ALNK"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 256
                     symbol "ALNT"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 257
                     symbol "ALOR"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 258
                     symbol "ALOT"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 259
                     symbol "ALPH"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 260
                     symbol "ALPP"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 261
                     symbol "ALPSQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 262
                     symbol "ALRC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 263
                     symbol "ALRM"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 264
                     symbol "ALRN2"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 265
                     symbol "ALSA"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 266
                     symbol "ALSM"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 267
                     symbol "ALTG"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 268
                     symbol "ALTR"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 269
                     symbol "ALTR1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 270
                     symbol "ALTS"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 271
                     symbol "ALTU"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 272
                     symbol "ALVRQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 273
                     symbol "ALY"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 274
                     symbol "ALYAF"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 275
                     symbol "ALYS"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 276
                     symbol "AM"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 277
                     symbol "AM2"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 278
                     symbol "AMAP"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 279
                     symbol "AMAT"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 280
                     symbol "AMBA"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 281
                     symbol "AMBI"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 282
                     symbol "AMBR"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 283
                     symbol "AMCC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 284
                     symbol "AMCF"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 285
                     symbol "AMCS"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 286
                     symbol "AMCVQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 287
                     symbol "AMD"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 288
                     symbol "AME"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 289
                     symbol "AMEP"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 290
                     symbol "AMFW"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 291
                     symbol "AMID1"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 292
                     symbol "AMIEQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 293
                     symbol "AMIIQ"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 294
                     symbol "AMIS"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 295
                     symbol "AMK1"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 296
                     symbol "AMKR"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 297
                     symbol "AMLJ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 298
                     symbol "AMNI"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 299
                     symbol "AMNUQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 300
                     symbol "AMP1"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 301
                     symbol "AMPG"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 302
                     symbol "AMPI"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 303
                     symbol "AMPL"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 304
                     symbol "AMPX"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 305
                     symbol "AMPXQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 306
                     symbol "AMPY"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 307
                     symbol "AMRC"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 308
                     symbol "AMRQQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 309
                     symbol "AMSC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 310
                     symbol "AMSI"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 311
                     symbol "AMSI1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 312
                     symbol "AMST"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 313
                     symbol "AMTM"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 314
                     symbol "AMTX"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 315
                     symbol "AMVC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 316
                     symbol "AMXC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 317
                     symbol "AN1"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 318
                     symbol "ANAC"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 319
                     symbol "ANAD"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 320
                     symbol "ANCCQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 321
                     symbol "ANCJQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 322
                     symbol "ANCR"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 323
                     symbol "ANDA1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 324
                     symbol "ANDA2"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 325
                     symbol "ANDN1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 326
                     symbol "ANDR"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 327
                     symbol "ANDV"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 328
                     symbol "ANDW"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 329
                     symbol "ANDX"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 330
                     symbol "ANEN"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 331
                     symbol "ANET"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 332
                     symbol "ANET2"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 333
                     symbol "ANI"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 334
                     symbol "ANIC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 335
                     symbol "ANLG"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 336
                     symbol "ANLY"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 337
                     symbol "ANMP"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 338
                     symbol "ANS"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 339
                     symbol "ANSC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 340
                     symbol "ANSS"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 341
                     symbol "ANST"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 342
                     symbol "ANSW"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 343
                     symbol "ANT"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 344
                     symbol "ANTP"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 345
                     symbol "ANV1"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 346
                     symbol "ANWWQ"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 347
                     symbol "ANY"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 348
                     symbol "AOGO"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 349
                     symbol "AOGSQ"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 350
                     symbol "AOL"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 351
                     symbol "AONEQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 352
                     symbol "AORGB"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 353
                     symbol "AOS"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 354
                     symbol "AOSL"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 355
                     symbol "AOUT"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 356
                     symbol "AP"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 357
                     symbol "APA"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 358
                     symbol "APAC1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 359
                     symbol "APAGF"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 360
                     symbol "APC"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 361
                     symbol "APCA"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 362
                     symbol "APCC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 363
                     symbol "APCX"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 364
                     symbol "APEX1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 365
                     symbol "APG"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 366
                     symbol "APGB"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 367
                     symbol "APH"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 368
                     symbol "API"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 369
                     symbol "API1"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 370
                     symbol "APIC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 371
                     symbol "APKT"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 372
                     symbol "APL"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 373
                     symbol "APLP"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 374
                     symbol "APLX"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 375
                     symbol "APM1"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 376
                     symbol "APMC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 377
                     symbol "APMI"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 378
                     symbol "APNC"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 379
                     symbol "APNI"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 380
                     symbol "APNT1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 381
                     symbol "APP"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 382
                     symbol "APPCQ"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 383
                     symbol "APPF"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 384
                     symbol "APPN"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 385
                     symbol "APPS"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 386
                     symbol "APPS1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 387
                     symbol "APQCF"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 388
                     symbol "APR1"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 389
                     symbol "APRS"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 390
                     symbol "APSG1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 391
                     symbol "APTI"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 392
                     symbol "APTI1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 393
                     symbol "APTM1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 394
                     symbol "APW"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 395
                     symbol "APWC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 396
                     symbol "APWR1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 397
                     symbol "APWRQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 398
                     symbol "APXI"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 399
                     symbol "AQ"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 400
                     symbol "AQ1"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 401
                     symbol "AQCR"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 402
                     symbol "AQMS"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 403
                     symbol "AQNT"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 404
                     symbol "AQP"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 405
                     symbol "AQU"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 406
                     symbol "AQUA"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 407
                     symbol "AR"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 408
                     symbol "ARB1"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 409
                     symbol "ARBA"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 410
                     symbol "ARBB"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 411
                     symbol "ARBE"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 412
                     symbol "ARBG"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 413
                     symbol "ARBX"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 414
                     symbol "ARC"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 415
                     symbol "ARC1"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 416
                     symbol "ARCB"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 417
                     symbol "ARCK"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 418
                     symbol "ARCW"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 419
                     symbol "ARCX"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 420
                     symbol "ARD1"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 421
                     symbol "ARDI"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 422
                     symbol "ARDT1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 423
                     symbol "AREM1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 424
                     symbol "AREXQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 425
                     symbol "ARG"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 426
                     symbol "ARGU"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 427
                     symbol "ARII"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 428
                     symbol "ARLCF"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 429
                     symbol "ARM"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 430
                     symbol "ARMH"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 431
                     symbol "ARMK"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 432
                     symbol "ARNC"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 433
                     symbol "AROC"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 434
                     symbol "ARPJQ"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 435
                     symbol "ARQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 436
                     symbol "ARQQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 437
                     symbol "ARRS"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 438
                     symbol "ARRY"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 439
                     symbol "ARS1"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 440
                     symbol "ARST"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 441
                     symbol "ART1"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 442
                     symbol "ARTE"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 443
                     symbol "ARTE1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 444
                     symbol "ARTG"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 445
                     symbol "ARTI1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 446
                     symbol "ARTW"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 447
                     symbol "ARTX"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 448
                     symbol "ARUN"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 449
                     symbol "ARVX"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 450
                     symbol "ARW"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 451
                     symbol "ARWA"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 452
                     symbol "ARX"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 453
                     symbol "ARXX"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 454
                     symbol "ARYE"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 455
                     symbol "ASAI1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 456
                     symbol "ASAL"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 457
                     symbol "ASAM1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 458
                     symbol "ASAN"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 459
                     symbol "ASAPQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 460
                     symbol "ASAQ"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 461
                     symbol "ASAX"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 462
                     symbol "ASC"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 463
                     symbol "ASCBF"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 464
                     symbol "ASCL"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 465
                     symbol "ASCMA"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 466
                     symbol "ASCX"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 467
                     symbol "ASDG"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 468
                     symbol "ASDS"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 469
                     symbol "ASDV"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 470
                     symbol "ASEC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 471
                     symbol "ASGN"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 472
                     symbol "ASHE"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 473
                     symbol "ASIA1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 474
                     symbol "ASIGF1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 475
                     symbol "ASIS"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 476
                     symbol "ASKJ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 477
                     symbol "ASLE"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 478
                     symbol "ASMIY"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 479
                     symbol "ASML"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 480
                     symbol "ASND1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 481
                     symbol "ASNS"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 482
                     symbol "ASPIY"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 483
                     symbol "ASPT"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 484
                     symbol "ASPXQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 485
                     symbol "ASR"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 486
                     symbol "ASTC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 487
                     symbol "ASTE"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 488
                     symbol "ASTI"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 489
                     symbol "ASTR"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 490
                     symbol "ASTS"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 491
                     symbol "ASTTY"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 492
                     symbol "ASTX1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 493
                     symbol "ASUR"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 494
                     symbol "ASV"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 495
                     symbol "ASVI"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 496
                     symbol "ASW1"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 497
                     symbol "ASWX"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 498
                     symbol "ASX"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 499
                     symbol "ASYS"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 500
                     symbol "ASYTQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 501
                     symbol "ASZ"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 502
                     symbol "ATA"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 503
                     symbol "ATAC1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 504
                     symbol "ATAHQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 505
                     symbol "ATAQ"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 506
                     symbol "ATAR1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 507
                     symbol "ATB"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 508
                     symbol "ATC"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 509
                     symbol "ATCH"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 510
                     symbol "ATCH1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 511
                     symbol "ATCM"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 512
                     symbol "ATCX"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 513
                     symbol "ATEA"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 514
                     symbol "ATEK"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 515
                     symbol "ATEL"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 516
                     symbol "ATEN"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 517
                     symbol "ATEYY"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 518
                     symbol "ATGCQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 519
                     symbol "ATGL"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 520
                     symbol "ATGN"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 521
                     symbol "ATHL"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 522
                     symbol "ATHR"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 523
                     symbol "ATHYQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 524
                     symbol "ATI"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 525
                     symbol "ATIS"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 526
                     symbol "ATKR"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 527
                     symbol "ATLPA"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 528
                     symbol "ATLS"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 529
                     symbol "ATLS1"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 530
                     symbol "ATLS2"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 531
                     symbol "ATMC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 532
                     symbol "ATML"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 533
                     symbol "ATMU"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 534
                     symbol "ATMV"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 535
                     symbol "ATN"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 536
                     symbol "ATN1"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 537
                     symbol "ATNY"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 538
                     symbol "ATOM"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 539
                     symbol "ATON"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 540
                     symbol "ATPAQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 541
                     symbol "ATPL"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 542
                     symbol "ATRO"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 543
                     symbol "ATRS1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 544
                     symbol "ATS"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 545
                     symbol "ATSC1"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 546
                     symbol "ATSG"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 547
                     symbol "ATSN"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 548
                     symbol "ATTOF"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 549
                     symbol "ATTU"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 550
                     symbol "ATTY"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 551
                     symbol "ATW"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 552
                     symbol "ATX"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 553
                     symbol "ATXG"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 554
                     symbol "ATXI1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 555
                     symbol "ATYT"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 556
                     symbol "AUDC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 557
                     symbol "AUGS"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 558
                     symbol "AUGT1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 559
                     symbol "AUID"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 560
                     symbol "AULT1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 561
                     symbol "AUOTY"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 562
                     symbol "AUR"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 563
                     symbol "AURAQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 564
                     symbol "AUS"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 565
                     symbol "AUSA"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 566
                     symbol "AUSPF"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 567
                     symbol "AUTH"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 568
                     symbol "AUTNY"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 569
                     symbol "AUTO1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 570
                     symbol "AUUD"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 571
                     symbol "AUZR"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 572
                     symbol "AV1"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 573
                     symbol "AVAN"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 574
                     symbol "AVAV"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 575
                     symbol "AVC"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 576
                     symbol "AVCT1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 577
                     symbol "AVCTQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 578
                     symbol "AVDS1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 579
                     symbol "AVDX"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 580
                     symbol "AVGE1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 581
                     symbol "AVGO"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 582
                     symbol "AVGO1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 583
                     symbol "AVGTF"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 584
                     symbol "AVHI"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 585
                     symbol "AVHOQ"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 586
                     symbol "AVI"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 587
                     symbol "AVID"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 588
                     symbol "AVL1"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 589
                     symbol "AVLR"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 590
                     symbol "AVMC1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 591
                     symbol "AVNT1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 592
                     symbol "AVNW"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 593
                     symbol "AVNX"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 594
                     symbol "AVOL"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 595
                     symbol "AVPT"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 596
                     symbol "AVSR"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 597
                     symbol "AVT"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 598
                     symbol "AVTMQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 599
                     symbol "AVV"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 600
                     symbol "AVX"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 601
                     symbol "AVYAQ"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 602
                     symbol "AVZAQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 603
                     symbol "AW"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 604
                     symbol "AWA"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 605
                     symbol "AWAY1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 606
                     symbol "AWIN"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 607
                     symbol "AWRE"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 608
                     symbol "AWX"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 609
                     symbol "AXAC"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 610
                     symbol "AXAR"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 611
                     symbol "AXAS"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 612
                     symbol "AXE"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 613
                     symbol "AXHI"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 614
                     symbol "AXHM"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 615
                     symbol "AXIL"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 616
                     symbol "AXNT"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 617
                     symbol "AXON"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 618
                     symbol "AXPWQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 619
                     symbol "AXSI"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 620
                     symbol "AXSO"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 621
                     symbol "AXST"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 622
                     symbol "AXTC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 623
                     symbol "AXTI"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 624
                     symbol "AXYS"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 625
                     symbol "AYD"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 626
                     symbol "AYI"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 627
                     symbol "AYR"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 628
                     symbol "AYS"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 629
                     symbol "AYX"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 630
                     symbol "AZ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 631
                     symbol "AZIC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 632
                     symbol "AZPN"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 633
                     symbol "AZPN1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 634
                     symbol "AZUL"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 635
                     symbol "AZURQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 636
                     symbol "AZZ"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 637
                     symbol "B"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 638
                     symbol "BA"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 639
                     symbol "BAANF"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 640
                     symbol "BACA"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 641
                     symbol "BAER"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 642
                     symbol "BAH"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 643
                     symbol "BALT2"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 644
                     symbol "BAND"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 645
                     symbol "BANL"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 646
                     symbol "BAR1"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 647
                     symbol "BASE"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 648
                     symbol "BASEA"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 649
                     symbol "BASXQ"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 650
                     symbol "BATL"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 651
                     symbol "BATT1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 652
                     symbol "BAY1"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 653
                     symbol "BAYA"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 654
                     symbol "BB"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 655
                     symbol "BBAI"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 656
                     symbol "BBBB"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 657
                     symbol "BBCP"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 658
                     symbol "BBEPQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 659
                     symbol "BBG"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 660
                     symbol "BBLKF"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 661
                     symbol "BBLUQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 662
                     symbol "BBND"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 663
                     symbol "BBOX"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 664
                     symbol "BBRC1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 665
                     symbol "BBSI"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 666
                     symbol "BBSW"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 667
                     symbol "BBU"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 668
                     symbol "BCAN"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 669
                     symbol "BCAS"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 670
                     symbol "BCDS1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 671
                     symbol "BCO"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 672
                     symbol "BCOV"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 673
                     symbol "BCSA"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 674
                     symbol "BCSI"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 675
                     symbol "BCST"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 676
                     symbol "BCTI"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 677
                     symbol "BDC"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 678
                     symbol "BDCO"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 679
                     symbol "BDE1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 680
                     symbol "BDGPA"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 681
                     symbol "BDI"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 682
                     symbol "BDK"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 683
                     symbol "BDLN"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 684
                     symbol "BDLSQ"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 685
                     symbol "BDMI"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 686
                     symbol "BDRL"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 687
                     symbol "BE"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 688
                     symbol "BEAS"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 689
                     symbol "BECN"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 690
                     symbol "BEEM"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 691
                     symbol "BEEP"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 692
                     symbol "BEI1"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 693
                     symbol "BEIQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 694
                     symbol "BELFA"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 695
                     symbol "BELM"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 696
                     symbol "BENE"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 697
                     symbol "BEOSZ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 698
                     symbol "BEST"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 699
                     symbol "BEST1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 700
                     symbol "BET"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 701
                     symbol "BEXP"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 702
                     symbol "BEZ"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 703
                     symbol "BFAC"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 704
                     symbol "BFI1"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 705
                     symbol "BFRE1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 706
                     symbol "BFUN"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 707
                     symbol "BFX1"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 708
                     symbol "BGC2"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 709
                     symbol "BGF"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 710
                     symbol "BGGSQ"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 711
                     symbol "BGH1"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 712
                     symbol "BGPTQ"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 713
                     symbol "BGRH"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 714
                     symbol "BGRY"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 715
                     symbol "BGSF"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 716
                     symbol "BGSX"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 717
                     symbol "BHAC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 718
                     symbol "BHAC1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 719
                     symbol "BHAG"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 720
                     symbol "BHE"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 721
                     symbol "BHI"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 722
                     symbol "BHODQ"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 723
                     symbol "BIDZ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 724
                     symbol "BIGC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 725
                     symbol "BILL"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 726
                     symbol "BIOS"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 727
                     symbol "BIOT"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 728
                     symbol "BIRT"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 729
                     symbol "BISA"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 730
                     symbol "BITS1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 731
                     symbol "BIZZ1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 732
                     symbol "BJS"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 733
                     symbol "BKEP"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 734
                     symbol "BKHA"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 735
                     symbol "BKI"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 736
                     symbol "BKKT"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 737
                     symbol "BKNG"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 738
                     symbol "BKR"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 739
                     symbol "BKSY"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 740
                     symbol "BKTI"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 741
                     symbol "BKV"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 742
                     symbol "BKYI"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 743
                     symbol "BL"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 744
                     symbol "BLAC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 745
                     symbol "BLBX"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 746
                     symbol "BLD"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 747
                     symbol "BLD1"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 748
                     symbol "BLDE"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 749
                     symbol "BLDP"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 750
                     symbol "BLEU"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 751
                     symbol "BLIN"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 752
                     symbol "BLKB"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 753
                     symbol "BLND"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 754
                     symbol "BLNG"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 755
                     symbol "BLNK"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 756
                     symbol "BLOG"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 757
                     symbol "BLOX"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 758
                     symbol "BLPG1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 759
                     symbol "BLSA"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 760
                     symbol "BLSW1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 761
                     symbol "BLT"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 762
                     symbol "BLTS"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 763
                     symbol "BLUAF"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 764
                     symbol "BLUE1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 765
                     symbol "BLVD"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 766
                     symbol "BLZE"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 767
                     symbol "BLZE1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 768
                     symbol "BMAC"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 769
                     symbol "BMAN"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 770
                     symbol "BMAQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 771
                     symbol "BMBL"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 772
                     symbol "BMC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 773
                     symbol "BMI"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 774
                     symbol "BMR"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 775
                     symbol "BMRQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 776
                     symbol "BMTM"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 777
                     symbol "BMTX"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 778
                     symbol "BN1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 779
                     symbol "BNAI"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 780
                     symbol "BNE1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 781
                     symbol "BNFT"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 782
                     symbol "BNI"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 783
                     symbol "BNIX"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 784
                     symbol "BNNR"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 785
                     symbol "BNSOF"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 786
                     symbol "BNZI"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 787
                     symbol "BOAC"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 788
                     symbol "BOBJY"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 789
                     symbol "BOCN"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 790
                     symbol "BOG"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 791
                     symbol "BOLDQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 792
                     symbol "BOLT1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 793
                     symbol "BOOL"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 794
                     symbol "BOOM"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 795
                     symbol "BOP"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 796
                     symbol "BOR"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 797
                     symbol "BORL"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 798
                     symbol "BORR"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 799
                     symbol "BOSA"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 800
                     symbol "BOSC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 801
                     symbol "BOWN"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 802
                     symbol "BOX"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 803
                     symbol "BOX1"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 804
                     symbol "BOXL"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 805
                     symbol "BOYD1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 806
                     symbol "BP"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 807
                     symbol "BPAC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 808
                     symbol "BPAO"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 809
                     symbol "BPI.A"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 810
                     symbol "BPIGF"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 811
                     symbol "BPL"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 812
                     symbol "BPMP"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 813
                     symbol "BPOM"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 814
                     symbol "BPT"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 815
                     symbol "BPTM"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 816
                     symbol "BPTR"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 817
                     symbol "BPZRQ"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 818
                     symbol "BR"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 819
                     symbol "BR1"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 820
                     symbol "BRAC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 821
                     symbol "BRANF"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 822
                     symbol "BRC"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 823
                     symbol "BRCD"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 824
                     symbol "BRCM"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 825
                     symbol "BRD"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 826
                     symbol "BRDG1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 827
                     symbol "BRDR"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 828
                     symbol "BRDSQ"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 829
                     symbol "BREK"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 830
                     symbol "BREZ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 831
                     symbol "BRIO"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 832
                     symbol "BRIV"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 833
                     symbol "BRKC1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 834
                     symbol "BRKH"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 835
                     symbol "BRKT"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 836
                     symbol "BRLCQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 837
                     symbol "BRLS1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 838
                     symbol "BRN"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 839
                     symbol "BRNC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 840
                     symbol "BRNC1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 841
                     symbol "BROD1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 842
                     symbol "BROG"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 843
                     symbol "BRQSF"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 844
                     symbol "BRR"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 845
                     symbol "BRR1"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 846
                     symbol "BRSS"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 847
                     symbol "BRST1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 848
                     symbol "BRSWQ"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 849
                     symbol "BRY"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 850
                     symbol "BRY1"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 851
                     symbol "BRZE"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 852
                     symbol "BSFT"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 853
                     symbol "BSIIU"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 854
                     symbol "BSKY"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 855
                     symbol "BSM"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 856
                     symbol "BSNX"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 857
                     symbol "BSQR"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 858
                     symbol "BSTW"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 859
                     symbol "BSY"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 860
                     symbol "BTAQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 861
                     symbol "BTC1"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 862
                     symbol "BTCM"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 863
                     symbol "BTDR"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 864
                     symbol "BTE"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 865
                     symbol "BTF1"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 866
                     symbol "BTGI"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 867
                     symbol "BTGL"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 868
                     symbol "BTH"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 869
                     symbol "BTHS"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 870
                     symbol "BTIC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 871
                     symbol "BTOC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 872
                     symbol "BTRS"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 873
                     symbol "BTSR"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 874
                     symbol "BTUI"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 875
                     symbol "BUCY"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 876
                     symbol "BUJA"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 877
                     symbol "BURU"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 878
                     symbol "BUSY"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 879
                     symbol "BUTLQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 880
                     symbol "BV"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 881
                     symbol "BV1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 882
                     symbol "BVEW"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 883
                     symbol "BVSI"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 884
                     symbol "BVSN"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 885
                     symbol "BW"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 886
                     symbol "BWAC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 887
                     symbol "BWAY1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 888
                     symbol "BWC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 889
                     symbol "BWC1"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 890
                     symbol "BWEBF"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 891
                     symbol "BWEN"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 892
                     symbol "BWLP"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 893
                     symbol "BWMN"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 894
                     symbol "BWOWF"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 895
                     symbol "BWP"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 896
                     symbol "BWSI"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 897
                     symbol "BWXT"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 898
                     symbol "BXC"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 899
                     symbol "BXEFF"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 900
                     symbol "BYI"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 901
                     symbol "BYNDQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 902
                     symbol "BYNO"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 903
                     symbol "BYRN"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 904
                     symbol "BZ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 905
                     symbol "BZC"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 906
                     symbol "CA1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 907
                     symbol "CAAP"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 908
                     symbol "CAB1"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 909
                     symbol "CACGU"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 910
                     symbol "CACI"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 911
                     symbol "CACS"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 912
                     symbol "CADA"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 913
                     symbol "CADE2"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 914
                     symbol "CAE"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 915
                     symbol "CAER"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 916
                     symbol "CAI"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 917
                     symbol "CAII"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 918
                     symbol "CAIR"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 919
                     symbol "CAIS"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 920
                     symbol "CAJPY"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 921
                     symbol "CAL1"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 922
                     symbol "CALAQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 923
                     symbol "CALD"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 924
                     symbol "CALX"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 925
                     symbol "CAM"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 926
                     symbol "CAM1"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 927
                     symbol "CAMB"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 928
                     symbol "CAMBA"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 929
                     symbol "CAMD"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 930
                     symbol "CAMPQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 931
                     symbol "CAMT"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 932
                     symbol "CAMZ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 933
                     symbol "CAN"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 934
                     symbol "CANI"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 935
                     symbol "CANOQ1"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 936
                     symbol "CANR1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 937
                     symbol "CANRQ"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 938
                     symbol "CAPA1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 939
                     symbol "CAPI"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 940
                     symbol "CAPL"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 941
                     symbol "CAPNU"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 942
                     symbol "CAPT"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 943
                     symbol "CAR"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 944
                     symbol "CARB"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 945
                     symbol "CARD1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 946
                     symbol "CARE1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 947
                     symbol "CARI"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 948
                     symbol "CARL1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 949
                     symbol "CAS"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 950
                     symbol "CASC1"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 951
                     symbol "CASS"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 952
                     symbol "CASSQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 953
                     symbol "CAST1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 954
                     symbol "CAT"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 955
                     symbol "CATM"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 956
                     symbol "CATP"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 957
                     symbol "CATS1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 958
                     symbol "CATT"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 959
                     symbol "CATX1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 960
                     symbol "CATZ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 961
                     symbol "CAUD"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 962
                     symbol "CAVM"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 963
                     symbol "CAVN"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 964
                     symbol "CAVO"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 965
                     symbol "CAYN"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 966
                     symbol "CBAT"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 967
                     symbol "CBE"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 968
                     symbol "CBEH"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 969
                     symbol "CBI"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 970
                     symbol "CBIS1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 971
                     symbol "CBLK"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 972
                     symbol "CBLT"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 973
                     symbol "CBNRQ"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 974
                     symbol "CBRG"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 975
                     symbol "CBRI"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 976
                     symbol "CBXC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 977
                     symbol "CBZ"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 978
                     symbol "CBZ2"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 979
                     symbol "CCA1"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 980
                     symbol "CCAI"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 981
                     symbol "CCAR"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 982
                     symbol "CCBL"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 983
                     symbol "CCCS"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 984
                     symbol "CCEC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 985
                     symbol "CCGM"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 986
                     symbol "CCIX"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 987
                     symbol "CCIX2"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 988
                     symbol "CCL"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 989
                     symbol "CCLN"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 990
                     symbol "CCLP"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 991
                     symbol "CCMP"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 992
                     symbol "CCMTF"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 993
                     symbol "CCN"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 994
                     symbol "CCRC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 995
                     symbol "CCRD"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 996
                     symbol "CCRD1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 997
                     symbol "CCSC1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 998
                     symbol "CCSI"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 999
                     symbol "CCTG"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 1000
                     symbol "CCTS"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 1001
                     symbol "CCTX"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 1002
                     symbol "CCUR"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 1003
                     symbol "CCV"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 1004
                     symbol "CCVI"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 1005
                     symbol "CD"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 1006
                     symbol "CDAQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 1007
                     symbol "CDCAQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 1008
                     symbol "CDCM"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 1009
                     symbol "CDCO1"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 1010
                     symbol "CDCSY"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 1011
                     symbol "CDCY"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 1012
                     symbol "CDD"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 1013
                     symbol "CDDDQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 1014
                     symbol "CDDT"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 1015
                     symbol "CDG"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 1016
                     symbol "CDI"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 1017
                     symbol "CDIIQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 1018
                     symbol "CDK"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 1019
                     symbol "CDLR"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 1020
                     symbol "CDMS"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 1021
                     symbol "CDNS"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 1022
                     symbol "CDOT"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 1023
                     symbol "CDRBQ"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
                 {
                     id 1024
                     symbol "CDRE"
-                    exchange "NYSE"
+                    exchange "UN"
                 }
                 {
                     id 1025
                     symbol "CDS2"
-                    exchange "NYSEMKT"
+                    exchange "UN"
                 }
                 {
                     id 1026
                     symbol "CDSC"
-                    exchange "NASDAQ"
+                    exchange "UQ"
                 }
             ]
         }
