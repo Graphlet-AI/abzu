@@ -142,9 +142,10 @@ process:
           matches: "${base_dir}/er/iterations/{iteration}/matches.{format}"
           eval: "${base_dir}/er/iterations/{iteration}/companies_resolved.{format}"
       max_block_size: 50
+      iteration: 4
 
     refine:
-      input: "${process.er.output}/{iteration}/companies_resolved.parquet"
+      input: "${process.er.paths.names.eval}"
       output: "${base_dir}/refined_knowledge_graph/nodes.parquet"
 
 chat:
