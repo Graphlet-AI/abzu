@@ -138,7 +138,7 @@ class Ticker {
 
 class Company {
   id int
-  @description("Unique among all objects.")
+  @description("Unique among all objects. Add to source_ids when merging.")
 
   uuid string?
   @description("A unique identifier for this object.")
@@ -175,11 +175,10 @@ class Company {
   linkedin_url string?
 
   source_ids int[]?
-  @description("List of source Company.id that this Company originates from via merging records.")
+  @description("List of source Company.ids that were merged to create this Company.")
 
   source_uuids string[]?
-  @description("List of source Company.uuid that this Company originates from via merging records.")
-}
+  @description("Leave null.")}
 
 class Product {
   id int

@@ -1,4 +1,5 @@
 class CompanyList {
+   @@description("Retain all Company.id values in source_ids when merging.")
    block_key string? @description("The blocking key used to merge records.")
    block_key_type string? @description("The blocking strategy this block key comes from.")
    block_size int? @description("The number of records merged by entity resolution.")   
@@ -11,6 +12,61 @@ function MultiEntityResolution(company_list: CompanyList) -> CompanyList {
 
   // The prompt uses Jinja syntax. Change the models or this text and watch the prompt preview change!
   prompt #"
+    Examine the following set of companies and determine which ones are the same entity. If two or more companies are the same, merge them and return the resolved company with all combined attributes filled out. If a record has a valid field and the other doesn't, add it. Consider both the company name and description when making matches. If there are multiple company descriptions, rewrite the description to summarize them into a single description of less than 60 words. Keep track of the source companies and their attributes throughout the process. 
+    
+    IMPORTANT UUID HANDLING: When merging companies, you MUST collect ALL the Company.uuid values from the input companies and store them in the Company.source_uuids field of the Companies in the output CompanyList. For example, if merging two companies with uuids 'abc-123' and 'def-456', the output source_uuids should be ['abc-123', 'def-456']. Always populate source_uuids with the input UUIDs - never leave it null if the input companies have UUIDs. The merged record should have uuid set to null (it will get a new UUID assigned later). If there are already UUIDs in Company.source_uuids then preserve them and append the merged Company.uuid values to the existing list.
+
+    Company.id and Company.source_id entries must always be integers and never floats, so no decimal points. Collect all Company.id values as integers from the input companies and store them in the Company.source_ids field of the Companies in the output CompanyList. Make sure all Company records have a valid integer 'id' field and valid UUID 'uuid' field. Fill 'source_ids' field with the integer 'id' field values that make up this record. Duplicate integers in 'source_ids' are okay.
+    
+    Choose the most complete corporate name when merging names, including the organization type ending. Company names without organization types can be merged with those that have them. Company names with different corporate endings are probably not the same company, depending on the description. Input records with the same UUID should be merged and only one UUID should be added to 'source_uuids'. If there is only 1 company in the input (no merging needed), copy its Company.uuid to the output Company.source_uuids and set the output Company.uuid to the value of the input Company.uuid. Similarly, copy its Company.id to the output Company.source_ids and set the output Company.id to the value of the input Company.id.
+
+    Return a merged set of companies with all combined attributes from the source companies filled out.
+
+    {# special macro to print the output instructions. #}
+    {{ ctx.output_format(hoist_classes=["Company", "Ticker", "CompanyList"]) }}
+
+    {{ _.role("user") }}
+
+    Company List: {{ company_list }}
+  "#
+}
+
+class MergeCompany {
+   @@description("A simple Company object to track merges of Company records.")
+   id int? @description("Unique among all objects. Add to source_ids when merging.")
+   source_ids int[]? @description("List of source Company.ids that were merged to create this Company.")
+}
+
+class FewShotExample {
+    companies MergeCompany[] @description("Input companies to be merged.")
+    merged_company MergeCompany @description("The resulting merged company, with all the input companies' Company.id values in source_ids.")
+}
+
+class MergeCompanyExamples {
+    @@description("A collection of few-shot examples for merging companies.")
+    merge_companies FewShotExample[]
+}
+
+template_string FewShotCompanies(example: MergeCompanyExamples) #"
+  For example:
+  {% for c in example.companies %}
+  {{ c }}
+  {% endfor %}
+  
+  Would merge into:
+  {{ example.merged_company }} 
+"#
+
+function FewShotMultiEntityResolution(company_list: CompanyList, few_shot_company_merges: MergeCompanyExamples) -> CompanyList {
+  // see clients.baml
+  client Gemini20Flash
+
+  // The prompt uses Jinja syntax. Change the models or this text and watch the prompt preview change!
+  prompt #"
+    Given these examples of merging companies:
+
+    {{ few_shot_company_merges }}
+
     Examine the following set of companies and determine which ones are the same entity. If two or more companies are the same, merge them and return the resolved company with all combined attributes filled out. If a record has a valid field and the other doesn't, add it. Consider both the company name and description when making matches. If there are multiple company descriptions, rewrite the description to summarize them into a single description of less than 60 words. Keep track of the source companies and their attributes throughout the process. 
     
     IMPORTANT UUID HANDLING: When merging companies, you MUST collect ALL the Company.uuid values from the input companies and store them in the Company.source_uuids field of the Companies in the output CompanyList. For example, if merging two companies with uuids 'abc-123' and 'def-456', the output source_uuids should be ['abc-123', 'def-456']. Always populate source_uuids with the input UUIDs - never leave it null if the input companies have UUIDs. The merged record should have uuid set to null (it will get a new UUID assigned later). If there are already UUIDs in Company.source_uuids then preserve them and append the merged Company.uuid values to the existing list.
