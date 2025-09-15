@@ -33,8 +33,8 @@ function MultiEntityResolution(company_list: CompanyList) -> CompanyList {
 
 class MergeCompany {
    @@description("A simple Company object to track merges of Company records.")
-   id int? @description("Unique among all objects. Add to source_ids when merging.")
-   source_ids int[]? @description("List of source Company.ids that were merged to create this Company.")
+   id int @description("Unique among all objects. Add to source_ids when merging.")
+   source_ids int[] @description("List of source Company.ids that were merged to create this Company.")
 }
 
 class FewShotExample {
@@ -49,17 +49,16 @@ class MergeCompanyExampleSet {
 
 template_string FewShotCompanies(examples: MergeCompanyExampleSet) #"
   For example:
-  {% for s in examples.merge_companies %}
-    {% for c in s.companies %}
+  {% for fse in examples.merge_companies %}
+    {% for c in fse.companies %}
       {{ c }}
     {% endfor %}
+    Would merge into:
+    {{ fse.merged_company }}
   {% endfor %}
-  
-  Would merge into:
-  {{ s.merged_company }}
 "#
 
-function FewShotMultiEntityResolution(company_list: CompanyList, few_shot_company_merges: MergeCompanyExampleSet) -> CompanyList {
+function FewShotMultiEntityResolution(company_list: CompanyList, merge_companies_example_set: MergeCompanyExampleSet) -> CompanyList {
   // see clients.baml
   client Gemini20Flash
 
@@ -67,7 +66,7 @@ function FewShotMultiEntityResolution(company_list: CompanyList, few_shot_compan
   prompt #"
     Given these examples of merging companies:
 
-    {{ few_shot_company_merges }}
+    {{ merge_companies_example_set }}
 
     Examine the following set of companies and determine which ones are the same entity. If two or more companies are the same, merge them and return the resolved company with all combined attributes filled out. If a record has a valid field and the other doesn't, add it. Consider both the company name and description when making matches. If there are multiple company descriptions, rewrite the description to summarize them into a single description of less than 60 words. Keep track of the source companies and their attributes throughout the process. 
     

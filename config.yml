@@ -145,8 +145,12 @@ process:
       iteration: 4
 
     refine:
-      input: "${process.er.paths.names.eval}"
-      output: "${base_dir}/refined_knowledge_graph/nodes.parquet"
+      input:
+        companies: "${process.kg.er.paths.names.eval}"
+        relationships: "${process.kg.raw.output}/relationships.parquet"
+      output:
+        nodes: "${base_dir}/refined_knowledge_graph/nodes.parquet"
+        edges: "${base_dir}/refined_knowledge_graph/edges.parquet"
 
 chat:
   start:

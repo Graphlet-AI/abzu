@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-"""Refine the knowledge graph by creating bidirectional relationships and a unified edge list."""
+"""Refine the knowledge graph by mapping relationships to resolved companies."""
 
 from pyspark.sql import SparkSession
 
@@ -11,16 +10,21 @@ logger = get_logger(__name__)
 
 
 def refine_knowledge_graph(
-    input_path: str = config.get("process.kg.refine.input"),
-    output_path: str = config.get("process.kg.refine.output"),
+    input_paths: dict[str, str] = {"companies": config.get("process.kg.refine.input.companies")},
+    output_paths: dict[str, str] = {
+        "nodes": config.get("process.kg.refine.output.nodes"),
+        "edges": config.get("process.kg.refine.output.edges"),
+    },
+    iteration: int = 4,
     local_mode: bool = True,
 ) -> None:
     """
-    Refine the knowledge graph by creating bidirectional relationships and a unified edge list.
+    Refine the knowledge graph by mapping relationships to resolved companies.
 
     Args:
         input_path: Path to the raw knowledge graph parquet files
         output_path: Path to save the refined knowledge graph
+        iteration: ER iteration number to use for resolved companies
         local_mode: Whether to run in local mode. Defaults to True.
     """
     # Create SparkSession with appropriate configuration
@@ -28,4 +32,6 @@ def refine_knowledge_graph(
         app_name="refine_knowledge_graph",
         local_mode=local_mode,
     )
-    spark
+    companies_df = spark.read.parquet(input_paths["companies"])
+    relationships_df = spark.read.parquet(input_paths["relationships"])
+    output_paths, iteration, companies_df, relationships_df

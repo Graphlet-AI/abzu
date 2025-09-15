@@ -34,7 +34,6 @@ class LazyGroup(click.Group):
         "dump": "abzu.cli.dump:dump",
         "mypy": "abzu.cli.mypy:mypy",
         "process": "abzu.cli.process:process",
-        "steps": "abzu.cli.steps:steps",
     },
 )
 def cli():

@@ -5,7 +5,8 @@ from typing import Any, Optional
 
 from abzu.baml_client.async_client import BamlAsyncClient
 from abzu.baml_client.runtime import BamlCallOptions
-from abzu.baml_client.types import Company, CompanyList
+from abzu.baml_client.types import Company, CompanyList, MergeCompanyExampleSet
+from abzu.er.few_shot import company_dicts_to_baml, company_id_tracking_dicts
 from abzu.logs import get_logger
 
 logger = get_logger(__name__)
@@ -197,6 +198,11 @@ async def process_block_with_uuid_mapping(
             companies=companies,
         )
 
+        # Setup few-show examples
+        merge_companies_example_set: MergeCompanyExampleSet = company_dicts_to_baml(
+            company_id_tracking_dicts
+        )
+
         logger.debug(
             f"Submitting block '{block_key}' to MultiEntityResolution API with integer IDs"
         )
@@ -204,11 +210,15 @@ async def process_block_with_uuid_mapping(
         # Call BAML with integer IDs
         if collector:
             baml_options = BamlCallOptions(collector=collector)
-            result = await baml_client.MultiEntityResolution(
-                company_list=company_list, baml_options=baml_options
+            result = await baml_client.FewShotMultiEntityResolution(
+                company_list=company_list,
+                merge_companies_example_set=merge_companies_example_set,
+                baml_options=baml_options,
             )
         else:
-            result = await baml_client.MultiEntityResolution(company_list=company_list)
+            result = await baml_client.FewShotMultiEntityResolution(
+                company_list=company_list, merge_companies_example_set=merge_companies_example_set
+            )
 
         # Convert resolved companies back to dictionaries with UUID mapping restored
         resolved_companies = []
