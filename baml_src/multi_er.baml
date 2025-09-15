@@ -65,8 +65,6 @@ function FewShotMultiEntityResolution(company_list: CompanyList, few_shot_compan
 
   // The prompt uses Jinja syntax. Change the models or this text and watch the prompt preview change!
   prompt #"
-    {{ _.role("system") }}
-
     Given these examples of merging companies:
 
     {{ few_shot_company_merges }}
