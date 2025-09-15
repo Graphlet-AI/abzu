@@ -187,10 +187,33 @@ def match_entities(
     output_dir = output_path_obj.parent
     output_dir.mkdir(parents=True, exist_ok=True)
 
+    # Check for blocks with errors and save them separately
+    error_blocks = (
+        results_df[results_df["error"].notna()]
+        if len(results_df) > 0 and "error" in results_df.columns
+        else pd.DataFrame()
+    )
+
+    if len(error_blocks) > 0:
+        # Create error output path
+        error_output_path = "data/er/iterations/{iteration}/errors.parquet".format(
+            iteration=iteration
+        )
+        error_path_obj = Path(error_output_path)
+        error_dir = error_path_obj.parent
+        error_dir.mkdir(parents=True, exist_ok=True)
+
+        # Backup existing error file if it exists
+        backup_file(error_path_obj)
+
+        # Save error blocks to separate file
+        error_blocks.to_parquet(error_output_path, index=False)
+        logger.warning(f"Saved {len(error_blocks)} error blocks to {error_output_path}")
+
     # Backup existing parquet file if it exists
     backup_file(output_path_obj)
 
-    # Save results to parquet
+    # Save ALL results to parquet (including error blocks)
     results_df.to_parquet(output_parquet_path, index=False)
     logger.info(f"Saved {len(results_df)} resolved blocks to {output_parquet_path}")
 
@@ -207,11 +230,6 @@ def match_entities(
         if len(results_df) > 0 and "was_resolved" in results_df.columns
         else pd.DataFrame()
     )
-    error_blocks = (
-        results_df[results_df["error"].notna()]
-        if len(results_df) > 0 and "error" in results_df.columns
-        else pd.DataFrame()
-    )
 
     logger.info("=" * 60)
     logger.info("ENTITY RESOLUTION MATCHING SUMMARY")
@@ -219,6 +237,10 @@ def match_entities(
     logger.info(f"Total blocks processed: {len(results_df)}")
     logger.info(f"Successfully resolved: {len(resolved_blocks)}")
     logger.info(f"Errors: {len(error_blocks)}")
+    if len(error_blocks) > 0:
+        error_path = "data/er/iterations/{iteration}/errors.parquet".format(iteration=iteration)
+        logger.info(f"  → Error blocks saved to: {error_path}")
+        logger.info("  → Error blocks are still included in main output")
     logger.info("")
     logger.info(
         "Note: Resolved companies have new UUIDs; single-company blocks retain original UUIDs"

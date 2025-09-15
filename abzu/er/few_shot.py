@@ -21,7 +21,8 @@ def company_dicts_to_baml(
 
     Note that we do hard asserts, if the few-shot examples aren't complete, we want to die hard."""
     for few_shot_example in merge_company_example_set_dict["merge_companies"]:
-        assert "merge_companies" in few_shot_example
+        assert "companies" in few_shot_example
+        assert "merged_company" in few_shot_example
 
         # Fill in the FewShotExample.companies field
         companies: list[MergeCompany] = []
