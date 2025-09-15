@@ -29,6 +29,7 @@ class LazyGroup(click.Group):
     lazy_subcommands={
         "api": "abzu.cli.api:api",
         "chat": "abzu.cli.chat:chat",
+        "config": "abzu.cli.config:config",
         "crawl": "abzu.cli.crawl:crawl",
         "data": "abzu.cli.data:data",
         "dump": "abzu.cli.dump:dump",
