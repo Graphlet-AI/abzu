@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Psychology
+
+Do not be afraid to question what I say. Do not always respond with "You're right!" Question the assertions I make and decide whether they are true. If they are probably true, don't question them. If they are probably false, question them. If you are unsure, question them. Always think critically about what I say and decide for yourself whether it is true or false.
+
 ## Commands
 
 ### Development
@@ -63,7 +67,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Data Processing**: Apache Spark (PySpark) for ETL and graph operations
 - **Graph Database**: Kuzu for graph storage and queries
 - **Web Crawling**: Scrapy with custom spiders
-- **Caching Modes**: 
+- **Caching Modes**:
   - none: No caching (legacy)
   - local: Redis + disk
   - hybrid: Dapr state store (Redis) + S3/MinIO
@@ -132,7 +136,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Mypy - fix mypy errors without being asked and without my verification.
 - Pre-commit - fix pre-commit errors without being asked and without my verification.
 - New Modules - create a folder for a new module without being asked and without my verification.
-- __init__.py - add these files to new module directories without being asked and without my verification.
+- **init**.py - add these files to new module directories without being asked and without my verification.
 - Edit Multiple Files at Once - if you need to edit multiple files for a single TODO operation, do so in a single step. Do not create multiple steps for the same task.
 - `abzu steps` Command - Add new steps in the data pipeline to the `abzu steps` command. This command is used to run the data pipeline in a specific order. The steps should be added in the order they are executed in the pipeline. If you aren't sure about the order, ask me.
 - Git - Keep commit messsages straightforward and to the point - do not put extraneous details, simply summarize the work performed. Do not put anything in commit messages other than a description of the code changes. Do not put "Generated with [Claude Code](https://claude.ai/code)" or anything else relating to Claude or Anthropic.
@@ -145,7 +149,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Important Notes
 
 ### BAML Client Generation
+
 The `abzu/baml_client/` directory is auto-generated. Never edit files in this directory directly. To make changes:
+
 1. Edit the BAML source files in `baml_src/`
 2. Run `baml-cli generate` to regenerate the client
 3. Test with `baml-cli test`
@@ -153,13 +159,16 @@ The `abzu/baml_client/` directory is auto-generated. Never edit files in this di
 ### Configuration Management
 
 All configuration is centralized in `config.yml`. Access configuration values using:
+
 ```python
 from abzu.config import config
 value = config.get("path.to.key", "default_value")
 ```
 
 ### Logging Best Practices
+
 Always use the centralized logging system:
+
 ```python
 from abzu.logs import get_logger
 logger = get_logger(__name__)
@@ -204,17 +213,20 @@ In addition, when writing PySpark code:
 - See pyproject.toml for complete dependency list
 
 ### Environment Variables
+
 - `ABZU_CACHE_MODE`: Set caching strategy (none/local/hybrid)
 - `SPARK_MODE`: Set Spark execution mode (local/distributed)
 - Additional env vars can be configured in Docker setup
 
 ### State Management and Caching
+
 - **None mode**: No caching, direct file I/O
 - **Local mode**: Redis for state, local disk for artifacts
 - **Hybrid mode**: Dapr state store (Redis) + S3/MinIO for artifacts
 - State store configuration in `dapr/statestore.yaml`
 
 ### Common Pitfalls to Avoid
+
 - Never edit files in `abzu/baml_client/` - always regenerate
 - Don't use relative imports - always use absolute imports
 - Don't hardcode paths or config values - use config.yml
