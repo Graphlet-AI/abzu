@@ -1,6 +1,4 @@
-"""CLI tools for Abzu using Click."""
-
-import sys
+"""Mypy cache management commands."""
 
 import click
 
@@ -24,29 +22,12 @@ class LazyGroup(click.Group):
         return None
 
 
-@click.command(
+@click.group(
     cls=LazyGroup,
     lazy_subcommands={
-        "api": "abzu.cli.api:api",
-        "chat": "abzu.cli.chat:chat",
-        "crawl": "abzu.cli.crawl:crawl",
-        "data": "abzu.cli.data:data",
-        "dump": "abzu.cli.dump:dump",
-        "mypy": "abzu.cli.mypy:mypy",
-        "process": "abzu.cli.process:process",
-        "steps": "abzu.cli.steps:steps",
+        "clear": "abzu.cli.mypy.clear:clear",
     },
 )
-def cli():
-    """Abzu - Industry knowledge extraction."""
+def mypy():
+    """Mypy cache management commands."""
     pass
-
-
-def main() -> int:
-    """Main entry point for the abzu command line interface."""
-    # Click automatically exits with the return code
-    return cli() or 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())
