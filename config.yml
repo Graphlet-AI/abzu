@@ -104,7 +104,7 @@ process:
       input:
         - "${process.articles.dcbyte.output}"
         - "${process.articles.datacenter.output}"
-        - "${process.articles.reddit.output}"
+        # - "${process.articles.reddit.output}"
         - "${process.articles.semianalysis.output}"
         - "${process.articles.theinformation.output}"
         - "${process.rss.output_dir}/processed_any-silicon.jsonl"
