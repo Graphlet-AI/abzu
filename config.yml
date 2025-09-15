@@ -144,8 +144,8 @@ process:
       max_block_size: 50
 
     refine:
-      input: "${process.kg.raw.output}"
-      output: "${base_dir}/refined_knowledge_graph"
+      input: "${process.er.output}/{iteration}/companies_resolved.parquet"
+      output: "${base_dir}/refined_knowledge_graph/nodes.parquet"
 
 chat:
   start:
