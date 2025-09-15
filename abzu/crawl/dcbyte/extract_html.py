@@ -11,7 +11,6 @@ from bs4 import BeautifulSoup
 
 from abzu.html_extractor import HTMLExtractor
 from abzu.logs import get_logger
-from abzu.url_extractor import URLExtractor
 from abzu.utils import append_jsonl
 
 logger = get_logger(__name__)
@@ -198,11 +197,9 @@ def fetch_article_content(url: str) -> Optional[dict[str, Any]]:
         response.raise_for_status()
 
         html_extractor = HTMLExtractor()
-        url_extractor = URLExtractor()
 
         # Extract text content
         extracted_text = html_extractor.extract(response.text)
-        extracted_urls = url_extractor.extract_urls_from_html(response.text)
 
         # Parse with BeautifulSoup for metadata
         soup = BeautifulSoup(response.text, "html.parser")
@@ -242,7 +239,6 @@ def fetch_article_content(url: str) -> Optional[dict[str, Any]]:
             "posted_at": posted_at,
             "collected_at": datetime.now().isoformat(),
             "content": extracted_text,
-            "urls": extracted_urls,
         }
 
     except Exception as e:

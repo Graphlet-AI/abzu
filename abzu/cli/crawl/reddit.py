@@ -10,7 +10,6 @@ import click
 from abzu.config import config
 from abzu.logs import get_logger
 from abzu.reddit.fetcher import RedditFetcher
-from abzu.url_extractor import URLExtractor
 
 logger = get_logger(__name__)
 
@@ -69,8 +68,6 @@ def reddit(input: Optional[str], ticker: Optional[str], output: str, limit: int)
     except RuntimeError as e:
         click.echo(f"Error: {e}")
         return
-
-    url_extractor = URLExtractor()
 
     # Determine tickers to process
     tickers = []
@@ -139,9 +136,6 @@ def reddit(input: Optional[str], ticker: Optional[str], output: str, limit: int)
 
                 combined_content = " ".join(content_parts)
 
-                # Extract URLs from the combined content
-                extracted_urls = url_extractor.extract_urls_from_html(combined_content)
-
                 # Create Reddit URL
                 reddit_url = (
                     f"https://reddit.com{post['permalink']}"
@@ -159,7 +153,6 @@ def reddit(input: Optional[str], ticker: Optional[str], output: str, limit: int)
                     "subreddit": post.get("subreddit", ""),
                     "score": post.get("score", 0),
                     "num_comments": post.get("num_comments", 0),
-                    "urls": extracted_urls,
                 }
 
                 f.write(json.dumps(document) + "\n")

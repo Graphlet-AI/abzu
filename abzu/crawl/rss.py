@@ -24,7 +24,6 @@ except ImportError:
 from abzu.config import config
 from abzu.html_extractor import HTMLExtractor
 from abzu.logs import get_logger
-from abzu.url_extractor import URLExtractor
 from abzu.utils import append_jsonl, build_crawled_url_index
 
 logger = get_logger(__name__)
@@ -145,9 +144,6 @@ async def parse_rss_and_save(
     crawled_urls = build_crawled_url_index(output_file)
     logger.info(f"Found {len(crawled_urls)} previously crawled URLs")
 
-    # Initialize URLExtractor
-    url_extractor = URLExtractor()
-
     # Choose fetch method based on bypass_cf option
     text = ""
     if bypass_cf:
@@ -219,11 +215,7 @@ async def parse_rss_and_save(
             logger.debug(f"Skipping already crawled URL: {link}")
             continue
 
-        # Skip if URL should be ignored
-        if url_extractor.should_ignore_url(link):
-            skipped += 1
-            logger.info(f"Skipping ignored URL: {link}")
-            continue
+        # No URL filtering needed (previously used url_extractor.should_ignore_url())
 
         # Parse and filter by publication date if min_year is set
         if min_year and published:
@@ -247,7 +239,6 @@ async def parse_rss_and_save(
 
         # Initialize variables for content and URLs
         content: str
-        extracted_urls: list[str] = []
 
         try:
             # Use Playwright to fetch the full HTML with JavaScript rendering
@@ -260,14 +251,9 @@ async def parse_rss_and_save(
             # Get the HTML content
             html_content = await page.content()
 
-            # Extract URLs from HTML before processing
-            extracted_urls = url_extractor.extract_urls_from_html(html_content)
-
             # Extract clean text content
             html_extractor = HTMLExtractor()
             content = html_extractor.extract(html_content)
-
-            logger.debug(f"Extracted {len(extracted_urls)} URLs from {link}")
 
             await page.close()
 
@@ -286,7 +272,6 @@ async def parse_rss_and_save(
             "posted_at": published,
             "feed_content": feed_content,
             "content": content,
-            "urls": extracted_urls,
             "collected_at": collected_at,
         }
 
@@ -351,9 +336,6 @@ async def _crawl_rss_async(
         logger.error("Failed to setup browser: %s", e)
         return 1
 
-    # Initialize URLExtractor to filter RSS feed URLs
-    url_extractor = URLExtractor()
-
     # Get min_year from config
     min_year = config.get("crawl.rss.min_year", None)
 
@@ -376,10 +358,7 @@ async def _crawl_rss_async(
                 logger.warning("Invalid feed entry: %s", line)
                 continue
 
-            # Check if RSS feed URL should be ignored
-            if url_extractor.should_ignore_url(url):
-                logger.info(f"Skipping ignored RSS feed URL: {url}")
-                continue
+            # No RSS feed URL filtering needed (previously used url_extractor.should_ignore_url())
 
             output_file = Path(output_dir) / f"{source}.jsonl"
             logger.info("Processing feed %s -> %s", url, output_file)
@@ -398,10 +377,7 @@ async def _crawl_rss_async(
 
         logger.info(f"Processing {len(feeds)} feeds from configuration")
         for source, url in feeds.items():
-            # Check if RSS feed URL should be ignored
-            if url_extractor.should_ignore_url(url):
-                logger.info(f"Skipping ignored RSS feed URL: {url}")
-                continue
+            # No RSS feed URL filtering needed (previously used url_extractor.should_ignore_url())
 
             output_file = Path(output_dir) / f"{source}.jsonl"
             logger.info("Processing feed %s -> %s", url, output_file)

@@ -12,7 +12,6 @@ from tqdm import tqdm
 from abzu.config import config
 from abzu.html_extractor import HTMLExtractor
 from abzu.logs import get_logger
-from abzu.url_extractor import URLExtractor
 from abzu.utils import append_jsonl, build_crawled_url_index
 
 logger = get_logger(__name__)
@@ -33,7 +32,6 @@ class DataCenterPlaywrightCrawler:
         self.base_url = "https://www.datacenterdynamics.com"
         self.articles_processed = 0
         self.html_extractor = HTMLExtractor()
-        self.url_extractor = URLExtractor()
         self.crawled_urls = build_crawled_url_index(output_path)
         self.rng = default_rng()  # Initialize random number generator
         logger.info(f"Found {len(self.crawled_urls)} previously crawled URLs")
@@ -124,9 +122,6 @@ class DataCenterPlaywrightCrawler:
             # Extract text using HTMLExtractor
             extracted_text = self.html_extractor.extract(html_content)
 
-            # Extract URLs from the article
-            extracted_urls = self.url_extractor.extract_urls_from_html(html_content)
-
             # Extract title
             title = await page.title()
 
@@ -170,7 +165,6 @@ class DataCenterPlaywrightCrawler:
                 "posted_at": posted_at,
                 "collected_at": datetime.now().isoformat(),
                 "content": extracted_text,
-                "urls": extracted_urls,
             }
 
         except Exception as e:
@@ -406,11 +400,7 @@ class DataCenterPlaywrightCrawler:
                 total=len(all_article_urls), desc="Fetching articles", unit="article"
             ) as pbar:
                 for url in all_article_urls:
-                    # Skip if URL should be ignored
-                    if self.url_extractor.should_ignore_url(url):
-                        logger.info(f"Skipping ignored URL: {url}")
-                        pbar.update(1)
-                        continue
+                    # No URL filtering needed (previously used url_extractor.should_ignore_url())
 
                     # Fetch article content
                     article_data = await self.fetch_article_content(article_page, url)
