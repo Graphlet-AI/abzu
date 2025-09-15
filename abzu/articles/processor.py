@@ -97,7 +97,7 @@ async def process_article_async(
     try:
         # Content is already extracted text, just pass it to BAML
         logger.info(
-            f"Processing article: {article.get('title', 'unknown')} posted at {article.get('posted_at', 'unknown')} ({len(article_text):,} chars)"
+            f"Processing article: {article.get('title', 'Empty Article') | 'Empty Article'} posted at {article.get('posted_at', 'Unknown Time') | 'Unknown Time'} ({len(article_text):,} chars)"
         )
 
         #
