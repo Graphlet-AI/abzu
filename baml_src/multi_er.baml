@@ -42,27 +42,31 @@ class FewShotExample {
     merged_company MergeCompany @description("The resulting merged company, with all the input companies' Company.id values in source_ids.")
 }
 
-class MergeCompanyExamples {
+class MergeCompanyExampleSet {
     @@description("A collection of few-shot examples for merging companies.")
     merge_companies FewShotExample[]
 }
 
-template_string FewShotCompanies(example: MergeCompanyExamples) #"
+template_string FewShotCompanies(examples: MergeCompanyExampleSet) #"
   For example:
-  {% for c in example.companies %}
-  {{ c }}
+  {% for s in examples.merge_companies %}
+    {% for c in s.companies %}
+      {{ c }}
+    {% endfor %}
   {% endfor %}
   
   Would merge into:
-  {{ example.merged_company }} 
+  {{ s.merged_company }}
 "#
 
-function FewShotMultiEntityResolution(company_list: CompanyList, few_shot_company_merges: MergeCompanyExamples) -> CompanyList {
+function FewShotMultiEntityResolution(company_list: CompanyList, few_shot_company_merges: MergeCompanyExampleSet) -> CompanyList {
   // see clients.baml
   client Gemini20Flash
 
   // The prompt uses Jinja syntax. Change the models or this text and watch the prompt preview change!
   prompt #"
+    {{ _.role("system") }}
+
     Given these examples of merging companies:
 
     {{ few_shot_company_merges }}
