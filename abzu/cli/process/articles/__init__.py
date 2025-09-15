@@ -36,6 +36,7 @@ class LazyGroup(click.Group):
         "datacenter": ("abzu.cli.process.articles.datacenter:process_datacenter", "datacenter"),
         "dcbyte": ("abzu.cli.process.articles.dcbyte:process_dcbyte", "dcbyte"),
         "reddit": ("abzu.cli.process.articles.reddit:process_reddit", "reddit"),
+        "clean": ("abzu.cli.process.articles.clean:clean", "clean"),
     },
 )
 def articles():
