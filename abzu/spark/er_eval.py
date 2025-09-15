@@ -396,12 +396,12 @@ def evaluate_er_matches(
     logger.info(
         f"  Invalid references: {invalid_source_uuid_count:,}/{total_source_uuid_refs:,} ({error_percentage:.2f}%)"
     )
+    logger.info("=" * 60)
     logger.info("Files saved:")
     logger.info(f"  - {companies_resolved_parquet}")
     logger.info(f"  - {companies_resolved_json}")
     logger.info(f"  - {metrics_parquet_path}")
     logger.info(f"  - {metrics_json_path}")
-    logger.info("=" * 60)
 
     # Don't stop the SparkSession - let the caller manage its lifecycle
     # This is important for tests and when the function is called multiple times
