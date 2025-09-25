@@ -22,9 +22,9 @@ repos:
         types: [python]
   - repo: local
     hooks:
-      - id: mypy
-        name: mypy
-        entry: mypy
+      - id: zuban
+        name: zuban
+        entry: zuban
         language: system
         types: [python]
   # Prettier - formats Markdown (and other files)

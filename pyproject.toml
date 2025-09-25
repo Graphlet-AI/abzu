@@ -61,7 +61,6 @@ sparkdantic = {git = "https://github.com/Graphlet-AI/sparkdantic.git", rev = "fi
 [tool.poetry.group.dev.dependencies]
 flake8 = "^7.2.0"
 isort = "^5.13.2"
-mypy = "1.16.0"
 pytest = "^8.3.4"
 ipython = "^8.31.0"
 pandas-stubs = "^2.2.3.241126"
@@ -78,6 +77,7 @@ types-beautifulsoup4 = "^4.12.0.20250204"
 pytest-asyncio = "^1.0.0"
 types-pyyaml = "^6.0.12.20250822"
 pytest-xdist = "^3.8.0"
+zuban = "^0.0.24"
 
 [build-system]
 requires = ["poetry-core"]
@@ -100,30 +100,32 @@ target-version = ["py311"]
 profile = "black"
 src_paths = ["abzu", "tests"]
 
-[tool.mypy]
+[tool.zuban]
 python_version = "3.12"
 files = ["abzu"]
 exclude = ["abzu/baml_client", "tests"]
 warn_return_any = true
 warn_unused_configs = true
-warn_redundant_casts = true
-warn_unused_ignores = true
+disallow_untyped_defs = true
+disallow_any_generics = true
+check_untyped_defs = true
 ignore_missing_imports = true
+warn_unreachable = false
 
-[[tool.mypy.overrides]]
+[[tool.zuban.overrides]]
 module = "abzu.baml_client"
 ignore_errors = true
 ignore_missing_imports = true
 
-[[tool.mypy.overrides]]
+[[tool.zuban.overrides]]
 module = "abzu.baml_client.*"
 ignore_errors = true
 
-[[tool.mypy.overrides]]
+[[tool.zuban.overrides]]
 module = "discord.*"
 ignore_missing_imports = true
 
-[[tool.mypy.overrides]]
+[[tool.zuban.overrides]]
 module = "notebooks.*"
 ignore_errors = true
 ignore_missing_imports = true
