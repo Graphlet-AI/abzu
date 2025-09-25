@@ -4,15 +4,15 @@ import json
 
 import pytest
 
-from abzu.baml_client import b
 from abzu.baml_client.async_client import b as async_b
+from abzu.baml_client.sync_client import b
 
 
 @pytest.fixture
 def create_test_article():
     """Fixture that returns a function to create test articles."""
 
-    def _create(title: str, url: str, content_urls: list[str]) -> dict:
+    def _create(title: str, url: str, content_urls: list[str]) -> dict[str, str | list[str]]:
         # Create URLs section in content
         urls_section = ""
         if content_urls:
@@ -170,6 +170,8 @@ async def test_article_url_preserved_async(create_test_article):
     processed = await process_article_async(article)
 
     # Verify URL is preserved
+    assert processed is not None
+    assert not isinstance(processed, BaseException)
     assert processed.url == test_url
 
 
@@ -279,6 +281,8 @@ async def test_async_processor_preserves_all_fields(create_test_article):
     result = await process_article_async(article)
 
     # Verify all fields are preserved
+    assert result is not None
+    assert not isinstance(result, BaseException)
     assert result.title == test_title
     assert result.url == test_url
     assert result.urls is not None

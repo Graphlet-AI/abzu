@@ -96,7 +96,7 @@ def process_annual_report(
     logger.info("Processing annual report %s %s", ticker, year)
     result: AnnualReportData = b.ExtractCompanyRelationshipsFromAnnualReport(report_text)
 
-    data = result.model_dump()
+    data: dict[str, Any] = result.model_dump()
     enrich_company_tickers(data)
 
     base_name = Path(text_path).stem
@@ -136,7 +136,7 @@ def process_annual_report_data_only(
     logger.info("Processing annual report %s %s", ticker, year)
     result: AnnualReportData = b.ExtractCompanyRelationshipsFromAnnualReport(report_text)
 
-    data = result.model_dump()
+    data: dict[str, Any] = result.model_dump()
     enrich_company_tickers(data)
 
     # Add metadata

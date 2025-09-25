@@ -176,8 +176,8 @@ def evaluate_er_matches(
 
     # Validate source_uuids - explode them first
     logger.info("Validating source UUIDs...")
-    resolved_with_source_uuids = resolved_companies_df.filter(
-        F.col("source_uuids").isNotNull() & (F.size("source_uuids") > 0)
+    resolved_with_source_uuids = resolved_companies_df.filter(  # type: ignore
+        F.col("source_uuids").isNotNull() & (F.size("source_uuids") > 0)  # type: ignore
     ).select(
         "uuid",
         "name",

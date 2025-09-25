@@ -38,7 +38,7 @@ Removed all data in data/er/iterations/1 and 2
 2025-09-10 09:09:05,177 - abzu.spark.build_graph - INFO - Found 100.0% 4,962 valid relationships out of 4,962
 ```
 
-## Command: abzu process er block names —iteration 1  # MAX_BLOCK_SIZE = 50
+## Command: abzu process er block names —iteration 1 # MAX_BLOCK_SIZE = 50
 
 ```
 2025-09-10 09:29:20,295 - abzu.spark.er_block - INFO - Unified all_blocks: 5553 blocks, 21251 companies
@@ -227,28 +227,28 @@ Summary:
 The records for the second iteration of matching still don’t match up to the expected - posted_at has name of ‘Google’ in it…
 
 ```json
-   {
-      "uuid": "c5dc3d06-4293-46cb-a7c7-a4817d57845e",
-      "block_key": "GOOGLE",
-      "block_key_type": "combined",
-      "url": "GOOGLE_chunk_6",
-      "name": "combined",
-      "description": null,
-      "ceo": null,
-      "cik": "A technology company known for its search engine, cloud computing, and artificial intelligence research.",
-      "employees": null,
-      "founded_year": null,
-      "headquarters_location": null,
-      "id": 103,
-      "jurisdiction": null,
-      "linkedin_url": null,
-      "posted_at": "Google",
-      "revenue_usd": null,
-      "source_ids": null,
-      "source_uuids": null,
-      "ticker": null,
-      "website_url": "<https://techcrunch.com/2025/07/14/mark-zuckerberg-says-meta-is-building-a-5gw-ai-data-center/>"
-    }
+{
+  "uuid": "c5dc3d06-4293-46cb-a7c7-a4817d57845e",
+  "block_key": "GOOGLE",
+  "block_key_type": "combined",
+  "url": "GOOGLE_chunk_6",
+  "name": "combined",
+  "description": null,
+  "ceo": null,
+  "cik": "A technology company known for its search engine, cloud computing, and artificial intelligence research.",
+  "employees": null,
+  "founded_year": null,
+  "headquarters_location": null,
+  "id": 103,
+  "jurisdiction": null,
+  "linkedin_url": null,
+  "posted_at": "Google",
+  "revenue_usd": null,
+  "source_ids": null,
+  "source_uuids": null,
+  "ticker": null,
+  "website_url": "<https://techcrunch.com/2025/07/14/mark-zuckerberg-says-meta-is-building-a-5gw-ai-data-center/>"
+}
 ```
 
 ## Command: abzu process er eval names --iteration 2
@@ -262,10 +262,10 @@ The records for the second iteration of matching still don’t match up to the e
 2025-09-10 11:19:30,226 - abzu.spark.er_eval - INFO - Source UUID coverage: 234/15,416 (1.52%)
 2025-09-10 11:19:30,226 - abzu.spark.er_eval - INFO - Source UUID validation: 0/1,980 valid (100.00% erroneous)
 2025-09-10 11:19:30,226 - abzu.spark.er_eval - INFO - Files saved:
-2025-09-10 11:19:30,226 - abzu.spark.er_eval - INFO -   - data/er/iterations/2/companies_resolved.parquet
-2025-09-10 11:19:30,226 - abzu.spark.er_eval - INFO -   - data/er/iterations/2/companies_resolved.json
-2025-09-10 11:19:30,226 - abzu.spark.er_eval - INFO -   - data/er/iterations/{iteration}/er_evaluation_metrics.parquet
-2025-09-10 11:19:30,226 - abzu.spark.er_eval - INFO -   - data/er/iterations/{iteration}/er_evaluation_metrics.json
+2025-09-10 11:19:30,226 - abzu.spark.er_eval - INFO - - data/er/iterations/2/companies_resolved.parquet
+2025-09-10 11:19:30,226 - abzu.spark.er_eval - INFO - - data/er/iterations/2/companies_resolved.json
+2025-09-10 11:19:30,226 - abzu.spark.er_eval - INFO - - data/er/iterations/{iteration}/er_evaluation_metrics.parquet
+2025-09-10 11:19:30,226 - abzu.spark.er_eval - INFO - - data/er/iterations/{iteration}/er_evaluation_metrics.json
 2025-09-10 11:19:30,226 - abzu.spark.er_eval - INFO - ============================================================
 
 # Claude Code Plan

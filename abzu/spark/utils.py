@@ -2,7 +2,7 @@
 """Utility functions for Spark operations."""
 import random
 import uuid
-from typing import Optional
+from typing import Any, Optional
 
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
@@ -187,7 +187,9 @@ def get_or_create_uuid(int_id: int, id_to_uuid_map: dict[int, str]) -> str:
 
 
 # Helper function to update entity with UUID
-def update_entity_with_uuid(entity: Row | dict, id_to_uuid_map: dict[int, str]) -> dict:
+def update_entity_with_uuid(
+    entity: Row | dict[str, Any] | None, id_to_uuid_map: dict[int, str]
+) -> dict[str, Any] | None:
     if entity is None:
         return None
     # Convert to dict if it's a Row

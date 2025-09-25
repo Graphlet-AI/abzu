@@ -44,7 +44,7 @@ def format_value_as_yaml(key: str, value: Any) -> str:
     current[parts[-1]] = value
 
     # Convert to YAML
-    yaml_str = yaml.dump(result, default_flow_style=False, sort_keys=False)
+    yaml_str: str = yaml.dump(result, default_flow_style=False, sort_keys=False)
     return yaml_str.rstrip()
 
 
@@ -102,7 +102,7 @@ def list_keys(depth: int | None) -> None:
     try:
 
         def _list_keys_recursive(
-            config_dict: dict, prefix: str = "", current_depth: int = 0
+            config_dict: dict[str, Any], prefix: str = "", current_depth: int = 0
         ) -> list[str]:
             """Recursively list all keys in the configuration.
 

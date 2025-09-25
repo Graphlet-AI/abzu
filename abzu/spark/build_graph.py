@@ -164,18 +164,19 @@ def build_knowledge_graph(
             updated_products = []
             for product in row_dict["products"]:
                 product_dict = update_entity_with_uuid(product, id_to_uuid_map)
-                # Convert manufacturer field from integer ID to UUID reference
-                if "manufacturer" in product_dict and product_dict["manufacturer"] is not None:
-                    product_dict["manufacturer"] = get_or_create_uuid(
-                        product_dict["manufacturer"], id_to_uuid_map
-                    )
-                if "technologies" in product_dict and product_dict["technologies"]:
-                    product_dict["technologies"] = [
-                        get_or_create_uuid(tech_id, id_to_uuid_map)
-                        for tech_id in product_dict["technologies"]
-                        if tech_id is not None
-                    ]
-                updated_products.append(product_dict)
+                if product_dict is not None:
+                    # Convert manufacturer field from integer ID to UUID reference
+                    if "manufacturer" in product_dict and product_dict["manufacturer"] is not None:
+                        product_dict["manufacturer"] = get_or_create_uuid(
+                            product_dict["manufacturer"], id_to_uuid_map
+                        )
+                    if "technologies" in product_dict and product_dict["technologies"]:
+                        product_dict["technologies"] = [
+                            get_or_create_uuid(tech_id, id_to_uuid_map)
+                            for tech_id in product_dict["technologies"]
+                            if tech_id is not None
+                        ]
+                    updated_products.append(product_dict)
             row_dict["products"] = updated_products
 
         # Process technologies array - add UUIDs to technologies and convert developer references
@@ -183,18 +184,21 @@ def build_knowledge_graph(
             updated_technologies = []
             for tech in row_dict["technologies"]:
                 tech_dict = update_entity_with_uuid(tech, id_to_uuid_map)
-                # Convert developer field from integer ID to UUID reference
-                if "developer" in tech_dict and tech_dict["developer"] is not None:
-                    tech_dict["developer"] = get_or_create_uuid(
-                        tech_dict["developer"], id_to_uuid_map
-                    )
-                updated_technologies.append(tech_dict)
+                if tech_dict is not None:
+                    # Convert developer field from integer ID to UUID reference
+                    if "developer" in tech_dict and tech_dict["developer"] is not None:
+                        tech_dict["developer"] = get_or_create_uuid(
+                            tech_dict["developer"], id_to_uuid_map
+                        )
+                    updated_technologies.append(tech_dict)
             row_dict["technologies"] = updated_technologies
 
         # Process tickers array - add UUIDs to tickers
         if row_dict.get("tickers"):
             row_dict["tickers"] = [
-                update_entity_with_uuid(ticker, id_to_uuid_map) for ticker in row_dict["tickers"]
+                update_entity_with_uuid(ticker, id_to_uuid_map)
+                for ticker in row_dict["tickers"]
+                if update_entity_with_uuid(ticker, id_to_uuid_map) is not None
             ]
 
         # Process relationships array - convert all integer references to UUIDs
@@ -280,23 +284,23 @@ def build_knowledge_graph(
     )
 
     # Check for null UUIDs and IDs - filter them out
-    null_uuid_count = companies_df.filter(F.col("uuid").isNull()).count()
-    null_id_count = companies_df.filter(F.col("id").isNull()).count()
+    null_uuid_count = companies_df.filter(F.col("uuid").isNull()).count()  # type: ignore
+    null_id_count = companies_df.filter(F.col("id").isNull()).count()  # type: ignore
 
     if null_uuid_count > 0:
         logger.warning(f"Found {null_uuid_count:,} companies with null UUIDs - filtering them out")
         # Show some examples for debugging
         logger.warning("Sample companies with null UUIDs:")
-        companies_df.filter(F.col("uuid").isNull()).show(5, truncate=False)
+        companies_df.filter(F.col("uuid").isNull()).show(5, truncate=False)  # type: ignore
 
     if null_id_count > 0:
         logger.warning(f"Found {null_id_count:,} companies with null IDs - filtering them out")
         # Show some examples for debugging
         logger.warning("Sample companies with null IDs:")
-        companies_df.filter(F.col("id").isNull()).show(5, truncate=False)
+        companies_df.filter(F.col("id").isNull()).show(5, truncate=False)  # type: ignore
 
     # Filter out companies with null UUIDs or IDs
-    companies_df = companies_df.filter(F.col("uuid").isNotNull() & F.col("id").isNotNull())
+    companies_df = companies_df.filter(F.col("uuid").isNotNull() & F.col("id").isNotNull())  # type: ignore
     logger.info(f"After filtering nulls: {companies_df.count():,} companies remain")
 
     # Explicitly cast id to ensure it's a non-null integer and uuid to ensure it's a non-null string
@@ -439,7 +443,7 @@ def build_knowledge_graph(
     # Only take relationships with non-null src/dst companies
     #
     relationships_clean_df = relationships_named_df.filter(
-        F.col("src").isNotNull() & F.col("dst").isNotNull()
+        F.col("src").isNotNull() & F.col("dst").isNotNull()  # type: ignore[call-arg]
     )
 
     relationships_output_path = os.path.join(output_path, "relationships.parquet")

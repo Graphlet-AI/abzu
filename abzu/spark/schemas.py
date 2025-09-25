@@ -67,7 +67,8 @@ def get_company_ddl_string() -> str:
 
     # Convert to DDL string
     # This will give us something like: "id:bigint,uuid:string,name:string,..."
-    return schema.simpleString()
+    result: str = schema.simpleString()
+    return result
 
 
 def normalize_company_dataframe(df: DataFrame, preserve_extra_fields: bool = False) -> DataFrame:

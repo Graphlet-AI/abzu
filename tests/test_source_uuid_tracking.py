@@ -48,7 +48,7 @@ def create_test_companies(num_companies: int = 10) -> list[dict[str, Any]]:
     """
     companies = []
     for i in range(num_companies):
-        company = {
+        company: dict[str, Any] = {
             "uuid": str(uuid.uuid4()),
             "name": "Acme Corporation",
             "description": "A leading provider of innovative solutions",
@@ -65,7 +65,9 @@ def create_test_companies(num_companies: int = 10) -> list[dict[str, Any]]:
     return companies
 
 
-def save_companies_to_parquet(spark: SparkSession, companies: list[dict], output_path: str) -> None:
+def save_companies_to_parquet(
+    spark: SparkSession, companies: list[dict[str, Any]], output_path: str
+) -> None:
     """Save companies to Parquet format."""
     # Define schema explicitly to handle empty arrays
     from pyspark.sql.types import ArrayType, StringType, StructField, StructType

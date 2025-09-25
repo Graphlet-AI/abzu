@@ -4,7 +4,7 @@ import json
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 import praw
 from praw.models import Comment, Submission
@@ -15,7 +15,7 @@ from abzu.logs import get_logger
 logger = get_logger(__name__)
 
 
-def save_to_jsonl(posts: list[dict], ticker: str, output_path: Path) -> None:
+def save_to_jsonl(posts: list[dict[str, Any]], ticker: str, output_path: Path) -> None:
     """Save posts to JSONL format matching theinformation.jsonl structure."""
     with open(output_path, "w", encoding="utf-8") as f:
         for post in posts:
@@ -74,7 +74,7 @@ class RedditFetcher:
             user_agent=user_agent,
         )
 
-    def fetch_hot_posts(self, subreddit: str, limit: int = 10) -> list[dict]:
+    def fetch_hot_posts(self, subreddit: str, limit: int = 10) -> list[dict[str, Any]]:
         """
         Fetch hot posts from a subreddit.
 
@@ -99,7 +99,7 @@ class RedditFetcher:
 
         return posts
 
-    def fetch_new_posts(self, subreddit: str, limit: int = 10) -> list[dict]:
+    def fetch_new_posts(self, subreddit: str, limit: int = 10) -> list[dict[str, Any]]:
         """
         Fetch new posts from a subreddit.
 
@@ -126,7 +126,7 @@ class RedditFetcher:
 
     def fetch_top_posts(
         self, subreddit: str, time_filter: str = "day", limit: int = 10
-    ) -> list[dict]:
+    ) -> list[dict[str, Any]]:
         """
         Fetch top posts from a subreddit.
 
@@ -153,7 +153,7 @@ class RedditFetcher:
 
         return posts
 
-    def fetch_post_with_comments(self, post_id: str, comment_limit: int = 20) -> dict:
+    def fetch_post_with_comments(self, post_id: str, comment_limit: int = 20) -> dict[str, Any]:
         """
         Fetch a specific post with its comments.
 
@@ -185,7 +185,7 @@ class RedditFetcher:
 
     def search_posts(
         self, query: str, subreddit: Optional[str] = None, limit: int = 10
-    ) -> list[dict]:
+    ) -> list[dict[str, Any]]:
         """
         Search for posts.
 
@@ -217,7 +217,7 @@ class RedditFetcher:
 
         return posts
 
-    def _extract_submission_data(self, submission: Submission) -> dict:
+    def _extract_submission_data(self, submission: Submission) -> dict[str, Any]:
         """
         Extract data from a Reddit submission.
 
@@ -254,7 +254,7 @@ class RedditFetcher:
             "spoiler": submission.spoiler,
         }
 
-    def fetch_ticker_posts(self, ticker: str, limit: int = 25) -> list[dict]:
+    def fetch_ticker_posts(self, ticker: str, limit: int = 25) -> list[dict[str, Any]]:
         """
         Fetch posts for a specific ticker across multiple finance subreddits.
 
@@ -317,7 +317,7 @@ class RedditFetcher:
 
         return final_posts
 
-    def _extract_comment_data(self, comment: Comment) -> dict:
+    def _extract_comment_data(self, comment: Comment) -> dict[str, Any]:
         """
         Extract data from a Reddit comment.
 

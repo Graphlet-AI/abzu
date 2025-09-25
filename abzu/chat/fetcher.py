@@ -3,7 +3,7 @@
 import re
 import time
 from datetime import datetime
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 import cloudscraper
 import requests
@@ -120,7 +120,7 @@ class ContentFetcher:
 
         return None
 
-    def fetch_url(self, url: str) -> tuple[bool, Union[dict, str]]:
+    def fetch_url(self, url: str) -> tuple[bool, Union[dict[str, Any], str]]:
         """Fetch content from a URL with retry capabilities.
 
         Args:

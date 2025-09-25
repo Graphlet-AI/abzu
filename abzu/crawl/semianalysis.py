@@ -16,7 +16,7 @@ class SemiAnalysisCrawler(BaseArticleCrawler):
     def get_article_links(self, response: Response) -> list[str]:
         """Extract article links from the SemiAnalysis archive page."""
         # Use a more specific selector for SemiAnalysis articles
-        article_links = response.css("article h2 a::attr(href)").getall()
+        article_links: list[str] = response.css("article h2 a::attr(href)").getall()
         if not article_links:
             # Fallback to a more general selector
             article_links = response.css("a::attr(href)").getall()

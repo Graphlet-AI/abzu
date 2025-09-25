@@ -154,7 +154,7 @@ def mock_dapr_components():
     mock_workflow_runtime.workflow = lambda *args, **kwargs: lambda func: func
     mock_workflow_runtime.start_workflow = lambda *args, **kwargs: True
 
-    with (
+    with (  # type: ignore[attr-defined]
         patch("abzu.workflows.cache_workflow.state_store", mock_state_store),
         patch("abzu.workflows.cache_workflow.s3_storage", mock_s3_storage),
         patch("abzu.workflows.cache_workflow.wfr", mock_workflow_runtime),

@@ -19,7 +19,6 @@ except ReactorAlreadyInstalledError:
 
 import dateutil.parser
 import scrapy
-import scrapy.utils.log
 from scrapy.crawler import CrawlerRunner
 from scrapy.http.response import Response
 from scrapy.utils.log import configure_logging

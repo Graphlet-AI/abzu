@@ -70,7 +70,7 @@ async def test_add_tickers_to_companies(max_tickers):
     # Show some examples of matched companies
     matched_examples = [c for c in result.companies if c.ticker is not None][:5]
     for company in matched_examples:
-        print(f"  {company.name} -> {company.ticker.symbol}")
+        print(f"  {company.name} -> {company.ticker.symbol if company.ticker else 'N/A'}")
 
     # Not all companies will have tickers (many won't match), but at least some should
     assert companies_with_tickers > 0, "At least some companies should have tickers assigned"

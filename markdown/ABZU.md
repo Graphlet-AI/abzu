@@ -9,46 +9,50 @@ The `abzu` CLI currently exhibits **~3.2 seconds** of startup latency before dis
 ### Baseline Measurements
 
 - **Help command latency**: 3,189 ms average (3 runs)
-- **Minimum observed**: 3,057 ms  
+- **Minimum observed**: 3,057 ms
 - **Maximum observed**: 3,427 ms
 
 ### Latency Breakdown
 
-| Component | Time (ms) | % of Total |
-|-----------|-----------|------------|
-| Poetry overhead | 1,328 | 41.6% |
-| Heavy imports | 1,730 | 54.2% |
-| Click + core logic | 60 | 1.9% |
-| Config/logging | 50 | 1.6% |
-| Other | 21 | 0.7% |
-| **Total** | **3,189** | **100%** |
+| Component          | Time (ms) | % of Total |
+| ------------------ | --------- | ---------- |
+| Poetry overhead    | 1,328     | 41.6%      |
+| Heavy imports      | 1,730     | 54.2%      |
+| Click + core logic | 60        | 1.9%       |
+| Config/logging     | 50        | 1.6%       |
+| Other              | 21        | 0.7%       |
+| **Total**          | **3,189** | **100%**   |
 
 ### Heavy Import Analysis
 
 The following imports contribute most to startup latency:
 
-| Module | Import Time (ms) | Usage |
-|--------|------------------|-------|
-| Scrapy | 1,066 | Web crawling (crawl commands only) |
-| Pandas | 762 | Data processing (rarely at CLI level) |
-| Kuzu | 366 | Graph database (kg commands only) |
-| PySpark | 284 | Data processing (process commands only) |
-| Discord | 307 | Bot functionality (chat commands only) |
+| Module  | Import Time (ms) | Usage                                   |
+| ------- | ---------------- | --------------------------------------- |
+| Scrapy  | 1,066            | Web crawling (crawl commands only)      |
+| Pandas  | 762              | Data processing (rarely at CLI level)   |
+| Kuzu    | 366              | Graph database (kg commands only)       |
+| PySpark | 284              | Data processing (process commands only) |
+| Discord | 307              | Bot functionality (chat commands only)  |
 
 ## Root Causes
 
 ### 1. Poetry Overhead (41.6% of latency)
+
 Poetry adds ~1.3 seconds of overhead compared to direct Python execution:
+
 - Poetry startup: 1,340 ms
 - Direct Python: 12 ms
 - **Overhead: 1,328 ms**
 
 ### 2. Eager Module Loading (54.2% of latency)
+
 Despite using a `LazyGroup` for Click commands, the following issues cause eager loading:
 
 a) **Config and Logging Initialization**: The `abzu.logs` module imports `abzu.config` at module level, which loads YAML configuration files immediately.
 
 b) **Subcommand Module Imports**: The `process/__init__.py` and similar command group files import their subcommands directly:
+
 ```python
 from abzu.cli.process.articles import articles
 from abzu.cli.process.er import er
@@ -58,6 +62,7 @@ from abzu.cli.process.kg import kg
 These imports trigger a cascade that loads heavy dependencies even when just displaying help.
 
 ### 3. Unnecessary Dependencies at CLI Level
+
 Many CLI command modules import heavy libraries at the module level rather than within the specific commands that need them.
 
 ## Optimization Strategy
@@ -65,6 +70,7 @@ Many CLI command modules import heavy libraries at the module level rather than 
 ### Phase 1: Quick Wins (Expected: 50-60% improvement)
 
 #### 1.1 Defer Config/Logging Initialization
+
 **Current**: Config and logging initialize on import
 **Proposed**: Initialize only when first accessed
 
@@ -82,6 +88,7 @@ def get_logger(name):
 **Expected savings**: 50 ms
 
 #### 1.2 Fix Subcommand Import Pattern
+
 **Current**: Direct imports in `__init__.py` files
 **Proposed**: Use string references for lazy loading
 
@@ -97,7 +104,7 @@ def _lazy_load_commands():
     from abzu.cli.process.articles import articles
     from abzu.cli.process.er import er
     from abzu.cli.process.kg import kg
-    
+
     process.add_command(articles)
     process.add_command(er)
     process.add_command(kg)
@@ -111,6 +118,7 @@ process._lazy_load = _lazy_load_commands
 ### Phase 2: Architectural Improvements (Expected: 75-85% improvement)
 
 #### 2.1 True Lazy Loading for All Commands
+
 Implement complete lazy loading pattern:
 
 ```python
@@ -128,6 +136,7 @@ class LazyGroup(click.Group):
 ```
 
 #### 2.2 Move Heavy Imports Inside Commands
+
 **Current**: Import at module level
 **Proposed**: Import within command functions
 
@@ -155,6 +164,7 @@ def kg():
 ### Phase 3: Alternative Solutions (Expected: 90-95% improvement)
 
 #### 3.1 Direct Script Entry Point
+
 Create a shell script that bypasses Poetry for the CLI:
 
 ```bash
@@ -166,6 +176,7 @@ exec python -m abzu.cli.click_cli "$@"
 **Expected savings**: 1,328 ms (Poetry overhead eliminated)
 
 #### 3.2 Pre-compiled Bytecode
+
 Use Python's compileall to pre-compile CLI modules:
 
 ```bash
@@ -175,13 +186,16 @@ python -m compileall -b abzu/cli/
 **Expected savings**: 50-100 ms
 
 #### 3.3 CLI/Core Separation
+
 Separate CLI from business logic completely:
+
 - `abzu-cli`: Minimal CLI package with lazy imports
 - `abzu-core`: Full package with all dependencies
 
 ## Implementation Plan
 
 ### Priority 1: Immediate Fixes (1-2 hours)
+
 1. ✅ Fix import patterns in `process/__init__.py`
 2. ✅ Move heavy imports inside command functions
 3. ✅ Implement lazy config/logging
@@ -189,6 +203,7 @@ Separate CLI from business logic completely:
 **Expected Result**: ~1,500 ms startup (53% improvement)
 
 ### Priority 2: Systematic Refactor (4-6 hours)
+
 1. ✅ Audit all CLI modules for eager imports
 2. ✅ Implement complete lazy loading pattern
 3. ✅ Add import timing to CI/CD pipeline
@@ -196,6 +211,7 @@ Separate CLI from business logic completely:
 **Expected Result**: ~700 ms startup (78% improvement)
 
 ### Priority 3: Architecture Changes (8-12 hours)
+
 1. ✅ Create direct entry point script
 2. ✅ Implement bytecode compilation in build
 3. ✅ Consider CLI/core package separation
@@ -206,26 +222,29 @@ Separate CLI from business logic completely:
 
 Testing with optimized prototypes shows:
 
-| Approach | Startup Time | Improvement |
-|----------|--------------|-------------|
-| Current CLI | 3,189 ms | Baseline |
-| Lazy imports only | 689 ms | 78.4% |
-| Direct Python entry | 200 ms | 93.7% |
-| Ultra-minimal | 100 ms | 96.9% |
+| Approach            | Startup Time | Improvement |
+| ------------------- | ------------ | ----------- |
+| Current CLI         | 3,189 ms     | Baseline    |
+| Lazy imports only   | 689 ms       | 78.4%       |
+| Direct Python entry | 200 ms       | 93.7%       |
+| Ultra-minimal       | 100 ms       | 96.9%       |
 
 ## Recommendations
 
 ### Immediate Actions
+
 1. **Fix the import cascade** in command group `__init__.py` files
 2. **Defer heavy imports** to command execution time
 3. **Add startup timing** to test suite to prevent regression
 
 ### Medium-term Actions
+
 1. **Create direct entry point** to bypass Poetry overhead for production
 2. **Implement complete lazy loading** across all CLI modules
 3. **Pre-compile bytecode** during installation
 
 ### Long-term Considerations
+
 1. **Evaluate alternative CLI frameworks** (e.g., Typer with lazy loading)
 2. **Consider microservice architecture** for heavy components
 3. **Implement CLI response caching** for frequently used commands
@@ -233,10 +252,12 @@ Testing with optimized prototypes shows:
 ## Conclusion
 
 The current 3.2-second startup latency is primarily caused by:
+
 - Poetry overhead (41.6%)
 - Eager loading of heavy dependencies (54.2%)
 
 By implementing the proposed optimizations, we can achieve:
+
 - **Quick wins**: 1.5s startup (53% improvement) with 1-2 hours of work
 - **Full optimization**: 150-700ms startup (78-95% improvement) with 8-12 hours of work
 

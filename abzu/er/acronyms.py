@@ -5,11 +5,11 @@ import pandas as pd
 from stop_words import AVAILABLE_LANGUAGES, get_stop_words
 
 
-def get_multilingual_stop_words() -> set:
+def get_multilingual_stop_words() -> set[str]:
     """
     Get a list of ALL common stop words across languages.
     """
-    stop_words: set = set()
+    stop_words: set[str] = set()
     for lang in AVAILABLE_LANGUAGES:
         stop_words.update(get_stop_words(lang))
     return stop_words

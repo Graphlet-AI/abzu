@@ -3,5 +3,4 @@ allowed-tools: Bash(git add:*), Bash(git checkout --branch:*), Bash(git status:*
 description: Prepare and commit the code already added to git
 ---
 
-
 Clean up any pre-commit issues without my intervention and then commit the outstanding changes

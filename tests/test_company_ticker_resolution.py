@@ -81,7 +81,11 @@ def test_refine_knowledge_graph_enriches_tickers(
     sec_df = pd.DataFrame([{"title": "Alpha Inc", "ticker": "ALP", "_norm_title": "alpha"}])
     monkeypatch.setattr("abzu.spark.ticker_enrichment._load_sec_companies", lambda: sec_df)
 
-    refine_knowledge_graph(str(input_dir), str(output_dir), local_mode=True)
+    refine_knowledge_graph(
+        input_paths={"companies": str(input_dir / "companies.parquet")},
+        output_paths={"tickers": str(output_dir / "tickers.parquet")},
+        local_mode=True,
+    )
 
     out_ticker_df = spark.read.parquet(str(output_dir / "tickers.parquet"))
     symbols = {row.symbol for row in out_ticker_df.collect()}

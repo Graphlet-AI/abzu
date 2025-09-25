@@ -204,7 +204,7 @@ class DiscordAgent:
 
             if bots_channel:
                 await bots_channel.send(
-                    f"Error processing URL from {message.channel.mention}: {error_msg}"
+                    f"Error processing URL from {message.channel.mention}: {error_msg}"  # type: ignore[union-attr]
                 )
             else:
                 # Fallback to original channel if #bots not found

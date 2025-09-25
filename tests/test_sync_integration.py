@@ -128,7 +128,7 @@ def mock_dapr_components():
     mock_workflow_runtime.workflow = lambda *args, **kwargs: lambda func: func
     mock_workflow_runtime.start_workflow = AsyncMock(return_value=True)
 
-    with (
+    with (  # type: ignore[attr-defined]
         patch("abzu.utils.DaprStateStore", return_value=mock_state_store),
         patch("abzu.utils.DaprS3Storage", return_value=mock_s3_storage),
         patch("abzu.workflows.cache_workflow.wfr", mock_workflow_runtime),
@@ -241,7 +241,7 @@ async def test_workflow_sync(cache, mock_dapr_components):
     # To test download via workflow, we need to simulate the workflow running
     # and populating the cache. The above only tests the upload part.
     # For this integration test, we'll rely on testing the activities directly.
-    with (
+    with (  # type: ignore[attr-defined]
         patch("abzu.workflows.cache_workflow.s3_storage", mock_dapr_components["s3_storage"]),
         patch("abzu.workflows.cache_workflow.state_store", mock_dapr_components["state_store"]),
     ):

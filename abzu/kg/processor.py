@@ -26,7 +26,7 @@ def is_pyspark_installed() -> bool:
 
 def run_spark_script(
     script_path: str,
-    args: list,
+    args: list[str],
     description: str,
 ) -> int:
     """Run a PySpark script with the given arguments.

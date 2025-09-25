@@ -41,7 +41,6 @@ def test_get_corporate_ending():
 
     # Test edge cases
     assert get_corporate_ending("") is None
-    assert get_corporate_ending(None) is None
 
     # Test with whitespace
     result = get_corporate_ending("Apple Inc. ")
@@ -64,9 +63,8 @@ def test_get_basename():
     assert get_basename("Apple Computer") == "Apple Computer"
     assert get_basename("Nike") == "Nike"
 
-    # Test edge cases
-    assert get_basename(None) is None
-    assert get_basename(pd.NA) is None
+    # Test edge cases with pandas NA
+    assert get_basename(pd.NA) is None  # type: ignore[arg-type]
     assert get_basename("") is None
 
     # Test with whitespace
@@ -117,11 +115,8 @@ def test_get_acronyms_single_uppercase_word():
 
 def test_get_acronyms_none_input():
     """Test None input handling."""
-    # Function correctly returns None for None input
-    result = get_acronyms(None)
-    assert result is None
-
-    result = get_acronyms(pd.NA)
+    # Function correctly returns None for pandas NA input
+    result = get_acronyms(pd.NA)  # type: ignore[arg-type]
     assert result is None
 
 

@@ -25,7 +25,7 @@ async def add_tickers_to_companies_blocked():
             #     break
             ticker_data = json.loads(line)
             ticker = Ticker(
-                name=ticker_data["name"],
+                name=ticker_data["name"],  # type: ignore[call-arg]
                 symbol=ticker_data["symbol"],
                 exchange=ticker_data.get("exchange"),
             )
@@ -38,7 +38,7 @@ async def add_tickers_to_companies_blocked():
         # Load first 100 companies for testing
         for i, line in enumerate(f):
             company_data = json.loads(line)
-            company = Company(name=company_data["name"])
+            company = Company(name=company_data["name"])  # type: ignore[call-arg]
             companies.append(company)
 
     # Create input objects
@@ -60,7 +60,8 @@ async def add_tickers_to_companies_blocked():
         # Show some examples of matched companies
         matched_examples = [c for c in result.companies if c.ticker is not None][:5]
         for company in matched_examples:
-            logger.debug(f"{company.name} -> {company.ticker.symbol}")
+            if company.ticker:
+                logger.debug(f"{company.name} -> {company.ticker.symbol}")
 
         # Count how many companies have tickers assigned
         companies_with_tickers = sum(1 for c in result.companies if c.ticker is not None)
@@ -79,4 +80,4 @@ if __name__ == "__main__":
 
     with open("data/financialdatasets/companies_with_tickers.jsonl", "w") as f:
         for company in companies_with_tickers:
-            f.write(json.dumps(company.to_dict()) + "\n")
+            f.write(json.dumps(company.to_dict()) + "\n")  # type: ignore[attr-defined]

@@ -149,6 +149,6 @@ class HTMLExtractor:
             logger.warning(f"Failed to parse HTML on first pass: {e}")
             # Fallback: simple text extraction
             soup = BeautifulSoup(html_content, "html.parser")
-            extracted_text = soup.get_text(separator="\n", strip=True)
-            self._log_efficiency(html_content, extracted_text, fallback=True)
-            return extracted_text
+            fallback_text: str = soup.get_text(separator="\n", strip=True)
+            self._log_efficiency(html_content, fallback_text, fallback=True)
+            return fallback_text

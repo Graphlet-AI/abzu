@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any
 
 from abzu.config import config
 from abzu.logs import get_logger
@@ -15,7 +16,7 @@ def collect_output_paths() -> set[str]:
     """
     output_paths: set[str] = set()
 
-    def extract_outputs_recursive(data: dict, path: str = "") -> None:
+    def extract_outputs_recursive(data: dict[str, Any], path: str = "") -> None:
         """Recursively extract output paths from config data."""
         if isinstance(data, dict):
             for key, value in data.items():

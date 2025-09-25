@@ -119,12 +119,12 @@ class Aggregator:
     def __init__(self):
         self.sum = 0
         self.count = 0
-    
+
     def eval(self, value: int):
         self.sum += value
         self.count += 1
         # Don't yield anything during eval
-    
+
     def terminate(self):
         # Yield final results after processing all rows
         avg = self.sum / self.count if self.count > 0 else 0
@@ -181,6 +181,7 @@ class OptimizedUDTF:
 ```
 
 Or set globally:
+
 ```python
 spark.conf.set("spark.sql.execution.pythonUDTF.arrow.enabled", "true")
 ```

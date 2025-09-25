@@ -61,6 +61,7 @@ The setup script will:
 - Build the Docker container with all required dependencies
 
 3. After running the setup script, either:
+
    - Run `source ~/.bashrc` (Linux) or `source ~/.zshrc` (macOS) to update your current shell
    - Or restart your terminal
 
@@ -226,6 +227,12 @@ baml-cli test
 baml-cli generate
 ```
 
+6. Install the PlayWright browsers:
+
+```bash
+playwright install
+```
+
 ### Running Locally
 
 Once installed, you can run commands directly:
@@ -364,7 +371,7 @@ Run the information extraction via the [VSCode Plugin](https://marketplace.visua
 
 #### Docker Setup
 
-```bash
+````bash
 # Inside container shell
 # Generate BAML client code
 baml-cli generate
@@ -379,9 +386,9 @@ poetry run abzu process articles theinformation
 # Processed articles are saved in data/processed_theinformation.jsonl
 
 > **Tip**: TheInformation.com requires authentication to access their content. There are two ways to handle this:
-> 
+>
 > 1. **Local Environment**: If you're signed into TheInformation.com in Chrome, the crawler will automatically use your browser's cookies. No additional setup needed.
-> 
+>
 > 2. **Docker Container**: Since the container can't access your browser's cookies, you need to manually provide them:
 >    ```bash
 >    # First, extract cookies from your local browser:
@@ -392,14 +399,14 @@ poetry run abzu process articles theinformation
 >    # Then run the crawler with the cookies in the container:
 >    poetry run abzu process articles theinformation --cookie "name=value;"
 >    ```
-> 
+>
 > The crawler fetches from `https://www.theinformation.com/feed` by default.
 
 # Extract each vertex / edge into its own Parquet
 poetry run abzu process kg raw
 # Uses data/processed_semianalysis.jsonl and data/processed_theinformation.jsonl
 poetry run abzu process kg refine
-```
+````
 
 #### Local Setup
 
@@ -486,15 +493,15 @@ abzu api sec download
 
 ```json
 {
-    "url": "https://semianalysis.com/2021/06/21/globalfoundries-is-a-leading-edge/",
-    "list_url": "https://semianalysis.com/archives/page/23/",
-    "title": "GlobalFoundries Is A Leading-Edge Foundry Despite Claims Otherwise – SemiAnalysis",
-    "posted_at": "2021-06-21T19:19:48+00:00",
-    "collected_at": "2025-04-15T04:20:37.763490",
-    "content": "GlobalFoundries is still a...",
-    "urls": [
-        "https://fuse.wikichip.org/news/5588/a-look-at-trishul-arms-first-high-density-3d-logic-stacked-test-chip/"
-    ]
+  "url": "https://semianalysis.com/2021/06/21/globalfoundries-is-a-leading-edge/",
+  "list_url": "https://semianalysis.com/archives/page/23/",
+  "title": "GlobalFoundries Is A Leading-Edge Foundry Despite Claims Otherwise – SemiAnalysis",
+  "posted_at": "2021-06-21T19:19:48+00:00",
+  "collected_at": "2025-04-15T04:20:37.763490",
+  "content": "GlobalFoundries is still a...",
+  "urls": [
+    "https://fuse.wikichip.org/news/5588/a-look-at-trishul-arms-first-high-density-3d-logic-stacked-test-chip/"
+  ]
 }
 ```
 
@@ -552,7 +559,7 @@ Node Types:
 
 ```sql
               id  properties
-entity_type                 
+entity_type
 company      354         354
 product      411         411
 technology   356         356
@@ -580,7 +587,7 @@ Edge Types:
 
 ```sql
               src  dst
-relationship          
+relationship
 DevelopedBy   356  356
 Develops      356  356
 ListedUnder    23   23
@@ -615,7 +622,7 @@ Logging is configured in `config.yml`:
 ```yaml
 logs:
   file:
-    path: "${base_dir}/logs"  # Logs stored in data/logs/
+    path: "${base_dir}/logs" # Logs stored in data/logs/
 ```
 
 ### Log Output
@@ -629,6 +636,7 @@ logs:
 
 1. Always use `get_logger(__name__)` to create module-specific loggers
 2. Use appropriate log levels:
+
    - `DEBUG`: Detailed information for diagnosing problems
    - `INFO`: General informational messages
    - `WARNING`: Warning messages for potentially harmful situations

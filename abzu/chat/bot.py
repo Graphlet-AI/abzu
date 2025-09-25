@@ -72,7 +72,7 @@ class URLMonitorBot(commands.Bot):
         @self.event
         async def on_ready():
             """Called when the bot is ready."""
-            logger.info(f"Logged in as {self.user} (ID: {self.user.id})")
+            logger.info(f"Logged in as {self.user} (ID: {self.user.id if self.user else 'N/A'})")
             logger.info(f"Connected to {len(self.guilds)} guilds")
 
             # Log all available channels
@@ -254,7 +254,7 @@ class BotRunner:
 
     async def start(self):
         """Start the Discord bot."""
-        self.bot: URLMonitorBot = URLMonitorBot(
+        self.bot = URLMonitorBot(
             command_prefix=self.command_prefix,
             specific_channels=self.specific_channels,
             ignored_domains=self.ignored_domains,
@@ -263,7 +263,10 @@ class BotRunner:
 
         try:
             logger.info("Starting Discord bot...")
-            await self.bot.start(self.token)
+            if self.bot and self.token:
+                await self.bot.start(self.token)
+            else:
+                raise ValueError("Bot or token not initialized")
         except errors.LoginFailure:
             logger.error(
                 "Invalid Discord token. Please check your DISCORD_BOT_TOKEN environment variable."

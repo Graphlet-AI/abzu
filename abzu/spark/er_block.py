@@ -2,7 +2,7 @@
 """Entity resolution blocking strategies for company matching."""
 import logging
 import os
-from typing import Optional
+from typing import Any, Optional
 
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
@@ -110,7 +110,7 @@ def build_blocks(
 
     # Filter out any UNKNOWN block keys
     companies_with_block_keys_df = companies_with_block_keys_df.filter(
-        (F.col("first_word_block") != "UNKNOWN") & (F.col("acronym_block") != "UNKNOWN")
+        (F.col("first_word_block") != "UNKNOWN") & (F.col("acronym_block") != "UNKNOWN")  # type: ignore[call-arg]
     )
 
     unknown_count = companies_df.count() - companies_with_block_keys_df.count()
@@ -129,7 +129,7 @@ def build_blocks(
     logger.info("Computing first word blocking distribution...")
     first_word_dist_df = (
         companies_with_block_keys_df.filter(
-            F.col("first_word_block").isNotNull() & (F.col("first_word_block") != "UNKNOWN")
+            F.col("first_word_block").isNotNull() & (F.col("first_word_block") != "UNKNOWN")  # type: ignore
         )
         .groupBy("first_word_block")
         .agg(F.count("*").alias("block_size"))
@@ -138,7 +138,7 @@ def build_blocks(
 
     first_word_blocks = first_word_dist_df.count()
     first_word_companies = companies_with_block_keys_df.filter(
-        F.col("first_word_block").isNotNull()
+        F.col("first_word_block").isNotNull()  # type: ignore[call-arg]
     ).count()
 
     logger.info(
@@ -152,11 +152,11 @@ def build_blocks(
     first_word_histogram_df = (
         first_word_dist_df.select(
             F.when(F.col("block_size") == 1, "1")
-            .when(F.col("block_size") <= 5, "2-5")
-            .when(F.col("block_size") <= 10, "6-10")
-            .when(F.col("block_size") <= 20, "11-20")
-            .when(F.col("block_size") <= 50, "21-50")
-            .when(F.col("block_size") <= 100, "51-100")
+            .when(F.col("block_size") <= 5, "2-5")  # type: ignore
+            .when(F.col("block_size") <= 10, "6-10")  # type: ignore
+            .when(F.col("block_size") <= 20, "11-20")  # type: ignore
+            .when(F.col("block_size") <= 50, "21-50")  # type: ignore
+            .when(F.col("block_size") <= 100, "51-100")  # type: ignore
             .otherwise("100+")
             .alias("block_size_range"),
             F.col("block_size"),
@@ -179,7 +179,7 @@ def build_blocks(
     logger.info("Computing acronym blocking distribution...")
     acronym_dist_df = (
         companies_with_block_keys_df.filter(
-            F.col("acronym_block").isNotNull() & (F.col("acronym_block") != "UNKNOWN")
+            F.col("acronym_block").isNotNull() & (F.col("acronym_block") != "UNKNOWN")  # type: ignore
         )
         .groupBy("acronym_block")
         .agg(F.count("*").alias("block_size"))
@@ -188,7 +188,7 @@ def build_blocks(
 
     acronym_blocks = acronym_dist_df.count()
     acronym_companies = companies_with_block_keys_df.filter(
-        F.col("acronym_block").isNotNull()
+        F.col("acronym_block").isNotNull()  # type: ignore[call-arg]
     ).count()
 
     logger.info(
@@ -202,11 +202,11 @@ def build_blocks(
     acronym_histogram_df = (
         acronym_dist_df.select(
             F.when(F.col("block_size") == 1, "1")
-            .when(F.col("block_size") <= 5, "2-5")
-            .when(F.col("block_size") <= 10, "6-10")
-            .when(F.col("block_size") <= 20, "11-20")
-            .when(F.col("block_size") <= 50, "21-50")
-            .when(F.col("block_size") <= 100, "51-100")
+            .when(F.col("block_size") <= 5, "2-5")  # type: ignore
+            .when(F.col("block_size") <= 10, "6-10")  # type: ignore
+            .when(F.col("block_size") <= 20, "11-20")  # type: ignore
+            .when(F.col("block_size") <= 50, "21-50")  # type: ignore
+            .when(F.col("block_size") <= 100, "51-100")  # type: ignore
             .otherwise("100+")
             .alias("block_size_range"),
             F.col("block_size"),
@@ -300,7 +300,7 @@ def build_blocks(
     overlapping_keys = (
         all_companies_with_blocks.groupBy("block_key")
         .agg(F.countDistinct("block_key_type").alias("strategy_count"))
-        .filter(F.col("strategy_count") > 1)
+        .filter(F.col("strategy_count") > 1)  # type: ignore
         .select("block_key")
     )
 
@@ -397,7 +397,13 @@ def build_blocks(
 
     @F.udtf(returnType=udtf_return_type)  # type: ignore
     class SplitLargeBlocks:
-        def eval(self, block_key: str, block_key_type: str, companies: list, block_size: int):
+        def eval(
+            self,
+            block_key: str,
+            block_key_type: str,
+            companies: list[dict[str, Any]],
+            block_size: int,
+        ):
             if block_size <= actual_max_block_size:
                 yield (block_key, block_key_type, companies, block_size)
             else:

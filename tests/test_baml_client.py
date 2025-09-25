@@ -2,7 +2,7 @@
 
 import pytest
 
-from abzu.baml_client import b
+from abzu.baml_client.sync_client import b
 from abzu.baml_client.types import IndustryArticle
 
 

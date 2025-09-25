@@ -116,12 +116,13 @@ abzu api sec download
 ```bash
 abzu api sec annual-report --ticker NVDA --year 2023
 ```
+
 - **What it does**: Downloads a 10-K filing and extracts relationships with BAML
 - **How it works**:
   - Retrieves the filing HTML for the specified year
   - Saves the text to the annual reports directory
   - Processes the text with the annual report BAML template
-  - Writes the JSON output prefixed with ``processed_`` in the same directory
+  - Writes the JSON output prefixed with `processed_` in the same directory
 - **Why**: Enables LLM processing of annual reports
 
 ### 4. Development Commands
@@ -170,10 +171,12 @@ abzu format
 ## Common Issues and Solutions
 
 1. **Authentication Issues**
+
    - Local: Ensure you're signed into Chrome
    - Docker: Manually provide cookies via `--cookie` flag
 
 2. **Processing Errors**
+
    - Check input file paths
    - Verify API keys are set
    - Ensure sufficient memory for Spark
@@ -186,11 +189,13 @@ abzu format
 ## Best Practices
 
 1. **Data Management**
+
    - Keep raw and processed data separate
    - Use consistent file naming
    - Regular backups of important data
 
 2. **Processing**
+
    - Start with small batches when testing
    - Monitor Spark UI for performance
    - Use appropriate memory settings

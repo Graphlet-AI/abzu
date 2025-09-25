@@ -187,7 +187,7 @@ class DaprStateStore:
             result = self.client.get_state(self.store_name, key, state_metadata=metadata)
             if not result or not result.data:
                 return None
-            return result.data.decode("utf-8")
+            return cast(str, result.data.decode("utf-8"))
         except Exception as e:
             logger.error(f"Failed to get state for key {key}: {e}")
             return None
@@ -370,7 +370,7 @@ class DaprStateStore:
                             json.loads(item.value.decode())
                             if isinstance(item.value, bytes)
                             else item.value
-                        ),
+                        ),  # type: ignore[typeddict-item]
                         "etag": item.etag,
                     }
                     for item in response.results

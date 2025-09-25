@@ -136,7 +136,7 @@ def test_get_pairwise_similarity(blocker):
 def test_model_initialization():
     """Test that the model is initialized with correct parameters."""
     # Test default model
-    blocker1 = E5EntityBlocker()
+    blocker1 = E5EntityBlocker()  # type: ignore[var-annotated]
     assert hasattr(blocker1, "model")
     assert blocker1.model is not None
 

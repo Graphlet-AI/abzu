@@ -161,6 +161,7 @@ class TestProcessBlockWithUUIDMapping:
         single_block = next((b for b in sample_blocks if b.get("block_size", 0) == 1), None)
         if not single_block:
             pytest.skip("No single company blocks found")
+        assert single_block is not None  # Type narrowing for mypy
 
         # Use real BAML client
 
@@ -187,6 +188,7 @@ class TestProcessBlockWithUUIDMapping:
         multi_block = next((b for b in sample_blocks if b.get("block_size", 0) > 1), None)
         if not multi_block:
             pytest.skip("No multi-company blocks found")
+        assert multi_block is not None  # Type narrowing for mypy
 
         # Use real BAML client for actual MultiEntityResolution
         result = await process_block_with_uuid_mapping(

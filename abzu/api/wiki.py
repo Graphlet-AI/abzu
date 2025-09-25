@@ -383,8 +383,10 @@ def crawl_company_wikipedia(
     }
 
     logger.info(f"Successfully crawled Wikipedia page: {page.title}")
-    logger.info(f"Summary length: {len(result['summary'])} chars")
-    logger.info(f"Content length: {len(result['content'])} chars")
+    if result["summary"]:
+        logger.info(f"Summary length: {len(result['summary'])} chars")
+    if result["content"]:
+        logger.info(f"Content length: {len(result['content'])} chars")
 
     return result
 
@@ -544,8 +546,10 @@ async def crawl_company_wikipedia_async(
     }
 
     logger.info(f"Successfully crawled Wikipedia page: {page.title}")
-    logger.info(f"Summary length: {len(result['summary'])} chars")
-    logger.info(f"Content length: {len(result['content'])} chars")
+    if result["summary"]:
+        logger.info(f"Summary length: {len(result['summary'])} chars")
+    if result["content"]:
+        logger.info(f"Content length: {len(result['content'])} chars")
 
     return result
 

@@ -1,6 +1,7 @@
 """Tests for the caching system."""
 
 import json
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -218,7 +219,7 @@ class TestPipelineCache:
         monkeypatch.setenv("ABZU_CACHE_DIR", str(temp_cache_dir))
 
         cache = PipelineCache()
-        graph_data = {"nodes": [], "edges": []}
+        graph_data: dict[str, list[Any]] = {"nodes": [], "edges": []}
 
         cache.cache_knowledge_graph("test_graph", graph_data)
         mock_state_store_fixture.set.assert_called_once()
@@ -236,7 +237,7 @@ class TestPipelineCache:
         monkeypatch.setenv("ABZU_CACHE_DIR", str(temp_cache_dir))
 
         cache = PipelineCache()
-        graph_data = {"nodes": [], "edges": []}
+        graph_data: dict[str, list[Any]] = {"nodes": [], "edges": []}
         mock_state_store_fixture.get.return_value = json.dumps(graph_data)
 
         result = cache.get_cached_knowledge_graph("test_graph")

@@ -62,11 +62,12 @@ def test_logger_format():
     test_handler.setFormatter(test_formatter)
 
     # Check the format string
-    format_str = test_handler.formatter._fmt
-    assert "%(asctime)s" in format_str
-    assert "%(name)s" in format_str
-    assert "%(levelname)s" in format_str
-    assert "%(message)s" in format_str
+    assert test_handler.formatter is not None
+    format_str = test_handler.formatter._fmt  # type: ignore[union-attr]
+    assert "%(asctime)s" in format_str  # type: ignore[operator]
+    assert "%(name)s" in format_str  # type: ignore[operator]
+    assert "%(levelname)s" in format_str  # type: ignore[operator]
+    assert "%(message)s" in format_str  # type: ignore[operator]
 
 
 def test_logger_level():

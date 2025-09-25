@@ -6,9 +6,9 @@ import click
 class LazyGroup(click.Group):
     """A Click group that loads subcommands lazily."""
 
-    def __init__(self, *args, lazy_subcommands=None, **kwargs):
+    def __init__(self, *args, lazy_subcommands: dict[str, str] | None = None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.lazy_subcommands = lazy_subcommands or {}
+        self.lazy_subcommands: dict[str, str] = lazy_subcommands or {}
 
     def list_commands(self, ctx):
         return sorted(self.lazy_subcommands.keys())

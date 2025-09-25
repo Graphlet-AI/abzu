@@ -31,7 +31,7 @@ def get_spark_session(
         local_mode = not (spark_master is not None and spark_master.startswith("spark://"))
 
     # Start building the SparkSession
-    builder = SparkSession.builder.appName(app_name)
+    builder = SparkSession.builder.appName(app_name)  # type: ignore[attr-defined]
 
     # Common configurations for both modes
     builder = builder.config("spark.sql.execution.arrow.pyspark.enabled", "true").config(
@@ -58,4 +58,5 @@ def get_spark_session(
             .master(os.getenv("SPARK_MASTER", "spark://spark-master:7077"))
         )
 
-    return builder.getOrCreate()
+    spark: SparkSession = builder.getOrCreate()
+    return spark

@@ -68,7 +68,7 @@ This file provides guidance to OpenAI Codex when working with code in this repos
 - Mypy - fix mypy errors without being asked and without my verification.
 - Pre-commit - fix pre-commit errors without being asked and without my verification.
 - New Modules - create a folder for a new module without being asked and without my verification.
-- __init__.py - add these files to new module directories without being asked and without my verification.
+- **init**.py - add these files to new module directories without being asked and without my verification.
 - Edit Multiple Files at Once - if you need to edit multiple files for a single TODO operation, do so in a single step. Do not create multiple steps for the same task.
 - `abzu steps` Command - Add new steps in the data pipeline to the `abzu steps` command. This command is used to run the data pipeline in a specific order. The steps should be added in the order they are executed in the pipeline. If you aren't sure about the order, ask me.
 - Git - Keep commit messsages straightforward and to the point - do not put extraneous details, simply summarize the work performed. Do not put anything in commit messages other than a description of the code changes.

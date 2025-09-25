@@ -33,8 +33,18 @@ def refine(input_dir, output_dir, iteration):
     # Import heavy module only when command is executed
     from abzu.kg.processor import process_refine_kg
 
+    # Convert directory paths to the expected dict format
+    input_paths = {
+        "companies": f"{input_dir}/companies.parquet",
+        "relationships": f"{input_dir}/relationships.parquet",
+    }
+    output_paths = {
+        "nodes": f"{output_dir}/nodes.parquet",
+        "edges": f"{output_dir}/edges.parquet",
+    }
+
     return process_refine_kg(
-        input_dir=input_dir,
-        output_dir=output_dir,
+        input_paths=input_paths,
+        output_paths=output_paths,
         iteration=iteration,
     )
