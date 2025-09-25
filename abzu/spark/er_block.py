@@ -73,8 +73,9 @@ def build_blocks(
     # If output_path has {format} placeholder, remove it (this should be a directory)
     if "{format}" in output_path:
         # Extract the directory path by removing the filename part with {format}
-        output_path = os.path.dirname(output_path)
-        logger.info(f"Extracted directory from path with format placeholder: {output_path}")
+        raise ValueError(
+            "There is an unsubstituted {format} in the output path. Remove {format} from the path."
+        )
 
     # Create SparkSession with appropriate configuration
     spark: SparkSession = get_spark_session(
