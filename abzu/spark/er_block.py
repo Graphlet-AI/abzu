@@ -63,7 +63,12 @@ def build_blocks(
         max_block_size: Maximum block size (blocks larger than this will be chunked). If None, uses config value
     """
     # Use provided max_block_size or fall back to config
-    actual_max_block_size = max_block_size if max_block_size is not None else MAX_BLOCK_SIZE
+    if max_block_size:
+        logger.info(f"Using provided max block size of {max_block_size}")
+        actual_max_block_size = max_block_size
+    else:
+        logger.info(f"Using default max block size of {MAX_BLOCK_SIZE}")
+        actual_max_block_size = MAX_BLOCK_SIZE
 
     # If output_path has {format} placeholder, remove it (this should be a directory)
     if "{format}" in output_path:
@@ -416,7 +421,7 @@ def build_blocks(
             """
             SELECT udtf_output.* FROM combined_blocks_temp,
             LATERAL split_large_blocks(block_key, block_key_type, companies, block_size) AS udtf_output
-        """
+            """
         )
         .orderBy(F.col("block_size"))
         .cache()
@@ -427,7 +432,7 @@ def build_blocks(
             """
             SELECT udtf_output.* FROM first_word_blocks_temp,
             LATERAL split_large_blocks(block_key, block_key_type, companies, block_size) AS udtf_output
-        """
+            """
         )
         .orderBy(F.col("block_size"))
         .cache()
@@ -438,7 +443,7 @@ def build_blocks(
             """
             SELECT udtf_output.* FROM acronym_blocks_temp,
             LATERAL split_large_blocks(block_key, block_key_type, companies, block_size) AS udtf_output
-        """
+         """
         )
         .orderBy(F.col("block_size"))
         .cache()
