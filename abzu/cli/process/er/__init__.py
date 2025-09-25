@@ -1,16 +1,20 @@
 """CLI commands for entity resolution processing."""
 
+from typing import Any
+
 import click
 
 
 class OrderedLazyGroup(click.Group):
     """A Click group that preserves command order and loads commands lazily."""
 
-    def __init__(self, *args, lazy_subcommands: dict[str, str] | None = None, **kwargs):
+    def __init__(
+        self, *args: Any, lazy_subcommands: dict[str, str] | None = None, **kwargs: Any
+    ) -> None:
         super().__init__(*args, **kwargs)
         self.lazy_subcommands: dict[str, str] = lazy_subcommands or {}
 
-    def list_commands(self, ctx):
+    def list_commands(self, ctx: click.Context) -> list[str]:
         """Return commands in the order they were added."""
         return [
             "block",
@@ -20,7 +24,7 @@ class OrderedLazyGroup(click.Group):
             "stage",
         ]
 
-    def get_command(self, ctx, name):
+    def get_command(self, ctx: click.Context, name: str) -> click.Command | None:
         if name in self.lazy_subcommands:
             import_path = self.lazy_subcommands[name]
             module_name, attr_name = import_path.rsplit(":", 1)
@@ -39,6 +43,6 @@ class OrderedLazyGroup(click.Group):
         "stage": "abzu.cli.process.er.stage:stage",
     },
 )
-def er():
+def er() -> None:
     """Entity resolution commands."""
     pass

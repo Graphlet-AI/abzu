@@ -67,7 +67,7 @@ def crawl_semianalysis(
     )
 
 
-def main(batch_size: int = 10):
+def main(batch_size: int = 10) -> int:
     """Run crawlers in batches."""
     return crawl_semianalysis(batch_size=batch_size)
 

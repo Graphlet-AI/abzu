@@ -35,7 +35,7 @@ from abzu.config import config
     default=5,
     help="Number of articles to process concurrently",
 )
-def rss(feeds_file, input_dir, output_dir, batch_size):
+def rss(feeds_file: str, input_dir: str, output_dir: str, batch_size: int) -> int:
     """Process RSS articles through the LLM extraction pipeline.
 
     By default, uses feeds defined in config.yml under crawl.rss.feeds.

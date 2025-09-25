@@ -1,6 +1,7 @@
 """CLI tools for Abzu using Click."""
 
 import sys
+from typing import Any
 
 import click
 
@@ -8,14 +9,16 @@ import click
 class LazyGroup(click.Group):
     """A Click group that loads subcommands lazily."""
 
-    def __init__(self, *args, lazy_subcommands: dict[str, str] | None = None, **kwargs):
+    def __init__(
+        self, *args: Any, lazy_subcommands: dict[str, str] | None = None, **kwargs: Any
+    ) -> None:
         super().__init__(*args, **kwargs)
         self.lazy_subcommands: dict[str, str] = lazy_subcommands or {}
 
-    def list_commands(self, ctx):
+    def list_commands(self, ctx: click.Context) -> list[str]:
         return sorted(self.lazy_subcommands.keys())
 
-    def get_command(self, ctx, name):
+    def get_command(self, ctx: click.Context, name: str) -> click.Command | None:
         if name in self.lazy_subcommands:
             import_path = self.lazy_subcommands[name]
             module_name, attr_name = import_path.rsplit(":", 1)
@@ -37,7 +40,7 @@ class LazyGroup(click.Group):
         "process": "abzu.cli.process:process",
     },
 )
-def cli():
+def cli() -> None:
     """Abzu - Industry knowledge extraction."""
     pass
 

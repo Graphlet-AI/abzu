@@ -24,7 +24,7 @@ from abzu.config import config
     default=config.get("process.kg.raw.output"),
     help="Output directory for raw knowledge graph type Parquet files.",
 )
-def raw(input_file, output_dir):
+def raw(input_file: str, output_dir: str) -> int:
     """Extract raw knowledge graph from processed articles."""
     # Import heavy module only when command is executed
     from abzu.kg.processor import process_raw_kg

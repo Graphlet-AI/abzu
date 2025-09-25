@@ -8,7 +8,7 @@ from abzu.cli.api.sec.download import download
 
 
 @click.group()
-def sec():
+def sec() -> None:
     """SEC API access."""
     pass
 

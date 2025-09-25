@@ -28,7 +28,7 @@ from abzu.config import config
     default=config.get("process.kg.er.iteration", 4),
     help="ER iteration number to use for resolved companies.",
 )
-def refine(input_dir, output_dir, iteration):
+def refine(input_dir: str, output_dir: str, iteration: int) -> int:
     """Refine knowledge graph by mapping relationships to resolved companies."""
     # Import heavy module only when command is executed
     from abzu.kg.processor import process_refine_kg

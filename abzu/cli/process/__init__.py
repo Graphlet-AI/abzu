@@ -1,5 +1,7 @@
 """CLI module for processing commands."""
 
+from typing import Any
+
 import click
 
 
@@ -7,14 +9,16 @@ import click
 class LazyGroup(click.Group):
     """A Click group that loads subcommands lazily."""
 
-    def __init__(self, *args, lazy_subcommands: dict[str, str] | None = None, **kwargs):
+    def __init__(
+        self, *args: Any, lazy_subcommands: dict[str, str] | None = None, **kwargs: Any
+    ) -> None:
         super().__init__(*args, **kwargs)
         self.lazy_subcommands: dict[str, str] = lazy_subcommands or {}
 
-    def list_commands(self, ctx):
+    def list_commands(self, ctx: click.Context) -> list[str]:
         return sorted(self.lazy_subcommands.keys())
 
-    def get_command(self, ctx, name):
+    def get_command(self, ctx: click.Context, name: str) -> click.Command | None:
         if name in self.lazy_subcommands:
             # Import the subcommand module only when accessed
             import_path = self.lazy_subcommands[name]
@@ -40,7 +44,7 @@ class LazyGroup(click.Group):
     help="Run the full processing pipeline: articles -> rss -> kg raw -> er block -> er match",
 )
 @click.pass_context
-def process(ctx, all):
+def process(ctx: click.Context, all: bool) -> dict[str, int | str] | None:
     """Process data for knowledge extraction."""
     if all:
         # Import logger only when needed
@@ -95,3 +99,5 @@ def process(ctx, all):
         return results
     elif ctx.invoked_subcommand is None:
         click.echo(ctx.get_help())
+
+    return None

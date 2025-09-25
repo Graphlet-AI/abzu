@@ -81,7 +81,7 @@ def metrics(
     pretty: bool,
     output_file: Optional[str],
     no_progress: bool,
-):
+) -> int:
     """Get financial metrics for ticker(s).
 
     Retrieves financial metrics for a ticker symbol or multiple tickers from an input file

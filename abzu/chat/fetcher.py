@@ -193,7 +193,7 @@ class ContentFetcher:
             logger.error(f"Unexpected error fetching URL {url}: {e}")
             return False, f"Unexpected error: {e}"
 
-    def close(self):
+    def close(self) -> None:
         """Close the session."""
         if self.session:
             self.session.close()

@@ -1,5 +1,7 @@
 """CLI module for article processing commands."""
 
+from typing import Any
+
 import click
 
 
@@ -7,15 +9,18 @@ class LazyGroup(click.Group):
     """A Click group that loads subcommands lazily."""
 
     def __init__(
-        self, *args, lazy_subcommands: dict[str, str | tuple[str, str]] | None = None, **kwargs
-    ):
+        self,
+        *args: Any,
+        lazy_subcommands: dict[str, str | tuple[str, str]] | None = None,
+        **kwargs: Any,
+    ) -> None:
         super().__init__(*args, **kwargs)
         self.lazy_subcommands: dict[str, str | tuple[str, str]] = lazy_subcommands or {}
 
-    def list_commands(self, ctx):
+    def list_commands(self, ctx: click.Context) -> list[str]:
         return sorted(self.lazy_subcommands.keys())
 
-    def get_command(self, ctx, name):
+    def get_command(self, ctx: click.Context, name: str) -> click.Command | None:
         if name in self.lazy_subcommands:
             value = self.lazy_subcommands[name]
             if isinstance(value, tuple):
@@ -45,6 +50,6 @@ class LazyGroup(click.Group):
         "clean": ("abzu.cli.process.articles.clean:clean", "clean"),
     },
 )
-def articles():
+def articles() -> None:
     """Process articles through LLM extraction pipeline."""
     pass

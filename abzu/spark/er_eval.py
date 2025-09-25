@@ -101,6 +101,76 @@ def evaluate_er_matches(
         F.explode("resolved_companies").alias("company"),
     ).select("match_block_key", "match_block_key_type", "company.*")
 
+    # Count match_skip records
+    total_records = resolved_companies_df.count()
+    match_skip_records = resolved_companies_df.filter(F.col("match_skip") is True).count()  # type: ignore
+    baml_processed_records = resolved_companies_df.filter(
+        (F.col("match_skip") is False) | F.col("match_skip").isNull()  # type: ignore
+    ).count()
+
+    logger.info(f"Total resolved records: {total_records:,}")
+    logger.info(f"BAML-processed records: {baml_processed_records:,}")
+    logger.info(f"Recovered records (match_skip=True): {match_skip_records:,}")
+
+    # Analyze match_skip_history and reasons
+    skipped_in_current = 0
+    error_recovery_count = 0
+    missing_uuid_recovery_count = 0
+
+    if "match_skip_history" in resolved_companies_df.columns:
+        # Count records by number of times skipped
+        skip_history_df = resolved_companies_df.select(
+            "uuid",
+            "name",
+            "match_skip",
+            "match_skip_history",
+            (
+                F.col("match_skip_reason")
+                if "match_skip_reason" in resolved_companies_df.columns
+                else F.lit(None).alias("match_skip_reason")
+            ),
+        ).filter(
+            F.col("match_skip_history").isNotNull()
+        )  # type: ignore
+
+        # Count records skipped in current iteration
+        skipped_in_current = skip_history_df.filter(
+            F.array_contains("match_skip_history", iteration)  # type: ignore
+        ).count()
+
+        # Count records by skip frequency
+        skip_frequency_df = (
+            skip_history_df.withColumn("skip_count", F.size("match_skip_history"))  # type: ignore
+            .groupBy("skip_count")
+            .count()
+            .orderBy("skip_count")
+        )
+
+        logger.info(f"Records skipped in iteration {iteration}: {skipped_in_current:,}")
+        logger.info("Skip frequency distribution:")
+        skip_frequency_df.show()
+
+        # Analyze skip reasons if the column exists
+        if "match_skip_reason" in resolved_companies_df.columns:
+            skip_reason_df = (
+                resolved_companies_df.filter(F.col("match_skip") is True)  # type: ignore
+                .groupBy("match_skip_reason")
+                .count()
+                .orderBy(F.desc("count"))
+            )
+
+            logger.info("Skip reason distribution:")
+            skip_reason_df.show()
+
+            # Count specific reasons
+            error_recovery_count = resolved_companies_df.filter(
+                F.col("match_skip_reason") == "error_recovery"  # type: ignore
+            ).count()
+
+            missing_uuid_recovery_count = resolved_companies_df.filter(
+                F.col("match_skip_reason") == "missing_in_match_output"  # type: ignore
+            ).count()
+
     # Get counts for comparison - original raw first
     total_original_companies = original_raw_companies_df.count()
     unique_original_companies = original_raw_companies_df.select("uuid").distinct().count()
@@ -396,6 +466,22 @@ def evaluate_er_matches(
     logger.info(
         f"  Invalid references: {invalid_source_uuid_count:,}/{total_source_uuid_refs:,} ({error_percentage:.2f}%)"
     )
+    logger.info("")
+    logger.info("RECOVERY STATISTICS:")
+    logger.info(f"  Total recovered (match_skip=True): {match_skip_records:,}")
+    logger.info(f"  BAML-processed records: {baml_processed_records:,}")
+    if "match_skip_history" in resolved_companies_df.columns:
+        logger.info(f"  Skipped in iteration {iteration}: {skipped_in_current:,}")
+    if "match_skip_reason" in resolved_companies_df.columns and match_skip_records > 0:
+        logger.info("  Recovery reasons:")
+        logger.info(f"    - Error recovery: {error_recovery_count:,}")
+        logger.info(f"    - Missing in match output: {missing_uuid_recovery_count:,}")
+
+    # Check if we achieved 100% coverage
+    if original_coverage_pct >= 99.99:
+        logger.info("")
+        logger.info("✓ SUCCESS: UUID recovery is working correctly!")
+        logger.info("  All original companies are tracked in source_uuids")
     logger.info("=" * 60)
     logger.info("Files saved:")
     logger.info(f"  - {companies_resolved_parquet}")

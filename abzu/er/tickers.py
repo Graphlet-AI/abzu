@@ -10,7 +10,7 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
-async def add_tickers_to_companies_blocked():
+async def add_tickers_to_companies_blocked() -> list[Company]:
 
     block_size = 1000
     all_results = []
@@ -71,7 +71,7 @@ async def add_tickers_to_companies_blocked():
         print(f"Companies with tickers: {companies_with_tickers}")
         print(f"Companies without tickers: {len(result.companies) - companies_with_tickers}")
 
-        return all_results
+    return all_results
 
 
 if __name__ == "__main__":

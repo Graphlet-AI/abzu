@@ -10,7 +10,7 @@ from abzu.config import config as abzu_config
 
 
 @click.group()
-def config():
+def config() -> None:
     """Manage and inspect Abzu configuration."""
     pass
 
@@ -166,13 +166,13 @@ def list_keys(depth: int | None) -> None:
 
 
 @config.command()
-def path():
+def path() -> None:
     """Show the path to the configuration file."""
     click.echo(abzu_config.config_file)
 
 
 @config.command()
-def reload():
+def reload() -> None:
     """Reload the configuration file."""
     try:
         abzu_config.reload()

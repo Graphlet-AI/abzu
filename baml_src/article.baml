@@ -178,7 +178,16 @@ class Company {
   @description("List of source Company.ids that were merged to create this Company.")
 
   source_uuids string[]?
-  @description("Leave null.")}
+  @description("Leave null.")
+
+  match_skip bool?
+  @description("Leave unaltered. Tracks if this company was skipped in matching.")
+
+  match_skip_reason string?
+  @description("Leave unaltered. Reason why this company was skipped (error_recovery or missing_in_match_output).")
+
+  match_skip_history int[]?
+  @description("Leave unaltered. List of iteration numbers where this company was skipped.")}
 
 class Product {
   id int

@@ -13,7 +13,7 @@ logger = get_logger(__name__)
 
 
 @click.command()
-def clean():
+def clean() -> None:
     """Back up and remove all processed_* files from data/articles/."""
     articles_dir = Path(config.get("data.articles_dir", "data/articles"))
 

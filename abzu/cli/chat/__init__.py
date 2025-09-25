@@ -8,7 +8,7 @@ from abzu.cli.chat.start import start
 
 
 @click.group()
-def chat():
+def chat() -> None:
     """Chat bot for URL monitoring and article processing."""
     pass
 

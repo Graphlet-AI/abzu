@@ -24,7 +24,7 @@ from abzu.config import config
     default=10,
     help="Number of pages to crawl concurrently (default: 10)",
 )
-def semianalysis(url, output_path, pages, batch_size):
+def semianalysis(url: str, output_path: str, pages: int, batch_size: int) -> int:
     """Crawl SemiAnalysis website."""
     from abzu.crawl.semianalysis import crawl_semianalysis
 

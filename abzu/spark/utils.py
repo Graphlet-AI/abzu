@@ -88,7 +88,7 @@ def select_most_common_property(
 
 
 # Create a modified schema where integer references are converted to string UUIDs
-def create_uuid_schema(original_schema):
+def create_uuid_schema(original_schema: T.StructType) -> T.StructType:
     """Create a schema where integer ID references are changed to string UUIDs."""
     fields = []
     for field in original_schema.fields:

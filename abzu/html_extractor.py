@@ -10,7 +10,7 @@ logger = get_logger(__name__)
 class HTMLExtractor:
     """Extract text content from HTML documents."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the HTML extractor."""
         pass
 

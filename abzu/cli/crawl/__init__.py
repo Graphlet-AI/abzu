@@ -27,7 +27,7 @@ logger = get_logger(__name__)
     help="Number of pages/feeds to crawl concurrently (default: 10)",
 )
 @click.pass_context
-def crawl(ctx, all, batch_size):
+def crawl(ctx: click.Context, all: bool, batch_size: int) -> dict[str, int | str] | None:
     """Crawl content from various sources."""
     if all:
         logger.info(
@@ -65,6 +65,8 @@ def crawl(ctx, all, batch_size):
         return results
     elif ctx.invoked_subcommand is None:
         click.echo(ctx.get_help())
+
+    return None
 
 
 crawl.add_command(datacenter)

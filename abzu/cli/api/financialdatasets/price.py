@@ -90,7 +90,7 @@ def price(
     pretty: bool,
     output_file: Optional[str],
     no_progress: bool,
-):
+) -> int:
     """Get historical price data for ticker(s).
 
     Retrieves historical stock price data for a ticker symbol or multiple tickers from an input file

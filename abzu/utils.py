@@ -199,7 +199,7 @@ class DaprStateStore:
         metadata: Optional[Dict[str, str]] = None,
         options: Optional[DaprStateOptions] = None,
         etag: Optional[str] = None,
-    ):
+    ) -> None:
         """Set state in Dapr state store.
 
         Args:
@@ -223,7 +223,7 @@ class DaprStateStore:
         metadata: Optional[Dict[str, str]] = None,
         options: Optional[DaprStateOptions] = None,
         etag: Optional[str] = None,
-    ):
+    ) -> None:
         """Delete state from Dapr state store.
 
         Args:
@@ -272,7 +272,7 @@ class DaprStateStore:
             logger.error(f"Failed to get bulk states for keys {keys}: {e}")
             return []
 
-    def set_bulk(self, states: List[StateItem]):
+    def set_bulk(self, states: List[StateItem]) -> None:
         """Set multiple states in Dapr state store.
 
         Args:
@@ -290,7 +290,7 @@ class DaprStateStore:
 
     def execute_transaction(
         self, operations: List[Tuple[str, str, Optional[str], Optional[Dict[str, str]]]]
-    ):
+    ) -> None:
         """Execute a state transaction.
 
         Args:
@@ -404,7 +404,7 @@ class DaprS3Storage:
         )
         self.bucket = os.environ.get("S3_BUCKET", "abzu-cache")
 
-    def upload(self, s3_key: str, data: bytes):
+    def upload(self, s3_key: str, data: bytes) -> None:
         """Upload data to S3 using Dapr binding.
 
         Args:

@@ -9,7 +9,7 @@ from abzu.cli.api.financialdatasets.tickers import tickers
 
 
 @click.group()
-def financialdatasets():
+def financialdatasets() -> None:
     """Financial Datasets API access."""
     pass
 

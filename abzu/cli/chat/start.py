@@ -86,7 +86,7 @@ def start(
     pause: float,
     timeout: int,
     use_cloudscraper: bool,
-):
+) -> int:
     """Start the Discord agent for URL monitoring and article processing.
 
     This command starts a Discord bot that monitors channels for URLs,

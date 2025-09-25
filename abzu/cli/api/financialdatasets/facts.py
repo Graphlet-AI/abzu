@@ -59,17 +59,17 @@ from abzu.config import config
 )
 @click.pass_context
 def facts(
-    ctx,
-    ticker,
-    cik,
-    input_file,
-    api_key,
-    pretty,
-    output_file,
-    max_retries,
-    pause_seconds,
-    no_progress,
-):
+    ctx: click.Context,
+    ticker: str,
+    cik: str,
+    input_file: str | None,
+    api_key: str,
+    pretty: bool,
+    output_file: str | None,
+    max_retries: int,
+    pause_seconds: int,
+    no_progress: bool,
+) -> int:
     """Get company facts from Financial Datasets API.
 
     Uses exponential backoff retry for rate-limited requests (HTTP 429 status code).

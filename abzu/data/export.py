@@ -99,7 +99,9 @@ def export_data(
                         # Exclude hidden files from directories to avoid duplicates and checksum files
                         if file_path_obj.is_dir():
 
-                            def exclude_hidden_files(tarinfo):
+                            def exclude_hidden_files(
+                                tarinfo: tarfile.TarInfo,
+                            ) -> Optional[tarfile.TarInfo]:
                                 if tarinfo.name.split("/")[-1].startswith("."):
                                     return None
                                 return tarinfo

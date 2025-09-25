@@ -246,7 +246,7 @@ def fetch_article_content(url: str) -> Optional[dict[str, Any]]:
         return None
 
 
-def main():
+def main() -> None:
     """Main extraction function."""
     mhtml_path = "data/DCByte Complete Blog Page.mhtml"
     output_path = "data/articles/dcbyte.jsonl"

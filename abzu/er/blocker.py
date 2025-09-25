@@ -10,7 +10,7 @@ from sklearn.cluster import AgglomerativeClustering
 
 class E5EntityBlocker:
 
-    def __init__(self, model_name="Qwen/Qwen3-Embedding-4B"):
+    def __init__(self, model_name: str = "Qwen/Qwen3-Embedding-4B"):
         """
         E5EntityBlocker blocks data and returns agglomerative clusters. Initialize with the large E5 model.
         """
@@ -23,7 +23,7 @@ class E5EntityBlocker:
             device = "cpu"
         self.model = SentenceTransformer(model_name, device=device)
 
-    def encode_companies(self, company_names):
+    def encode_companies(self, company_names: list[str]) -> np.ndarray:
         """
         Encode company names into embeddings.
 
@@ -37,7 +37,7 @@ class E5EntityBlocker:
         )
         return embeddings
 
-    def calculate_similarity_matrix(self, company_names):
+    def calculate_similarity_matrix(self, company_names: list[str]) -> np.ndarray:
         """
         Calculate pairwise similarity matrix for all companies.
 
@@ -51,14 +51,16 @@ class E5EntityBlocker:
             return np.array([]).reshape(0, 0)
 
         # Get embeddings for all companies
-        embeddings = self.encode_companies(company_names)
+        embeddings: np.ndarray = self.encode_companies(company_names)
 
         # Calculate cosine similarity - it's symmetric by default!
-        similarity_matrix = cos_sim(embeddings, embeddings).numpy()
+        similarity_matrix: np.ndarray = cos_sim(embeddings, embeddings).numpy()
 
         return similarity_matrix
 
-    def create_blocks(self, company_names, threshold=0.8):
+    def create_blocks(
+        self, company_names: list[str], threshold: float = 0.8
+    ) -> dict[int, list[str]]:
         """
         Create blocking groups for entity resolution.
 
@@ -100,33 +102,35 @@ class E5EntityBlocker:
 
         return blocks
 
-    def find_similar_companies(self, query_company, candidate_companies, top_k=5):
+    def find_similar_companies(
+        self, query_company: str, candidate_companies: list[str], top_k: int = 5
+    ) -> list[dict[str, str | float]]:
         """
         Find companies most similar to a query company.
 
         With standard E5, this is just cosine similarity ranking.
         """
         # Encode query and candidates together for efficiency
-        all_companies = [query_company] + list(candidate_companies)
-        embeddings = self.encode_companies(all_companies)
+        all_companies: list[str] = [query_company] + list(candidate_companies)
+        embeddings: np.ndarray = self.encode_companies(all_companies)
 
         # Query is first, candidates are the rest
-        query_embedding = embeddings[0:1]
-        candidate_embeddings = embeddings[1:]
+        query_embedding: np.ndarray = embeddings[0:1]
+        candidate_embeddings: np.ndarray = embeddings[1:]
 
         # Calculate similarities
-        similarities = cos_sim(query_embedding, candidate_embeddings).numpy()[0]
+        similarities: np.ndarray = cos_sim(query_embedding, candidate_embeddings).numpy()[0]
 
         # Get top-k results
-        top_indices = np.argsort(similarities)[::-1][:top_k]
+        top_indices: np.ndarray = np.argsort(similarities)[::-1][:top_k]
 
-        results = []
+        results: list[dict[str, str | float]] = []
         for idx in top_indices:
             results.append({"company": candidate_companies[idx], "similarity": similarities[idx]})
 
         return results
 
-    def find_duplicates(self, company_names, threshold=0.8):
+    def find_duplicates(self, company_names: list[str], threshold: float = 0.8) -> pd.DataFrame:
         """
         Find potential duplicate companies based on similarity threshold.
 
@@ -154,12 +158,12 @@ class E5EntityBlocker:
             # Return empty DataFrame with correct columns
             return pd.DataFrame(columns=["company1", "company2", "similarity"])
 
-    def get_pairwise_similarity(self, company1, company2):
+    def get_pairwise_similarity(self, company1: str, company2: str) -> float:
         """
         Get similarity between two specific companies.
 
         Simple helper method for checking individual pairs.
         """
-        embeddings = self.encode_companies([company1, company2])
-        similarity = cos_sim([embeddings[0]], [embeddings[1]]).numpy()[0][0]
+        embeddings: np.ndarray = self.encode_companies([company1, company2])
+        similarity: float = cos_sim([embeddings[0]], [embeddings[1]]).numpy()[0][0]
         return similarity

@@ -8,7 +8,7 @@ from abzu.cli.api.wiki import wiki
 
 
 @click.group()
-def api():
+def api() -> None:
     """API access to external data sources."""
     pass
 

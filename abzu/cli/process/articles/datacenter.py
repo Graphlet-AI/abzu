@@ -29,7 +29,7 @@ from abzu.config import config
     default=5,
     help="Number of articles to process concurrently (default: 5)",
 )
-def process_datacenter(input_file, output_file, batch_size):
+def process_datacenter(input_file: str, output_file: str, batch_size: int) -> int:
     """Process SemiAnalysis articles through LLM extraction pipeline."""
     from abzu.articles.processor import process_main
 

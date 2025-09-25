@@ -10,7 +10,7 @@ logger = get_logger(__name__)
 
 
 @click.group()
-def data():
+def data() -> None:
     """Data import/export operations."""
     pass
 

@@ -403,7 +403,7 @@ def build_blocks(
             block_key_type: str,
             companies: list[dict[str, Any]],
             block_size: int,
-        ):
+        ):  # type: ignore
             if block_size <= actual_max_block_size:
                 yield (block_key, block_key_type, companies, block_size)
             else:

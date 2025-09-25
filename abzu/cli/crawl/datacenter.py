@@ -24,7 +24,7 @@ from abzu.config import config
     default=10,
     help="Number of pages to crawl concurrently (default: 10)",
 )
-def datacenter(url, output_path, pages, batch_size):
+def datacenter(url: str, output_path: str, pages: int, batch_size: int) -> int:
     """Crawl DataCenter Dynamics website."""
     from abzu.crawl.datacenter import crawl_datacenter
 

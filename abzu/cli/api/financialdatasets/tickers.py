@@ -34,11 +34,11 @@ from abzu.config import config
     help="Maximum number of retries for rate-limited requests (429 status code). Defaults to 5.",
 )
 def tickers(
-    api_key,
-    output_file,
-    pretty,
-    max_retries,
-):
+    api_key: str,
+    output_file: str,
+    pretty: bool,
+    max_retries: int,
+) -> int:
     f"""Get all available tickers from Financial Datasets API.
 
     Retrieves a list of all available ticker symbols and their associated company information

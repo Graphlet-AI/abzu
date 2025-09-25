@@ -26,6 +26,7 @@ collector = Collector()
 async def process_block(
     block: dict[str, Any],
     semaphore: asyncio.Semaphore,
+    iteration: int = 1,
 ) -> dict[str, Any]:
     """
     Process a single block of companies using MultiEntityResolution with UUID mapping.
@@ -33,6 +34,7 @@ async def process_block(
     Args:
         block: Dictionary containing block data with companies list
         semaphore: Asyncio semaphore for rate limiting
+        iteration: Current iteration number for match_skip_history tracking
 
     Returns:
         Dictionary with matched/resolved companies
@@ -43,6 +45,7 @@ async def process_block(
             block=block,
             baml_client=baml_client,
             collector=collector,
+            iteration=iteration,
         )
 
         # If the block was resolved, generate new UUIDs for the resolved companies
@@ -58,6 +61,7 @@ async def process_block(
 async def process_blocks_async(
     blocks: list[dict[str, Any]],
     batch_size: int,
+    iteration: int = 1,
 ) -> list[dict[str, Any]]:
     """
     Process all blocks concurrently with rate limiting.
@@ -65,6 +69,7 @@ async def process_blocks_async(
     Args:
         blocks: List of block dictionaries
         batch_size: Maximum number of concurrent API calls
+        iteration: Current iteration number for match_skip_history tracking
 
     Returns:
         List of resolved block dictionaries
@@ -72,7 +77,7 @@ async def process_blocks_async(
     semaphore = asyncio.Semaphore(batch_size)
 
     # Create tasks for all blocks
-    tasks = [process_block(block, semaphore) for block in blocks]
+    tasks = [process_block(block, semaphore, iteration) for block in blocks]
 
     # Process with progress bar
     results = []
@@ -173,7 +178,7 @@ def match_entities(
 
     # Process blocks asynchronously
     logger.info("Starting async processing...")
-    results = asyncio.run(process_blocks_async(blocks, batch_size))
+    results = asyncio.run(process_blocks_async(blocks, batch_size, iteration))
 
     # Convert results to DataFrame
     results_df = pd.DataFrame(results)
@@ -187,15 +192,16 @@ def match_entities(
     output_dir = output_path_obj.parent
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # Check for blocks with errors and save them separately
+    # Check for blocks with errors and handle them
     error_blocks = (
         results_df[results_df["error"].notna()]
         if len(results_df) > 0 and "error" in results_df.columns
         else pd.DataFrame()
     )
 
+    error_recovery_count = 0
     if len(error_blocks) > 0:
-        # Create error output path
+        # Create error output path for debugging
         error_output_path = "data/er/iterations/{iteration}/errors.parquet".format(
             iteration=iteration
         )
@@ -206,9 +212,43 @@ def match_entities(
         # Backup existing error file if it exists
         backup_file(error_path_obj)
 
-        # Save error blocks to separate file
+        # Save error blocks to separate file for debugging
         error_blocks.to_parquet(error_output_path, index=False)
         logger.warning(f"Saved {len(error_blocks)} error blocks to {error_output_path}")
+
+        # Recover companies from error blocks
+        logger.info("Recovering companies from error blocks...")
+        for idx, error_row in error_blocks.iterrows():
+            # Check if we have original_companies in the error block
+            if "original_companies" in error_row and error_row["original_companies"]:
+                original_companies = error_row["original_companies"]
+
+                # Mark these companies as error-recovered
+                for company in original_companies:
+                    company["match_skip"] = True
+                    company["match_skip_reason"] = "error_recovery"
+
+                    # Update match_skip_history
+                    skip_history = company.get("match_skip_history", [])
+                    if iteration not in skip_history:
+                        skip_history.append(iteration)
+                    company["match_skip_history"] = skip_history
+
+                    # Ensure source_uuids contains the company's UUID
+                    if "uuid" in company and company["uuid"]:
+                        if "source_uuids" not in company or not company["source_uuids"]:
+                            company["source_uuids"] = [company["uuid"]]
+                        elif company["uuid"] not in company["source_uuids"]:
+                            company["source_uuids"].append(company["uuid"])
+
+                    error_recovery_count += 1
+
+                # Update the error block to have recovered companies
+                results_df.at[idx, "resolved_companies"] = original_companies
+                results_df.at[idx, "was_resolved"] = False
+                results_df.at[idx, "error_recovered"] = True
+
+        logger.info(f"Recovered {error_recovery_count} companies from error blocks")
 
     # Backup existing parquet file if it exists
     backup_file(output_path_obj)
@@ -224,6 +264,30 @@ def match_entities(
     # Save to JSON format
     save_jsonl(results_df, json_output_path_obj)
 
+    # Count recovered records
+    recovered_records = 0
+    skipped_in_iteration = 0
+    error_recovered_records = 0
+    uuid_recovered_records = 0
+    if len(results_df) > 0 and "resolved_companies" in results_df.columns:
+        for _, row in results_df.iterrows():
+            companies = row.get("resolved_companies", [])
+            if isinstance(companies, list):
+                for company in companies:
+                    if isinstance(company, dict):
+                        if company.get("match_skip") is True:
+                            recovered_records += 1
+                            # Check reason for skip
+                            skip_reason = company.get("match_skip_reason", "")
+                            if skip_reason == "error_recovery":
+                                error_recovered_records += 1
+                            elif skip_reason == "missing_in_match_output":
+                                uuid_recovered_records += 1
+                            # Check if this iteration is in the skip history
+                            skip_history = company.get("match_skip_history", [])
+                            if iteration in skip_history:
+                                skipped_in_iteration += 1
+
     # Print summary statistics
     resolved_blocks = (
         results_df[results_df["was_resolved"]]
@@ -236,11 +300,18 @@ def match_entities(
     logger.info("=" * 60)
     logger.info(f"Total blocks processed: {len(results_df)}")
     logger.info(f"Successfully resolved: {len(resolved_blocks)}")
-    logger.info(f"Errors: {len(error_blocks)}")
+    logger.info(f"Errors encountered: {len(error_blocks)}")
     if len(error_blocks) > 0:
         error_path = "data/er/iterations/{iteration}/errors.parquet".format(iteration=iteration)
         logger.info(f"  → Error blocks saved to: {error_path}")
-        logger.info("  → Error blocks are still included in main output")
+        logger.info(f"  → {error_recovery_count} companies recovered from error blocks")
+    logger.info("")
+    logger.info("RECOVERY STATISTICS:")
+    logger.info(f"  Total records recovered (match_skip=True): {recovered_records}")
+    if recovered_records > 0:
+        logger.info(f"    - From errors: {error_recovered_records}")
+        logger.info(f"    - From missing UUIDs: {uuid_recovered_records}")
+    logger.info(f"  Records skipped in iteration {iteration}: {skipped_in_iteration}")
     logger.info("")
     logger.info(
         "Note: Resolved companies have new UUIDs; single-company blocks retain original UUIDs"

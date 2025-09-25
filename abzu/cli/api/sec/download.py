@@ -42,15 +42,16 @@ from abzu.config import config
     default=config.get("api.sec.download.ticker"),
     help="Download filings for a single ticker",
 )
-def download(tickers_file, output_dir, filing_index, form_type, ticker):
+def download(
+    tickers_file: str, output_dir: str, filing_index: int, form_type: str, ticker: str
+) -> int:
     """Download SEC filings for a single ticker or all tickers in the file."""
     from abzu.api.sec_downloader import process_all_tickers
 
-    process_all_tickers(
+    return process_all_tickers(
         tickers_file=tickers_file,
         output_dir=output_dir,
         filing_index=filing_index,
         form_type=form_type,
         ticker=ticker,
     )
-    return 0

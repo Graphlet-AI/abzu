@@ -13,7 +13,7 @@ logger = get_logger(__name__)
 class ArticleProcessor:
     """Process articles using BAML's IndustryArticle extraction."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the article processor."""
         # Check for required environment variables
         if not os.environ.get("GEMINI_API_KEY"):

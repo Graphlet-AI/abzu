@@ -36,7 +36,7 @@ from abzu.config import config
     default=1,
     help="Number of feeds to crawl concurrently",
 )
-def rss(feeds_file, output_dir, cookie, user_agent, batch_size):
+def rss(feeds_file: str, output_dir: str, cookie: str, user_agent: str, batch_size: int) -> int:
     """Crawl RSS feeds from configuration or a feeds file.
 
     By default, uses feeds defined in config.yml under crawl.rss.feeds.

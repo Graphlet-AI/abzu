@@ -6,7 +6,7 @@ import click
 
 
 @click.command(context_settings={"show_default": True})
-def clear():
+def clear() -> None:
     """Clear zuban cache and Python cache files."""
     commands = [
         ("rm -rf .zuban_cache 2>/dev/null", "Removing .zuban_cache directory"),

@@ -33,7 +33,9 @@ from abzu.config import config
     help="Run Spark in local mode",
 )
 @click.pass_context
-def stage(ctx, iteration, block_size, batch_size, local_mode):
+def stage(
+    ctx: click.Context, iteration: int, block_size: int, batch_size: int, local_mode: bool
+) -> None:
     """Run complete entity resolution stage: block, match, and eval."""
     from abzu.logs import get_logger
 

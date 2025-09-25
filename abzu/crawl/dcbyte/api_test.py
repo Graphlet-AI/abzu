@@ -15,7 +15,7 @@ logger = get_logger(__name__)
 class DCByteAPIClient:
     """Client for interacting with DC Byte blog's Essential Grid API."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.session = requests.Session()
         self.session.headers.update(
             {
@@ -199,9 +199,9 @@ class DCByteAPIClient:
         return posts
 
 
-def main():
+def main() -> None:
     """Test the DC Byte API client."""
-    client = DCByteAPIClient()
+    client: DCByteAPIClient = DCByteAPIClient()
 
     # Get initial page and configuration
     logger.info("=" * 80)

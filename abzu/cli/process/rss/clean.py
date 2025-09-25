@@ -13,7 +13,7 @@ logger = get_logger(__name__)
 
 
 @click.command()
-def clean():
+def clean() -> None:
     """Back up and remove all files from data/rss/processed/."""
     processed_dir = Path(config.get("process.rss.output_dir", "data/rss/processed"))
 

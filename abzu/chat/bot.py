@@ -5,7 +5,7 @@ import os
 import re
 from typing import Any, Callable, Optional
 
-from discord import Intents, Message, TextChannel, errors
+from discord import Guild, Intents, Message, TextChannel, errors
 from discord.ext import commands
 
 from abzu.logs import get_logger
@@ -66,11 +66,11 @@ class URLMonitorBot(commands.Bot):
         # Set up event handlers
         self.setup_event_handlers()
 
-    def setup_event_handlers(self):
+    def setup_event_handlers(self) -> None:
         """Set up Discord event handlers."""
 
         @self.event
-        async def on_ready():
+        async def on_ready() -> None:
             """Called when the bot is ready."""
             logger.info(f"Logged in as {self.user} (ID: {self.user.id if self.user else 'N/A'})")
             logger.info(f"Connected to {len(self.guilds)} guilds")
@@ -96,7 +96,7 @@ class URLMonitorBot(commands.Bot):
             logger.info("Bot is ready!")
 
         @self.event
-        async def on_message(message: Message):
+        async def on_message(message: Message) -> None:
             """Called when a message is received.
 
             Args:
@@ -142,7 +142,7 @@ class URLMonitorBot(commands.Bot):
             await self.process_commands(message)
 
         @self.event
-        async def on_guild_join(guild):
+        async def on_guild_join(guild: Guild) -> None:
             """Called when the bot joins a new guild.
 
             Args:
@@ -168,11 +168,11 @@ class URLMonitorBot(commands.Bot):
             return []
 
         # Find all URLs in the content
-        urls = self.url_pattern.findall(content)
+        urls: list[str] = self.url_pattern.findall(content)
 
         # Filter out duplicates while preserving order
-        seen = set()
-        unique_urls = []
+        seen: set[str] = set()
+        unique_urls: list[str] = []
         for url in urls:
             if url not in seen:
                 seen.add(url)
@@ -195,7 +195,7 @@ class BotRunner:
         specific_channels: Optional[list[int]] = None,
         ignored_domains: Optional[list[str]] = None,
         on_url_found_callback: Optional[Callable[[str, Message], Any]] = None,
-    ):
+    ) -> None:
         """Initialize the bot runner.
 
         Args:
@@ -252,7 +252,7 @@ class BotRunner:
         query_string = "&".join(f"{k}={v}" for k, v in query_params.items())
         return f"{base_url}?{query_string}"
 
-    async def start(self):
+    async def start(self) -> None:
         """Start the Discord bot."""
         self.bot = URLMonitorBot(
             command_prefix=self.command_prefix,
@@ -276,14 +276,14 @@ class BotRunner:
             logger.error(f"Error starting Discord bot: {e}")
             raise
 
-    async def stop(self):
+    async def stop(self) -> None:
         """Stop the Discord bot."""
         if self.bot:
             logger.info("Stopping Discord bot...")
             await self.bot.close()
             logger.info("Discord bot stopped.")
 
-    def run(self):
+    def run(self) -> None:
         """Run the Discord bot synchronously."""
         try:
             asyncio.run(self.start())

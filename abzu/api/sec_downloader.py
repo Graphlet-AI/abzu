@@ -1164,7 +1164,7 @@ def process_10q_filing(ticker: str, filing_idx: int = 0) -> dict[str, Any]:
     return process_filing(ticker, form_type="10-Q", filing_idx=filing_idx)
 
 
-def save_results_to_json(data: dict[str, Any], output_file: str = "filing_data.json"):
+def save_results_to_json(data: dict[str, Any], output_file: str = "filing_data.json") -> None:
     """Saves the extracted data dictionary to a JSON file."""
     # Ensure the output directory exists
     output_dir = os.path.dirname(output_file)
@@ -1177,7 +1177,7 @@ def save_results_to_json(data: dict[str, Any], output_file: str = "filing_data.j
     logger.info(f"Results successfully saved to {output_file}")
 
 
-def display_financial_summary(results: dict[str, Any]):
+def display_financial_summary(results: dict[str, Any]) -> None:
     """Prints a formatted summary of the extracted financial data."""
 
     ticker = results.get("ticker", "N/A")
@@ -1295,7 +1295,7 @@ def process_all_tickers(
     filing_index: int = 0,
     form_type: str = config.get("api.sec.download.form_type"),
     ticker: str | None = config.get("api.sec.download.ticker"),
-) -> None:
+) -> int:
     """Process filings of ``form_type`` for a ticker list or a single ticker."""
 
     if ticker:
@@ -1316,6 +1316,8 @@ def process_all_tickers(
         save_results_to_json(result, os.path.join(output_dir, fname))
 
         display_financial_summary(result)
+
+    return 0
 
 
 if __name__ == "__main__":

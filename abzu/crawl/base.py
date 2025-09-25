@@ -5,17 +5,8 @@ import time
 from abc import ABC, abstractmethod
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Iterator, Optional, cast
-
-# Install the AsyncIO reactor before any other twisted imports
-from twisted.internet import asyncioreactor
-from twisted.internet.error import ReactorAlreadyInstalledError
-
-try:
-    asyncioreactor.install()
-except ReactorAlreadyInstalledError:
-    # Reactor already installed
-    pass
+from types import FrameType
+from typing import Any, Callable, Generator, Iterator, Optional, cast
 
 import dateutil.parser
 import scrapy
@@ -24,7 +15,16 @@ from scrapy.http.response import Response
 from scrapy.utils.log import configure_logging
 from scrapy.utils.project import get_project_settings
 from tqdm import tqdm
-from twisted.internet import defer, reactor
+
+# Install the AsyncIO reactor before any other twisted imports
+from twisted.internet import asyncioreactor, defer, reactor
+from twisted.internet.error import ReactorAlreadyInstalledError
+
+try:
+    asyncioreactor.install()
+except ReactorAlreadyInstalledError:
+    # Reactor already installed
+    pass
 
 from abzu.config import config
 from abzu.html_extractor import HTMLExtractor
@@ -166,7 +166,7 @@ class BaseArticleCrawler(scrapy.Spider, ABC):
             f"(new: {new_articles}, skipped: {skipped_articles})"
         )
 
-    def handle_error(self, failure):
+    def handle_error(self, failure: Any) -> None:
         """Handle request failures."""
         self._logger.error(f"Request failed: {failure.request.url}")
         self._logger.error(f"Error: {failure.value}")
@@ -237,7 +237,7 @@ class BaseArticleCrawler(scrapy.Spider, ABC):
             }
         )
 
-    def save(self, article) -> None:
+    def save(self, article: dict[str, Any]) -> None:
         """Save all collected articles to the output file."""
         # First article will create a backup if file exists
         # Subsequent articles will not (more efficient for large crawls)
@@ -272,7 +272,7 @@ class BaseArticleCrawler(scrapy.Spider, ABC):
         else:
             self._logger.error(f"Failed to save article to {self.output_file}")
 
-    def closed(self, reason):
+    def closed(self, reason: str) -> None:
         """Called when the crawler is closed."""
         elapsed = datetime.now() - self.start_time
         self._logger.info(
@@ -293,7 +293,7 @@ def run_batch_crawl(
     concurrent_requests: int = 1,
     progress_bar: Optional[tqdm] = None,
     crawled_urls: Optional[set[str]] = None,
-):
+) -> Generator[Any, Any, Any]:
     """Run crawlers sequentially with configurable concurrency.
 
     Args:
@@ -342,7 +342,7 @@ def run_batch_crawl(
 
     # Define a function to process URLs one at a time
     @defer.inlineCallbacks
-    def process_sequentially(url_list):
+    def process_sequentially(url_list: list[str]) -> Generator[Any, Any, Any]:
         for url in url_list:
             print(f"Starting crawl for {url}")
             # Process one URL at a time with the crawled_urls set
@@ -356,12 +356,12 @@ def run_batch_crawl(
             time.sleep(0.7)
 
     # Return a deferred that fires when all URLs are processed sequentially
-    return process_sequentially(urls)
+    return process_sequentially(urls)  # type: ignore
 
 
 def crawl_site(
     crawler_class: type[BaseArticleCrawler],
-    get_archive_urls_func,
+    get_archive_urls_func: Callable[[int], list[str]],
     output_path: str,
     url: Optional[str] = None,
     pages: int = 10,
@@ -429,7 +429,7 @@ def crawl_site(
         )
 
         @defer.inlineCallbacks
-        def process_batches():
+        def process_batches() -> Generator[Any, Any, Any]:
             try:
                 start_time = time.time()
                 for i, batch in enumerate(batches):
@@ -468,7 +468,7 @@ def crawl_site(
                     logger.info("Reactor stopped")
 
         # Set up signal handlers to gracefully exit on interrupt
-        def signal_handler(sig, frame):
+        def signal_handler(sig: int, frame: Optional[FrameType]) -> None:
             logger.info("Received interrupt signal, shutting down gracefully...")
             if progress:
                 progress.close()
@@ -480,7 +480,7 @@ def crawl_site(
         signal.signal(signal.SIGTERM, signal_handler)
 
         # Set up a timeout to prevent indefinite hanging
-        def timeout_handler():
+        def timeout_handler() -> None:
             logger.warning("Crawler timed out after 300 seconds, shutting down...")
             if progress:
                 progress.close()
@@ -494,7 +494,7 @@ def crawl_site(
         d = process_batches()
 
         # Add a callback to cancel the timeout when done
-        def cancel_timeout(result):
+        def cancel_timeout(result: Any) -> Any:
             if timeout_id.active():
                 timeout_id.cancel()
             return result

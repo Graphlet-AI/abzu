@@ -14,7 +14,7 @@ logger = get_logger(__name__)
 class DCByteAnalyzer:
     """Analyzer for DC Byte blog pagination and AJAX requests."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.ajax_requests: list[dict[str, Any]] = []
         self.initial_posts: list[dict[str, Any]] = []
         self.loaded_posts: list[dict[str, Any]] = []
@@ -274,7 +274,7 @@ class DCByteAnalyzer:
             return analysis
 
 
-async def main():
+async def main() -> None:
     """Run the analyzer."""
     analyzer = DCByteAnalyzer()
     results = await analyzer.analyze()

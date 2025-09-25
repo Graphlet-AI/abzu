@@ -26,7 +26,7 @@ from abzu.config import config
     default=1,
     help="Number of pages to crawl concurrently",
 )
-def dcbyte(output_path, pages, batch_size):
+def dcbyte(output_path: str, pages: int, batch_size: int) -> int:
     """Crawl DC Byte blog articles using Playwright."""
     from abzu.crawl.dcbyte import crawl_dcbyte
 

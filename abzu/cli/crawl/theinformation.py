@@ -38,7 +38,9 @@ from abzu.config import config
     default=1,
     help="Number of pages to crawl concurrently",
 )
-def theinformation(output_file, cookie, user_agent, bypass_cf, batch_size):
+def theinformation(
+    output_file: str, cookie: str, user_agent: str, bypass_cf: bool, batch_size: int
+) -> int:
     """Crawl TheInformation RSS feed."""
     from abzu.crawl.information import crawl_theinformation
 

@@ -21,7 +21,7 @@ logger = get_logger(__name__)
     "--redirect-uri",
     help="Optional redirect URI after authorization",
 )
-def auth(app_id: Optional[str], redirect_uri: Optional[str]):
+def auth(app_id: Optional[str], redirect_uri: Optional[str]) -> int:
     """Generate Discord bot authorization URL.
 
     This command generates a URL that can be used to add the bot to a Discord server.
