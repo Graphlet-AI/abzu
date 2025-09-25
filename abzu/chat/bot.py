@@ -228,7 +228,7 @@ class BotRunner:
         self.specific_channels = specific_channels
         self.ignored_domains = ignored_domains
         self.on_url_found_callback = on_url_found_callback
-        self.bot = None
+        self.bot: URLMonitorBot | None = None
 
     def get_auth_url(self, redirect_uri: Optional[str] = None) -> str:
         """Generate the OAuth2 authorization URL for adding the bot to servers.
@@ -254,7 +254,7 @@ class BotRunner:
 
     async def start(self):
         """Start the Discord bot."""
-        self.bot = URLMonitorBot(
+        self.bot: URLMonitorBot = URLMonitorBot(
             command_prefix=self.command_prefix,
             specific_channels=self.specific_channels,
             ignored_domains=self.ignored_domains,

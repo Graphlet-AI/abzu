@@ -8,8 +8,8 @@ from pydantic import BaseModel, Field
 
 from abzu.baml_client.types import IndustryArticle
 from abzu.chat.bot import BotRunner
-from abzu.chat.fetcher import ContentFetcher
 from abzu.chat.io import ArticleStorage
+from abzu.chat.playwright_fetcher import PlaywrightFetcher
 from abzu.chat.processor import ArticleProcessor
 from abzu.config import config
 from abzu.logs import get_logger
@@ -42,11 +42,22 @@ class AgentConfig(BaseModel):
         config.get("chat.start.processed_articles"),
         description="Path to store processed articles.",
     )
-    max_retries: int = Field(5, description="Maximum number of retries for rate-limited requests.")
-    pause_seconds: float = Field(0.5, description="Number of seconds to pause between requests.")
-    timeout: int = Field(200, description="Request timeout in seconds.")
-    use_cloudscraper: bool = Field(
-        False, description="Whether to use cloudscraper instead of requests."
+    # Playwright configuration
+    browser_type: str = Field(
+        config.get("crawl.playwright.browser_type", "chromium"),
+        description="Browser type for Playwright: chromium, firefox, or webkit.",
+    )
+    headless: bool = Field(
+        config.get("crawl.playwright.headless", True),
+        description="Run browser in headless mode.",
+    )
+    max_retries: int = Field(
+        config.get("crawl.playwright.max_retries", 3),
+        description="Maximum number of retries for failed requests.",
+    )
+    timeout: int = Field(
+        config.get("crawl.playwright.timeout", 30),
+        description="Page load timeout in seconds.",
     )
 
 
@@ -55,10 +66,10 @@ class DiscordAgent:
 
     config: AgentConfig
     bot_runner: Optional[BotRunner] = None
-    content_fetcher: Optional[ContentFetcher] = None
+    playwright_fetcher: Optional[PlaywrightFetcher] = None
     article_processor: Optional[ArticleProcessor] = None
     article_storage: Optional[ArticleStorage] = None
-    _bot_task: Optional[asyncio.Task] = None
+    _bot_task: Optional[asyncio.Task[None]] = None
     _running: bool = False
 
     def __init__(self, config: Optional[AgentConfig] = None):
@@ -75,18 +86,18 @@ class DiscordAgent:
             ignored_domains=None,
             raw_articles_path=config.get("chat.start.raw_articles"),  # type: ignore
             processed_articles_path=config.get("chat.start.processed_articles"),  # type: ignore
-            max_retries=5,
-            pause_seconds=0.5,
-            timeout=200,
-            use_cloudscraper=False,
+            browser_type=config.get("crawl.playwright.browser_type", "chromium"),  # type: ignore
+            headless=config.get("crawl.playwright.headless", True),  # type: ignore
+            max_retries=config.get("crawl.playwright.max_retries", 3),  # type: ignore
+            timeout=config.get("crawl.playwright.timeout", 30),  # type: ignore
         )
 
         # Initialize components
-        self.content_fetcher = ContentFetcher(
+        self.playwright_fetcher = PlaywrightFetcher(
             max_retries=self.config.max_retries,
-            pause_seconds=self.config.pause_seconds,
             timeout=self.config.timeout,
-            use_cloudscraper=self.config.use_cloudscraper,
+            headless=self.config.headless,
+            browser_type=self.config.browser_type,
         )
         self.article_processor = ArticleProcessor()
         self.article_storage = ArticleStorage(
@@ -103,7 +114,7 @@ class DiscordAgent:
             on_url_found_callback=self.process_url,
         )
 
-    async def start(self):
+    async def start(self) -> None:
         """Start the Discord agent."""
         if self._running:
             logger.warning("Agent is already running")
@@ -112,12 +123,17 @@ class DiscordAgent:
         logger.info("Starting Discord agent...")
         self._running = True
 
+        # Initialize Playwright browser
+        if self.playwright_fetcher:
+            await self.playwright_fetcher.initialize()
+            logger.info("Playwright browser initialized")
+
         # Start the bot in a background task
         self._bot_task = asyncio.create_task(self._run_bot())
 
         logger.info("Discord agent started")
 
-    async def stop(self):
+    async def stop(self) -> None:
         """Stop the Discord agent."""
         if not self._running:
             logger.warning("Agent is not running")
@@ -129,9 +145,10 @@ class DiscordAgent:
         if self.bot_runner:
             await self.bot_runner.stop()
 
-        # Close the content fetcher
-        if self.content_fetcher:
-            self.content_fetcher.close()
+        # Close the Playwright browser
+        if self.playwright_fetcher:
+            await self.playwright_fetcher.close()
+            logger.info("Playwright browser closed")
 
         # Cancel the bot task
         if self._bot_task:
@@ -145,7 +162,7 @@ class DiscordAgent:
         self._running = False
         logger.info("Discord agent stopped")
 
-    async def _run_bot(self):
+    async def _run_bot(self) -> None:
         """Run the Discord bot in a background task."""
         if not self.bot_runner:
             logger.error("Bot runner not initialized")
@@ -157,19 +174,19 @@ class DiscordAgent:
             logger.error(f"Error running Discord bot: {e}")
             self._running = False
 
-    async def process_url(self, url: str, message: Message):
+    async def process_url(self, url: str, message: Message) -> None:
         """Process a URL found in a Discord message.
 
         Args:
             url: The URL to process
             message: The Discord message containing the URL
         """
-        if not self.content_fetcher or not self.article_processor or not self.article_storage:
+        if not self.playwright_fetcher or not self.article_processor or not self.article_storage:
             logger.error("Agent components not initialized")
             return
 
         # Helper function to send error to bots channel
-        async def send_error_to_bots(error_msg: str):
+        async def send_error_to_bots(error_msg: str) -> None:
             """Send error message to #bots channel."""
             if not self.bot_runner or not self.bot_runner.bot:
                 await message.channel.send(error_msg)
@@ -194,9 +211,9 @@ class DiscordAgent:
                 await message.channel.send(error_msg)
 
         try:
-            # Fetch the content
+            # Fetch the content using Playwright
             logger.info(f"Fetching content from URL: {url}")
-            success, result = self.content_fetcher.fetch_url(url)
+            success, result = await self.playwright_fetcher.fetch_url(url)
 
             if not success:
                 logger.error(f"Failed to fetch URL {url}: {result}")

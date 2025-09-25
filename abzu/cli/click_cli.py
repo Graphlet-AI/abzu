@@ -33,7 +33,7 @@ class LazyGroup(click.Group):
         "crawl": "abzu.cli.crawl:crawl",
         "data": "abzu.cli.data:data",
         "dump": "abzu.cli.dump:dump",
-        "mypy": "abzu.cli.mypy:mypy",
+        "zuban": "abzu.cli.zuban:zuban",
         "process": "abzu.cli.process:process",
     },
 )

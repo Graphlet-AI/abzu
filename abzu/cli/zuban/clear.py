@@ -1,4 +1,4 @@
-"""Clear mypy and Python cache files."""
+"""Clear zuban and Python cache files."""
 
 import subprocess
 
@@ -7,9 +7,9 @@ import click
 
 @click.command(context_settings={"show_default": True})
 def clear():
-    """Clear mypy cache and Python cache files."""
+    """Clear zuban cache and Python cache files."""
     commands = [
-        ("rm -rf .mypy_cache 2>/dev/null", "Removing .mypy_cache directory"),
+        ("rm -rf .zuban_cache 2>/dev/null", "Removing .zuban_cache directory"),
         (
             'find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null',
             "Removing __pycache__ directories",

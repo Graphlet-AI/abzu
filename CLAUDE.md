@@ -19,7 +19,7 @@ Do not be afraid to question what I say. Do not always respond with "You're righ
 - Test specific cache modes: `poetry run pytest -e ABZU_CACHE_MODE=hybrid tests/test_sync.py`
 - Lint: `pre-commit`
 - Format: `poetry run black abzu tests`, `poetry run isort abzu tests`
-- Type check: `poetry run mypy abzu tests`
+- Type check: `poetry run zuban check`
 - Place temporary scripts for debugging in the `scripts/` directory.
 - Use the `pqrs` utility to inspect Parquet files: `pqrs schema <path_to_parquet_file>`, `pqrs row-count <path_to_parquet_file>`, `pqrs head <path_to_parquet_file>`
 
@@ -99,11 +99,11 @@ Do not be afraid to question what I say. Do not always respond with "You're righ
 - Tests: Use pytest for testing, include type hints in test functions, use fixtures for setup/teardown
 - Tests: Don't make a class to contain unit tests. Just write the tests in pytest style.
 - Type hints: Use Python 3.9 type hints for all function parameters and return types. Use `list`, `dict`, `tuple`, etc. instead of `List`, `Dict`, `Tuple` from the `typing` module. Use `Optional` from the `typing` module for optional parameters.
-- Type checking: Use mypy for type checking, run mypy before committing code
+- Type checking: Use zuban for type checking, run zuban before committing code
 - Logging: Use logging for error handling, avoid print statements. Always use `from abzu.logs import get_logger` and `logger = get_logger(__name__)`
 - Documentation: Use Sphinx for documentation, include docstrings in all public functions/classes
 - Code style: Follow PEP 8 for Python code style, use flake8 for linting
-- Mypy: Use mypy for type checking, run mypy before committing code. Configure it in `pyproject.toml`, not `mypy.ini`.
+- Zuban: Use zuban for type checking, it is a faster version of mypy. Run zuban via pre-commit before committing code. Configure it in `pyproject.toml` under `[tool.zuban]`.
 - Pre-commit: Use pre-commit for linting and formatting, configure it in `.pre-commit-config.yaml`
 - Git: Use git for version control, commit often with clear messages, use branches for new features/bug fixes. Always test new features in the CLI before you commit them.
 - Poetry: Use poetry for dependency management and packaging, configure it in `pyproject.toml`
@@ -133,7 +133,7 @@ Do not be afraid to question what I say. Do not always respond with "You're righ
 - Flake8 - fix flake8 errors without being asked and without my verification.
 - Black - fix black errors without being asked and without my verification.
 - Isort - fix isort errors without being asked and without my verification.
-- Mypy - fix mypy errors without being asked and without my verification.
+- Zuban - fix zuban errors without being asked and without my verification.
 - Pre-commit - fix pre-commit errors without being asked and without my verification.
 - New Modules - create a folder for a new module without being asked and without my verification.
 - **init**.py - add these files to new module directories without being asked and without my verification.
@@ -209,7 +209,7 @@ In addition, when writing PySpark code:
 
 - Python 3.12 required
 - Core packages: pyspark==3.5.5, scrapy==2.11, baml, kuzu, discord.py
-- Development tools: poetry, black, isort, flake8, mypy, pytest
+- Development tools: poetry, black, isort, flake8, zuban, pytest
 - See pyproject.toml for complete dependency list
 
 ### Environment Variables

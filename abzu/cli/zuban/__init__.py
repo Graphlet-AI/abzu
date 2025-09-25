@@ -1,4 +1,4 @@
-"""Mypy cache management commands."""
+"""Zuban cache management commands."""
 
 import click
 
@@ -25,9 +25,9 @@ class LazyGroup(click.Group):
 @click.group(
     cls=LazyGroup,
     lazy_subcommands={
-        "clear": "abzu.cli.mypy.clear:clear",
+        "clear": "abzu.cli.zuban.clear:clear",
     },
 )
-def mypy():
-    """Mypy cache management commands."""
+def zuban():
+    """Zuban cache management commands."""
     pass
