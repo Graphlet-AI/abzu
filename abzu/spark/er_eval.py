@@ -236,7 +236,7 @@ def evaluate_er_matches(
         else 0
     )
     logger.info(
-        f"UUID overlap with ORIGINAL: {overlapping_with_original:,} ({overlap_with_original_pct:.2f}%) - should be 0%"
+        f"UUID overlap with ORIGINAL: {overlapping_with_original:,} ({overlap_with_original_pct:.2f}%) - should be low %"
     )
 
     # Check overlap with previous iteration
