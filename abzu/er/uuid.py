@@ -5,7 +5,13 @@ from typing import Any, Optional
 
 from abzu.baml_client.async_client import BamlAsyncClient
 from abzu.baml_client.runtime import BamlCallOptions
-from abzu.baml_client.types import Company, CompanyList, MergeCompanyExampleSet
+from abzu.baml_client.types import (
+    Company,
+    CompanyList,
+    Exchange,
+    MergeCompanyExampleSet,
+    Ticker,
+)
 from abzu.er.few_shot import company_dicts_to_baml, company_id_tracking_dicts
 from abzu.logs import get_logger
 
@@ -205,13 +211,50 @@ async def process_block_with_uuid_mapping(
                 # Map each source_uuid to an integer ID
                 source_ids = [mapper.add_uuid(uuid) for uuid in comp_copy["source_uuids"] if uuid]
 
+            # Handle ticker field - might be a dict from parquet
+            ticker_data = comp_copy.get("ticker")
+            ticker = None
+            if ticker_data:
+                if isinstance(ticker_data, dict):
+                    # If ticker is a dict, we need to validate the exchange field
+                    exchange_value = ticker_data.get("exchange")
+                    # Check if exchange is a valid Exchange enum value
+                    valid_exchange = None
+                    if exchange_value:
+                        try:
+                            # Try to convert to Exchange enum
+                            if hasattr(Exchange, exchange_value):
+                                valid_exchange = Exchange[exchange_value]
+                            else:
+                                # If not a valid enum, use UNK
+                                valid_exchange = Exchange.UNK
+                                logger.warning(
+                                    f"Invalid exchange value '{exchange_value}' for company {comp_copy['name']}, using UNK"
+                                )
+                        except (KeyError, ValueError):
+                            valid_exchange = Exchange.UNK
+                            logger.warning(
+                                f"Invalid exchange value '{exchange_value}' for company {comp_copy['name']}, using UNK"
+                            )
+
+                    # Create Ticker object with validated exchange
+                    ticker = Ticker(
+                        id=ticker_data.get("id"),
+                        uuid=ticker_data.get("uuid"),
+                        symbol=ticker_data.get("symbol", ""),
+                        exchange=valid_exchange,
+                    )
+                else:
+                    # If it's already a Ticker object, use it as is
+                    ticker = ticker_data
+
             # Create Company object
             company = Company(
                 id=comp_copy["id"],  # Use the integer ID
                 uuid=None,  # Clear UUID for BAML
                 name=comp_copy["name"],
                 cik=comp_copy.get("cik"),
-                ticker=comp_copy.get("ticker"),
+                ticker=ticker,  # Use the processed ticker
                 description=comp_copy.get("description", ""),
                 website_url=comp_copy.get("website_url"),
                 headquarters_location=comp_copy.get("headquarters_location"),

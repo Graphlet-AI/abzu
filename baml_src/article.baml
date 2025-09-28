@@ -120,6 +120,7 @@ enum Exchange {
   DU @description("DFM - Dubai Financial Market")
   QD @description("QSE - Qatar Stock Exchange")
   EY @description("EGX - Egyptian Exchange")
+  UNK @description("Other/Unknown Exchange")
 }
 
 class Ticker {
