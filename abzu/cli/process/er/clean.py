@@ -50,13 +50,14 @@ def clean(base_path: str, iteration: int | None, dry_run: bool, force: bool) -> 
         "matches.json",
         "matches.jsonl",
         "matches.jsonl.bak",
-        "matches_backup_*.parquet",
-        "matches_backup_*.json",
-        "matches_backup_*.jsonl",
+        "*_backup_*.parquet",  # All backup parquet files
+        "*_backup_*.json",  # All backup json files
+        "*_backup_*.jsonl",  # All backup jsonl files
         "companies_resolved.parquet",
         "companies_resolved.json",
         "er_evaluation_metrics.parquet",
         "er_evaluation_metrics.json",
+        "errors.parquet",  # Error files from match.py
     ]
 
     files_to_delete: list[Path] = []
