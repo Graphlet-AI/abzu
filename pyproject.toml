@@ -132,8 +132,27 @@ ignore_missing_imports = true
 
 [tool.flake8]
 max-line-length = 100
-ignore = ["E203", "E266", "E501", "W503", "C901"]
-extend-ignore = ["E203", "E266", "E501", "W503", "C901"]
+docstring-convention = "numpy"
+format-greedy = 2
+inline-quotes = "double"
+multiline-quotes = "double"
+min_python_version = "3.12.11"
+ignore = ["E203", "E266", "E501", "W503", "C901", "E712"]
+extend-ignore = ["E203", "E266", "E501", "W503", "C901", "E712"]
+exclude = [
+    ".git",
+    "__pycache__",
+    "build",
+    "dist",
+    ".venv",
+    "venv",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ipynb_checkpoints",
+    "docs/source/conf.py",
+    "abzu/baml_client",
+    "tests/data",
+]
 
 [tool.pytest.ini_options]
 asyncio_mode = "strict"

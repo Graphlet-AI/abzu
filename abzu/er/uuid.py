@@ -339,18 +339,22 @@ async def process_block_with_uuid_mapping(
         uuids_to_add_back: dict[str, list[str]] = {}  # company_uuid -> list of uuids to add
 
         if missing_uuids:
-            logger.warning(
-                f"Block {block_key}: Found {len(missing_uuids)} missing UUIDs to recover"
-            )
+            # Count different types of missing UUIDs
+            missing_primary_count = 0
+            missing_source_count = 0
 
             for missing_uuid in missing_uuids:
                 # Case 1: This UUID was a primary company UUID
                 if missing_uuid in input_companies_by_uuid:
                     companies_to_recover.add(missing_uuid)
-                    logger.debug(f"  Will recover entire company with uuid={missing_uuid}")
+                    missing_primary_count += 1
+                    logger.debug(
+                        f"  Missing PRIMARY uuid: {missing_uuid} - will recover entire company"
+                    )
 
                 # Case 2: This UUID was in someone's source_uuids
                 elif missing_uuid in source_uuid_to_company:
+                    missing_source_count += 1
                     parent_company: dict[str, Any] = source_uuid_to_company[missing_uuid]
                     parent_uuid: Any | None = parent_company.get("uuid")
 
@@ -364,7 +368,7 @@ async def process_block_with_uuid_mapping(
                         if parent_in_output:
                             # Parent is in output, just need to ensure missing_uuid is in its source_uuids
                             logger.debug(
-                                f"  UUID {missing_uuid} from parent {parent_uuid} needs to be added back"
+                                f"  Missing SOURCE uuid: {missing_uuid} from parent {parent_uuid} - will add to source_uuids"
                             )
                             if parent_uuid not in uuids_to_add_back:
                                 uuids_to_add_back[parent_uuid] = []
@@ -372,9 +376,16 @@ async def process_block_with_uuid_mapping(
                         else:
                             # Parent company is also missing, need to recover it entirely
                             companies_to_recover.add(parent_uuid)
+                            missing_primary_count += 1  # Parent is missing
                             logger.debug(
-                                f"  Parent company {parent_uuid} of UUID {missing_uuid} also needs recovery"
+                                f"  Missing SOURCE uuid: {missing_uuid} but parent {parent_uuid} ALSO missing - will recover parent"
                             )
+
+            # Log summary of missing UUIDs
+            logger.warning(
+                f"Block {block_key}: Found {len(missing_uuids)} missing UUIDs: "
+                f"{missing_primary_count} primary, {missing_source_count} from source_uuids"
+            )
 
         # Step 1: Add back missing UUIDs to existing output companies
         for resolved_company in resolved_companies:
@@ -401,15 +412,22 @@ async def process_block_with_uuid_mapping(
                 # Ensure source_uuids contains the company's own UUID
                 if "source_uuids" not in missing_company or not missing_company["source_uuids"]:
                     missing_company["source_uuids"] = [company_uuid]
-                elif company_uuid not in missing_company["source_uuids"]:
+                elif (
+                    missing_company["source_uuids"] is not None
+                    and company_uuid not in missing_company["source_uuids"]
+                ):
                     missing_company["source_uuids"].append(company_uuid)
 
                 # Mark as skipped in this iteration
                 missing_company["match_skip"] = True
-                missing_company["match_skip_reason"] = "missing_in_match_output"
+                # Companies in companies_to_recover are always primary UUIDs that went missing
+                missing_company["match_skip_reason"] = "missing_primary_uuid"
 
                 # Update match_skip_history
                 skip_history = missing_company.get("match_skip_history", [])
+                # Ensure skip_history is a list (not None)
+                if skip_history is None:
+                    skip_history = []
                 if iteration not in skip_history:
                     skip_history.append(iteration)
                 missing_company["match_skip_history"] = skip_history

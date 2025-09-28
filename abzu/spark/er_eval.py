@@ -103,9 +103,9 @@ def evaluate_er_matches(
 
     # Count match_skip records
     total_records = resolved_companies_df.count()
-    match_skip_records = resolved_companies_df.filter(F.col("match_skip") is True).count()  # type: ignore
+    match_skip_records = resolved_companies_df.filter(F.col("match_skip") == True).count()  # type: ignore
     baml_processed_records = resolved_companies_df.filter(
-        (F.col("match_skip") is False) | F.col("match_skip").isNull()  # type: ignore
+        (F.col("match_skip") == False) | F.col("match_skip").isNull()  # type: ignore
     ).count()
 
     logger.info(f"Total resolved records: {total_records:,}")
@@ -116,6 +116,8 @@ def evaluate_er_matches(
     skipped_in_current = 0
     error_recovery_count = 0
     missing_uuid_recovery_count = 0
+    missing_primary_uuid_count = 0
+    missing_source_uuid_count = 0
 
     if "match_skip_history" in resolved_companies_df.columns:
         # Count records by number of times skipped
@@ -153,7 +155,7 @@ def evaluate_er_matches(
         # Analyze skip reasons if the column exists
         if "match_skip_reason" in resolved_companies_df.columns:
             skip_reason_df = (
-                resolved_companies_df.filter(F.col("match_skip") is True)  # type: ignore
+                resolved_companies_df.filter(F.col("match_skip") == True)  # type: ignore
                 .groupBy("match_skip_reason")
                 .count()
                 .orderBy(F.desc("count"))
@@ -169,6 +171,14 @@ def evaluate_er_matches(
 
             missing_uuid_recovery_count = resolved_companies_df.filter(
                 F.col("match_skip_reason") == "missing_in_match_output"  # type: ignore
+            ).count()
+
+            missing_primary_uuid_count = resolved_companies_df.filter(
+                F.col("match_skip_reason") == "missing_primary_uuid"  # type: ignore
+            ).count()
+
+            missing_source_uuid_count = resolved_companies_df.filter(
+                F.col("match_skip_reason") == "missing_source_uuid"  # type: ignore
             ).count()
 
     # Get counts for comparison - original raw first
@@ -475,7 +485,12 @@ def evaluate_er_matches(
     if "match_skip_reason" in resolved_companies_df.columns and match_skip_records > 0:
         logger.info("  Recovery reasons:")
         logger.info(f"    - Error recovery: {error_recovery_count:,}")
-        logger.info(f"    - Missing in match output: {missing_uuid_recovery_count:,}")
+        if missing_uuid_recovery_count > 0:
+            logger.info(f"    - Missing in match output (legacy): {missing_uuid_recovery_count:,}")
+        if missing_primary_uuid_count > 0:
+            logger.info(f"    - Missing primary UUID: {missing_primary_uuid_count:,}")
+        if missing_source_uuid_count > 0:
+            logger.info(f"    - Missing source UUID: {missing_source_uuid_count:,}")
 
     # Check if we achieved 100% coverage
     if original_coverage_pct >= 99.99:

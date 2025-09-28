@@ -7,6 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional, cast
 
+import numpy as np
 import pandas as pd
 from baml_py import Collector
 from tqdm import tqdm
@@ -137,8 +138,10 @@ def match_entities(
     df = pd.read_parquet(blocks_parquet_path)
     logger.info(f"Loaded {len(df)} blocks")
 
-    # Filter to blocks with multiple companies
+    # Separate singleton blocks from multi-company blocks
+    singleton_blocks = df[df["block_size"] == 1].copy()
     multi_company_blocks = df[df["block_size"] > 1].copy()
+    logger.info(f"Found {len(singleton_blocks)} singleton blocks")
     logger.info(f"Found {len(multi_company_blocks)} blocks with multiple companies")
 
     # Apply size range filter if specified
@@ -159,8 +162,8 @@ def match_entities(
         logger.info(f"After max size filter ({max_block_size}): {len(multi_company_blocks)} blocks")
 
     # Check if we have any blocks left after max size filter
-    if len(multi_company_blocks) == 0:
-        logger.warning("No blocks found after applying max size filter.")
+    if len(multi_company_blocks) == 0 and len(singleton_blocks) == 0:
+        logger.warning("No blocks found after applying filters.")
         return
 
     # Apply limit if specified
@@ -168,20 +171,127 @@ def match_entities(
         multi_company_blocks = multi_company_blocks.head(limit)
         logger.info(f"Limited to {len(multi_company_blocks)} blocks")
 
-    # Final check to ensure we have blocks to process
-    if len(multi_company_blocks) == 0:
-        logger.warning("No blocks to process after applying all filters.")
-        return
+    # Process multi-company blocks asynchronously if we have any
+    if len(multi_company_blocks) > 0:
+        # Convert to list of dictionaries for processing
+        blocks = cast(list[dict[str, Any]], multi_company_blocks.to_dict("records"))
 
-    # Convert to list of dictionaries for processing
-    blocks = cast(list[dict[str, Any]], multi_company_blocks.to_dict("records"))
+        # Process blocks asynchronously
+        logger.info("Starting async processing...")
+        results = asyncio.run(process_blocks_async(blocks, batch_size, iteration))
+    else:
+        logger.info("No multi-company blocks to process")
+        results = []
 
-    # Process blocks asynchronously
-    logger.info("Starting async processing...")
-    results = asyncio.run(process_blocks_async(blocks, batch_size, iteration))
+    # Process error blocks BEFORE creating DataFrame
+    error_recovery_count = 0
+    for i, result in enumerate(results):
+        # Check if this result has an error
+        if "error" in result and result["error"] is not None:
+            # Check if we have original_companies to recover
+            if (
+                "original_companies" in result
+                and result["original_companies"] is not None
+                and isinstance(result["original_companies"], (list, np.ndarray))
+                and len(result["original_companies"]) > 0
+            ):
+                original_companies = result["original_companies"]
+
+                # Mark these companies as error-recovered
+                recovered_companies = []
+                for company in original_companies:
+                    # Make a copy to avoid modifying original
+                    company_copy = dict(company) if isinstance(company, dict) else company
+
+                    company_copy["match_skip"] = True
+                    company_copy["match_skip_reason"] = "error_recovery"
+
+                    # Update match_skip_history
+                    skip_history: list[int] | None = company_copy.get("match_skip_history")
+                    # Ensure skip_history is a list (not None)
+                    if skip_history is None:
+                        skip_history = []
+                    if iteration not in skip_history:
+                        skip_history.append(iteration)
+                    company_copy["match_skip_history"] = skip_history
+
+                    # Ensure source_uuids contains the company's UUID
+                    if "uuid" in company_copy and company_copy["uuid"]:
+                        if "source_uuids" not in company_copy or not company_copy["source_uuids"]:
+                            company_copy["source_uuids"] = [company_copy["uuid"]]
+                        elif (
+                            company_copy["source_uuids"] is not None
+                            and company_copy["uuid"] not in company_copy["source_uuids"]
+                        ):
+                            company_copy["source_uuids"].append(company_copy["uuid"])
+
+                    recovered_companies.append(company_copy)
+                    error_recovery_count += 1
+
+                # Update the result dictionary directly
+                result["resolved_companies"] = recovered_companies
+                result["was_resolved"] = False
+                result["error_recovered"] = True
+
+                logger.debug(
+                    f"Recovered {len(recovered_companies)} companies from error block '{result.get('block_key', 'unknown')}'"
+                )
+
+    if error_recovery_count > 0:
+        logger.info(f"Recovered {error_recovery_count} companies from error blocks")
+
+    # Process singleton blocks (no matching needed, just pass through)
+    singleton_results = []
+    if len(singleton_blocks) > 0:
+        logger.info(f"Processing {len(singleton_blocks)} singleton blocks...")
+        for _, block in singleton_blocks.iterrows():
+            block_dict = block.to_dict()
+            companies = block_dict.get("companies", [])
+
+            # For singleton blocks, the single company becomes the resolved company
+            if companies and len(companies) > 0:
+                company = companies[0]
+
+                # Ensure the company has its own UUID in source_uuids
+                if "uuid" in company and company["uuid"]:
+                    if "source_uuids" not in company or not company["source_uuids"]:
+                        company["source_uuids"] = [company["uuid"]]
+                    elif company["uuid"] not in company["source_uuids"]:
+                        company["source_uuids"].append(company["uuid"])
+
+                # Mark as singleton (not processed by BAML)
+                company["match_skip"] = True
+                company["match_skip_reason"] = "singleton_block"
+
+                # Initialize match_skip_history if not present
+                if "match_skip_history" not in company:
+                    company["match_skip_history"] = []
+                elif company["match_skip_history"] is None:
+                    company["match_skip_history"] = []
+
+                # Add current iteration to skip history
+                if iteration not in company["match_skip_history"]:
+                    company["match_skip_history"].append(iteration)
+
+                # Create result structure
+                singleton_result = {
+                    "block_key": block_dict.get("block_key"),
+                    "block_key_type": block_dict.get("block_key_type"),
+                    "original_companies": [company],
+                    "resolved_companies": [company],
+                    "original_count": 1,
+                    "resolved_count": 1,
+                    "was_resolved": False,  # No matching was done
+                }
+                singleton_results.append(singleton_result)
+
+        logger.info(f"Processed {len(singleton_results)} singleton blocks")
+
+    # Combine multi-company and singleton results
+    all_results = results + singleton_results
 
     # Convert results to DataFrame
-    results_df = pd.DataFrame(results)
+    results_df = pd.DataFrame(all_results)
 
     # Format output paths for both formats with iteration
     output_parquet_path = output_path.format(iteration=iteration, format="parquet")
@@ -192,14 +302,13 @@ def match_entities(
     output_dir = output_path_obj.parent
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # Check for blocks with errors and handle them
+    # Save error blocks to a separate file for debugging if any exist
     error_blocks = (
         results_df[results_df["error"].notna()]
         if len(results_df) > 0 and "error" in results_df.columns
         else pd.DataFrame()
     )
 
-    error_recovery_count = 0
     if len(error_blocks) > 0:
         # Create error output path for debugging
         error_output_path = "data/er/iterations/{iteration}/errors.parquet".format(
@@ -215,40 +324,6 @@ def match_entities(
         # Save error blocks to separate file for debugging
         error_blocks.to_parquet(error_output_path, index=False)
         logger.warning(f"Saved {len(error_blocks)} error blocks to {error_output_path}")
-
-        # Recover companies from error blocks
-        logger.info("Recovering companies from error blocks...")
-        for idx, error_row in error_blocks.iterrows():
-            # Check if we have original_companies in the error block
-            if "original_companies" in error_row and error_row["original_companies"]:
-                original_companies = error_row["original_companies"]
-
-                # Mark these companies as error-recovered
-                for company in original_companies:
-                    company["match_skip"] = True
-                    company["match_skip_reason"] = "error_recovery"
-
-                    # Update match_skip_history
-                    skip_history = company.get("match_skip_history", [])
-                    if iteration not in skip_history:
-                        skip_history.append(iteration)
-                    company["match_skip_history"] = skip_history
-
-                    # Ensure source_uuids contains the company's UUID
-                    if "uuid" in company and company["uuid"]:
-                        if "source_uuids" not in company or not company["source_uuids"]:
-                            company["source_uuids"] = [company["uuid"]]
-                        elif company["uuid"] not in company["source_uuids"]:
-                            company["source_uuids"].append(company["uuid"])
-
-                    error_recovery_count += 1
-
-                # Update the error block to have recovered companies
-                results_df.at[idx, "resolved_companies"] = original_companies
-                results_df.at[idx, "was_resolved"] = False
-                results_df.at[idx, "error_recovered"] = True
-
-        logger.info(f"Recovered {error_recovery_count} companies from error blocks")
 
     # Backup existing parquet file if it exists
     backup_file(output_path_obj)
@@ -285,7 +360,7 @@ def match_entities(
                                 uuid_recovered_records += 1
                             # Check if this iteration is in the skip history
                             skip_history = company.get("match_skip_history", [])
-                            if iteration in skip_history:
+                            if skip_history and iteration in skip_history:
                                 skipped_in_iteration += 1
 
     # Print summary statistics

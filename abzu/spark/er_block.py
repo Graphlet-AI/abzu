@@ -108,14 +108,24 @@ def build_blocks(
         get_acronym(F.col("name")).alias("acronym_block"),
     )
 
-    # Filter out any UNKNOWN block keys
-    companies_with_block_keys_df = companies_with_block_keys_df.filter(
-        (F.col("first_word_block") != "UNKNOWN") & (F.col("acronym_block") != "UNKNOWN")  # type: ignore[call-arg]
+    # Separate companies with UNKNOWN block keys
+    companies_with_unknown_keys = companies_with_block_keys_df.filter(
+        (F.col("first_word_block") == "UNKNOWN") & (F.col("acronym_block") == "UNKNOWN")  # type: ignore[call-arg]
     )
 
-    unknown_count = companies_df.count() - companies_with_block_keys_df.count()
+    unknown_count = companies_with_unknown_keys.count()
     if unknown_count > 0:
-        logger.warning(f"Filtered out {unknown_count} companies with UNKNOWN block keys")
+        logger.warning(
+            f"Found {unknown_count} companies with UNKNOWN block keys - will create an UNBLOCKED block for them"
+        )
+
+    # For analysis, only use companies with valid block keys
+    companies_with_valid_keys_df = companies_with_block_keys_df.filter(
+        (F.col("first_word_block") != "UNKNOWN") | (F.col("acronym_block") != "UNKNOWN")  # type: ignore[call-arg]
+    )
+
+    # Continue with valid keys for analysis
+    companies_with_block_keys_df = companies_with_valid_keys_df
 
     # Cache for multiple operations
     companies_with_block_keys_df = companies_with_block_keys_df.cache()
@@ -483,11 +493,40 @@ def build_blocks(
     acronym_blocks_final.repartition(1).write.mode("overwrite").json(acronym_json_path)
     acronym_blocks_final.repartition(1).write.mode("overwrite").parquet(acronym_parquet_path)
 
+    # Handle companies with UNKNOWN block keys - create singleton blocks for them
+    unblocked_blocks_df = None
+    if unknown_count > 0:
+        logger.info(
+            f"Creating singleton blocks for {unknown_count} companies with UNKNOWN block keys..."
+        )
+
+        # Get the full company data for companies with UNKNOWN keys
+        unknown_uuids = companies_with_unknown_keys.select("uuid")
+        unknown_companies_full = full_companies_df.join(unknown_uuids, "uuid", "inner")
+
+        # Create singleton blocks for each unknown company using DataFrame operations
+        # Each company becomes its own block with block_size=1
+        unblocked_blocks_df = unknown_companies_full.select(
+            F.concat(F.lit("UNBLOCKED_"), F.col("uuid")).alias("block_key"),
+            F.lit("unblocked").alias("block_key_type"),
+            F.array(F.struct(unknown_companies_full.columns)).alias("companies"),
+            F.lit(1).alias("block_size"),
+        )
+
+        logger.info(f"Created {unblocked_blocks_df.count()} singleton blocks for UNKNOWN companies")
+
     # Create unified all_blocks output by combining all block types
     logger.info("Creating unified all_blocks output...")
-    all_blocks_df = combined_blocks_final.unionByName(first_word_blocks_final).unionByName(
-        acronym_blocks_final
-    )
+    if unblocked_blocks_df is not None:
+        all_blocks_df = (
+            combined_blocks_final.unionByName(first_word_blocks_final)
+            .unionByName(acronym_blocks_final)
+            .unionByName(unblocked_blocks_df)
+        )
+    else:
+        all_blocks_df = combined_blocks_final.unionByName(first_word_blocks_final).unionByName(
+            acronym_blocks_final
+        )
 
     # Save all_blocks to both JSON and Parquet formats
     all_blocks_json_path = os.path.join(output_path, "all_blocks.json")
@@ -509,7 +548,10 @@ def build_blocks(
     combined_block_count = combined_blocks_final.count()
     first_word_only_count = first_word_blocks_final.count()
     acronym_only_count = acronym_blocks_final.count()
-    total_blocks = combined_block_count + first_word_only_count + acronym_only_count
+    unblocked_count = unblocked_blocks_df.count() if unblocked_blocks_df is not None else 0
+    total_blocks = (
+        combined_block_count + first_word_only_count + acronym_only_count + unblocked_count
+    )
 
     # Debug: Show schema and sample data for verification
     if logger.isEnabledFor(logging.DEBUG):
@@ -563,6 +605,11 @@ def build_blocks(
     if acronym_only_count != original_acronym_count:
         logger.info(f"  (Split from {original_acronym_count:,} original blocks)")
     logger.info(f"  Saved to: {acronym_json_path} and {acronym_parquet_path}")
+    if unblocked_count > 0:
+        logger.info(
+            f"Unblocked Companies (singleton blocks): {unblocked_count:,} blocks with {unblocked_count:,} companies"
+        )
+        logger.info("  (Companies with no valid block keys)")
     logger.info(
         f"Total Blocks: {total_blocks:,} blocks (all blocks ≤ {actual_max_block_size} companies)"
     )
