@@ -7,7 +7,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional, cast
 
-import numpy as np
 import pandas as pd
 from baml_py import Collector
 from tqdm import tqdm
@@ -135,7 +134,9 @@ def match_entities(
 
     # Load blocks from parquet (format the path with iteration and parquet extension)
     blocks_parquet_path = blocks_path.format(iteration=iteration, format="parquet")
-    df = pd.read_parquet(blocks_parquet_path)
+    # Use dtype_backend='pyarrow' to preserve Python lists instead of converting to numpy arrays
+    df = pd.read_parquet(blocks_parquet_path, dtype_backend="pyarrow")
+
     logger.info(f"Loaded {len(df)} blocks")
 
     # Separate singleton blocks from multi-company blocks
@@ -192,7 +193,7 @@ def match_entities(
             if (
                 "original_companies" in result
                 and result["original_companies"] is not None
-                and isinstance(result["original_companies"], (list, np.ndarray))
+                and isinstance(result["original_companies"], list)
                 and len(result["original_companies"]) > 0
             ):
                 original_companies = result["original_companies"]
@@ -207,23 +208,27 @@ def match_entities(
                     company_copy["match_skip_reason"] = "error_recovery"
 
                     # Update match_skip_history
-                    skip_history: list[int] | None = company_copy.get("match_skip_history")
-                    # Ensure skip_history is a list (not None)
-                    if skip_history is None:
-                        skip_history = []
+                    skip_history: list[int] = company_copy.get("match_skip_history", [])
+                    if not isinstance(skip_history, list):
+                        skip_history = list(skip_history) if skip_history else []
+
                     if iteration not in skip_history:
                         skip_history.append(iteration)
                     company_copy["match_skip_history"] = skip_history
 
                     # Ensure source_uuids contains the company's UUID
                     if "uuid" in company_copy and company_copy["uuid"]:
-                        if "source_uuids" not in company_copy or not company_copy["source_uuids"]:
-                            company_copy["source_uuids"] = [company_copy["uuid"]]
-                        elif (
-                            company_copy["source_uuids"] is not None
-                            and company_copy["uuid"] not in company_copy["source_uuids"]
-                        ):
-                            company_copy["source_uuids"].append(company_copy["uuid"])
+                        source_uuids = company_copy.get("source_uuids")
+                        if source_uuids is None:
+                            source_uuids = [company_copy["uuid"]]
+                        elif isinstance(source_uuids, list):
+                            if company_copy["uuid"] not in source_uuids:
+                                source_uuids.append(company_copy["uuid"])
+                        else:
+                            source_uuids = list(source_uuids) if source_uuids else []
+                            if company_copy["uuid"] not in source_uuids:
+                                source_uuids.append(company_copy["uuid"])
+                        company_copy["source_uuids"] = source_uuids
 
                     recovered_companies.append(company_copy)
                     error_recovery_count += 1
@@ -254,24 +259,31 @@ def match_entities(
 
                 # Ensure the company has its own UUID in source_uuids
                 if "uuid" in company and company["uuid"]:
-                    if "source_uuids" not in company or not company["source_uuids"]:
-                        company["source_uuids"] = [company["uuid"]]
-                    elif company["uuid"] not in company["source_uuids"]:
-                        company["source_uuids"].append(company["uuid"])
+                    source_uuids = company.get("source_uuids")
+                    if source_uuids is None:
+                        source_uuids = [company["uuid"]]
+                    elif isinstance(source_uuids, list):
+                        if company["uuid"] not in source_uuids:
+                            source_uuids.append(company["uuid"])
+                    else:
+                        source_uuids = list(source_uuids) if source_uuids else []
+                        if company["uuid"] not in source_uuids:
+                            source_uuids.append(company["uuid"])
+                    company["source_uuids"] = source_uuids
 
                 # Mark as singleton (not processed by BAML)
                 company["match_skip"] = True
                 company["match_skip_reason"] = "singleton_block"
 
                 # Initialize match_skip_history if not present
-                if "match_skip_history" not in company:
-                    company["match_skip_history"] = []
-                elif company["match_skip_history"] is None:
-                    company["match_skip_history"] = []
+                skip_hist: list[int] = company.get("match_skip_history", [])
+                if not isinstance(skip_hist, list):
+                    skip_hist = list(skip_hist) if skip_hist else []
 
                 # Add current iteration to skip history
-                if iteration not in company["match_skip_history"]:
-                    company["match_skip_history"].append(iteration)
+                if iteration not in skip_hist:
+                    skip_hist.append(iteration)
+                company["match_skip_history"] = skip_hist
 
                 # Create result structure
                 singleton_result = {
