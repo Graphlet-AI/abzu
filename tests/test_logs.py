@@ -1,26 +1,27 @@
 """Tests for the centralized logging module."""
 
 import logging
+from pathlib import Path
 from unittest import mock
 
 from abzu.logs import get_logger
 
 
-def test_get_logger_returns_logger():
+def test_get_logger_returns_logger() -> None:
     """Test that get_logger returns a logging.Logger instance."""
     logger = get_logger("test_module")
     assert isinstance(logger, logging.Logger)
     assert logger.name == "test_module"
 
 
-def test_get_logger_no_name_returns_root_logger():
+def test_get_logger_no_name_returns_root_logger() -> None:
     """Test that get_logger with no name returns root logger."""
     logger = get_logger()
     assert isinstance(logger, logging.Logger)
     assert logger.name == "root"
 
 
-def test_logger_writes_to_file(tmp_path):
+def test_logger_writes_to_file(tmp_path: Path) -> None:
     """Test that logger writes to the configured log file."""
     # Create a test log file
     test_log_file = tmp_path / "test.log"
@@ -54,7 +55,7 @@ def test_logger_writes_to_file(tmp_path):
     file_handler.close()
 
 
-def test_logger_format():
+def test_logger_format() -> None:
     """Test that logger uses the correct format."""
     # Create a test handler with known format
     test_handler = logging.StreamHandler()
@@ -70,7 +71,7 @@ def test_logger_format():
     assert "%(message)s" in format_str  # type: ignore[operator]
 
 
-def test_logger_level():
+def test_logger_level() -> None:
     """Test that get_logger returns a working logger."""
     # Get a logger using get_logger
     logger = get_logger("test_level_check")
@@ -83,7 +84,7 @@ def test_logger_level():
         assert mock_info.called or logger.isEnabledFor(logging.INFO)
 
 
-def test_logger_handlers():
+def test_logger_handlers() -> None:
     """Test that logger has both file and stream handlers."""
     logger = logging.getLogger()
 
@@ -96,7 +97,7 @@ def test_logger_handlers():
     )
 
 
-def test_log_directory_creation(tmp_path):
+def test_log_directory_creation(tmp_path: Path) -> None:
     """Test that log directory is created if it doesn't exist."""
     # Create a nested path that doesn't exist
     nested_log_dir = tmp_path / "nested" / "logs"
@@ -115,7 +116,7 @@ def test_log_directory_creation(tmp_path):
         assert nested_log_dir.is_dir()
 
 
-def test_logger_propagation():
+def test_logger_propagation() -> None:
     """Test logger propagation behavior."""
     # Create a child logger
     logger = get_logger("abzu.test.module")
@@ -125,7 +126,7 @@ def test_logger_propagation():
     assert logger.propagate is True
 
 
-def test_multiple_loggers_same_name():
+def test_multiple_loggers_same_name() -> None:
     """Test that multiple calls with same name return same logger."""
     logger1 = get_logger("test_same")
     logger2 = get_logger("test_same")
@@ -134,7 +135,7 @@ def test_multiple_loggers_same_name():
     assert logger1 is logger2
 
 
-def test_logger_hierarchy():
+def test_logger_hierarchy() -> None:
     """Test that logger hierarchy works correctly."""
     parent_logger = get_logger("abzu")
     child_logger = get_logger("abzu.test")

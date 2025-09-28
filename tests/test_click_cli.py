@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pandas as pd
 import pytest
 from click.testing import CliRunner
@@ -145,7 +147,7 @@ def test_click_cli_help_commands(cmd: str, expected: list[str]) -> None:
         assert text in result.output
 
 
-def test_dump_products_sorted(tmp_path) -> None:
+def test_dump_products_sorted(tmp_path: Path) -> None:
     df = pd.DataFrame(
         [
             {"company_name": "Beta", "name": "ProdB", "description": "B desc"},
