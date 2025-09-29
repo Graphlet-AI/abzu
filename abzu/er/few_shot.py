@@ -65,11 +65,25 @@ company_id_tracking_dicts: dict[
     "merge_companies": [
         {
             "companies": [
-                {"id": 1, "source_ids": [101, 102]},
-                {"id": 2, "source_ids": [201, 202]},
+                {"id": 1, "name": "Nvidia", "source_ids": [3, 4]},
+                {"id": 2, "name": "Nvidia Corp", "source_ids": [5, 6, 7, 8, 9]},
             ],
-            "merged_company": {"id": 10, "source_ids": [1, 2, 101, 102, 201, 202]},
-        }
+            "merged_company": {
+                "id": 10,
+                "name": "Nvidia Corp",
+                "source_ids": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+            },
+        },
+        {
+            "companies": [
+                {"id": 11, "name": "Apple", "source_ids": [13, 14]},
+                {"id": 12, "name": "Apple Inc", "source_ids": [15, 16, 17, 18, 19]},
+            ],
+            "merged_company": {
+                "id": 20,
+                "name": "Apple Inc",
+                "source_ids": [11, 12, 13, 14, 15, 16, 17, 18, 19],
+            },
+        },
     ]
 }
-company_id_tracking_few_shot_candidates = company_dicts_to_baml(company_id_tracking_dicts)
