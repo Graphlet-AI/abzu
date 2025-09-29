@@ -211,10 +211,16 @@ async def process_block_with_uuid_mapping(
                 # Map each source_uuid to an integer ID
                 source_ids = [mapper.add_uuid(uuid) for uuid in comp_copy["source_uuids"] if uuid]
 
-            # Handle ticker field - might be a dict from parquet
+            # Handle ticker field - might be a dict or Row from parquet
             ticker_data = comp_copy.get("ticker")
             ticker = None
             if ticker_data:
+                # Convert PySpark Row to dict if needed
+                from pyspark.sql.types import Row
+
+                if isinstance(ticker_data, Row):
+                    ticker_data = ticker_data.asDict()
+
                 if isinstance(ticker_data, dict):
                     # If ticker is a dict, we need to validate the exchange field
                     exchange_value = ticker_data.get("exchange")

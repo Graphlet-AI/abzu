@@ -15,6 +15,7 @@ from abzu.baml_client import b as baml_client
 from abzu.config import config
 from abzu.er.uuid import process_block_with_uuid_mapping
 from abzu.logs import get_logger
+from abzu.spark.config import get_spark_session
 from abzu.utils import save_jsonl
 
 logger = get_logger(__name__)
@@ -132,10 +133,39 @@ def match_entities(
     if min_block_size is not None or max_block_size is not None:
         logger.info(f"Block size range: {min_block_size or 'any'}:{max_block_size or 'any'}")
 
-    # Load blocks from parquet (format the path with iteration and parquet extension)
+    # Load blocks from parquet using PySpark to preserve Python lists
     blocks_parquet_path = blocks_path.format(iteration=iteration, format="parquet")
-    # Use dtype_backend='pyarrow' to preserve Python lists instead of converting to numpy arrays
-    df = pd.read_parquet(blocks_parquet_path, dtype_backend="pyarrow")
+
+    # Create or get SparkSession
+    spark = get_spark_session(f"EntityResolutionMatch_Iteration{iteration}")
+
+    # Disable Arrow optimization to preserve Python object types
+    spark.conf.set("spark.sql.execution.arrow.pyspark.enabled", "false")
+
+    # Load parquet file with Spark (preserves lists as Python lists, not numpy arrays)
+    spark_df = spark.read.parquet(blocks_parquet_path)
+
+    # Convert to pandas DataFrame
+    # With Arrow disabled, toPandas() preserves Python lists without converting to numpy arrays
+    df = spark_df.toPandas()
+
+    # Convert any Row objects to dicts in the companies column
+    from pyspark.sql.types import Row
+
+    if "companies" in df.columns:
+
+        def convert_row_to_dict(item: Any) -> Any:
+            """Recursively convert Row objects to dicts."""
+            if isinstance(item, Row):
+                return item.asDict()
+            elif isinstance(item, list):
+                return [convert_row_to_dict(i) for i in item]
+            elif isinstance(item, dict):
+                return {k: convert_row_to_dict(v) for k, v in item.items()}
+            else:
+                return item
+
+        df["companies"] = df["companies"].apply(convert_row_to_dict)
 
     logger.info(f"Loaded {len(df)} blocks")
 
@@ -208,9 +238,17 @@ def match_entities(
                     company_copy["match_skip_reason"] = "error_recovery"
 
                     # Update match_skip_history
-                    skip_history: list[int] = company_copy.get("match_skip_history", [])
-                    if not isinstance(skip_history, list):
-                        skip_history = list(skip_history) if skip_history else []
+                    skip_history_raw = company_copy.get("match_skip_history")
+                    if skip_history_raw is None:
+                        skip_history: list[int] = []
+                    elif not isinstance(skip_history_raw, list):
+                        # This should not happen with PySpark loading
+                        logger.error(
+                            f"Unexpected non-list type for match_skip_history: {type(skip_history_raw)}"
+                        )
+                        skip_history = []
+                    else:
+                        skip_history = skip_history_raw
 
                     if iteration not in skip_history:
                         skip_history.append(iteration)
@@ -225,9 +263,11 @@ def match_entities(
                             if company_copy["uuid"] not in source_uuids:
                                 source_uuids.append(company_copy["uuid"])
                         else:
-                            source_uuids = list(source_uuids) if source_uuids else []
-                            if company_copy["uuid"] not in source_uuids:
-                                source_uuids.append(company_copy["uuid"])
+                            # This should not happen with PySpark loading
+                            logger.error(
+                                f"Unexpected non-list type for source_uuids: {type(source_uuids)}"
+                            )
+                            source_uuids = [company_copy["uuid"]]
                         company_copy["source_uuids"] = source_uuids
 
                     recovered_companies.append(company_copy)
@@ -266,9 +306,11 @@ def match_entities(
                         if company["uuid"] not in source_uuids:
                             source_uuids.append(company["uuid"])
                     else:
-                        source_uuids = list(source_uuids) if source_uuids else []
-                        if company["uuid"] not in source_uuids:
-                            source_uuids.append(company["uuid"])
+                        # This should not happen with PySpark loading
+                        logger.error(
+                            f"Unexpected non-list type for source_uuids in singleton: {type(source_uuids)}"
+                        )
+                        source_uuids = [company["uuid"]]
                     company["source_uuids"] = source_uuids
 
                 # Mark as singleton (not processed by BAML)
@@ -276,9 +318,17 @@ def match_entities(
                 company["match_skip_reason"] = "singleton_block"
 
                 # Initialize match_skip_history if not present
-                skip_hist: list[int] = company.get("match_skip_history", [])
-                if not isinstance(skip_hist, list):
-                    skip_hist = list(skip_hist) if skip_hist else []
+                skip_hist_raw = company.get("match_skip_history")
+                if skip_hist_raw is None:
+                    skip_hist: list[int] = []
+                elif not isinstance(skip_hist_raw, list):
+                    # This should not happen with PySpark loading
+                    logger.error(
+                        f"Unexpected non-list type for match_skip_history in singleton: {type(skip_hist_raw)}"
+                    )
+                    skip_hist = []
+                else:
+                    skip_hist = skip_hist_raw
 
                 # Add current iteration to skip history
                 if iteration not in skip_hist:
