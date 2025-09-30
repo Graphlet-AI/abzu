@@ -111,6 +111,11 @@ def clean(base_path: str, iteration: int | None, dry_run: bool, force: bool) -> 
     error_count = 0
     for file in files_to_delete:
         try:
+            # Check if file/directory still exists before deleting
+            if not file.exists():
+                logger.debug(f"Skipping {file} - already deleted or doesn't exist")
+                continue
+
             if file.is_dir():
                 shutil.rmtree(file)
                 logger.debug(f"Deleted directory: {file}")

@@ -503,11 +503,12 @@ def match_entities(
     # Save to JSON format
     save_jsonl(results_df, json_output_path_obj)
 
-    # Count recovered records
-    recovered_records = 0
-    skipped_in_iteration = 0
-    error_recovered_records = 0
-    uuid_recovered_records = 0
+    # Count recovered records by category
+    error_recovered_records = 0  # Recovered from BAML API errors
+    uuid_recovered_records = 0  # Recovered because BAML dropped them from output
+    singleton_records = 0  # Single-company blocks (no matching possible)
+    skipped_in_iteration = 0  # All records skipped in this iteration
+
     if len(results_df) > 0 and "resolved_companies" in results_df.columns:
         for _, row in results_df.iterrows():
             companies = row.get("resolved_companies", [])
@@ -515,13 +516,14 @@ def match_entities(
                 for company in companies:
                     if isinstance(company, dict):
                         if company.get("match_skip") is True:
-                            recovered_records += 1
                             # Check reason for skip
                             skip_reason = company.get("match_skip_reason", "")
                             if skip_reason == "error_recovery":
                                 error_recovered_records += 1
                             elif skip_reason == "missing_in_match_output":
                                 uuid_recovered_records += 1
+                            elif skip_reason == "singleton_block":
+                                singleton_records += 1
                             # Check if this iteration is in the skip history
                             skip_history = company.get("match_skip_history", [])
                             if skip_history and iteration in skip_history:
@@ -545,12 +547,11 @@ def match_entities(
         logger.info(f"  → Error blocks saved to: {error_path}")
         logger.info(f"  → {error_recovery_count} companies recovered from error blocks")
     logger.info("")
-    logger.info("RECOVERY STATISTICS:")
-    logger.info(f"  Total records recovered (match_skip=True): {recovered_records}")
-    if recovered_records > 0:
-        logger.info(f"    - From errors: {error_recovered_records}")
-        logger.info(f"    - From missing UUIDs: {uuid_recovered_records}")
-    logger.info(f"  Records skipped in iteration {iteration}: {skipped_in_iteration}")
+    logger.info("PROCESSING STATISTICS:")
+    logger.info(f"  Companies not matched in this iteration: {skipped_in_iteration}")
+    logger.info(f"    - Singleton blocks (no matching needed): {singleton_records}")
+    logger.info(f"    - Recovered from BAML API errors: {error_recovered_records}")
+    logger.info(f"    - Recovered because BAML dropped from output: {uuid_recovered_records}")
     logger.info("")
     logger.info(
         "Note: Resolved companies have new UUIDs; single-company blocks retain original UUIDs"

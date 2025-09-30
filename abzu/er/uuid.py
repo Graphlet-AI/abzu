@@ -471,7 +471,7 @@ async def process_block_with_uuid_mapping(
                 # Mark as skipped in this iteration
                 missing_company["match_skip"] = True
                 # Companies in companies_to_recover are always primary UUIDs that went missing
-                missing_company["match_skip_reason"] = "missing_primary_uuid"
+                missing_company["match_skip_reason"] = "missing_in_match_output"
 
                 # Update match_skip_history
                 skip_history = missing_company.get("match_skip_history", [])
