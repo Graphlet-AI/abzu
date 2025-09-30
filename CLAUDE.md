@@ -23,6 +23,14 @@ Do not be afraid to question what I say. Do not always respond with "You're righ
 - Place temporary scripts for debugging in the `scripts/` directory.
 - Use the `pqrs` utility to inspect Parquet files: `pqrs schema <path_to_parquet_file>`, `pqrs row-count <path_to_parquet_file>`, `pqrs head <path_to_parquet_file>`
 
+### Testing Entity Resolution
+
+Test one iteration of the full entity resolution pipeline each time you make changes to entity resolution code:
+
+- Block with `abzu process er block names --iteration 1 -m 30`
+- Match with `abzu process er match names --iteration 1 -b 50` - note you can use the `-n` option to limit the number of rows processed for faster testing.
+- Evaluate with `abzu process er eval names --iteration 1`
+
 ### Docker Development (via Taskfile)
 
 - Setup: `task setup` (builds container)
