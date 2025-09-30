@@ -399,7 +399,7 @@ async def process_block_with_uuid_mapping(
                     companies_to_recover.add(missing_uuid)
                     missing_primary_count += 1
                     logger.debug(
-                        f"  Missing PRIMARY uuid: {missing_uuid} - will recover entire company"
+                        f"  Missing PRIMARY ID: {missing_uuid} - will recover entire company"
                     )
 
                 # Case 2: This UUID was in someone's source_uuids
@@ -418,7 +418,7 @@ async def process_block_with_uuid_mapping(
                         if parent_in_output:
                             # Parent is in output, just need to ensure missing_uuid is in its source_uuids
                             logger.debug(
-                                f"  Missing SOURCE uuid: {missing_uuid} from parent {parent_uuid} - will add to source_uuids"
+                                f"  Missing SOURCE ID: {missing_uuid} from parent {parent_uuid} - will add to source_uuids"
                             )
                             if parent_uuid not in uuids_to_add_back:
                                 uuids_to_add_back[parent_uuid] = []
@@ -428,12 +428,12 @@ async def process_block_with_uuid_mapping(
                             companies_to_recover.add(parent_uuid)
                             missing_primary_count += 1  # Parent is missing
                             logger.debug(
-                                f"  Missing SOURCE uuid: {missing_uuid} but parent {parent_uuid} ALSO missing - will recover parent"
+                                f"  Missing SOURCE ID: {missing_uuid} but parent {parent_uuid} ALSO missing - will recover parent"
                             )
 
-            # Log summary of missing UUIDs
+            # Log summary of missing IDs
             logger.warning(
-                f"Block {block_key}: Found {len(missing_uuids)} missing UUIDs: "
+                f"Block {block_key}: Found {len(missing_uuids)} missing IDs: "
                 f"{missing_primary_count} primary, {missing_source_count} from source_uuids"
             )
 
@@ -488,7 +488,7 @@ async def process_block_with_uuid_mapping(
         if recovered_count > 0 or uuids_to_add_back:
             logger.info(
                 f"Block {block_key}: Recovered {recovered_count} missing companies, "
-                f"added back {sum(len(uuids) for uuids in uuids_to_add_back.values())} UUIDs"
+                f"added back {sum(len(uuids) for uuids in uuids_to_add_back.values())} IDs"
             )
 
         return {
