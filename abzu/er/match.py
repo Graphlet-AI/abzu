@@ -95,12 +95,27 @@ async def process_blocks_async(
 
 
 def backup_file(file_path: Path) -> None:
-    """Create a backup of an existing file or directory with timestamp.
+    """Create a backup of an existing file or directory, keeping only the most recent backup.
 
     Args:
         file_path: Path to the file or directory to backup
     """
     if file_path.exists():
+        # Remove old backups first - keep only the most recent
+        backup_pattern = f"{file_path.stem}_backup_*{file_path.suffix}"
+        old_backups = sorted(file_path.parent.glob(backup_pattern))
+
+        # Delete all old backups
+        for old_backup in old_backups:
+            if old_backup.exists():
+                if old_backup.is_dir():
+                    shutil.rmtree(old_backup)
+                    logger.debug(f"Removed old backup directory: {old_backup}")
+                else:
+                    old_backup.unlink()
+                    logger.debug(f"Removed old backup file: {old_backup}")
+
+        # Create new backup with timestamp
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         backup_path = file_path.parent / f"{file_path.stem}_backup_{timestamp}{file_path.suffix}"
 
