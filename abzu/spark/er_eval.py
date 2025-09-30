@@ -48,9 +48,10 @@ def evaluate_er_matches(
     )
 
     # Format matches_path for reading (should have {iteration} and {format} placeholders)
-    matches_parquet_path = matches_path.format(iteration=iteration, format="parquet")
-    logger.info(f"Loading matches from {matches_parquet_path}")
-    matches_df: DataFrame = spark.read.parquet(matches_parquet_path)
+    # Use JSON instead of Parquet because Parquet loses source_uuids
+    matches_json_path = matches_path.format(iteration=iteration, format="json")
+    logger.info(f"Loading matches from {matches_json_path}")
+    matches_df: DataFrame = spark.read.json(matches_json_path)
 
     # No need for JSON deserialization anymore since we're using PySpark to save
     # The data is already in the correct format with proper struct arrays
@@ -104,16 +105,19 @@ def evaluate_er_matches(
         F.explode("resolved_companies").alias("company"),
     ).select("match_block_key", "match_block_key_type", "company.*")
 
-    # Count match_skip records
-    total_records = resolved_companies_df.count()
-    match_skip_records = resolved_companies_df.filter(F.col("match_skip") == True).count()  # type: ignore
-    baml_processed_records = resolved_companies_df.filter(
+    # Split into BAML-processed vs skipped companies
+    baml_processed_df = resolved_companies_df.filter(
         (F.col("match_skip") == False) | F.col("match_skip").isNull()  # type: ignore
-    ).count()
+    )
+    skipped_df = resolved_companies_df.filter(F.col("match_skip") == True)  # type: ignore
+
+    total_records = resolved_companies_df.count()
+    baml_processed_records = baml_processed_df.count()
+    skipped_records = skipped_df.count()
 
     logger.info(f"Total resolved records: {total_records:,}")
-    logger.info(f"BAML-processed records: {baml_processed_records:,}")
-    logger.info(f"Recovered records (match_skip=True): {match_skip_records:,}")
+    logger.info(f"BAML-processed records (what we care about): {baml_processed_records:,}")
+    logger.info(f"Skipped records (singletons/errors): {skipped_records:,}")
 
     # Analyze match_skip_history and reasons
     skipped_in_current = 0
@@ -199,47 +203,50 @@ def evaluate_er_matches(
             f"Previous iteration ({iteration - 1}) companies: {total_prev_companies:,} total, {unique_prev_companies:,} unique"
         )
 
-    total_resolved_companies = resolved_companies_df.count()
-    unique_resolved_companies = resolved_companies_df.select("uuid").distinct().count()
-    logger.info(
-        f"Resolved companies: {total_resolved_companies:,} total, {unique_resolved_companies:,} unique"
-    )
+    # COUNT BAML-PROCESSED COMPANIES ONLY (exclude singletons/errors)
+    unique_baml_processed = baml_processed_df.select("uuid").distinct().count()
+    logger.info(f"BAML-processed companies (after matching): {unique_baml_processed:,} unique")
 
-    # Calculate data reduction metrics - from original
-    reduction_from_original = total_original_companies - unique_resolved_companies
-    reduction_from_original_pct = (
-        (reduction_from_original / total_original_companies) * 100
-        if total_original_companies > 0
+    # To calculate reduction, we need to know how many companies WENT INTO matching
+    # This is: total original companies - skipped companies
+    # Skipped companies are those with match_skip=True, which includes singletons
+    companies_that_went_into_matching = total_original_companies - skipped_records
+
+    # Calculate data reduction from matching
+    # This shows how many companies were merged/deduplicated
+    reduction_from_matching = companies_that_went_into_matching - unique_baml_processed
+    reduction_from_matching_pct = (
+        (reduction_from_matching / companies_that_went_into_matching) * 100
+        if companies_that_went_into_matching > 0
         else 0
     )
     logger.info(
-        f"Data reduction from ORIGINAL: {reduction_from_original:,} companies ({reduction_from_original_pct:.2f}%)"
+        f"Data reduction from matching: {reduction_from_matching:,} companies merged ({reduction_from_matching_pct:.2f}%)"
     )
 
-    # For iteration 2+, also calculate reduction from previous iteration
-    reduction_from_prev = 0
-    reduction_from_prev_pct = 0.0
-    if previous_iteration_df is not None:
-        reduction_from_prev = unique_prev_companies - unique_resolved_companies
-        reduction_from_prev_pct = (
-            (reduction_from_prev / unique_prev_companies) * 100 if unique_prev_companies > 0 else 0
-        )
-        logger.info(
-            f"Data reduction from PREVIOUS iteration: {reduction_from_prev:,} companies ({reduction_from_prev_pct:.2f}%)"
-        )
+    # Total output = BAML processed + skipped
+    total_output_companies = unique_baml_processed + skipped_records
+    total_reduction = total_original_companies - total_output_companies
+    total_reduction_pct = (
+        (total_reduction / total_original_companies) * 100 if total_original_companies > 0 else 0
+    )
+    logger.info(
+        f"Total reduction (original → output): {total_reduction:,} companies ({total_reduction_pct:.2f}%)"
+    )
 
-    # Verify that resolved companies have new UUIDs (should be 0% overlap with ANY previous data)
+    # Verify that BAML-PROCESSED companies have new UUIDs (should be 0% overlap)
+    # Skipped companies (singletons) will have original UUIDs, which is expected
     original_uuids = original_raw_companies_df.select("uuid").distinct()
-    resolved_uuids = resolved_companies_df.select("uuid").distinct()
+    baml_uuids = baml_processed_df.select("uuid").distinct()
 
-    overlapping_with_original = original_uuids.intersect(resolved_uuids).count()
+    overlapping_with_original = original_uuids.intersect(baml_uuids).count()
     overlap_with_original_pct = (
-        (overlapping_with_original / unique_original_companies) * 100
-        if unique_original_companies > 0
+        (overlapping_with_original / unique_baml_processed) * 100
+        if unique_baml_processed > 0
         else 0
     )
     logger.info(
-        f"UUID overlap with ORIGINAL: {overlapping_with_original:,} ({overlap_with_original_pct:.2f}%) - should be low %"
+        f"UUID overlap with ORIGINAL (BAML-processed only): {overlapping_with_original:,} ({overlap_with_original_pct:.2f}%) - should be 0%"
     )
 
     # Check overlap with previous iteration
@@ -247,14 +254,14 @@ def evaluate_er_matches(
     overlap_with_prev_pct = 0.0
     if previous_iteration_df is not None:
         prev_uuids = previous_iteration_df.select("uuid").distinct()
-        overlapping_with_prev = prev_uuids.intersect(resolved_uuids).count()
+        overlapping_with_prev = prev_uuids.intersect(baml_uuids).count()
         overlap_with_prev_pct = (
-            (overlapping_with_prev / unique_prev_companies) * 100
-            if unique_prev_companies > 0
+            (overlapping_with_prev / unique_baml_processed) * 100
+            if unique_baml_processed > 0
             else 0
         )
         logger.info(
-            f"UUID overlap with PREVIOUS iteration: {overlapping_with_prev:,} ({overlap_with_prev_pct:.2f}%) - should be 0%"
+            f"UUID overlap with PREVIOUS iteration (BAML-processed only): {overlapping_with_prev:,} ({overlap_with_prev_pct:.2f}%) - should be 0%"
         )
 
     # Validate source_uuids - explode them first
@@ -359,24 +366,19 @@ def evaluate_er_matches(
             iteration,
             total_blocks,
             total_original_companies,
-            unique_original_companies,
-            total_prev_companies if previous_iteration_df is not None else None,
-            unique_prev_companies if previous_iteration_df is not None else None,
-            total_resolved_companies,
-            unique_resolved_companies,
-            reduction_from_original,
-            reduction_from_original_pct,
-            reduction_from_prev if previous_iteration_df is not None else None,
-            reduction_from_prev_pct if previous_iteration_df is not None else None,
+            companies_that_went_into_matching,
+            skipped_records,
+            unique_baml_processed,
+            reduction_from_matching,
+            reduction_from_matching_pct,
+            total_output_companies,
+            total_reduction,
+            total_reduction_pct,
             overlapping_with_original,
             overlap_with_original_pct,
-            overlapping_with_prev if previous_iteration_df is not None else None,
-            overlap_with_prev_pct if previous_iteration_df is not None else None,
             unique_source_uuids,
             tracked_original_uuids,
             original_coverage_pct,
-            tracked_prev_uuids if previous_iteration_df is not None else None,
-            prev_coverage_pct if previous_iteration_df is not None else None,
             total_source_uuid_refs,
             valid_source_uuid_count,
             invalid_source_uuid_count,
@@ -389,24 +391,19 @@ def evaluate_er_matches(
             StructField("iteration", IntegerType(), False),
             StructField("total_blocks", LongType(), False),
             StructField("total_original_companies", LongType(), False),
-            StructField("unique_original_companies", LongType(), False),
-            StructField("total_prev_iteration_companies", LongType(), True),
-            StructField("unique_prev_iteration_companies", LongType(), True),
-            StructField("total_resolved_companies", LongType(), False),
-            StructField("unique_resolved_companies", LongType(), False),
-            StructField("reduction_from_original_count", LongType(), False),
-            StructField("reduction_from_original_pct", DoubleType(), False),
-            StructField("reduction_from_prev_count", LongType(), True),
-            StructField("reduction_from_prev_pct", DoubleType(), True),
+            StructField("companies_that_went_into_matching", LongType(), False),
+            StructField("skipped_records", LongType(), False),
+            StructField("unique_baml_processed", LongType(), False),
+            StructField("reduction_from_matching", LongType(), False),
+            StructField("reduction_from_matching_pct", DoubleType(), False),
+            StructField("total_output_companies", LongType(), False),
+            StructField("total_reduction", LongType(), False),
+            StructField("total_reduction_pct", DoubleType(), False),
             StructField("uuid_overlap_with_original_count", LongType(), False),
             StructField("uuid_overlap_with_original_pct", DoubleType(), False),
-            StructField("uuid_overlap_with_prev_count", LongType(), True),
-            StructField("uuid_overlap_with_prev_pct", DoubleType(), True),
             StructField("unique_source_uuids", LongType(), False),
             StructField("tracked_original_uuids", LongType(), False),
             StructField("original_coverage_pct", DoubleType(), False),
-            StructField("tracked_prev_uuids", LongType(), True),
-            StructField("prev_coverage_pct", DoubleType(), True),
             StructField("total_source_uuid_refs", LongType(), False),
             StructField("valid_source_uuid_count", LongType(), False),
             StructField("invalid_source_uuid_count", LongType(), False),
@@ -433,33 +430,29 @@ def evaluate_er_matches(
     logger.info("\n" + "=" * 60)
     logger.info(f"ENTITY RESOLUTION EVALUATION SUMMARY - ITERATION {iteration}")
     logger.info("=" * 60)
+    logger.info(f"Original raw companies (iteration 0): {total_original_companies:,} unique")
+    logger.info(f"  Companies that went into matching: {companies_that_went_into_matching:,}")
+    logger.info(f"  Skipped (singletons/errors): {skipped_records:,}")
+    logger.info("")
+    logger.info("MATCHING RESULTS:")
+    logger.info(f"  BAML-processed companies: {unique_baml_processed:,} unique")
     logger.info(
-        f"Original raw companies (iteration 0): {total_original_companies:,} total, {unique_original_companies:,} unique"
-    )
-    if previous_iteration_df is not None:
-        logger.info(
-            f"Previous iteration ({iteration - 1}) companies: {total_prev_companies:,} total, {unique_prev_companies:,} unique"
-        )
-    logger.info(
-        f"Current iteration ({iteration}) resolved: {total_resolved_companies:,} total, {unique_resolved_companies:,} unique"
+        f"  Companies merged: {reduction_from_matching:,} ({reduction_from_matching_pct:.2f}%)"
     )
     logger.info("")
-    logger.info("DATA REDUCTION:")
+    logger.info("FINAL OUTPUT:")
     logger.info(
-        f"  From original: {reduction_from_original:,} companies ({reduction_from_original_pct:.2f}%)"
+        f"  Total companies: {total_output_companies:,} ({unique_baml_processed:,} matched + {skipped_records:,} skipped)"
     )
-    if previous_iteration_df is not None:
-        logger.info(
-            f"  From previous iteration: {reduction_from_prev:,} companies ({reduction_from_prev_pct:.2f}%)"
-        )
+    logger.info(f"  Total reduction: {total_reduction:,} companies ({total_reduction_pct:.2f}%)")
     logger.info("")
-    logger.info("UUID VERIFICATION (should all be 0%):")
+    logger.info("UUID VERIFICATION (BAML-processed companies only):")
     logger.info(
-        f"  Overlap with original: {overlapping_with_original:,} UUIDs ({overlap_with_original_pct:.2f}%)"
+        f"  Overlap with original: {overlapping_with_original:,} UUIDs ({overlap_with_original_pct:.2f}%) - should be 0%"
     )
     if previous_iteration_df is not None:
         logger.info(
-            f"  Overlap with previous: {overlapping_with_prev:,} UUIDs ({overlap_with_prev_pct:.2f}%)"
+            f"  Overlap with previous: {overlapping_with_prev:,} UUIDs ({overlap_with_prev_pct:.2f}%) - should be 0%"
         )
     logger.info("")
     logger.info("SOURCE UUID COVERAGE:")
@@ -481,11 +474,11 @@ def evaluate_er_matches(
     )
     logger.info("")
     logger.info("RECOVERY STATISTICS:")
-    logger.info(f"  Total recovered (match_skip=True): {match_skip_records:,}")
+    logger.info(f"  Total recovered (match_skip=True): {skipped_records:,}")
     logger.info(f"  BAML-processed records: {baml_processed_records:,}")
     if "match_skip_history" in resolved_companies_df.columns:
         logger.info(f"  Skipped in iteration {iteration}: {skipped_in_current:,}")
-    if "match_skip_reason" in resolved_companies_df.columns and match_skip_records > 0:
+    if "match_skip_reason" in resolved_companies_df.columns and skipped_records > 0:
         logger.info("  Recovery reasons:")
         logger.info(f"    - Error recovery: {error_recovery_count:,}")
         if missing_uuid_recovery_count > 0:
