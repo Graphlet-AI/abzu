@@ -2,7 +2,15 @@
 
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame
-from pyspark.sql.types import StructType
+from pyspark.sql.types import (
+    ArrayType,
+    DataType,
+    IntegerType,
+    LongType,
+    MapType,
+    StructField,
+    StructType,
+)
 from sparkdantic import SparkModel
 
 from abzu.baml_client.types import Company, Ticker
@@ -38,12 +46,45 @@ def get_company_fields_without_blocks() -> list[str]:
     return [field for field in Company.model_fields.keys() if field not in excluded_fields]
 
 
+def convert_ints_to_longs(data_type: DataType) -> DataType:
+    """Recursively convert IntegerType to LongType in a schema.
+
+    This is needed because some fields like revenue_usd can exceed int32 limits.
+
+    Args:
+        data_type: A PySpark data type
+
+    Returns:
+        The data type with IntegerType converted to LongType
+    """
+    if isinstance(data_type, IntegerType):
+        return LongType()
+    elif isinstance(data_type, StructType):
+        fields = []
+        for field in data_type.fields:
+            new_field = StructField(
+                field.name, convert_ints_to_longs(field.dataType), field.nullable, field.metadata
+            )
+            fields.append(new_field)
+        return StructType(fields)
+    elif isinstance(data_type, ArrayType):
+        return ArrayType(convert_ints_to_longs(data_type.elementType), data_type.containsNull)
+    elif isinstance(data_type, MapType):
+        return MapType(
+            convert_ints_to_longs(data_type.keyType),
+            convert_ints_to_longs(data_type.valueType),
+            data_type.valueContainsNull,
+        )
+    else:
+        return data_type
+
+
 # At the top of get_company_spark_schema() function
 def get_company_spark_schema() -> StructType:
     """Get the Spark StructType schema for Company.
 
     Returns:
-        StructType schema for Company model
+        StructType schema for Company model with IntegerType converted to LongType
     """
     # Ensure forward references are resolved
     Company.model_rebuild()
@@ -52,6 +93,10 @@ def get_company_spark_schema() -> StructType:
     company_schema = SparkCompany(
         id=1, name="Google", description="Search, Big Data and AI"
     ).model_spark_schema()
+
+    # Convert all IntegerType fields to LongType to handle large values
+    # This is needed for fields like revenue_usd which can be in billions
+    company_schema = convert_ints_to_longs(company_schema)
 
     return company_schema
 

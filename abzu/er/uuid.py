@@ -3,6 +3,8 @@
 import copy
 from typing import Any, Optional
 
+from pyspark.sql.types import Row
+
 from abzu.baml_client.async_client import BamlAsyncClient
 from abzu.baml_client.runtime import BamlCallOptions
 from abzu.baml_client.types import (
@@ -187,6 +189,7 @@ async def process_block_with_uuid_mapping(
                         all_input_uuids.add(source_uuid)
                         # Map this source_uuid to the company that contains it
                         source_uuid_to_company[source_uuid] = comp_data
+
             # Deep copy to avoid modifying original data
             comp_copy = copy.deepcopy(comp_data)
 
@@ -215,8 +218,6 @@ async def process_block_with_uuid_mapping(
             ticker_data = comp_copy.get("ticker")
             ticker = None
             if ticker_data:
-                # Convert PySpark Row to dict if needed
-                from pyspark.sql.types import Row
 
                 if isinstance(ticker_data, Row):
                     ticker_data = ticker_data.asDict()
@@ -359,7 +360,7 @@ async def process_block_with_uuid_mapping(
                 "uuid": company.uuid,
                 "name": company.name,
                 "cik": company.cik,
-                "ticker": company.ticker.__dict__ if company.ticker else None,
+                "ticker": company.ticker.model_dump(mode="json") if company.ticker else None,
                 "description": company.description,
                 "website_url": company.website_url,
                 "headquarters_location": company.headquarters_location,

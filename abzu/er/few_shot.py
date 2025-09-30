@@ -10,8 +10,8 @@ def company_dicts_to_baml(
             dict[
                 str,  # companies / merged_company
                 Union[
-                    list[dict[str, Union[int, list[int]]]],  # MergeCompany
-                    dict[str, Union[int, list[int]]],  # MergeCompany
+                    list[dict[str, Union[int, list[int], str]]],  # MergeCompany
+                    dict[str, Union[int, list[int], str]],  # MergeCompany
                 ],  # This is also to format the line I hope
             ]  # This is also to format the line I hope
         ],  # This is to format the line I hope
@@ -28,10 +28,12 @@ def company_dicts_to_baml(
         companies: list[MergeCompany] = []
         for company in few_shot_example["companies"]:
             assert "id" in company
+            assert "name" in company
             assert "source_ids" in company
 
             merge_company = MergeCompany(
                 id=company["id"],  # type: ignore
+                name=company["name"],  # type: ignore
                 source_ids=company["source_ids"],  # type: ignore
             )
             companies.append(merge_company)
@@ -43,6 +45,7 @@ def company_dicts_to_baml(
         assert "source_ids" in merged_company_dict
         merged_company = MergeCompany(
             id=merged_company_dict["id"],  # type: ignore
+            name=merged_company_dict["name"],  # type: ignore
             source_ids=merged_company_dict["source_ids"],  # type: ignore
         )
 
@@ -67,22 +70,12 @@ company_id_tracking_dicts: dict[
             "companies": [
                 {"id": 1, "name": "Nvidia", "source_ids": [3, 4]},
                 {"id": 2, "name": "Nvidia Corp", "source_ids": [5, 6, 7, 8, 9]},
+                {"id": 11, "name": "NVIDIA Corporation", "source_ids": []},
             ],
             "merged_company": {
-                "id": 10,
-                "name": "Nvidia Corp",
-                "source_ids": [1, 2, 3, 4, 5, 6, 7, 8, 9],
-            },
-        },
-        {
-            "companies": [
-                {"id": 11, "name": "Apple", "source_ids": [13, 14]},
-                {"id": 12, "name": "Apple Inc", "source_ids": [15, 16, 17, 18, 19]},
-            ],
-            "merged_company": {
-                "id": 20,
-                "name": "Apple Inc",
-                "source_ids": [11, 12, 13, 14, 15, 16, 17, 18, 19],
+                "id": 11,
+                "name": "Nvidia Corporation",
+                "source_ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
             },
         },
     ]

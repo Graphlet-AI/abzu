@@ -9,6 +9,7 @@ from typing import Any, Optional, cast
 
 import pandas as pd
 from baml_py import Collector
+from pyspark.sql.types import ArrayType, LongType, StringType, StructField, StructType
 from tqdm import tqdm
 
 from abzu.baml_client import b as baml_client
@@ -16,6 +17,8 @@ from abzu.config import config
 from abzu.er.uuid import process_block_with_uuid_mapping
 from abzu.logs import get_logger
 from abzu.spark.config import get_spark_session
+from abzu.spark.pandas_to_parquet import save_pandas_df_with_pyspark
+from abzu.spark.schemas import get_company_spark_schema
 from abzu.utils import save_jsonl
 
 logger = get_logger(__name__)
@@ -92,16 +95,23 @@ async def process_blocks_async(
 
 
 def backup_file(file_path: Path) -> None:
-    """Create a backup of an existing file with timestamp.
+    """Create a backup of an existing file or directory with timestamp.
 
     Args:
-        file_path: Path to the file to backup
+        file_path: Path to the file or directory to backup
     """
     if file_path.exists():
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         backup_path = file_path.parent / f"{file_path.stem}_backup_{timestamp}{file_path.suffix}"
-        shutil.copy2(file_path, backup_path)
-        logger.info(f"Created backup: {backup_path}")
+
+        if file_path.is_dir():
+            # Handle directory (e.g., PySpark parquet output)
+            shutil.copytree(file_path, backup_path)
+            logger.info(f"Created backup of directory: {backup_path}")
+        else:
+            # Handle single file
+            shutil.copy2(file_path, backup_path)
+            logger.info(f"Created backup of file: {backup_path}")
 
 
 def match_entities(
@@ -355,6 +365,31 @@ def match_entities(
     # Convert results to DataFrame
     results_df = pd.DataFrame(all_results)
 
+    logger.info(
+        f"Created DataFrame with {len(results_df)} rows and columns: {list(results_df.columns)}"
+    )
+
+    # Ensure required columns exist with default values
+    if "resolved_companies" not in results_df.columns:
+        results_df["resolved_companies"] = [[] for _ in range(len(results_df))]
+    if "original_companies" not in results_df.columns:
+        results_df["original_companies"] = [[] for _ in range(len(results_df))]
+
+    # Debug: Check for mixed types before fixing
+    if "resolved_companies" in results_df.columns:
+        # Find any non-list values
+        non_list_mask = ~results_df["resolved_companies"].apply(lambda x: isinstance(x, list))
+        if non_list_mask.any():
+            logger.warning(
+                f"Found {non_list_mask.sum()} non-list values in resolved_companies column"
+            )
+            # Show sample of problematic values for debugging
+            problematic = results_df[non_list_mask]["resolved_companies"].head(5)
+            for idx, val in problematic.items():
+                logger.debug(f"  Row {idx}: type={type(val)}, value={val}")
+
+    # No longer need ensure_list workaround - PySpark handles None values properly
+
     # Format output paths for both formats with iteration
     output_parquet_path = output_path.format(iteration=iteration, format="parquet")
     output_json_path = output_path.format(iteration=iteration, format="json")
@@ -366,7 +401,7 @@ def match_entities(
 
     # Save error blocks to a separate file for debugging if any exist
     error_blocks = (
-        results_df[results_df["error"].notna()]
+        results_df[results_df["error"].notna()].copy()
         if len(results_df) > 0 and "error" in results_df.columns
         else pd.DataFrame()
     )
@@ -383,15 +418,67 @@ def match_entities(
         # Backup existing error file if it exists
         backup_file(error_path_obj)
 
-        # Save error blocks to separate file for debugging
-        error_blocks.to_parquet(error_output_path, index=False)
+        # Ensure error blocks also have consistent list columns (reuse the ensure_list function)
+        def ensure_list_error(x: Any) -> list[Any]:
+            if x is None:
+                return []
+            elif isinstance(x, list):
+                return x
+            else:
+                try:
+                    if pd.isna(x):
+                        return []
+                except (TypeError, ValueError):
+                    pass
+                return []
+
+        # Type ignore for pandas apply with custom function
+        if "resolved_companies" in error_blocks.columns:
+            error_blocks["resolved_companies"] = error_blocks["resolved_companies"].apply(
+                ensure_list_error  # type: ignore
+            )
+        if "original_companies" in error_blocks.columns:
+            error_blocks["original_companies"] = error_blocks["original_companies"].apply(
+                ensure_list_error  # type: ignore
+            )
+
+        save_pandas_df_with_pyspark(
+            error_blocks,
+            error_output_path,
+            app_name=f"SaveERErrorBlocks_Iteration{iteration}",
+        )
         logger.warning(f"Saved {len(error_blocks)} error blocks to {error_output_path}")
 
     # Backup existing parquet file if it exists
     backup_file(output_path_obj)
 
-    # Save ALL results to parquet (including error blocks)
-    results_df.to_parquet(output_parquet_path, index=False)
+    #
+    # Save ALL results to parquet using PySpark for proper handling of nested structures
+    #
+
+    # Get the Company schema from SparkDantic
+    company_schema = get_company_spark_schema()
+
+    # Define the full schema for the results DataFrame
+    # This wraps the Company schema in arrays for resolved/original companies
+    results_schema = StructType(
+        [
+            StructField("block_key", StringType(), True),
+            StructField("block_key_type", StringType(), True),
+            StructField("resolved_companies", ArrayType(company_schema), True),
+            StructField("original_companies", ArrayType(company_schema), True),
+            StructField("error", StringType(), True),
+            StructField("block_size", LongType(), True),
+        ]
+    )
+
+    # Save using PySpark with SparkDantic-derived schema
+    save_pandas_df_with_pyspark(
+        results_df,
+        output_parquet_path,
+        schema=results_schema,
+        app_name=f"SaveERMatches_Iteration{iteration}",
+    )
     logger.info(f"Saved {len(results_df)} resolved blocks to {output_parquet_path}")
 
     # Backup existing JSON file if it exists

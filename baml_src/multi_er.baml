@@ -32,9 +32,10 @@ function MultiEntityResolution(company_list: CompanyList) -> CompanyList {
 }
 
 class MergeCompany {
-   @@description("A simple Company object to track merges of Company records.")
-   id int @description("Unique among all objects. Add to source_ids when merging.")
-   source_ids int[] @description("List of source Company.ids that were merged to create this Company.")
+    @@description("A simple Company object to track merges of Company records.")
+    id int @description("Unique among all objects. Add to source_ids when merging.")
+    name string @description("Formal name of the company with company suffix")
+    source_ids int[] @description("List of source Company.ids and their Company.source_ids that were merged to create this Company.")
 }
 
 class FewShotExample {

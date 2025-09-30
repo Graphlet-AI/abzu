@@ -52,6 +52,9 @@ def evaluate_er_matches(
     logger.info(f"Loading matches from {matches_parquet_path}")
     matches_df: DataFrame = spark.read.parquet(matches_parquet_path)
 
+    # No need for JSON deserialization anymore since we're using PySpark to save
+    # The data is already in the correct format with proper struct arrays
+
     # Load the ORIGINAL raw companies (always the same, regardless of iteration)
     logger.info(f"Loading ORIGINAL raw companies from {raw_companies_path}")
     original_raw_companies_df: DataFrame = spark.read.parquet(raw_companies_path)
