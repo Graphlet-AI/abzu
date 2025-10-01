@@ -77,7 +77,10 @@
     "deny": [
       "Bash(pip install:*)"
     ],
-    "ask": []
+    "ask": [
+      "Write(./abzu/spark/er_eval.py)",
+      "Write(./baml_src)"
+    ]
   },
   "statusLine": {
     "type": "command",
