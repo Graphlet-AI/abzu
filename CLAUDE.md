@@ -17,7 +17,7 @@ Do not be afraid to question what I say. Do not always respond with "You're righ
 - Test all: `poetry run pytest tests/`
 - Test single: `poetry run pytest tests/path_to_test.py::test_name`
 - Test specific cache modes: `poetry run pytest -e ABZU_CACHE_MODE=hybrid tests/test_sync.py`
-- Lint: `pre-commit`
+- Lint: `pre-commit run` is better than `poetry run flake8`. Don't use `--all-files` with pre-commit.
 - Format: `poetry run black abzu tests`, `poetry run isort abzu tests`
 - Type check: `poetry run zuban check`
 - Place temporary scripts for debugging in the `scripts/` directory.
