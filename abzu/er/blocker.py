@@ -21,7 +21,9 @@ class E5EntityBlocker:
             device = "mps"
         else:
             device = "cpu"
-        self.model = SentenceTransformer(model_name, device=device)
+        self.model = SentenceTransformer(
+            model_name, device=device, model_kwargs={"device_map": "auto"}
+        )
 
     def encode_companies(self, company_names: list[str]) -> np.ndarray:
         """

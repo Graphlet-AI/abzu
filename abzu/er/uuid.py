@@ -1,6 +1,7 @@
 """UUID to integer ID mapping wrapper for MultiEntityResolution API."""
 
 import copy
+import json
 from typing import Any, Optional
 
 from pyspark.sql.types import Row
@@ -103,11 +104,17 @@ async def process_block_with_uuid_mapping(
     """
     Process a block using MultiEntityResolution with UUID to integer ID mapping.
 
-    This function:
+    This function implements MDM-style (Master Data Management) entity resolution:
     1. Maps UUIDs to consecutive integer IDs
     2. Submits the modified data to MultiEntityResolution
-    3. Maps the returned source_ids back to source_uuids
-    4. Recovers any missing companies that were not included in the resolution
+    3. BAML selects a master record (keeping one ID) and returns other merged IDs in source_ids
+    4. Maps the returned source_ids back to source_uuids
+    5. Recovers any truly missing companies that were dropped from the resolution
+
+    MDM-Style ID Handling (Interpretation 1):
+    - Output record keeps one of the input IDs as the master
+    - source_ids contains the OTHER records that were merged in (not the master's own ID)
+    - Master record UUID is tracked separately and not flagged as missing
 
     Args:
         block: Dictionary containing block data with companies list
@@ -214,10 +221,20 @@ async def process_block_with_uuid_mapping(
                 # Map each source_uuid to an integer ID
                 source_ids = [mapper.add_uuid(uuid) for uuid in comp_copy["source_uuids"] if uuid]
 
-            # Handle ticker field - might be a dict or Row from parquet
+            # Handle ticker field - might be a dict, Row from parquet, or JSON string
             ticker_data = comp_copy.get("ticker")
             ticker = None
             if ticker_data:
+
+                # If ticker is a JSON string, parse it first
+                if isinstance(ticker_data, str):
+                    try:
+                        ticker_data = json.loads(ticker_data)
+                    except json.JSONDecodeError:
+                        logger.warning(
+                            f"Failed to parse ticker JSON string for company {comp_copy['name']}: {ticker_data}"
+                        )
+                        ticker_data = None
 
                 if isinstance(ticker_data, Row):
                     ticker_data = ticker_data.asDict()
@@ -311,6 +328,10 @@ async def process_block_with_uuid_mapping(
         # Track which UUIDs appear in the BAML results
         output_uuids: set[str] = set()
 
+        # Track which UUIDs became output record IDs (master records in MDM style)
+        # These should NOT be flagged as missing even if not in source_uuids
+        master_record_uuids: set[str] = set()
+
         # Convert resolved companies back to dictionaries with UUID mapping restored
         resolved_companies = []
         for company in result.companies:
@@ -319,37 +340,17 @@ async def process_block_with_uuid_mapping(
             # BAML should have accumulated all source_ids as per its prompt
             source_uuids_list = mapper.map_ids_to_uuids(company.source_ids) or []
 
-            # BAML sometimes doesn't include the company IDs themselves in source_ids,
-            # only the historical source_ids. We need to add the company UUIDs.
-            # Check which companies were merged by looking at the source_ids
-            source_uuids_set = set(source_uuids_list) if source_uuids_list else set()
+            # Track the master record UUID (the output company's ID maps back to an input UUID)
+            # In MDM-style merging, this UUID becomes the master and won't be in source_ids
+            master_uuid = mapper.get_uuid(company.id)
+            if master_uuid:
+                master_record_uuids.add(master_uuid)
 
-            # Build a set of all IDs in the result for quick lookup
-            result_ids = set(company.source_ids) if company.source_ids else set()
-
-            # Add company UUIDs for companies that were merged
-            for comp_data in companies_data:
-                comp_uuid = comp_data.get("uuid")
-                comp_id = mapper.uuid_to_int.get(comp_uuid)
-
-                if comp_id:
-                    # Check if this company's ID is in the result
-                    if comp_id in result_ids:
-                        source_uuids_set.add(comp_uuid)
-                    # Also check if any of its historical source_ids are in the result
-                    elif (
-                        "source_uuids" in comp_data
-                        and isinstance(comp_data["source_uuids"], list)
-                        and len(comp_data["source_uuids"]) > 0
-                    ):
-                        for hist_uuid in comp_data["source_uuids"]:
-                            hist_id = mapper.uuid_to_int.get(hist_uuid)
-                            if hist_id and hist_id in result_ids:
-                                # This company was merged, add its UUID
-                                source_uuids_set.add(comp_uuid)
-                                break
-
-            source_uuids_final = sorted(list(source_uuids_set)) if source_uuids_set else None
+            # Build source_uuids from the source_ids returned by BAML
+            # In Interpretation 1 (MDM-style), source_ids contains the OTHER records merged in,
+            # NOT including the master record's own ID
+            # We trust BAML's output and map the IDs back to UUIDs directly
+            source_uuids_final = sorted(source_uuids_list) if source_uuids_list else None
 
             # Track all UUIDs that appear in the output
             if source_uuids_final:
@@ -380,7 +381,17 @@ async def process_block_with_uuid_mapping(
             resolved_companies.append(resolved_dict)
 
         # Find missing UUIDs - those that went in but didn't come out
-        missing_uuids = all_input_uuids - output_uuids
+        # In MDM-style (Interpretation 1), master record UUIDs don't appear in source_uuids,
+        # so we need to exclude them from the missing check
+        accounted_uuids: set[str] = output_uuids | master_record_uuids
+        missing_uuids: set[str] = all_input_uuids - accounted_uuids
+
+        logger.debug(
+            f"Block {block_key}: Input UUIDs: {len(all_input_uuids)}, "
+            f"In source_uuids: {len(output_uuids)}, "
+            f"Master records: {len(master_record_uuids)}, "
+            f"Missing: {len(missing_uuids)}"
+        )
 
         # Track which companies we need to recover entirely
         companies_to_recover: set[str] = set()

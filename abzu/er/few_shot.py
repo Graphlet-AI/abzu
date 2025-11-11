@@ -22,37 +22,38 @@ def company_dicts_to_baml(
     Note that we do hard asserts, if the few-shot examples aren't complete, we want to die hard."""
     for few_shot_example in merge_company_example_set_dict["merge_companies"]:
         assert "companies" in few_shot_example
-        assert "merged_company" in few_shot_example
+        assert "output_master_record" in few_shot_example
 
         # Fill in the FewShotExample.companies field
         companies: list[MergeCompany] = []
         for company in few_shot_example["companies"]:
             assert "id" in company
-            assert "name" in company
+            # assert "name" in company
             assert "source_ids" in company
 
             merge_company = MergeCompany(
                 id=company["id"],  # type: ignore
-                name=company["name"],  # type: ignore
+                # name=company["name"],  # type: ignore
                 source_ids=company["source_ids"],  # type: ignore
             )
             companies.append(merge_company)
 
         # Fill in the FewShotExample.merged_company field
-        assert "merged_company" in few_shot_example
-        merged_company_dict = few_shot_example["merged_company"]
-        assert "id" in merged_company_dict
-        assert "source_ids" in merged_company_dict
-        merged_company = MergeCompany(
-            id=merged_company_dict["id"],  # type: ignore
-            name=merged_company_dict["name"],  # type: ignore
-            source_ids=merged_company_dict["source_ids"],  # type: ignore
+        assert "output_master_record" in few_shot_example
+        # Yes, it changes from 'output_master_record' to 'merged_company' here. Deal with it.
+        output_master_record_dict = few_shot_example["output_master_record"]
+        assert "id" in output_master_record_dict
+        assert "source_ids" in output_master_record_dict
+        output_master_record = MergeCompany(
+            id=output_master_record_dict["id"],  # type: ignore
+            # name=output_master_record_dict["name"],  # type: ignore
+            source_ids=output_master_record_dict["source_ids"],  # type: ignore
         )
 
     merge_companies = [
         FewShotExample(
             companies=companies,
-            merged_company=merged_company,
+            output_master_record=output_master_record,
         )
     ]
     merge_company_example_set: MergeCompanyExampleSet = MergeCompanyExampleSet(
@@ -68,14 +69,12 @@ company_id_tracking_dicts: dict[
     "merge_companies": [
         {
             "companies": [
-                {"id": 1, "name": "Nvidia", "source_ids": [3, 4]},
-                {"id": 2, "name": "Nvidia Corp", "source_ids": [5, 6, 7, 8, 9]},
-                {"id": 11, "name": "NVIDIA Corporation", "source_ids": []},
+                {"id": 1, "source_ids": [3, 7]},
+                {"id": 22, "source_ids": [2, 4]},
             ],
-            "merged_company": {
-                "id": 11,
-                "name": "Nvidia Corporation",
-                "source_ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+            "output_master_record": {
+                "id": 1,
+                "source_ids": [22, 3, 7, 2, 4],
             },
         },
     ]

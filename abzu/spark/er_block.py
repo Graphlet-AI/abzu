@@ -13,7 +13,6 @@ from abzu.er.acronyms import get_acronyms
 from abzu.logs import get_logger
 from abzu.spark.config import get_spark_session
 from abzu.spark.schemas import (
-    build_udtf_return_type,
     get_company_fields_without_blocks,
     normalize_company_dataframe,
 )
@@ -85,7 +84,7 @@ def build_blocks(
 
     # Load companies (always in regular format after UUID resolution)
     logger.info(f"Loading companies from {input_path}")
-    companies_df_raw: DataFrame = spark.read.parquet(input_path)
+    companies_df_raw: DataFrame = spark.read.json(input_path)
 
     # Normalize schema to ensure consistency across iterations
     logger.info("Normalizing company schema to match BAML definition...")
@@ -294,7 +293,7 @@ def build_blocks(
     logger.info("Grouping complete company records by blocking keys...")
 
     # Join filtered companies back with full company data
-    full_companies_df_raw = spark.read.parquet(input_path)
+    full_companies_df_raw = spark.read.json(input_path)
     # Normalize again to ensure consistency
     full_companies_df = normalize_company_dataframe(
         full_companies_df_raw, preserve_extra_fields=False
@@ -401,8 +400,19 @@ def build_blocks(
         f"Splitting large blocks (> {actual_max_block_size} companies) into smaller chunks..."
     )
 
-    # Build the UDTF returnType dynamically from the Company model
-    udtf_return_type = build_udtf_return_type()
+    # Build the UDTF returnType dynamically from the actual DataFrame schema
+    # Get the companies array element type from the first non-empty block
+    from pyspark.sql.types import ArrayType
+
+    companies_field = combined_blocks.schema["companies"]
+    companies_array_type = companies_field.dataType
+    assert isinstance(companies_array_type, ArrayType), "companies must be an ArrayType"
+    companies_schema = companies_array_type.elementType.simpleString()
+    udtf_return_type = (
+        f"block_key: string, block_key_type: string, "
+        f"companies: array<{companies_schema}>, "
+        f"block_size: long"
+    )
     logger.debug(f"UDTF return type: {udtf_return_type}")
 
     @F.udtf(returnType=udtf_return_type)  # type: ignore
@@ -468,30 +478,18 @@ def build_blocks(
 
     # Save combined blocks separately
     combined_blocks_json_path = os.path.join(output_path, "combined_blocks.json")
-    combined_blocks_parquet_path = os.path.join(output_path, "combined_blocks.parquet")
-    logger.info(
-        f"Persisting combined blocks to {combined_blocks_json_path} and {combined_blocks_parquet_path}"
-    )
+    logger.info(f"Persisting combined blocks to {combined_blocks_json_path}")
     combined_blocks_final.repartition(1).write.mode("overwrite").json(combined_blocks_json_path)
-    combined_blocks_final.repartition(1).write.mode("overwrite").parquet(
-        combined_blocks_parquet_path
-    )
 
     # Save first_word_only blocks separately
     first_word_json_path = os.path.join(output_path, "first_word_blocks.json")
-    first_word_parquet_path = os.path.join(output_path, "first_word_blocks.parquet")
-    logger.info(
-        f"Persisting first word blocks to {first_word_json_path} and {first_word_parquet_path}"
-    )
+    logger.info(f"Persisting first word blocks to {first_word_json_path}")
     first_word_blocks_final.repartition(1).write.mode("overwrite").json(first_word_json_path)
-    first_word_blocks_final.repartition(1).write.mode("overwrite").parquet(first_word_parquet_path)
 
     # Save acronym_only blocks separately
     acronym_json_path = os.path.join(output_path, "acronym_blocks.json")
-    acronym_parquet_path = os.path.join(output_path, "acronym_blocks.parquet")
-    logger.info(f"Persisting acronym blocks to {acronym_json_path} and {acronym_parquet_path}")
+    logger.info(f"Persisting acronym blocks to {acronym_json_path}")
     acronym_blocks_final.repartition(1).write.mode("overwrite").json(acronym_json_path)
-    acronym_blocks_final.repartition(1).write.mode("overwrite").parquet(acronym_parquet_path)
 
     # Handle companies with UNKNOWN block keys - create singleton blocks for them
     unblocked_blocks_df = None
@@ -509,7 +507,9 @@ def build_blocks(
         unblocked_blocks_df = unknown_companies_full.select(
             F.concat(F.lit("UNBLOCKED_"), F.col("uuid")).alias("block_key"),
             F.lit("unblocked").alias("block_key_type"),
-            F.array(F.struct(unknown_companies_full.columns)).alias("companies"),
+            F.array(F.struct(*[F.col(c) for c in unknown_companies_full.columns])).alias(
+                "companies"
+            ),
             F.lit(1).alias("block_size"),
         )
 
@@ -530,11 +530,9 @@ def build_blocks(
 
     # Save all_blocks to both JSON and Parquet formats
     all_blocks_json_path = os.path.join(output_path, "all_blocks.json")
-    all_blocks_parquet_path = os.path.join(output_path, "all_blocks.parquet")
 
-    logger.info(f"Persisting all blocks to {all_blocks_json_path} and {all_blocks_parquet_path}")
+    logger.info(f"Persisting all blocks to {all_blocks_json_path}")
     all_blocks_df.repartition(1).write.mode("overwrite").json(all_blocks_json_path)
-    all_blocks_df.repartition(1).write.mode("overwrite").parquet(all_blocks_parquet_path)
 
     # Count total blocks and companies in unified output
     all_blocks_count = all_blocks_df.count()
@@ -592,19 +590,19 @@ def build_blocks(
     )
     if combined_block_count != original_combined_count:
         logger.info(f"  (Split from {original_combined_count:,} original blocks)")
-    logger.info(f"  Saved to: {combined_blocks_json_path} and {combined_blocks_parquet_path}")
+    logger.info(f"  Saved to: {combined_blocks_json_path}")
     logger.info(
         f"First Word Only Blocks: {first_word_only_count:,} blocks with {first_word_only_companies_count:,} companies"
     )
     if first_word_only_count != original_first_word_count:
         logger.info(f"  (Split from {original_first_word_count:,} original blocks)")
-    logger.info(f"  Saved to: {first_word_json_path} and {first_word_parquet_path}")
+    logger.info(f"  Saved to: {first_word_json_path}")
     logger.info(
         f"Acronym Only Blocks: {acronym_only_count:,} blocks with {acronym_only_companies_count:,} companies"
     )
     if acronym_only_count != original_acronym_count:
         logger.info(f"  (Split from {original_acronym_count:,} original blocks)")
-    logger.info(f"  Saved to: {acronym_json_path} and {acronym_parquet_path}")
+    logger.info(f"  Saved to: {acronym_json_path}")
     if unblocked_count > 0:
         logger.info(
             f"Unblocked Companies (singleton blocks): {unblocked_count:,} blocks with {unblocked_count:,} companies"

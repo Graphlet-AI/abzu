@@ -9,7 +9,6 @@ from typing import Any, Optional, cast
 
 import pandas as pd
 from baml_py import Collector
-from pyspark.sql.types import ArrayType, LongType, StringType, StructField, StructType
 from tqdm import tqdm
 
 from abzu.baml_client import b as baml_client
@@ -17,8 +16,6 @@ from abzu.config import config
 from abzu.er.uuid import process_block_with_uuid_mapping
 from abzu.logs import get_logger
 from abzu.spark.config import get_spark_session
-from abzu.spark.pandas_to_parquet import save_pandas_df_with_pyspark
-from abzu.spark.schemas import get_company_spark_schema
 from abzu.utils import save_jsonl
 
 logger = get_logger(__name__)
@@ -158,8 +155,8 @@ def match_entities(
     if min_block_size is not None or max_block_size is not None:
         logger.info(f"Block size range: {min_block_size or 'any'}:{max_block_size or 'any'}")
 
-    # Load blocks from parquet using PySpark to preserve Python lists
-    blocks_parquet_path = blocks_path.format(iteration=iteration, format="parquet")
+    # Load blocks from JSON using PySpark to preserve Python lists
+    blocks_json_path = blocks_path.format(iteration=iteration, format="json")
 
     # Create or get SparkSession
     spark = get_spark_session(f"EntityResolutionMatch_Iteration{iteration}")
@@ -167,8 +164,8 @@ def match_entities(
     # Disable Arrow optimization to preserve Python object types
     spark.conf.set("spark.sql.execution.arrow.pyspark.enabled", "false")
 
-    # Load parquet file with Spark (preserves lists as Python lists, not numpy arrays)
-    spark_df = spark.read.parquet(blocks_parquet_path)
+    # Load JSON file with Spark (preserves lists as Python lists, not numpy arrays)
+    spark_df = spark.read.json(blocks_json_path)
 
     # Convert to pandas DataFrame
     # With Arrow disabled, toPandas() preserves Python lists without converting to numpy arrays
@@ -405,13 +402,12 @@ def match_entities(
 
     # No longer need ensure_list workaround - PySpark handles None values properly
 
-    # Format output paths for both formats with iteration
-    output_parquet_path = output_path.format(iteration=iteration, format="parquet")
+    # Format output path with iteration
     output_json_path = output_path.format(iteration=iteration, format="json")
 
     # Create output directory if it doesn't exist
-    output_path_obj = Path(output_parquet_path)
-    output_dir = output_path_obj.parent
+    json_output_path_obj = Path(output_json_path)
+    output_dir = json_output_path_obj.parent
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Save error blocks to a separate file for debugging if any exist
@@ -422,82 +418,9 @@ def match_entities(
     )
 
     if len(error_blocks) > 0:
-        # Create error output path for debugging
-        error_output_path = "data/er/iterations/{iteration}/errors.parquet".format(
-            iteration=iteration
-        )
-        error_path_obj = Path(error_output_path)
-        error_dir = error_path_obj.parent
-        error_dir.mkdir(parents=True, exist_ok=True)
-
-        # Backup existing error file if it exists
-        backup_file(error_path_obj)
-
-        # Ensure error blocks also have consistent list columns (reuse the ensure_list function)
-        def ensure_list_error(x: Any) -> list[Any]:
-            if x is None:
-                return []
-            elif isinstance(x, list):
-                return x
-            else:
-                try:
-                    if pd.isna(x):
-                        return []
-                except (TypeError, ValueError):
-                    pass
-                return []
-
-        # Type ignore for pandas apply with custom function
-        if "resolved_companies" in error_blocks.columns:
-            error_blocks["resolved_companies"] = error_blocks["resolved_companies"].apply(
-                ensure_list_error  # type: ignore
-            )
-        if "original_companies" in error_blocks.columns:
-            error_blocks["original_companies"] = error_blocks["original_companies"].apply(
-                ensure_list_error  # type: ignore
-            )
-
-        save_pandas_df_with_pyspark(
-            error_blocks,
-            error_output_path,
-            app_name=f"SaveERErrorBlocks_Iteration{iteration}",
-        )
-        logger.warning(f"Saved {len(error_blocks)} error blocks to {error_output_path}")
-
-    # Backup existing parquet file if it exists
-    backup_file(output_path_obj)
-
-    #
-    # Save ALL results to parquet using PySpark for proper handling of nested structures
-    #
-
-    # Get the Company schema from SparkDantic
-    company_schema = get_company_spark_schema()
-
-    # Define the full schema for the results DataFrame
-    # This wraps the Company schema in arrays for resolved/original companies
-    results_schema = StructType(
-        [
-            StructField("block_key", StringType(), True),
-            StructField("block_key_type", StringType(), True),
-            StructField("resolved_companies", ArrayType(company_schema), True),
-            StructField("original_companies", ArrayType(company_schema), True),
-            StructField("error", StringType(), True),
-            StructField("block_size", LongType(), True),
-        ]
-    )
-
-    # Save using PySpark with SparkDantic-derived schema
-    save_pandas_df_with_pyspark(
-        results_df,
-        output_parquet_path,
-        schema=results_schema,
-        app_name=f"SaveERMatches_Iteration{iteration}",
-    )
-    logger.info(f"Saved {len(results_df)} resolved blocks to {output_parquet_path}")
+        logger.warning(f"Found {len(error_blocks)} blocks with errors")
 
     # Backup existing JSON file if it exists
-    json_output_path_obj = Path(output_json_path)
     backup_file(json_output_path_obj)
 
     # Save to JSON format

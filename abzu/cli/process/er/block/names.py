@@ -56,7 +56,7 @@ def names(
         # For later iterations, use previous iteration's resolved companies
         prev_iteration = iteration - 1
         companies_path = config.get("process.kg.er.paths.names.eval").format(
-            iteration=prev_iteration, format="parquet"
+            iteration=prev_iteration, format="json"
         )
 
     # Set output path if not provided

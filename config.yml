@@ -141,7 +141,7 @@ process:
     
     er:
       paths:
-        input: "${process.kg.raw.output}/companies.parquet"
+        input: "${process.kg.raw.output}/companies.jsonl"
         output: "${base_dir}/er/"
         # Names workflow paths (supports iterations and formats)
         names:

@@ -58,7 +58,7 @@ def evaluate_er_matches(
 
     # Load the ORIGINAL raw companies (always the same, regardless of iteration)
     logger.info(f"Loading ORIGINAL raw companies from {raw_companies_path}")
-    original_raw_companies_df: DataFrame = spark.read.parquet(raw_companies_path)
+    original_raw_companies_df: DataFrame = spark.read.json(raw_companies_path)
 
     # For iteration 2+, also load the previous iteration's output for comparison
     previous_iteration_df: Optional[DataFrame] = None
@@ -66,7 +66,7 @@ def evaluate_er_matches(
         prev_iteration = iteration - 1
         # Check if output_path has {iteration} placeholder
         if "{iteration}" in output_path:
-            prev_iteration_path = output_path.format(iteration=prev_iteration, format="parquet")
+            prev_iteration_path = output_path.format(iteration=prev_iteration, format="json")
         else:
             # If no iteration placeholder, construct path based on current path
             # Replace current iteration with previous iteration in the path
@@ -75,7 +75,7 @@ def evaluate_er_matches(
             prev_iteration_path = re.sub(
                 f"iteration_{iteration}",
                 f"iteration_{prev_iteration}",
-                output_path.format(format="parquet"),
+                output_path.format(format="json"),
             )
 
         # Check if the previous iteration output exists
@@ -83,7 +83,7 @@ def evaluate_er_matches(
             logger.info(
                 f"Loading previous iteration ({prev_iteration}) results from {prev_iteration_path}"
             )
-            previous_iteration_df = spark.read.parquet(prev_iteration_path)
+            previous_iteration_df = spark.read.json(prev_iteration_path)
         else:
             logger.info(
                 f"Previous iteration ({prev_iteration}) output not found at {prev_iteration_path}, skipping comparison"
@@ -128,19 +128,14 @@ def evaluate_er_matches(
 
     if "match_skip_history" in resolved_companies_df.columns:
         # Count records by number of times skipped
-        skip_history_df = resolved_companies_df.select(
-            "uuid",
-            "name",
-            "match_skip",
-            "match_skip_history",
-            (
-                F.col("match_skip_reason")
-                if "match_skip_reason" in resolved_companies_df.columns
-                else F.lit(None).alias("match_skip_reason")
-            ),
-        ).filter(
-            F.col("match_skip_history").isNotNull()
-        )  # type: ignore
+        # Select columns conditionally based on what exists
+        select_cols = ["uuid", "name", "match_skip", "match_skip_history"]
+        if "match_skip_reason" in resolved_companies_df.columns:
+            select_cols.append("match_skip_reason")
+
+        skip_history_df = resolved_companies_df.select(*select_cols).filter(
+            F.col("match_skip_history").isNotNull()  # type: ignore[call-arg]
+        )
 
         # Count records skipped in current iteration
         skipped_in_current = skip_history_df.filter(
@@ -192,7 +187,7 @@ def evaluate_er_matches(
     total_original_companies = original_raw_companies_df.count()
     unique_original_companies = original_raw_companies_df.select("uuid").distinct().count()
     logger.info(
-        f"ORIGINAL raw companies (iteration 0): {total_original_companies:,} total, {unique_original_companies:,} unique"
+        f"ORIGINAL raw companies (before matching): {total_original_companies:,} total, {unique_original_companies:,} unique"
     )
 
     # For iteration 2+, get previous iteration counts
@@ -222,6 +217,17 @@ def evaluate_er_matches(
     )
     logger.info(
         f"Data reduction from matching: {reduction_from_matching:,} companies merged ({reduction_from_matching_pct:.2f}%)"
+    )
+
+    # Calculate IDs dropped by BAML (went in but didn't come out)
+    ids_dropped_by_baml = missing_uuid_recovery_count
+    ids_dropped_pct = (
+        (ids_dropped_by_baml / companies_that_went_into_matching) * 100
+        if companies_that_went_into_matching > 0
+        else 0
+    )
+    logger.info(
+        f"IDs dropped by BAML: {ids_dropped_by_baml:,} ({ids_dropped_pct:.2f}%) - recovered via UUID tracking"
     )
 
     # Total output = BAML processed + skipped
@@ -339,13 +345,9 @@ def evaluate_er_matches(
     # that aren't in our current dataset but are still valid
     cleaned_resolved_companies = resolved_companies_df
 
-    # Save companies_resolved files - both Parquet and JSON
+    # Save companies_resolved file as JSON
     # Format the output path with iteration and format
-    companies_resolved_parquet = output_path.format(iteration=iteration, format="parquet")
     companies_resolved_json = output_path.format(iteration=iteration, format="json")
-
-    logger.info(f"Saving companies_resolved.parquet to {companies_resolved_parquet}")
-    cleaned_resolved_companies.write.mode("overwrite").parquet(companies_resolved_parquet)
 
     logger.info(f"Saving companies_resolved.json to {companies_resolved_json}")
     cleaned_resolved_companies.coalesce(1).write.mode("overwrite").option(
@@ -371,6 +373,8 @@ def evaluate_er_matches(
             unique_baml_processed,
             reduction_from_matching,
             reduction_from_matching_pct,
+            ids_dropped_by_baml,
+            ids_dropped_pct,
             total_output_companies,
             total_reduction,
             total_reduction_pct,
@@ -396,6 +400,8 @@ def evaluate_er_matches(
             StructField("unique_baml_processed", LongType(), False),
             StructField("reduction_from_matching", LongType(), False),
             StructField("reduction_from_matching_pct", DoubleType(), False),
+            StructField("ids_dropped_by_baml", LongType(), False),
+            StructField("ids_dropped_by_baml_pct", DoubleType(), False),
             StructField("total_output_companies", LongType(), False),
             StructField("total_reduction", LongType(), False),
             StructField("total_reduction_pct", DoubleType(), False),
@@ -415,13 +421,9 @@ def evaluate_er_matches(
 
     # Get the directory for metrics files
     # Format the output_path first to get the actual directory with iteration number
-    formatted_output_path = output_path.format(iteration=iteration, format="parquet")
+    formatted_output_path = output_path.format(iteration=iteration, format="json")
     output_dir = os.path.dirname(formatted_output_path)
-    metrics_parquet_path = os.path.join(output_dir, "er_evaluation_metrics.parquet")
     metrics_json_path = os.path.join(output_dir, "er_evaluation_metrics.json")
-
-    logger.info(f"Saving evaluation metrics (Parquet) to {metrics_parquet_path}")
-    metrics_df.write.mode("overwrite").parquet(metrics_parquet_path)
 
     logger.info(f"Saving evaluation metrics (JSON) to {metrics_json_path}")
     metrics_df.coalesce(1).write.mode("overwrite").json(metrics_json_path)
@@ -430,7 +432,7 @@ def evaluate_er_matches(
     logger.info("\n" + "=" * 60)
     logger.info(f"ENTITY RESOLUTION EVALUATION SUMMARY - ITERATION {iteration}")
     logger.info("=" * 60)
-    logger.info(f"Original raw companies (iteration 0): {total_original_companies:,} unique")
+    logger.info(f"Original raw companies (before matching): {total_original_companies:,} unique")
     logger.info(f"  Companies that went into matching: {companies_that_went_into_matching:,}")
     logger.info(f"  Skipped (singletons/errors): {skipped_records:,}")
     logger.info("")
@@ -438,6 +440,9 @@ def evaluate_er_matches(
     logger.info(f"  BAML-processed companies: {unique_baml_processed:,} unique")
     logger.info(
         f"  Companies merged: {reduction_from_matching:,} ({reduction_from_matching_pct:.2f}%)"
+    )
+    logger.info(
+        f"  IDs dropped by BAML: {ids_dropped_by_baml:,} ({ids_dropped_pct:.2f}%) - recovered via UUID tracking"
     )
     logger.info("")
     logger.info("FINAL OUTPUT:")
@@ -495,9 +500,7 @@ def evaluate_er_matches(
         logger.info("  All original companies are tracked in source_uuids")
     logger.info("=" * 60)
     logger.info("Files saved:")
-    logger.info(f"  - {companies_resolved_parquet}")
     logger.info(f"  - {companies_resolved_json}")
-    logger.info(f"  - {metrics_parquet_path}")
     logger.info(f"  - {metrics_json_path}")
 
     # Don't stop the SparkSession - let the caller manage its lifecycle
