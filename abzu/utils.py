@@ -530,6 +530,30 @@ def save_jsonl(
 
     try:
         if isinstance(data, pd.DataFrame):
+            # Deep copy to avoid modifying original data
+            data = data.copy()
+
+            # Recursively convert any nested Pydantic models or non-dict objects to dicts
+            def serialize_nested_objects(obj: Any) -> Any:
+                """Recursively serialize nested objects to JSON-compatible dicts."""
+                if hasattr(obj, "model_dump"):
+                    # Pydantic model - convert to dict
+                    return obj.model_dump(mode="json")
+                elif hasattr(obj, "asDict"):
+                    # PySpark Row - convert to dict
+                    return obj.asDict()
+                elif isinstance(obj, dict):
+                    return {k: serialize_nested_objects(v) for k, v in obj.items()}
+                elif isinstance(obj, (list, tuple)):
+                    return [serialize_nested_objects(item) for item in obj]
+                else:
+                    return obj
+
+            # Apply serialization to all columns that might contain nested objects
+            for col in data.columns:
+                if data[col].dtype == "object":  # Only process object columns
+                    data[col] = data[col].apply(serialize_nested_objects)
+
             # Use pandas to_json with lines=True for JSONL format
             data.to_json(path, orient="records", lines=True, force_ascii=False)
         else:
