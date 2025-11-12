@@ -315,9 +315,18 @@ def evaluate_er_matches(
     # Validate source_uuids against ALL historical UUIDs (original + all previous iterations)
     # Build a union of all valid historical UUIDs
     all_valid_uuids = original_uuids
-    if previous_iteration_df is not None:
-        # Include UUIDs from previous iteration
-        all_valid_uuids = all_valid_uuids.union(prev_uuids).distinct()
+
+    # Load UUIDs from ALL previous iterations (not just immediate previous)
+    # This ensures we can validate source_uuids that chain through multiple iterations
+    for prev_iter in range(1, iteration):
+        prev_iter_path = output_path.format(iteration=prev_iter, format="json")
+        if os.path.exists(prev_iter_path):
+            logger.debug(f"Loading UUIDs from iteration {prev_iter} for validation")
+            prev_iter_df = spark.read.json(prev_iter_path)
+            prev_iter_uuids = prev_iter_df.select("uuid").distinct()
+            all_valid_uuids = all_valid_uuids.union(prev_iter_uuids).distinct()
+        else:
+            logger.debug(f"Iteration {prev_iter} output not found at {prev_iter_path}, skipping")
 
     all_valid_uuids_distinct = all_valid_uuids.alias("valid")
     valid_source_uuids = resolved_with_source_uuids.join(

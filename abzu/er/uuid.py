@@ -221,13 +221,13 @@ async def process_block_with_uuid_mapping(
                 # Map each source_uuid to an integer ID
                 source_ids = [mapper.add_uuid(uuid) for uuid in comp_copy["source_uuids"] if uuid]
 
-            # Handle ticker field - might be a dict, Row from parquet, or JSON string
+            # Handle ticker field - normalize to dict format
             ticker_data = comp_copy.get("ticker")
             ticker = None
             if ticker_data:
-
-                # If ticker is a JSON string, parse it first
+                # Normalize ticker to dict format
                 if isinstance(ticker_data, str):
+                    # JSON string - parse it
                     try:
                         ticker_data = json.loads(ticker_data)
                     except json.JSONDecodeError:
@@ -235,8 +235,14 @@ async def process_block_with_uuid_mapping(
                             f"Failed to parse ticker JSON string for company {comp_copy['name']}: {ticker_data}"
                         )
                         ticker_data = None
-
-                if isinstance(ticker_data, Row):
+                elif isinstance(ticker_data, list):
+                    # Malformed list format - skip it
+                    logger.warning(
+                        f"Ticker is a list (unsupported format) for company {comp_copy['name']}: {ticker_data}. Skipping ticker."
+                    )
+                    ticker_data = None
+                elif isinstance(ticker_data, Row):
+                    # PySpark Row - convert to dict
                     ticker_data = ticker_data.asDict()
 
                 if isinstance(ticker_data, dict):
@@ -350,7 +356,32 @@ async def process_block_with_uuid_mapping(
             # In Interpretation 1 (MDM-style), source_ids contains the OTHER records merged in,
             # NOT including the master record's own ID
             # We trust BAML's output and map the IDs back to UUIDs directly
-            source_uuids_final = sorted(source_uuids_list) if source_uuids_list else None
+            if source_uuids_list:
+                # BAML returned source_ids - company was merged
+                source_uuids_final = sorted(source_uuids_list)
+            else:
+                # BAML returned empty source_ids - company was NOT merged
+                # Preserve original source_uuids to maintain provenance chain
+                if master_uuid:
+                    original_company = input_companies_by_uuid.get(master_uuid)
+                    if original_company and original_company.get("source_uuids"):
+                        # Preserve existing source_uuids from input
+                        source_uuids_final = original_company["source_uuids"]
+                        logger.debug(
+                            f"Preserving source_uuids for unmerged company {company.name}: {source_uuids_final}"
+                        )
+                    else:
+                        # New singleton or first occurrence - use own UUID as source
+                        source_uuids_final = [master_uuid]
+                        logger.debug(
+                            f"Setting self-reference source_uuid for company {company.name}: [{master_uuid}]"
+                        )
+                else:
+                    # Edge case - no master UUID (shouldn't happen)
+                    source_uuids_final = None
+                    logger.warning(
+                        f"No master UUID found for company {company.name}, source_uuids will be null"
+                    )
 
             # Track all UUIDs that appear in the output
             if source_uuids_final:
