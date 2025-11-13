@@ -151,7 +151,7 @@ process:
           matches: "${base_dir}/er/iterations/{iteration}/matches.{format}"
           eval: "${base_dir}/er/iterations/{iteration}/companies_resolved.{format}"
       max_block_size: 50
-      iteration: 4
+      iteration: 3
 
     refine:
       input:
