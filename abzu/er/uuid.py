@@ -358,7 +358,13 @@ async def process_block_with_uuid_mapping(
             # We trust BAML's output and map the IDs back to UUIDs directly
             if source_uuids_list:
                 # BAML returned source_ids - company was merged
-                source_uuids_final = sorted(source_uuids_list)
+                # IMPORTANT: Add master UUID to maintain complete provenance
+                # Even though BAML's MDM-style doesn't include master in source_ids,
+                # we need ALL input UUIDs traceable for edge/relationship tracking
+                all_uuids = set(source_uuids_list)
+                if master_uuid:
+                    all_uuids.add(master_uuid)
+                source_uuids_final = sorted(list(all_uuids))
             else:
                 # BAML returned empty source_ids - company was NOT merged
                 # Preserve original source_uuids to maintain provenance chain
@@ -389,7 +395,7 @@ async def process_block_with_uuid_mapping(
 
             resolved_dict: dict[str, Any] = {
                 "id": company.id,
-                "uuid": company.uuid,
+                "uuid": master_uuid,  # Preserve master UUID instead of None
                 "name": company.name,
                 "cik": company.cik,
                 "ticker": company.ticker.model_dump(mode="json") if company.ticker else None,

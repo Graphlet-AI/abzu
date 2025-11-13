@@ -48,6 +48,7 @@ def clean(base_path: str, iteration: int | None, dry_run: bool, force: bool) -> 
         "combined_blocks.json",
         "matches.parquet",
         "matches.json",
+        "matches.json.bak",
         "matches.jsonl",
         "matches.jsonl.bak",
         "*_backup_*.parquet",  # All backup parquet files

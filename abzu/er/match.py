@@ -147,8 +147,12 @@ def match_entities(
         min_block_size: Minimum block size to process (inclusive)
         max_block_size: Maximum block size to process (inclusive)
     """
-    logger.info(f"Starting entity matching from {blocks_path}")
-    logger.info(f"Output path: {output_path}")
+    # Format paths with iteration and format early for logging
+    blocks_json_path = blocks_path.format(iteration=iteration, format="json")
+    output_json_path = output_path.format(iteration=iteration, format="json")
+
+    logger.info(f"Starting entity matching from {blocks_json_path}")
+    logger.info(f"Output path: {output_json_path}")
     logger.info(f"Batch size: {batch_size}")
     if limit:
         logger.info(f"Limiting to {limit} blocks")
@@ -156,7 +160,6 @@ def match_entities(
         logger.info(f"Block size range: {min_block_size or 'any'}:{max_block_size or 'any'}")
 
     # Load blocks from JSON using PySpark to preserve Python lists
-    blocks_json_path = blocks_path.format(iteration=iteration, format="json")
 
     # Create or get SparkSession
     spark = get_spark_session(f"EntityResolutionMatch_Iteration{iteration}")
@@ -401,9 +404,6 @@ def match_entities(
                 logger.debug(f"  Row {idx}: type={type(val)}, value={val}")
 
     # No longer need ensure_list workaround - PySpark handles None values properly
-
-    # Format output path with iteration
-    output_json_path = output_path.format(iteration=iteration, format="json")
 
     # Create output directory if it doesn't exist
     json_output_path_obj = Path(output_json_path)

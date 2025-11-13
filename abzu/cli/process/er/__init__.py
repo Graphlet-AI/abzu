@@ -17,6 +17,7 @@ class OrderedLazyGroup(click.Group):
     def list_commands(self, ctx: click.Context) -> list[str]:
         """Return commands in the order they were added."""
         return [
+            "all",
             "block",
             "match",
             "eval",
@@ -36,6 +37,7 @@ class OrderedLazyGroup(click.Group):
 @click.command(
     cls=OrderedLazyGroup,
     lazy_subcommands={
+        "all": "abzu.cli.process.er.all:all",
         "block": "abzu.cli.process.er.block:block",
         "match": "abzu.cli.process.er.match:match",
         "eval": "abzu.cli.process.er.eval:eval",
