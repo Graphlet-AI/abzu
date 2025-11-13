@@ -14,17 +14,17 @@ def refine_knowledge_graph(
     input_paths: dict[str, str] = {
         # A hack to persist the iteration parameter in the path
         "companies": config.get("process.kg.refine.input.companies").format(
-            format="parquet", iteration="{iteration}"
+            format="json", iteration="{iteration}"
         ),
         "relationships": config.get("process.kg.refine.input.relationships").format(
-            format="parquet", iteration="{iteration}"
+            format="json", iteration="{iteration}"
         ),
     },
     output_paths: dict[str, str] = {
         "nodes": config.get("process.kg.refine.output.nodes"),
         "edges": config.get("process.kg.refine.output.edges"),
     },
-    iteration: int = 4,
+    iteration: int = 3,
     local_mode: bool = True,
 ) -> None:
     """
@@ -41,27 +41,51 @@ def refine_knowledge_graph(
         app_name="refine_knowledge_graph",
         local_mode=local_mode,
     )
-    companies_df = spark.read.parquet(input_paths["companies"].format(iteration=iteration))
+    companies_df = spark.read.json(input_paths["companies"].format(iteration=iteration))
     print(f"Read total companies: {companies_df.count():,}")
 
     company_stats_df = companies_df.select(
+        "uuid",
         "name",
-        "id",
-        F.substring("uuid", 0, 8).alias("uuid"),
-        F.size("source_ids").alias("source_id_count"),
         F.size("source_uuids").alias("source_uuid_count"),
-        F.round((F.col("source_uuid_count") / F.col("source_id_count")), 2).alias("id_to_uuid_pct"),
+        "source_uuids",
     )
     company_stats_df.show(20, False)
 
-    company_stats_df.select(
-        F.round(F.avg(F.col("source_uuid_count") / F.col("source_id_count")), 2).alias(
-            "avg_id_to_uuid_pct"
-        ),
-        F.round(F.median(F.col("source_uuid_count") / F.col("source_id_count")), 2).alias(
-            "median_id_to_uuid_pct"
-        ),
-    ).show()
-
     relationships_df = spark.read.parquet(input_paths["relationships"].format(iteration=iteration))
     print(f"Read total relationships: {relationships_df.count():,}")
+
+    # Now flatten the companies source_uuids for joining to the company relationships
+    exploded_companies_df = companies_df.select(
+        "uuid",
+        "name",
+        F.explode("source_uuids").alias("source_uuid"),
+    )
+    print(f"Exploded companies count: {exploded_companies_df.count():,}")
+
+    # Join relationships to companies on source_uuid to get resolved UUIDs
+    src_companies = exploded_companies_df.alias("src_company")
+    dst_companies = exploded_companies_df.alias("dst_company")
+
+    refined_edges_df = (
+        relationships_df.join(
+            src_companies,
+            relationships_df.src == src_companies.source_uuid,
+            how="inner",
+        )
+        .drop("source_uuid")
+        .join(
+            dst_companies,
+            relationships_df.dst == dst_companies.source_uuid,
+            how="inner",
+        )
+        .drop("source_uuid")
+    )
+
+    refined_edges_df.show(20, False)
+    print(f"Refined edges count: {refined_edges_df.count():,}")
+
+    # Save the refined edges
+    output_edges_path = output_paths["edges"].format(iteration=iteration, format="json")
+    refined_edges_df.write.mode("overwrite").json(output_edges_path)
+    logger.info(f"Refined knowledge graph edges saved to: {output_edges_path}")

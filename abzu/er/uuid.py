@@ -141,6 +141,11 @@ async def process_block_with_uuid_mapping(
         # For single companies, ensure source_uuids contains the UUID
         if len(companies_data) == 1:
             company = companies_data[0]
+
+            # IMPORTANT: Remove any integer IDs from previous iterations
+            company.pop("id", None)
+            company.pop("source_ids", None)
+
             if "uuid" in company and company["uuid"]:
                 # Map the record's uuid into the source_uuids field so we can do a simple join on the edges
                 if "source_uuids" not in company or not company["source_uuids"]:
@@ -393,8 +398,9 @@ async def process_block_with_uuid_mapping(
             if source_uuids_final:
                 output_uuids.update(source_uuids_final)
 
+            # IMPORTANT: Do NOT include integer IDs (id, source_ids) in output
+            # These are internal to BAML processing and should not persist between iterations
             resolved_dict: dict[str, Any] = {
-                "id": company.id,
                 "uuid": master_uuid,  # Preserve master UUID instead of None
                 "name": company.name,
                 "cik": company.cik,
@@ -408,7 +414,6 @@ async def process_block_with_uuid_mapping(
                 "founded_year": company.founded_year,
                 "ceo": company.ceo,
                 "linkedin_url": company.linkedin_url,
-                "source_ids": company.source_ids,
                 "source_uuids": source_uuids_final,
                 "match_skip": False,  # This company was processed by BAML
                 "match_skip_history": company.match_skip_history
@@ -506,6 +511,10 @@ async def process_block_with_uuid_mapping(
         for company_uuid in companies_to_recover:
             if company_uuid in input_companies_by_uuid:
                 missing_company = copy.deepcopy(input_companies_by_uuid[company_uuid])
+
+                # IMPORTANT: Remove any integer IDs from previous iterations
+                missing_company.pop("id", None)
+                missing_company.pop("source_ids", None)
 
                 # Ensure source_uuids contains the company's own UUID
                 if "source_uuids" not in missing_company or not missing_company["source_uuids"]:

@@ -173,7 +173,7 @@ def process_refine_kg(
         "nodes": config.get("process.kg.refine.output.nodes"),
         "edges": config.get("process.kg.refine.output.edges"),
     },
-    iteration: int = 4,
+    iteration: int = 3,
 ) -> int:
     """Refine the knowledge graph by mapping relationships to resolved companies.
 
