@@ -41,6 +41,8 @@ def refine_knowledge_graph(
         app_name="refine_knowledge_graph",
         local_mode=local_mode,
     )
+
+    # Load the entity resolved companies
     companies_df = spark.read.json(input_paths["companies"].format(iteration=iteration))
     print(f"Read total companies: {companies_df.count():,}")
 
@@ -58,7 +60,6 @@ def refine_knowledge_graph(
     # Now flatten the companies source_uuids for joining to the company relationships
     exploded_companies_df = companies_df.select(
         "uuid",
-        "name",
         F.explode("source_uuids").alias("source_uuid"),
     )
     print(f"Exploded companies count: {exploded_companies_df.count():,}")
@@ -73,13 +74,17 @@ def refine_knowledge_graph(
             relationships_df.src == src_companies.source_uuid,
             how="inner",
         )
-        .drop("source_uuid")
+        .withColumnRenamed("uuid", "resolved_src")
+        .drop("source_uuid", "src")
         .join(
             dst_companies,
             relationships_df.dst == dst_companies.source_uuid,
             how="inner",
         )
-        .drop("source_uuid")
+        .withColumnRenamed("uuid", "resolved_dst")
+        .drop("source_uuid", "dst")
+        .withColumnRenamed("resolved_src", "src")
+        .withColumnRenamed("resolved_dst", "dst")
     )
 
     refined_edges_df.show(20, False)
