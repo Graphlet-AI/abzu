@@ -17,7 +17,7 @@ from scrapy.utils.project import get_project_settings
 from tqdm import tqdm
 
 # Install the AsyncIO reactor before any other twisted imports
-from twisted.internet import asyncioreactor, defer, reactor
+from twisted.internet import asyncioreactor
 from twisted.internet.error import ReactorAlreadyInstalledError
 
 try:
@@ -25,6 +25,9 @@ try:
 except ReactorAlreadyInstalledError:
     # Reactor already installed
     pass
+
+# Import reactor and defer AFTER installation
+from twisted.internet import defer, reactor
 
 from abzu.config import config
 from abzu.html_extractor import HTMLExtractor
