@@ -43,7 +43,9 @@ def refine_knowledge_graph(
     )
 
     # Load the entity resolved companies
-    companies_df = spark.read.json(input_paths["companies"].format(iteration=iteration))
+    companies_path = input_paths["companies"].format(iteration=iteration, format="json")
+    print(f"Loading companies from: {companies_path}")
+    companies_df = spark.read.json(companies_path)
     print(f"Read total companies: {companies_df.count():,}")
 
     company_stats_df = companies_df.select(
@@ -91,6 +93,7 @@ def refine_knowledge_graph(
     print(f"Refined edges count: {refined_edges_df.count():,}")
 
     # Save the refined edges
-    output_edges_path = output_paths["edges"].format(iteration=iteration, format="json")
-    refined_edges_df.write.mode("overwrite").json(output_edges_path)
+    output_edges_path = output_paths["edges"]
+    print(f"Saving edges to: {output_edges_path}")
+    refined_edges_df.write.mode("overwrite").parquet(output_edges_path)
     logger.info(f"Refined knowledge graph edges saved to: {output_edges_path}")
