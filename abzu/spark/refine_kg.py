@@ -97,3 +97,9 @@ def refine_knowledge_graph(
     print(f"Saving edges to: {output_edges_path}")
     refined_edges_df.write.mode("overwrite").parquet(output_edges_path)
     logger.info(f"Refined knowledge graph edges saved to: {output_edges_path}")
+
+    # Save the nodes (companies)
+    output_nodes_path = output_paths["nodes"]
+    print(f"Saving nodes to: {output_nodes_path}")
+    companies_df.write.mode("overwrite").parquet(output_nodes_path)
+    logger.info(f"Refined knowledge graph nodes saved to: {output_nodes_path}")
