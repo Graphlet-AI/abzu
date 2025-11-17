@@ -1,0 +1,89 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [[ \"$CLAUDE_TOOL_FILE_PATH\" == *.py ]]; then black \"$CLAUDE_TOOL_FILE_PATH\" 2>/dev/null || true; fi"
+          },
+          {
+            "type": "command",
+            "command": "if [[ \"$CLAUDE_TOOL_FILE_PATH\" == *.py ]]; then isort \"$CLAUDE_TOOL_FILE_PATH\" 2>/dev/null || true; fi"
+          }
+        ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if command -v osascript >/dev/null 2>&1; then osascript -e 'beep 1'; elif command -v notify-send >/dev/null 2>&1; then notify-send 'Claude Code' \"Tool: $CLAUDE_TOOL_NAME completed\"; fi"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git add:*)",
+      "Bash(git grep:*)",
+      "Bash(poetry update:*)",
+      "Bash(pip show:*)",
+      "Bash(pip freeze:*)",
+      "Bash(pip list:*)",
+      "Bash(mypy:*)",
+      "Bash(pytest:*)",
+      "Bash(isort:*)",
+      "Bash(flake8:*)",
+      "Bash(jupyter notebook:*)",
+      "Bash(poetry run black:*)",
+      "Bash(poetry run black --check .)",
+      "Bash(poetry run isort:*)",
+      "Bash(poetry run flake8:*)",
+      "Bash(poetry run pytest tests/)",
+      "Bash(poetry run pre-commit:*)",
+      "Bash(pre-commit:*)",
+      "Bash(pre-commit run --all-files)",
+      "Bash(ls:*)",
+      "Bash(grep -n:*)",
+      "Bash(mkdir:*)",
+      "Bash(mkdir -p:*)",
+      "Bash(poetry add:*)",
+      "Bash(poetry install:*)",
+      "Bash(poetry update:*)",
+      "Bash(touch:*)",
+      "Bash(echo:*)",
+      "Bash(echo -ne:*)",
+      "Write(__init__.py)",
+      "Bash(abzu:*)",
+      "WebFetch(domain:*.readthedocs.io)",
+      "WebFetch(domain:*.google.com)",
+      "Bash(python -c:*)",
+      "WebFetch",
+      "Bash(poetry run abzu:*)",
+      "Bash(poetry:*)",
+      "Bash(jq:*)",
+      "Bash(length:*)",
+      "Bash(head:*)",
+      "Bash(poetry run:*)",
+      "Bash(baml-cli:*)",
+      "Bash(passage-of-time-mcp:*)"
+    ],
+    "deny": [
+      "Bash(pip install:*)"
+    ],
+    "ask": [
+      "Write(./abzu/spark/er_eval.py)",
+      "Write(./baml_src)"
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "bash -c 'input=$(cat); MODEL=$(echo \"$input\" | jq -r \".model.display_name\"); DIR=$(echo \"$input\" | jq -r \".workspace.current_dir\"); BRANCH=\"\"; if git rev-parse --git-dir >/dev/null 2>&1; then BRANCH=\" | 🌿 $(git branch --show-current 2>/dev/null)\"; fi; echo \"[$MODEL] 📁 ${DIR##*/}$BRANCH\"'"
+  }
+}

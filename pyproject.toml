@@ -5,7 +5,7 @@ description = "Project Abzu"
 authors = ["Russell Jurney <russell.jurney@gmail.com>"]
 license = "COMMERCIAL"
 readme = "README.md"
-packages = [{include = "abzu"}]
+packages = [{ include = "abzu" }]
 
 [tool.poetry.urls]
 "Code Repository" = "https://github.com/Graphlet-AI/abzu"
@@ -13,12 +13,12 @@ packages = [{include = "abzu"}]
 
 [tool.poetry.scripts]
 process-articles = "abzu.cli.process_articles:main"
-abzu = "abzu.cli:main"
+abzu = "abzu.cli.click_cli:main"
 
 [tool.poetry.dependencies]
 python = "3.12.*"
 scrapy = "^2.12.0"
-baml-py = "^0.83.0"
+baml-py = "0.213.0"
 pyspark = "^3.5.5"
 python-dateutil = "^2.9.0.post0"
 pydantic = "^2.11.3"
@@ -29,11 +29,39 @@ seaborn = "^0.13.2"
 networkx = "^3.4.2"
 matplotlib = "^3.10.1"
 graphframes-latest = "^0.8.3"
+requests = "^2.32.3"
+cleanco = "^2.2.0"
+click = "^8.1.8"
+langchain = "^0.3.24"
+langchain-community = "^0.3.23"
+openai = "^1.76.2"
+tqdm = "^4.66.1"
+kuzu = "^0.9.0"
+feedparser = "^6.0.11"
+browsercookie = "^0.8.1"
+cloudscraper = "^1.2.71"
+pydantic-ai = "^0.2.4"
+pynacl = "^1.5.0"
+discord-py = "^2.5.2"
+arxiv = "^2.2.0"
+anthropic = "^0.51.0"
+lxml = "^5.4.0"
+praw = "^7.8.1"
+sentence-transformers = "^5.0.0"
+dapr = "^1.15.0"
+wikipedia = "^1.4.0"
+mwparserfromhell = "^0.7.2"
+markdown = "^3.8.2"
+aiohttp = "^3.12.15"
+marimo = "^0.14.17"
+stop-words = "^2018.7.23"
+playwright = "^1.54.0"
+sparkdantic = {git = "https://github.com/Graphlet-AI/sparkdantic.git", rev = "fix-forward-references"}
+wandb = "0.23.0"
 
 [tool.poetry.group.dev.dependencies]
-flake8 = "^7.1.1"
+flake8 = "^7.2.0"
 isort = "^5.13.2"
-mypy = "^1.14.0"
 pytest = "^8.3.4"
 ipython = "^8.31.0"
 pandas-stubs = "^2.2.3.241126"
@@ -43,6 +71,14 @@ jupyter-black = "^0.4.0"
 pre-commit = "^4.1.0"
 jupyter = "^1.1.1"
 nbdime = "^4.0.2"
+types-requests = "^2.32.0.20250328"
+flake8-pyproject = "^1.2.3"
+poetry-types = "^0.6.0"
+types-beautifulsoup4 = "^4.12.0.20250204"
+pytest-asyncio = "^1.0.0"
+types-pyyaml = "^6.0.12.20250822"
+pytest-xdist = "^3.8.0"
+zuban = "^0.0.24"
 
 [build-system]
 requires = ["poetry-core"]
@@ -59,28 +95,67 @@ priority = "supplemental"
 
 [tool.black]
 line-length = 100
-target-version = ["py312"]
-include = ["abzu", "tests"]
-
-[tool.flake8]
-max-line-length = 100
+target-version = ["py311"]
 
 [tool.isort]
 profile = "black"
 src_paths = ["abzu", "tests"]
 
-[tool.mypy]
+[tool.zuban]
 python_version = "3.12"
-mypy_path = ["abzu", "tests"]
+files = ["abzu"]
+exclude = ["abzu/baml_client", "tests"]
 warn_return_any = true
 warn_unused_configs = true
-warn_redundant_casts = true
-warn_unused_ignores = true
+disallow_untyped_defs = true
+disallow_any_generics = true
+check_untyped_defs = true
+ignore_missing_imports = true
+warn_unreachable = false
+
+[[tool.zuban.overrides]]
+module = "abzu.baml_client"
+ignore_errors = true
 ignore_missing_imports = true
 
-[[tool.mypy.overrides]]
+[[tool.zuban.overrides]]
 module = "abzu.baml_client.*"
 ignore_errors = true
 
-[tool.pytest]
-testpaths = ["tests"]
+[[tool.zuban.overrides]]
+module = "discord.*"
+ignore_missing_imports = true
+
+[[tool.zuban.overrides]]
+module = "notebooks.*"
+ignore_errors = true
+ignore_missing_imports = true
+
+[tool.flake8]
+max-line-length = 100
+docstring-convention = "numpy"
+format-greedy = 2
+inline-quotes = "double"
+multiline-quotes = "double"
+min_python_version = "3.12.11"
+ignore = ["E203", "E266", "E501", "W503", "C901", "E712"]
+extend-ignore = ["E203", "E266", "E501", "W503", "C901", "E712"]
+exclude = [
+    ".git",
+    "__pycache__",
+    "build",
+    "dist",
+    ".venv",
+    "venv",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ipynb_checkpoints",
+    "docs/source/conf.py",
+    "abzu/baml_client",
+    "tests/data",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "strict"
+asyncio_default_fixture_loop_scope = "function"
+include = ["tests"]

@@ -1,0 +1,208 @@
+base_dir: "data"
+
+logs:
+  file:
+    path: "logs"
+
+crawl:
+  tickers: "${base_dir}/sec/company_tickers.json"
+
+  ignore:
+    - "wsj.com"
+    - "github.com"
+    - "stocktwits.com"
+    - "x.com"
+    - "linkedin.com"
+    - "docs.google.com"
+
+  playwright:
+    browser_type: "chromium"  # Options: chromium, firefox, webkit
+    headless: true
+    timeout: 30  # Page load timeout in seconds
+    max_retries: 3
+    viewport:
+      width: 1920
+      height: 1080
+
+  spider:
+    config:
+      COOKIES_ENABLED: false
+      RETRY_ENABLED: true
+      RETRY_TIMES: 3
+      AUTOTHROTTLE_ENABLED: true
+      AUTOTHROTTLE_START_DELAY: 1.0
+      AUTOTHROTTLE_MAX_DELAY: 10.0
+      DOWNLOAD_TIMEOUT: 30
+      DOWNLOAD_DELAY: 2.0
+      RANDOMIZE_DOWNLOAD_DELAY: true
+      CONCURRENT_REQUESTS: 1
+      CONCURRENT_REQUESTS_PER_DOMAIN: 1
+      LOG_ENABLED: true
+      LOG_LEVEL: "INFO"
+      LOG_FORMAT: "%(levelname)s: %(message)s"
+
+  semianalysis:
+    output: "${base_dir}/articles/semianalysis.jsonl"
+
+  theinformation:
+    output: "${base_dir}/articles/theinformation.jsonl"
+
+  dcbyte:
+    output: "${base_dir}/articles/dcbyte.jsonl"
+
+  datacenter:
+    output: "${base_dir}/articles/datacenter.jsonl"
+
+  rss:
+    feeds:
+      any-silicon: "https://anysilicon.com/feed/"
+      ee-journal: "https://www.eejournal.com/category/semiconductor/feed/"
+      ee-times: "https://www.eetimes.com/tag/semiconductors/feed/"
+      fabricated-knowledge: "https://www.fabricatedknowledge.com/feed"
+      ieee-spectrum-semi: "https://spectrum.ieee.org/feeds/topic/semiconductors.rss"
+      neutron-bytes: "https://neutronbytes.com/feed/"
+      new-atlas: "https://newatlas.com/robotics/index.rss"
+      nvidia-blog: "https://developer.nvidia.com/blog/rss"
+      nvidia-corp: "https://feeds.feedburner.com/nvidiablog"
+      planet-analog: "https://www.planetanalog.com/feed/"
+      robohub: "https://robohub.org/feed/"
+      robotics-tomorrow-news: "https://www.roboticstomorrow.com/rss/news/"
+      robotics-tomorrow-robotics: "https://www.roboticstomorrow.com/rss/robotics/"
+      semi-engineering: "https://semiengineering.com/feed"
+      semi-today-features: "https://www.semiconductor-today.com/rss/features.xml"
+      techcrunch: "https://techcrunch.com/feed/"
+      techxplore: "https://techxplore.com/rss-feed/semiconductors-news/"
+      wired: "https://www.wired.com/feed/tag/ai/latest/rss"
+      wsj-markets: "https://feeds.content.dowjones.io/public/rss/RSSMarketsMain"
+      wsj-tech: "https://feeds.content.dowjones.io/public/rss/RSSWSJD"
+    output_dir: "${base_dir}/rss"
+    min_year: 2024
+
+  reddit:
+    input: "${crawl.tickers}"
+    output: "${base_dir}/reddit/reddit_posts.jsonl"
+
+process:
+  articles:
+    semianalysis:
+      input: "${crawl.semianalysis.output}"
+      output: "${base_dir}/articles/processed_semianalysis.jsonl"
+
+    datacenter:
+      input: "${crawl.datacenter.output}"
+      output: "${base_dir}/articles/processed_datacenter.jsonl"
+
+    theinformation:
+      input: "${crawl.theinformation.output}"
+      output: "${base_dir}/articles/processed_theinformation.jsonl"
+
+    dcbyte:
+      input: "${crawl.dcbyte.output}"
+      output: "${base_dir}/articles/processed_dcbyte.jsonl"
+
+    reddit:
+      input: "${crawl.reddit.output}"
+      output: "${base_dir}/reddit/processed_reddit_posts.jsonl"
+
+  rss:
+    input_dir: "${crawl.rss.output_dir}"
+    output_dir: "${base_dir}/rss/processed"
+
+  kg:
+    raw:
+      input:
+        - "${process.articles.dcbyte.output}"
+        - "${process.articles.datacenter.output}"
+        # - "${process.articles.reddit.output}"
+        - "${process.articles.semianalysis.output}"
+        - "${process.articles.theinformation.output}"
+        - "${process.rss.output_dir}/processed_any-silicon.jsonl"
+        - "${process.rss.output_dir}/processed_ee-journal.jsonl"
+        # - "${process.rss.output_dir}/processed_ee-times.jsonl"
+        - "${process.rss.output_dir}/processed_fabricated-knowledge.jsonl"
+        - "${process.rss.output_dir}/processed_ieee-spectrum-semi.jsonl"
+        - "${process.rss.output_dir}/processed_neutron-bytes.jsonl"
+        - "${process.rss.output_dir}/processed_new-atlas.jsonl"
+        - "${process.rss.output_dir}/processed_nvidia-blog.jsonl"
+        - "${process.rss.output_dir}/processed_nvidia-corp.jsonl"
+        - "${process.rss.output_dir}/processed_planet-analog.jsonl"
+        - "${process.rss.output_dir}/processed_robohub.jsonl"
+        - "${process.rss.output_dir}/processed_robotics-tomorrow-news.jsonl"
+        - "${process.rss.output_dir}/processed_robotics-tomorrow-robotics.jsonl"
+        - "${process.rss.output_dir}/processed_semi-engineering.jsonl"
+        - "${process.rss.output_dir}/processed_semi-today-features.jsonl"
+        - "${process.rss.output_dir}/processed_techcrunch.jsonl"
+        - "${process.rss.output_dir}/processed_techxplore.jsonl"
+        - "${process.rss.output_dir}/processed_wired.jsonl"
+        - "${process.rss.output_dir}/processed_wsj-markets.jsonl"
+        - "${process.rss.output_dir}/processed_wsj-tech.jsonl"
+        # - "${chat.start.processed_articles}"
+      output: "${base_dir}/knowledge_graph"
+    
+    er:
+      paths:
+        input: "${process.kg.raw.output}/companies.jsonl"
+        output: "${base_dir}/er/"
+        # Names workflow paths (supports iterations and formats)
+        names:
+          # Use iteration subdirectories for multi-round processing
+          blocks_dir: "${base_dir}/er/iterations/{iteration}/"
+          blocks: "${base_dir}/er/iterations/{iteration}/all_blocks.{format}"
+          matches: "${base_dir}/er/iterations/{iteration}/matches.{format}"
+          eval: "${base_dir}/er/iterations/{iteration}/companies_resolved.{format}"
+      max_block_size: 50
+      iteration: 3
+
+    refine:
+      input:
+        companies: "${process.kg.er.paths.names.eval}"
+        relationships: "${process.kg.raw.output}/relationships.parquet"
+      output:
+        nodes: "${base_dir}/refined_knowledge_graph/nodes.parquet"
+        edges: "${base_dir}/refined_knowledge_graph/edges.parquet"
+
+chat:
+  start:
+    raw_articles: "${base_dir}/chat/raw_articles.jsonl"
+    processed_articles: "${base_dir}/chat/processed_articles.jsonl"
+
+api:
+  financialdatasets:
+    facts:
+      input: "${process.kg.raw.output}/tickers.parquet"
+      output: "${base_dir}/financialdatasets/facts.json"
+    metrics:
+      input: "${process.kg.raw.output}/tickers.parquet"
+      output: "${base_dir}/financialdatasets/metrics.json"
+    price:
+      input: "${process.kg.raw.output}/tickers.parquet"
+      output: "${base_dir}/financialdatasets/price.json"
+    tickers:
+      output: "${base_dir}/financialdatasets/tickers.json"
+
+  sec:
+    download:
+      tickers_file: "${process.kg.raw.output}/tickers.parquet"
+      output_dir: "${base_dir}/sec/tickers"
+      xbrl_files: "${base_dir}/sec/xbrl_files"
+      html_filings: "${base_dir}/sec/html_filings"
+      annual_reports: "${base_dir}/sec/annual_reports"
+      form_type: "10-Q"
+      ticker: null
+    annual_reports:
+      output:
+        jsonl: "${base_dir}/sec/annual_reports.jsonl"
+        parquet: "${base_dir}/sec/annual_reports.parquet"
+    build_kuzu:
+      output_dir: "${base_dir}/sec/kuzu"
+
+dump:
+  companies:
+    input: "${process.kg.refine.output}/companies.parquet"
+  products:
+    input: "${process.kg.refine.output}/products.parquet"
+  returns:
+    input: "${api.financialdatasets.price.output}"
+  tickers:
+    url: "https://www.sec.gov/files/company_tickers.json"
+    cache: "data/sec/company_tickers.json"

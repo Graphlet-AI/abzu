@@ -1,0 +1,83 @@
+"""
+Module for handling the pipeline steps functionality.
+"""
+
+import click
+
+from abzu.logs import get_logger
+
+logger = get_logger(__name__)
+
+
+def get_pipeline_steps() -> list[str]:
+    """
+    Get the ordered list of steps required to run the complete data pipeline.
+
+    Returns
+    -------
+    list[str]
+        List of command strings representing the pipeline steps.
+    """
+    return [
+        "baml-cli generate",
+        # Setup Discord bot authentication (one-time setup)
+        "abzu chat key",
+        "abzu chat auth",
+        # Run Discord bot to monitor channels for articles
+        "abzu chat start",
+        # Crawl semianalysis.com for articles
+        "abzu crawl semianalysis -b 10",
+        # Crawl theinformation.com for articles
+        "abzu crawl theinformation -b 10",
+        # Crawl generic RSS feeds defined in feeds.txt
+        "abzu crawl datacententer -b 10",
+        "abzu crawl rss -b 10",
+        # Crawl Reddit for relevant content
+        # "abzu crawl reddit -b 10",
+        # Process the collected articles
+        "abzu process articles semianalysis",
+        "abzu process articles theinformation",
+        "abzu process articles datacententer",
+        # Process the collected RSS articles
+        "abzu process rss",
+        # Build a separate node / edge list parquet file for each type of node / edge
+        "abzu process kg raw",
+        # Get available tickers from financial datasets
+        "abzu api financialdatasets tickers",
+        # Get financial data for companies extracted from knowledge graph
+        "abzu api financialdatasets facts",
+        "abzu api financialdatasets metrics",
+        # Get financial metrics for key companies
+        # "abzu api financialdatasets metrics --file -P annual -l 5",
+        # Get historical price data for all tickers extracted from the knowledge graph
+        # "abzu api financialdatasets price --file -s 2025-01-01 -e <today> -i day",
+        # Summarize best performing stocks
+        # "abzu dump returns -f data/financialdatasets/price.json",
+        # Download SEC filings for companies
+        "abzu api sec download",
+        # Download annual reports for key companies (optional - specify ticker and year)
+        # "abzu api sec annual-report --ticker <TICKER> --year <YEAR>",
+        # Process annual reports from tickers in bulk using BFS
+        "abzu api sec annual-reports bulk",
+        # Build a Kuzu graph from processed annual reports
+        "abzu api sec annual-reports build kuzu",
+        # Build a single node / edge list in GraphFrames format
+        "abzu process kg refine",
+        # List all products found in the refined knowledge graph
+        "abzu dump products -f data/refined_knowledge_graph/products.parquet",
+        # List all companies found in the refined knowledge graph
+        "abzu dump companies -f data/refined_knowledge_graph/companies.parquet",
+        # Dump company ticker resolution data
+        "abzu dump company-ticker-resolution",
+    ]
+
+
+def print_pipeline_steps() -> None:
+    """
+    Print the ordered list of steps required to run the complete data pipeline.
+    """
+    steps = get_pipeline_steps()
+
+    click.echo("Complete Pipeline Steps:")
+    for idx, step in enumerate(steps, 1):
+        click.echo(f"{idx}. Run '{step}'")

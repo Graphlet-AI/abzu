@@ -12,10 +12,10 @@ generator target {
 
     // The version of the BAML package you have installed (e.g. same version as your baml-py or @boundaryml/baml).
     // The BAML VSCode extension version should also match this version.
-    version "0.83.0"
-
+    version "0.213.0"
     // Valid values: "sync", "async"
     // This controls what `b.FunctionName()` will be (sync or async).
-    default_client_mode sync
-}
+    default_client_mode async
 
+    on_generate "black . && isort ."
+}

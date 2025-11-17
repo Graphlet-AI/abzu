@@ -1,0 +1,42 @@
+{
+    "mcpServers": {
+        "applescript-mcp": {
+            "type": "stdio",
+            "command": "npx",
+            "args": [
+                "@peakmojo/applescript-mcp"
+            ],
+            "env": { }
+        },
+        "kuzu": {
+            "command": "docker",
+            "args": [
+                "run",
+                "-v",
+                "/Users/rjurney/weave/data/kuzu/db:/database",
+                "--rm",
+                "-i",
+                "kuzudb/mcp-server"
+            ]
+        },
+        "github": {
+            "type": "http",
+            "url": "https://api.githubcopilot.com/mcp",
+            "headers": {
+                "Authorization": "Bearer YOUR_GITHUB"
+            }
+        },
+        "passage-of-time-mcp": {
+            "command": "npx",
+            "args": [
+                "mcp-remote",
+                "https://localhost/sse",
+                "--transport",
+                "sse-only"
+            ],
+            "env": {
+                "NODE_TLS_REJECT_UNAUTHORIZED": "0"
+            }
+        }
+    }
+}

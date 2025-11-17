@@ -1,0 +1,37 @@
+{
+    "mcpServers": {
+        "applescript-mcp": {
+            "type": "stdio",
+            "command": "npx",
+            "args": [
+                "@peakmojo/applescript-mcp"
+            ],
+            "env": { }
+        },
+        "kuzu": {
+            "command": "docker",
+            "args": [
+                "run",
+                "-v",
+                "{Absolute path to weave project}/data/kuzu/db:/database",
+                "--rm",
+                "-i",
+                "kuzudb/mcp-server"
+            ]
+        },
+        "github": {
+            "command": "docker",
+            "args": [
+                "run",
+                "-i",
+                "--rm",
+                "-e",
+                "GITHUB_PERSONAL_ACCESS_TOKEN",
+                "ghcr.io/github/github-mcp-server"
+            ],
+            "env": {
+                "GITHUB_PERSONAL_ACCESS_TOKEN": "<YOUR_TOKEN>"
+            }
+        }
+    }
+}
