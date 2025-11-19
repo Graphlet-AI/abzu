@@ -212,19 +212,25 @@ async def process_block_with_uuid_mapping(
                 del comp_copy["match_skip_history"]
 
             # Replace UUIDs with integer IDs for BAML processing
-            comp_copy["id"] = mapper.add_uuid(comp_copy.get("uuid"))
+            comp_id = mapper.add_uuid(comp_copy.get("uuid"))
+            comp_copy["id"] = comp_id
             comp_copy["uuid"] = None
             comp_copy["source_ids"] = None
 
             # Map old source_uuids to source_ids
+            # IMPORTANT: Exclude the company's own ID from source_ids to prevent duplicates
             source_ids: list[int] = []
             if (
                 "source_uuids" in comp_copy
                 and isinstance(comp_copy["source_uuids"], list)
                 and len(comp_copy["source_uuids"]) > 0
             ):
-                # Map each source_uuid to an integer ID
-                source_ids = [mapper.add_uuid(uuid) for uuid in comp_copy["source_uuids"] if uuid]
+                # Map each source_uuid to an integer ID, excluding the company's own ID
+                source_ids = [
+                    mapped_id
+                    for uuid in comp_copy["source_uuids"]
+                    if uuid and (mapped_id := mapper.add_uuid(uuid)) != comp_id
+                ]
 
             # Handle ticker field - normalize to dict format
             ticker_data = comp_copy.get("ticker")

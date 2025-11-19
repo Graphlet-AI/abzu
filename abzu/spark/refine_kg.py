@@ -90,7 +90,11 @@ def refine_knowledge_graph(
     )
 
     refined_edges_df.show(20, False)
-    print(f"Refined edges count: {refined_edges_df.count():,}")
+    print(f"Refined edges count (before distinct): {refined_edges_df.count():,}")
+
+    # Remove duplicate edges
+    refined_edges_df = refined_edges_df.distinct()
+    print(f"Refined edges count (after distinct): {refined_edges_df.count():,}")
 
     # Save the refined edges
     output_edges_path = output_paths["edges"]
