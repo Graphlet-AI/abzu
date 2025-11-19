@@ -240,7 +240,6 @@ def evaluate_er_matches(
         f"Total reduction (original → output): {total_reduction:,} companies ({total_reduction_pct:.2f}%)"
     )
 
-    # Verify that BAML-PROCESSED companies have new UUIDs (should be 0% overlap)
     # Skipped companies (singletons) will have original UUIDs, which is expected
     original_uuids = original_raw_companies_df.select("uuid").distinct()
     baml_uuids = baml_processed_df.select("uuid").distinct()
@@ -252,7 +251,7 @@ def evaluate_er_matches(
         else 0
     )
     logger.info(
-        f"UUID overlap with ORIGINAL (BAML-processed only): {overlapping_with_original:,} ({overlap_with_original_pct:.2f}%) - should be 0%"
+        f"UUID overlap with ORIGINAL (BAML-processed only): {overlapping_with_original:,} ({overlap_with_original_pct:.2f}%)"
     )
 
     # Check overlap with previous iteration
