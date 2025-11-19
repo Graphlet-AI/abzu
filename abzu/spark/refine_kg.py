@@ -113,8 +113,35 @@ def refine_knowledge_graph(
     ).drop("src")
     print(f"Total companies after filtering (degree > 0): {filtered_companies_df.count():,}")
 
-    # Save the nodes (companies with edges only)
+    # Deduplicate nodes - companies appear in multiple blocks with same UUID
+    print(f"Nodes before deduplication: {filtered_companies_df.count():,}")
+    deduplicated_nodes_df = filtered_companies_df.groupBy("uuid").agg(
+        # Keep first non-null value for scalar fields
+        F.first("name", ignorenulls=True).alias("name"),
+        F.first("cik", ignorenulls=True).alias("cik"),
+        F.first("description", ignorenulls=True).alias("description"),
+        F.first("ceo", ignorenulls=True).alias("ceo"),
+        F.first("employees", ignorenulls=True).alias("employees"),
+        F.first("founded_year", ignorenulls=True).alias("founded_year"),
+        F.first("headquarters_location", ignorenulls=True).alias("headquarters_location"),
+        F.first("jurisdiction", ignorenulls=True).alias("jurisdiction"),
+        F.first("linkedin_url", ignorenulls=True).alias("linkedin_url"),
+        F.first("revenue_usd", ignorenulls=True).alias("revenue_usd"),
+        F.first("website_url", ignorenulls=True).alias("website_url"),
+        F.first("ticker", ignorenulls=True).alias("ticker"),
+        # Union all source_uuids from duplicate records
+        F.array_distinct(F.flatten(F.collect_set("source_uuids"))).alias("source_uuids"),
+        # Union match_skip_history
+        F.array_distinct(F.flatten(F.collect_set("match_skip_history"))).alias(
+            "match_skip_history"
+        ),
+        # For match_skip: prefer false (matched) over true (skipped)
+        F.min("match_skip").alias("match_skip"),
+    )
+    print(f"Nodes after deduplication: {deduplicated_nodes_df.count():,}")
+
+    # Save the deduplicated nodes (companies with edges only)
     output_nodes_path = output_paths["nodes"]
     print(f"Saving nodes to: {output_nodes_path}")
-    filtered_companies_df.write.mode("overwrite").parquet(output_nodes_path)
+    deduplicated_nodes_df.write.mode("overwrite").parquet(output_nodes_path)
     logger.info(f"Refined knowledge graph nodes saved to: {output_nodes_path}")
