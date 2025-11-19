@@ -25,3 +25,4 @@ abzu/spark/README.html
 abzu/__pycache__
 */__pycache__
 scripts
+notebooks/__marimo__
