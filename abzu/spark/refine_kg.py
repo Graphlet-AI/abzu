@@ -99,8 +99,8 @@ def refine_knowledge_graph(
     logger.info(f"Refined knowledge graph edges saved to: {output_edges_path}")
 
     # Filter out companies with degree zero (no edges)
-    connected_src_nodes = refined_edges_df.select("src").distinct()
-    connected_dst_nodes = refined_edges_df.select(F.col("dst").alias("src")).distinct()
+    connected_src_nodes = refined_edges_df.select("src")
+    connected_dst_nodes = refined_edges_df.select(F.col("dst").alias("src"))
     connected_nodes = connected_src_nodes.union(connected_dst_nodes).distinct()
 
     print(f"Total companies before filtering: {companies_df.count():,}")
