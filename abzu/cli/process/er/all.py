@@ -104,7 +104,7 @@ def get_evaluation_metrics(eval_path: str, metrics_path: str) -> dict[str, int |
         if metrics_path_obj.exists():
             if metrics_path_obj.is_dir():
                 # Spark directory - read part file
-                part_files = list(metrics_path_obj.glob("part-*.json"))
+                part_files = sorted(list(metrics_path_obj.glob("part-*.json")))
                 if part_files:
                     with open(part_files[0]) as f:
                         metrics = json.load(f)
