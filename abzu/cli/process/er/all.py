@@ -17,12 +17,30 @@ logger = get_logger(__name__)
 def get_blocking_metrics(input_path: str, blocks_path: str) -> dict[str, int]:
     """Extract key metrics from blocking stage output."""
     try:
-        # Read input companies
-        input_df = pd.read_json(input_path, lines=True)
+        # Read input companies - handle both file and Spark directory
+        input_path_obj = Path(input_path)
+        if input_path_obj.is_dir():
+            # Spark directory - read all part files
+            part_files = list(input_path_obj.glob("part-*.json"))
+            if part_files:
+                input_df = pd.concat([pd.read_json(f, lines=True) for f in part_files])
+            else:
+                return {"input_companies": 0, "blocks_created": 0, "largest_block": 0}
+        else:
+            input_df = pd.read_json(input_path, lines=True)
         input_count = len(input_df)
 
-        # Read blocks
-        blocks_df = pd.read_json(blocks_path, lines=True)
+        # Read blocks - handle both file and Spark directory
+        blocks_path_obj = Path(blocks_path)
+        if blocks_path_obj.is_dir():
+            # Spark directory - read all part files
+            part_files = list(blocks_path_obj.glob("part-*.json"))
+            if part_files:
+                blocks_df = pd.concat([pd.read_json(f, lines=True) for f in part_files])
+            else:
+                return {"input_companies": input_count, "blocks_created": 0, "largest_block": 0}
+        else:
+            blocks_df = pd.read_json(blocks_path, lines=True)
         blocks_count = len(blocks_df)
 
         # Get largest block size
@@ -41,7 +59,17 @@ def get_blocking_metrics(input_path: str, blocks_path: str) -> dict[str, int]:
 def get_matching_metrics(matches_path: str) -> dict[str, int]:
     """Extract key metrics from matching stage output."""
     try:
-        matches_df = pd.read_json(matches_path, lines=True)
+        # Read matches - handle both file and Spark directory
+        matches_path_obj = Path(matches_path)
+        if matches_path_obj.is_dir():
+            # Spark directory - read all part files
+            part_files = list(matches_path_obj.glob("part-*.json"))
+            if part_files:
+                matches_df = pd.concat([pd.read_json(f, lines=True) for f in part_files])
+            else:
+                return {"blocks_processed": 0, "total_companies": 0, "skipped": 0}
+        else:
+            matches_df = pd.read_json(matches_path, lines=True)
         blocks_processed = len(matches_df)
 
         # Explode resolved companies to count them
@@ -72,19 +100,38 @@ def get_evaluation_metrics(eval_path: str, metrics_path: str) -> dict[str, int |
     """Extract key metrics from evaluation stage output."""
     try:
         # Try to read the metrics JSON file first (more accurate)
-        if Path(metrics_path).exists():
-            with open(metrics_path) as f:
-                metrics = json.load(f)
-                return {
-                    "original_companies": metrics.get("original_companies", {}).get("unique", 0),
-                    "final_companies": metrics.get("final_output", {}).get("total_companies", 0),
-                    "reduction_pct": metrics.get("final_output", {}).get(
-                        "total_reduction_pct", 0.0
-                    ),
-                }
+        metrics_path_obj = Path(metrics_path)
+        if metrics_path_obj.exists():
+            if metrics_path_obj.is_dir():
+                # Spark directory - read part file
+                part_files = list(metrics_path_obj.glob("part-*.json"))
+                if part_files:
+                    with open(part_files[0]) as f:
+                        metrics = json.load(f)
+                else:
+                    raise FileNotFoundError("No part files in metrics directory")
+            else:
+                # Single file
+                with open(metrics_path) as f:
+                    metrics = json.load(f)
+
+            return {
+                "original_companies": metrics.get("total_original_companies", 0),
+                "final_companies": metrics.get("total_output_companies", 0),
+                "reduction_pct": metrics.get("total_reduction_pct", 0.0),
+            }
 
         # Fallback: read the resolved companies file
-        eval_df = pd.read_json(eval_path, lines=True)
+        eval_path_obj = Path(eval_path)
+        if eval_path_obj.is_dir():
+            # Spark directory - read all part files
+            part_files = list(eval_path_obj.glob("part-*.json"))
+            if part_files:
+                eval_df = pd.concat([pd.read_json(f, lines=True) for f in part_files])
+            else:
+                return {"original_companies": 0, "final_companies": 0, "reduction_pct": 0.0}
+        else:
+            eval_df = pd.read_json(eval_path, lines=True)
         final_count = len(eval_df)
 
         return {
@@ -242,7 +289,8 @@ def all(
         eval_time = time.time() - eval_start
 
         # Extract and display evaluation metrics
-        metrics_path = eval_path.replace(".json", "_evaluation_metrics.json")
+        eval_dir = str(Path(eval_path).parent)
+        metrics_path = str(Path(eval_dir) / "er_evaluation_metrics.json")
         eval_metrics = get_evaluation_metrics(eval_path, metrics_path)
         click.echo(f"✓ Evaluation completed in {timedelta(seconds=int(eval_time))}")
         click.echo(f"  • Original companies: {eval_metrics['original_companies']:,}")
@@ -277,7 +325,7 @@ def all(
     click.echo(f"  - Blocks:      {blocks_path}")
     click.echo(f"  - Matches:     {matches_path}")
     click.echo(f"  - Resolved:    {eval_path}")
-    click.echo(f"  - Metrics:     {eval_path.replace('.json', '_evaluation_metrics.json')}")
+    click.echo(f"  - Metrics:     {metrics_path}")
     click.echo()
     click.echo("✓ Entity resolution cycle completed successfully!")
     click.echo("=" * 80)

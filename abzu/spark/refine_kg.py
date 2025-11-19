@@ -98,8 +98,19 @@ def refine_knowledge_graph(
     refined_edges_df.write.mode("overwrite").parquet(output_edges_path)
     logger.info(f"Refined knowledge graph edges saved to: {output_edges_path}")
 
-    # Save the nodes (companies)
+    # Filter out companies with degree zero (no edges)
+    connected_src_nodes = refined_edges_df.select("src").distinct()
+    connected_dst_nodes = refined_edges_df.select(F.col("dst").alias("src")).distinct()
+    connected_nodes = connected_src_nodes.union(connected_dst_nodes).distinct()
+
+    print(f"Total companies before filtering: {companies_df.count():,}")
+    filtered_companies_df = companies_df.join(
+        connected_nodes, companies_df.uuid == connected_nodes.src, how="inner"
+    ).drop("src")
+    print(f"Total companies after filtering (degree > 0): {filtered_companies_df.count():,}")
+
+    # Save the nodes (companies with edges only)
     output_nodes_path = output_paths["nodes"]
     print(f"Saving nodes to: {output_nodes_path}")
-    companies_df.write.mode("overwrite").parquet(output_nodes_path)
+    filtered_companies_df.write.mode("overwrite").parquet(output_nodes_path)
     logger.info(f"Refined knowledge graph nodes saved to: {output_nodes_path}")
