@@ -22,7 +22,6 @@ class OrderedLazyGroup(click.Group):
             "match",
             "eval",
             "clean",
-            "stage",
         ]
 
     def get_command(self, ctx: click.Context, name: str) -> click.Command | None:
@@ -42,7 +41,6 @@ class OrderedLazyGroup(click.Group):
         "match": "abzu.cli.process.er.match:match",
         "eval": "abzu.cli.process.er.eval:eval",
         "clean": "abzu.cli.process.er.clean:clean",
-        "stage": "abzu.cli.process.er.stage:stage",
     },
 )
 def er() -> None:
