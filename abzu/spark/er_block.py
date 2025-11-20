@@ -456,6 +456,12 @@ def build_blocks(
     acronym_only_blocks.createOrReplaceTempView("acronym_blocks_temp")
 
     # 4) Apply the UDTF using SQL with LATERAL syntax - only select UDTF output columns
+    # Count blocks before splitting
+    combined_blocks_before = combined_blocks.count()
+    first_word_blocks_before = first_word_only_blocks.count()
+    acronym_blocks_before = acronym_only_blocks.count()
+    total_blocks_before = combined_blocks_before + first_word_blocks_before + acronym_blocks_before
+
     combined_blocks_final = (
         spark.sql(
             """
@@ -488,6 +494,34 @@ def build_blocks(
         .orderBy(F.col("block_size"))
         .cache()
     )
+
+    # Count blocks after splitting
+    combined_blocks_after = combined_blocks_final.count()
+    first_word_blocks_after = first_word_blocks_final.count()
+    acronym_blocks_after = acronym_blocks_final.count()
+    total_blocks_after = combined_blocks_after + first_word_blocks_after + acronym_blocks_after
+
+    # Report on block splitting
+    total_sub_blocks_created = total_blocks_after - total_blocks_before
+    if total_sub_blocks_created > 0:
+        logger.info(
+            f"Block splitting created {total_sub_blocks_created:,} additional sub-blocks "
+            f"({total_blocks_before:,} → {total_blocks_after:,})"
+        )
+        logger.info(
+            f"  Combined blocks: {combined_blocks_before:,} → {combined_blocks_after:,} "
+            f"(+{combined_blocks_after - combined_blocks_before:,})"
+        )
+        logger.info(
+            f"  First-word blocks: {first_word_blocks_before:,} → {first_word_blocks_after:,} "
+            f"(+{first_word_blocks_after - first_word_blocks_before:,})"
+        )
+        logger.info(
+            f"  Acronym blocks: {acronym_blocks_before:,} → {acronym_blocks_after:,} "
+            f"(+{acronym_blocks_after - acronym_blocks_before:,})"
+        )
+    else:
+        logger.info(f"No blocks exceeded max size of {actual_max_block_size}, no splitting needed")
 
     # Save combined blocks separately
     combined_blocks_json_path = os.path.join(output_path, "combined_blocks.json")
