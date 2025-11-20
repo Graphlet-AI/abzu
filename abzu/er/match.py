@@ -159,6 +159,19 @@ def match_entities(
     if min_block_size is not None or max_block_size is not None:
         logger.info(f"Block size range: {min_block_size or 'any'}:{max_block_size or 'any'}")
 
+    # Check if blocks file exists
+    if not Path(blocks_json_path).exists():
+        error_msg = (
+            f"Blocks file not found: {blocks_json_path}\n\n"
+            f"The matching step requires blocks from the blocking step.\n"
+            f"Please run the blocking step first:\n"
+            f"  abzu process er block names --iteration {iteration}\n\n"
+            f"Or run the complete pipeline:\n"
+            f"  abzu process er all names --iteration {iteration}"
+        )
+        logger.error(error_msg)
+        raise FileNotFoundError(error_msg)
+
     # Load blocks from JSON using PySpark to preserve Python lists
 
     # Create or get SparkSession

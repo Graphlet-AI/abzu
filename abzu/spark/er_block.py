@@ -76,6 +76,19 @@ def build_blocks(
             "There is an unsubstituted {format} in the output path. Remove {format} from the path."
         )
 
+    # Check if input file exists
+    if not os.path.exists(input_path):
+        error_msg = (
+            f"Companies file not found: {input_path}\n\n"
+            f"The blocking step requires company data.\n"
+            f"For iteration 1, please ensure you have run the KG raw processing step:\n"
+            f"  abzu process kg raw\n\n"
+            f"For iteration 2+, the previous iteration's resolved companies are used.\n"
+            f"Please ensure the previous iteration completed successfully."
+        )
+        logger.error(error_msg)
+        raise FileNotFoundError(error_msg)
+
     # Create SparkSession with appropriate configuration
     spark: SparkSession = get_spark_session(
         app_name="build_er_blocks",

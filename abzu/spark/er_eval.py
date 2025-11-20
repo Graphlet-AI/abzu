@@ -50,6 +50,30 @@ def evaluate_er_matches(
     # Format matches_path for reading (should have {iteration} and {format} placeholders)
     # Use JSON instead of Parquet because Parquet loses source_uuids
     matches_json_path = matches_path.format(iteration=iteration, format="json")
+
+    # Check if required input files exist
+    if not os.path.exists(matches_json_path):
+        error_msg = (
+            f"Matches file not found: {matches_json_path}\n\n"
+            f"The evaluation step requires matches from the matching step.\n"
+            f"Please run the matching step first:\n"
+            f"  abzu process er match names --iteration {iteration}\n\n"
+            f"Or run the complete pipeline:\n"
+            f"  abzu process er all names --iteration {iteration}"
+        )
+        logger.error(error_msg)
+        raise FileNotFoundError(error_msg)
+
+    if not os.path.exists(raw_companies_path):
+        error_msg = (
+            f"Raw companies file not found: {raw_companies_path}\n\n"
+            f"The evaluation step requires the original raw companies data.\n"
+            f"Please ensure you have run the KG raw processing step:\n"
+            f"  abzu process kg raw"
+        )
+        logger.error(error_msg)
+        raise FileNotFoundError(error_msg)
+
     logger.info(f"Loading matches from {matches_json_path}")
     matches_df: DataFrame = spark.read.json(matches_json_path)
 

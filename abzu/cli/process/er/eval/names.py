@@ -51,10 +51,14 @@ def names(
     # Import heavy Spark module only when command is executed
     from abzu.spark.er_eval import evaluate_er_matches
 
-    evaluate_er_matches(
-        matches_path=matches_path,
-        raw_companies_path=raw_companies_path,
-        output_path=output_path,
-        iteration=iteration,
-        local_mode=local_mode if local_mode else None,
-    )
+    try:
+        evaluate_er_matches(
+            matches_path=matches_path,
+            raw_companies_path=raw_companies_path,
+            output_path=output_path,
+            iteration=iteration,
+            local_mode=local_mode if local_mode else None,
+        )
+    except FileNotFoundError as e:
+        click.echo(str(e), err=True)
+        raise click.exceptions.Exit(1)

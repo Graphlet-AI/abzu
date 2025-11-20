@@ -82,12 +82,16 @@ def names(
             )
             return
 
-    match_entities(
-        blocks_path=blocks_path,
-        output_path=output_path,
-        iteration=iteration,
-        batch_size=batch_size,
-        limit=limit,
-        min_block_size=min_size,
-        max_block_size=max_size,
-    )
+    try:
+        match_entities(
+            blocks_path=blocks_path,
+            output_path=output_path,
+            iteration=iteration,
+            batch_size=batch_size,
+            limit=limit,
+            min_block_size=min_size,
+            max_block_size=max_size,
+        )
+    except FileNotFoundError as e:
+        click.echo(str(e), err=True)
+        raise click.exceptions.Exit(1)
