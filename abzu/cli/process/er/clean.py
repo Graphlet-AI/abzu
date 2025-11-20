@@ -77,6 +77,12 @@ def clean(base_path: str, iteration: int | None, dry_run: bool, force: bool) -> 
         for pattern in patterns_to_clean:
             files_to_delete.extend(base.glob(pattern))
 
+        # Clean test_blocks directory
+        test_blocks_path = base / "test_blocks"
+        if test_blocks_path.exists():
+            for pattern in patterns_to_clean:
+                files_to_delete.extend(test_blocks_path.glob(pattern))
+
         # Clean all iteration directories
         iterations_path = base / "iterations"
         if iterations_path.exists():
