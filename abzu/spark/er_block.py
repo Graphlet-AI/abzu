@@ -627,37 +627,78 @@ def build_blocks(
     original_first_word_count = first_word_only_blocks.count()
     original_acronym_count = acronym_only_blocks.count()
 
+    # Calculate additional metrics for summary
+    total_company_instances = (
+        combined_companies_count
+        + first_word_only_companies_count
+        + acronym_only_companies_count
+        + (unblocked_count if unblocked_count > 0 else 0)
+    )
+    duplication_factor = total_company_instances / total_companies if total_companies > 0 else 0
+
+    # Count singleton blocks accurately
+    singleton_blocks = 0
+    multi_company_blocks = 0
+    for block_type_df in [combined_blocks_final, first_word_blocks_final, acronym_blocks_final]:
+        if block_type_df is not None:
+            singleton_blocks += block_type_df.filter(F.col("block_size") == 1).count()
+            multi_company_blocks += block_type_df.filter(F.col("block_size") > 1).count()
+
+    logger.info("\n" + "=" * 60)
+    logger.info("ENTITY RESOLUTION BLOCKING SUMMARY")
     logger.info("=" * 60)
-    logger.info("ENTITY RESOLUTION BLOCKS CREATED")
-    logger.info("=" * 60)
-    logger.info(f"Total companies: {total_companies:,}")
-    logger.info("")
+    logger.info("WHAT IS BLOCKING?")
+    logger.info("  Groups similar companies together to reduce comparisons")
     logger.info(
-        f"Combined Blocks (overlapping keys): {combined_block_count:,} blocks with {combined_companies_count:,} companies"
+        f"  Without blocking: {total_companies:,} × {total_companies:,} = {total_companies * total_companies:,} comparisons"
+    )
+    logger.info(f"  With blocking: Only compare within {total_blocks:,} small blocks")
+    logger.info("")
+    logger.info("INPUT DATA:")
+    logger.info(f"  Total unique companies: {total_companies:,}")
+    logger.info("")
+    logger.info("BLOCKING STRATEGY RESULTS:")
+    logger.info(
+        f"  Combined Blocks (both strategies agree): {combined_block_count:,} blocks, {combined_companies_count:,} companies"
     )
     if combined_block_count != original_combined_count:
-        logger.info(f"  (Split from {original_combined_count:,} original blocks)")
-    logger.info(f"  Saved to: {combined_blocks_json_path}")
+        logger.info(
+            f"    └─ Split from {original_combined_count:,} original blocks (chunks > {actual_max_block_size})"
+        )
     logger.info(
-        f"First Word Only Blocks: {first_word_only_count:,} blocks with {first_word_only_companies_count:,} companies"
+        f"  First Word Only Blocks: {first_word_only_count:,} blocks, {first_word_only_companies_count:,} companies"
     )
     if first_word_only_count != original_first_word_count:
-        logger.info(f"  (Split from {original_first_word_count:,} original blocks)")
-    logger.info(f"  Saved to: {first_word_json_path}")
+        logger.info(f"    └─ Split from {original_first_word_count:,} original blocks")
     logger.info(
-        f"Acronym Only Blocks: {acronym_only_count:,} blocks with {acronym_only_companies_count:,} companies"
+        f"  Acronym Only Blocks: {acronym_only_count:,} blocks, {acronym_only_companies_count:,} companies"
     )
     if acronym_only_count != original_acronym_count:
-        logger.info(f"  (Split from {original_acronym_count:,} original blocks)")
-    logger.info(f"  Saved to: {acronym_json_path}")
+        logger.info(f"    └─ Split from {original_acronym_count:,} original blocks")
     if unblocked_count > 0:
         logger.info(
-            f"Unblocked Companies (singleton blocks): {unblocked_count:,} blocks with {unblocked_count:,} companies"
+            f"  Unblocked (no valid keys): {unblocked_count:,} singleton blocks, {unblocked_count:,} companies"
         )
-        logger.info("  (Companies with no valid block keys)")
+    logger.info("")
+    logger.info("BLOCK STATISTICS:")
+    logger.info(f"  Total blocks created: {total_blocks:,}")
     logger.info(
-        f"Total Blocks: {total_blocks:,} blocks (all blocks ≤ {actual_max_block_size} companies)"
+        f"  Singleton blocks (no match possible): {singleton_blocks:,} ({singleton_blocks / total_blocks * 100:.1f}%)"
     )
+    logger.info(
+        f"  Multi-company blocks (matchable): {multi_company_blocks:,} ({multi_company_blocks / total_blocks * 100:.1f}%)"
+    )
+    logger.info(f"  Maximum block size: {actual_max_block_size} companies")
+    logger.info(f"  Company instances across blocks: {total_company_instances:,}")
+    logger.info(
+        f"  Duplication factor: {duplication_factor:.2f}x (companies appear in multiple blocks)"
+    )
+    logger.info("")
+    logger.info("OUTPUT FILES:")
+    logger.info(f"  Combined blocks: {combined_blocks_json_path}")
+    logger.info(f"  First word blocks: {first_word_json_path}")
+    logger.info(f"  Acronym blocks: {acronym_json_path}")
+    logger.info(f"  All blocks unified: {all_blocks_json_path}")
     logger.info("=" * 60)
 
     # Clean up

@@ -149,6 +149,7 @@ def evaluate_er_matches(
     missing_uuid_recovery_count = 0
     missing_primary_uuid_count = 0
     missing_source_uuid_count = 0
+    singleton_block_count = 0
 
     if "match_skip_history" in resolved_companies_df.columns:
         # Count records by number of times skipped
@@ -205,6 +206,10 @@ def evaluate_er_matches(
 
             missing_source_uuid_count = resolved_companies_df.filter(
                 F.col("match_skip_reason") == "missing_source_uuid"  # type: ignore
+            ).count()
+
+            singleton_block_count = resolved_companies_df.filter(
+                F.col("match_skip_reason") == "singleton_block"  # type: ignore
             ).count()
 
     # Get counts for comparison - original raw first
@@ -464,76 +469,103 @@ def evaluate_er_matches(
     logger.info("\n" + "=" * 60)
     logger.info(f"ENTITY RESOLUTION EVALUATION SUMMARY - ITERATION {iteration}")
     logger.info("=" * 60)
-    logger.info(f"Original raw companies (before matching): {total_original_companies:,} unique")
-    logger.info(f"  Companies that went into matching: {companies_that_went_into_matching:,}")
-    logger.info(f"  Skipped (singletons/errors): {skipped_records:,}")
+    logger.info("WHAT IS EVALUATION?")
+    logger.info("  Validates matching results, tracks UUID lineage, and ensures no data loss")
+    logger.info("  Explodes resolved companies from blocks into final dataset")
     logger.info("")
-    logger.info("MATCHING RESULTS:")
-    logger.info(f"  BAML-processed companies: {unique_baml_processed:,} unique")
-    logger.info(
-        f"  Companies merged: {reduction_from_matching:,} ({reduction_from_matching_pct:.2f}%)"
-    )
-    logger.info(
-        f"  IDs dropped by BAML: {ids_dropped_by_baml:,} ({ids_dropped_pct:.2f}%) - recovered via UUID tracking"
-    )
-    logger.info("")
-    logger.info("FINAL OUTPUT:")
-    logger.info(
-        f"  Total companies: {total_output_companies:,} ({unique_baml_processed:,} matched + {skipped_records:,} skipped)"
-    )
+    logger.info("INPUT/OUTPUT SUMMARY:")
+    logger.info(f"  Original companies (before matching): {total_original_companies:,} unique")
+    logger.info(f"    ├─ Went into matching: {companies_that_went_into_matching:,}")
+    logger.info(f"    └─ Skipped (singletons/errors): {skipped_records:,}")
+    logger.info(f"  Final output companies: {total_output_companies:,} unique")
+    logger.info(f"    ├─ BAML-processed: {unique_baml_processed:,}")
+    logger.info(f"    └─ Pass-through (skipped): {skipped_records:,}")
     logger.info(f"  Total reduction: {total_reduction:,} companies ({total_reduction_pct:.2f}%)")
     logger.info("")
-    logger.info("UUID VERIFICATION (BAML-processed companies only):")
+    logger.info("MATCHING EFFECTIVENESS:")
     logger.info(
-        f"  Overlap with original: {overlapping_with_original:,} UUIDs ({overlap_with_original_pct:.2f}%) - should be 0%"
+        f"  Companies merged by BAML: {reduction_from_matching:,} / {companies_that_went_into_matching:,} ({reduction_from_matching_pct:.2f}%)"
     )
-    if previous_iteration_df is not None:
-        logger.info(
-            f"  Overlap with previous: {overlapping_with_prev:,} UUIDs ({overlap_with_prev_pct:.2f}%) - should be 0%"
-        )
+    logger.info(
+        f"  IDs dropped by BAML: {ids_dropped_by_baml:,} ({ids_dropped_pct:.2f}%) → recovered via UUID tracking ✓"
+    )
     logger.info("")
-    logger.info("SOURCE UUID COVERAGE:")
+    logger.info("UUID VERIFICATION:")
+    uuid_status = "✓ PASS" if overlap_with_original_pct < 1.0 else "✗ FAIL"
     logger.info(
-        f"  Original companies tracked: {tracked_original_uuids:,}/{unique_original_companies:,} ({original_coverage_pct:.2f}%)"
+        f"  BAML-processed companies vs original: {overlapping_with_original:,} overlap ({overlap_with_original_pct:.2f}%) {uuid_status}"
+    )
+    logger.info("    └─ Should be 0% (new UUIDs for resolved companies)")
+    if previous_iteration_df is not None:
+        prev_uuid_status = "✓ PASS" if overlap_with_prev_pct < 1.0 else "✗ FAIL"
+        logger.info(
+            f"  BAML-processed companies vs previous iteration: {overlapping_with_prev:,} overlap ({overlap_with_prev_pct:.2f}%) {prev_uuid_status}"
+        )
+        logger.info("    └─ Should be 0% (new UUIDs each iteration)")
+    logger.info("")
+    logger.info("SOURCE UUID TRACKING:")
+    logger.info(f"  Total unique source_uuids: {unique_source_uuids:,}")
+    logger.info(
+        f"  Total source_uuid references: {total_source_uuid_refs:,} (avg {total_source_uuid_refs / total_output_companies:.1f} per company)"
+    )
+    coverage_status = "✓ PASS" if original_coverage_pct >= 99.99 else "✗ FAIL"
+    logger.info(
+        f"  Original companies tracked: {tracked_original_uuids:,} / {unique_original_companies:,} ({original_coverage_pct:.2f}%) {coverage_status}"
     )
     if previous_iteration_df is not None:
         logger.info(
-            f"  Previous iteration tracked: {tracked_prev_uuids:,}/{unique_prev_companies:,} ({prev_coverage_pct:.2f}%)"
+            f"  Previous iteration tracked: {tracked_prev_uuids:,} / {unique_prev_companies:,} ({prev_coverage_pct:.2f}%)"
         )
-    logger.info(f"  Total unique source_uuids: {unique_source_uuids:,}")
     logger.info("")
     logger.info("SOURCE UUID VALIDATION:")
+    validation_status = "✓ PASS" if error_percentage < 0.01 else "✗ FAIL"
     logger.info(
-        f"  Valid references: {valid_source_uuid_count:,}/{total_source_uuid_refs:,} ({100 - error_percentage:.2f}%)"
+        f"  Valid references: {valid_source_uuid_count:,} / {total_source_uuid_refs:,} ({100 - error_percentage:.2f}%) {validation_status}"
     )
-    logger.info(
-        f"  Invalid references: {invalid_source_uuid_count:,}/{total_source_uuid_refs:,} ({error_percentage:.2f}%)"
-    )
+    if invalid_source_uuid_count > 0:
+        logger.info(
+            f"  Invalid references: {invalid_source_uuid_count:,} / {total_source_uuid_refs:,} ({error_percentage:.2f}%)"
+        )
     logger.info("")
     logger.info("RECOVERY STATISTICS:")
-    logger.info(f"  Total recovered (match_skip=True): {skipped_records:,}")
-    logger.info(f"  BAML-processed records: {baml_processed_records:,}")
-    if "match_skip_history" in resolved_companies_df.columns:
-        logger.info(f"  Skipped in iteration {iteration}: {skipped_in_current:,}")
+    logger.info(f"  Skipped in iteration {iteration}: {skipped_in_current:,} / {total_records:,}")
     if "match_skip_reason" in resolved_companies_df.columns and skipped_records > 0:
-        logger.info("  Recovery reasons:")
-        logger.info(f"    - Error recovery: {error_recovery_count:,}")
+        logger.info("  Recovery breakdown:")
+        logger.info(f"    ├─ Singleton blocks: {singleton_block_count:,}")
+        if error_recovery_count > 0:
+            logger.info(f"    ├─ API error recovery: {error_recovery_count:,}")
         if missing_uuid_recovery_count > 0:
-            logger.info(f"    - Missing in match output (legacy): {missing_uuid_recovery_count:,}")
+            logger.info(f"    ├─ BAML dropped output: {missing_uuid_recovery_count:,}")
         if missing_primary_uuid_count > 0:
-            logger.info(f"    - Missing primary UUID: {missing_primary_uuid_count:,}")
+            logger.info(f"    ├─ Missing primary UUID: {missing_primary_uuid_count:,}")
         if missing_source_uuid_count > 0:
-            logger.info(f"    - Missing source UUID: {missing_source_uuid_count:,}")
+            logger.info(f"    └─ Missing source UUID: {missing_source_uuid_count:,}")
 
-    # Check if we achieved 100% coverage
-    if original_coverage_pct >= 99.99:
-        logger.info("")
-        logger.info("✓ SUCCESS: UUID recovery is working correctly!")
-        logger.info("  All original companies are tracked in source_uuids")
+    # Overall status assessment
+    logger.info("")
+    all_checks_pass = (
+        original_coverage_pct >= 99.99  # All original companies tracked
+        and error_percentage < 0.01  # No invalid UUID references
+        and overlap_with_original_pct < 1.0  # New UUIDs generated (if not, this is a bug)
+    )
+    if all_checks_pass:
+        logger.info("✓ SUCCESS: All validation checks passed!")
+        logger.info("  └─ UUID tracking working correctly")
+        logger.info("  └─ No data loss detected")
+        logger.info("  └─ Resolved companies have new UUIDs")
+    else:
+        logger.info("✗ WARNING: Some validation checks failed")
+        if original_coverage_pct < 99.99:
+            logger.info(f"  └─ Only {original_coverage_pct:.2f}% of original companies tracked")
+        if error_percentage >= 0.01:
+            logger.info(f"  └─ {error_percentage:.2f}% invalid UUID references detected")
+        if overlap_with_original_pct >= 1.0:
+            logger.info("  └─ Resolved companies reusing original UUIDs (BUG!)")
+    logger.info("")
+    logger.info("OUTPUT FILES:")
+    logger.info(f"  Resolved companies: {companies_resolved_json}")
+    logger.info(f"  Evaluation metrics: {metrics_json_path}")
     logger.info("=" * 60)
-    logger.info("Files saved:")
-    logger.info(f"  - {companies_resolved_json}")
-    logger.info(f"  - {metrics_json_path}")
 
     # Don't stop the SparkSession - let the caller manage its lifecycle
     # This is important for tests and when the function is called multiple times
