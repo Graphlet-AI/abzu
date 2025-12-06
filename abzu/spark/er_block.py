@@ -24,10 +24,12 @@ MAX_BLOCK_SIZE = config.get("process.kg.er.max_block_size", 50)
 
 @F.udf(T.StringType())
 def get_first_word(name: str) -> str | None:
-    """Extract first word if it's at least 1 character."""
+    """Extract first word if it's at least 1 character, removing domain suffixes."""
     if not name or not name.strip():
         return "UNKNOWN"  # Fallback for empty names
-    words = name.strip().split()
+    # Remove domain suffix (everything after and including first ".")
+    name_without_suffix = name.split(".")[0].strip()
+    words = name_without_suffix.split()
     return words[0].upper() if words else "UNKNOWN"
 
 
@@ -36,11 +38,13 @@ def get_acronym(name: str) -> str | None:
     """Generate acronyms from company names, fallback to first word if no acronym."""
     if not name or not name.strip():
         return "UNKNOWN"  # Fallback for empty names
-    acronym = get_acronyms(name)
+    # Remove domain suffix (everything after and including first ".")
+    name_without_suffix = name.split(".")[0].strip()
+    acronym = get_acronyms(name_without_suffix)
     if acronym:
         return acronym
     # Fallback to first word if no acronym can be generated
-    words = name.strip().split()
+    words = name_without_suffix.split()
     return words[0].upper() if words else "UNKNOWN"
 
 
@@ -641,8 +645,10 @@ def build_blocks(
     multi_company_blocks = 0
     for block_type_df in [combined_blocks_final, first_word_blocks_final, acronym_blocks_final]:
         if block_type_df is not None:
-            singleton_blocks += block_type_df.filter(F.col("block_size") == 1).count()
-            multi_company_blocks += block_type_df.filter(F.col("block_size") > 1).count()
+            singleton_blocks += block_type_df.filter(F.col("block_size") == F.lit(1)).count()
+            multi_company_blocks += block_type_df.filter(
+                F.col("block_size") > F.lit(1)  # type: ignore[call-arg,operator]
+            ).count()
 
     logger.info("\n" + "=" * 60)
     logger.info("ENTITY RESOLUTION BLOCKING SUMMARY")

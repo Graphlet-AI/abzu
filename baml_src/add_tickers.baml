@@ -69,7 +69,6 @@ test BasicTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
                     source_ids null
                     source_uuids null
                 }
@@ -85,7 +84,6 @@ test BasicTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
                     source_ids null
                     source_uuids null
                 }

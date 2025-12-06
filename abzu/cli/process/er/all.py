@@ -178,18 +178,20 @@ def all(
     batch_size: int,
     local_mode: bool,
 ) -> None:
-    """Run complete entity resolution cycle: block, match, and evaluate.
+    """Run complete entity resolution cycle: block, match, final, and evaluate.
 
     This command orchestrates the full ER pipeline:
     1. Block: Create similarity-based blocks of companies
     2. Match: Resolve entities within blocks using BAML
-    3. Eval: Evaluate results and generate metrics
+    3. Final: Deduplicate resolved companies by UUID using BAML
+    4. Eval: Evaluate results and generate metrics
 
     At the end, prints a comprehensive report of the entire cycle.
     """
     from abzu.er.match import match_entities
     from abzu.spark.er_block import build_blocks
     from abzu.spark.er_eval import evaluate_er_matches
+    from abzu.spark.er_final import deduplicate_resolved_companies
 
     cycle_start = time.time()
 
@@ -216,12 +218,15 @@ def all(
     matches_path = config.get("process.kg.er.paths.names.matches").format(
         iteration=iteration, format="json"
     )
+    final_path = config.get("process.kg.er.paths.names.final").format(
+        iteration=iteration, format="json"
+    )
     eval_path = config.get("process.kg.er.paths.names.eval").format(
         iteration=iteration, format="json"
     )
 
     # Step 1: Blocking
-    click.echo(f"[1/3] BLOCKING (max_block_size={max_block_size})")
+    click.echo(f"[1/4] BLOCKING (max_block_size={max_block_size})")
     click.echo("-" * 80)
     block_start = time.time()
 
@@ -246,7 +251,7 @@ def all(
         return
 
     # Step 2: Matching
-    click.echo(f"[2/3] MATCHING (batch_size={batch_size})")
+    click.echo(f"[2/4] MATCHING (batch_size={batch_size})")
     click.echo("-" * 80)
     match_start = time.time()
 
@@ -273,14 +278,42 @@ def all(
         click.echo(f"✗ Matching failed: {e}", err=True)
         return
 
-    # Step 3: Evaluation
-    click.echo("[3/3] EVALUATION")
+    # Step 3: Final Deduplication
+    click.echo(f"[3/4] FINAL DEDUPLICATION (batch_size={batch_size})")
+    click.echo("-" * 80)
+    final_start = time.time()
+
+    try:
+        final_metrics = deduplicate_resolved_companies(
+            matches_path=matches_path,
+            output_path=final_path,
+            iteration=iteration,
+            batch_size=batch_size,
+            local_mode=local_mode if local_mode else None,
+        )
+        final_time = time.time() - final_start
+
+        # Display final deduplication metrics
+        click.echo(f"✓ Final deduplication completed in {timedelta(seconds=int(final_time))}")
+        click.echo(f"  • Input records:     {final_metrics['input_count']:,}")
+        click.echo(f"  • Duplicates found:  {final_metrics['duplicate_count']:,}")
+        click.echo(f"  • Output records:    {final_metrics['output_count']:,}")
+        if final_metrics["input_count"] > 0:
+            reduction_pct = final_metrics["duplicate_count"] / final_metrics["input_count"] * 100
+            click.echo(f"  • Reduction:         {reduction_pct:.2f}%")
+        click.echo()
+    except Exception as e:
+        click.echo(f"✗ Final deduplication failed: {e}", err=True)
+        return
+
+    # Step 4: Evaluation
+    click.echo("[4/4] EVALUATION")
     click.echo("-" * 80)
     eval_start = time.time()
 
     try:
         evaluate_er_matches(
-            matches_path=matches_path,
+            matches_path=final_path,
             raw_companies_path=config.get("process.kg.er.paths.input"),
             output_path=eval_path,
             iteration=iteration,
@@ -308,6 +341,7 @@ def all(
     # Calculate stage-specific metrics
     block_throughput = block_metrics["input_companies"] / block_time if block_time > 0 else 0
     match_throughput = match_metrics["blocks_processed"] / match_time if match_time > 0 else 0
+    final_throughput = final_metrics["input_count"] / final_time if final_time > 0 else 0
 
     click.echo("\n" + "=" * 80)
     click.echo(f"ENTITY RESOLUTION CYCLE SUMMARY - ITERATION {iteration}")
@@ -316,7 +350,8 @@ def all(
     click.echo("WHAT HAPPENED:")
     click.echo("  1. BLOCKING: Grouped similar companies into blocks for efficient comparison")
     click.echo("  2. MATCHING: Used BAML/LLM to identify duplicates within each block")
-    click.echo("  3. EVALUATION: Validated results and tracked UUID lineage")
+    click.echo("  3. FINAL DEDUPLICATION: Merged duplicate UUIDs across blocks using BAML")
+    click.echo("  4. EVALUATION: Validated results and tracked UUID lineage")
     click.echo()
     click.echo("OVERALL PIPELINE RESULTS:")
     click.echo(f"  Input:  {eval_metrics['original_companies']:,} companies")
@@ -338,7 +373,16 @@ def all(
     click.echo(f"     • Singletons/skipped: {match_metrics['skipped']:,}")
     click.echo(f"     • Throughput: {match_throughput:,.0f} blocks/sec")
     click.echo()
-    click.echo(f"  3. Evaluation ({timedelta(seconds=int(eval_time))}):")
+    click.echo(f"  3. Final Deduplication ({timedelta(seconds=int(final_time))}):")
+    click.echo(f"     • Input records: {final_metrics['input_count']:,}")
+    click.echo(f"     • Duplicates merged: {final_metrics['duplicate_count']:,}")
+    click.echo(f"     • Output records: {final_metrics['output_count']:,}")
+    if final_metrics["input_count"] > 0:
+        final_reduction_pct = final_metrics["duplicate_count"] / final_metrics["input_count"] * 100
+        click.echo(f"     • Reduction: {final_reduction_pct:.2f}%")
+    click.echo(f"     • Throughput: {final_throughput:,.0f} records/sec")
+    click.echo()
+    click.echo(f"  4. Evaluation ({timedelta(seconds=int(eval_time))}):")
     click.echo(f"     • Validated {eval_metrics['final_companies']:,} resolved companies")
     click.echo("     • Source UUID tracking: 100% coverage")
     click.echo("     • Data integrity: PASS ✓")
@@ -347,20 +391,24 @@ def all(
     click.echo(f"  Total cycle time: {timedelta(seconds=int(cycle_time))}")
     click.echo("  Time per stage:")
     click.echo(
-        f"    ├─ Blocking:   {timedelta(seconds=int(block_time))} ({block_time / cycle_time * 100:.1f}%)"
+        f"    ├─ Blocking:      {timedelta(seconds=int(block_time))} ({block_time / cycle_time * 100:.1f}%)"
     )
     click.echo(
-        f"    ├─ Matching:   {timedelta(seconds=int(match_time))} ({match_time / cycle_time * 100:.1f}%)"
+        f"    ├─ Matching:      {timedelta(seconds=int(match_time))} ({match_time / cycle_time * 100:.1f}%)"
     )
     click.echo(
-        f"    └─ Evaluation: {timedelta(seconds=int(eval_time))} ({eval_time / cycle_time * 100:.1f}%)"
+        f"    ├─ Final Dedup:   {timedelta(seconds=int(final_time))} ({final_time / cycle_time * 100:.1f}%)"
+    )
+    click.echo(
+        f"    └─ Evaluation:    {timedelta(seconds=int(eval_time))} ({eval_time / cycle_time * 100:.1f}%)"
     )
     click.echo()
     click.echo("OUTPUT FILES:")
-    click.echo(f"  Blocks:            {blocks_path}")
-    click.echo(f"  Matches:           {matches_path}")
-    click.echo(f"  Resolved companies: {eval_path}")
-    click.echo(f"  Evaluation metrics: {metrics_path}")
+    click.echo(f"  Blocks:             {blocks_path}")
+    click.echo(f"  Matches:            {matches_path}")
+    click.echo(f"  Final (deduplicated): {final_path}")
+    click.echo(f"  Resolved companies:  {eval_path}")
+    click.echo(f"  Evaluation metrics:  {metrics_path}")
     click.echo()
     click.echo("✓ Entity resolution cycle completed successfully!")
     click.echo(

@@ -16,9 +16,9 @@ from abzu.config import config
 @click.option(
     "--matches-path",
     "-m",
-    default=config.get("process.kg.er.paths.names.matches"),
+    default=config.get("process.kg.er.paths.names.final"),
     type=click.Path(exists=False, file_okay=True, dir_okay=True),
-    help="Path to names matches file (with {format} placeholder)",
+    help="Path to deduplicated companies file (with {format} placeholder)",
 )
 @click.option(
     "--raw-companies-path",

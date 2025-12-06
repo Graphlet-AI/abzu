@@ -54,6 +54,8 @@ def clean(base_path: str, iteration: int | None, dry_run: bool, force: bool) -> 
         "*_backup_*.parquet",  # All backup parquet files
         "*_backup_*.json",  # All backup json files
         "*_backup_*.jsonl",  # All backup jsonl files
+        "companies_final.parquet",
+        "companies_final.json",
         "companies_resolved.parquet",
         "companies_resolved.json",
         "er_evaluation_metrics.parquet",

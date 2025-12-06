@@ -20,6 +20,7 @@ class OrderedLazyGroup(click.Group):
             "all",
             "block",
             "match",
+            "final",
             "eval",
             "clean",
         ]
@@ -29,7 +30,7 @@ class OrderedLazyGroup(click.Group):
             import_path = self.lazy_subcommands[name]
             module_name, attr_name = import_path.rsplit(":", 1)
             module = __import__(module_name, fromlist=[attr_name])
-            return getattr(module, attr_name)
+            return getattr(module, attr_name)  # type: ignore[no-any-return]
         return None
 
 
@@ -39,6 +40,7 @@ class OrderedLazyGroup(click.Group):
         "all": "abzu.cli.process.er.all:all",
         "block": "abzu.cli.process.er.block:block",
         "match": "abzu.cli.process.er.match:match",
+        "final": "abzu.cli.process.er.final:final",
         "eval": "abzu.cli.process.er.eval:eval",
         "clean": "abzu.cli.process.er.clean:clean",
     },

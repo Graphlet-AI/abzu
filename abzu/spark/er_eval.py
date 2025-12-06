@@ -15,7 +15,7 @@ logger = get_logger(__name__)
 
 
 def evaluate_er_matches(
-    matches_path: str = config.get("process.kg.er.paths.names.matches"),
+    matches_path: str = config.get("process.kg.er.paths.names.final"),
     raw_companies_path: str = os.path.join(
         config.get("process.kg.raw.output"), "companies.parquet"
     ),
@@ -35,7 +35,7 @@ def evaluate_er_matches(
     6. For iteration 2+, tracks coverage against both original and previous iteration
 
     Args:
-        matches_path: Path to the matches parquet file from ER matching
+        matches_path: Path to the final deduplicated companies file from ER final step
         raw_companies_path: Path to the ORIGINAL raw companies parquet file (iteration 0)
         output_path: Directory path to save evaluation results
         iteration: Iteration number (1, 2, 3, etc.)
@@ -54,10 +54,10 @@ def evaluate_er_matches(
     # Check if required input files exist
     if not os.path.exists(matches_json_path):
         error_msg = (
-            f"Matches file not found: {matches_json_path}\n\n"
-            f"The evaluation step requires matches from the matching step.\n"
-            f"Please run the matching step first:\n"
-            f"  abzu process er match names --iteration {iteration}\n\n"
+            f"Final deduplicated companies file not found: {matches_json_path}\n\n"
+            f"The evaluation step requires output from the final deduplication step.\n"
+            f"Please run the final deduplication step first:\n"
+            f"  abzu process er final --iteration {iteration}\n\n"
             f"Or run the complete pipeline:\n"
             f"  abzu process er all names --iteration {iteration}"
         )
@@ -118,16 +118,12 @@ def evaluate_er_matches(
 
     # Show sample of matches data
     if logger.isEnabledFor(logging.DEBUG):
-        logger.info("Sample matches data:")
+        logger.info("Sample input data:")
         matches_df.show(3, truncate=False)
 
-    # Explode resolved companies from blocks, keeping block metadata
-    logger.info("Exploding resolved companies from blocks...")
-    resolved_companies_df = matches_df.select(
-        F.col("block_key").alias("match_block_key"),
-        F.col("block_key_type").alias("match_block_key_type"),
-        F.explode("resolved_companies").alias("company"),
-    ).select("match_block_key", "match_block_key_type", "company.*")
+    # Input is already exploded and deduplicated from final step
+    logger.info("Using deduplicated companies from final step...")
+    resolved_companies_df = matches_df
 
     # Split into BAML-processed vs skipped companies
     baml_processed_df = resolved_companies_df.filter(
