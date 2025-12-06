@@ -6,13 +6,13 @@ from typing import Optional
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame, SparkSession
 
+from abzu.er.match import match_entities
 from abzu.logs import get_logger
 from abzu.spark.config import get_spark_session
 from abzu.spark.er_block import (
     get_company_fields_without_blocks,
     normalize_company_dataframe,
 )
-from abzu.spark.er_match import match_companies_in_blocks
 
 logger = get_logger(__name__)
 
@@ -204,13 +204,12 @@ def deduplicate_resolved_companies(
     logger.info("Matching companies within UUID blocks...")
     uuid_matches_path = output_path.replace("companies_final", "uuid_matches")
 
-    match_companies_in_blocks(
+    match_entities(
         blocks_path=uuid_blocks_path,
         output_path=uuid_matches_path,
         iteration=iteration,
-        local_mode=local_mode,
         batch_size=batch_size,
-        num_rows=None,  # Process all
+        limit=None,  # Process all
     )
 
     # Step 3: Combine UUID-matched companies with original resolved companies
