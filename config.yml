@@ -149,6 +149,7 @@ process:
           blocks_dir: "${base_dir}/er/iterations/{iteration}/"
           blocks: "${base_dir}/er/iterations/{iteration}/all_blocks.{format}"
           matches: "${base_dir}/er/iterations/{iteration}/matches.{format}"
+          final: "${base_dir}/er/iterations/{iteration}/companies_final.{format}"
           eval: "${base_dir}/er/iterations/{iteration}/companies_resolved.{format}"
       max_block_size: 50
       iteration: 3
