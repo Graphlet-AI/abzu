@@ -16,6 +16,7 @@ from abzu.config import config
 from abzu.er.uuid import process_block_with_uuid_mapping
 from abzu.logs import get_logger
 from abzu.spark.config import get_spark_session
+from abzu.spark.schemas import validate_block_schema
 from abzu.utils import save_jsonl
 
 logger = get_logger(__name__)
@@ -83,6 +84,7 @@ async def process_blocks_async(
 
     # Process with progress bar
     results = []
+    pbar: Any
     with tqdm(total=len(tasks), desc="Processing blocks") as pbar:
         for coro in asyncio.as_completed(tasks):
             result = await coro
@@ -207,6 +209,10 @@ def match_entities(
         df["companies"] = df["companies"].apply(convert_row_to_dict)
 
     logger.info(f"Loaded {len(df)} blocks")
+
+    # Validate block schema - ensures block_size and other required fields are present
+    # This catches schema drift issues early, before they cause cryptic KeyErrors
+    validate_block_schema(df.columns.tolist())
 
     # Separate singleton blocks from multi-company blocks
     singleton_blocks = df[df["block_size"] == 1].copy()

@@ -82,6 +82,10 @@ crawl:
     input: "${crawl.tickers}"
     output: "${base_dir}/reddit/reddit_posts.jsonl"
 
+download:
+  walmart_amazon:
+    output_dir: "${base_dir}/datasets/walmart_amazon"
+
 process:
   articles:
     semianalysis:

@@ -9,7 +9,9 @@ from pyspark.sql import DataFrame, SparkSession
 from abzu.er.match import match_entities
 from abzu.logs import get_logger
 from abzu.spark.config import get_spark_session
-from abzu.spark.er_block import (
+from abzu.spark.schemas import (
+    BLOCK_FIELDS,
+    build_udtf_return_type,
     get_company_fields_without_blocks,
     normalize_company_dataframe,
 )
@@ -101,18 +103,9 @@ def build_uuid_blocks(
     # Split large blocks
     logger.info(f"Splitting blocks larger than {max_block_size}...")
 
-    # Build the UDTF returnType dynamically from the actual DataFrame schema
-    from pyspark.sql.types import ArrayType
-
-    companies_field = uuid_blocks_temp.schema["companies"]
-    companies_array_type = companies_field.dataType
-    assert isinstance(companies_array_type, ArrayType), "companies must be an ArrayType"
-    companies_schema = companies_array_type.elementType.simpleString()
-    udtf_return_type = (
-        f"block_key: string, block_key_type: string, "
-        f"companies: array<{companies_schema}>, "
-        f"company_count: long"
-    )
+    # Use centralized UDTF return type from schemas.py for consistency
+    # This ensures block_size field is always included (not company_count)
+    udtf_return_type = build_udtf_return_type()
 
     @F.udtf(returnType=udtf_return_type)  # type: ignore
     class SplitLargeBlocks:
@@ -148,11 +141,10 @@ def build_uuid_blocks(
     final_block_count = uuid_blocks.count()
     logger.info(f"Final UUID blocks after splitting: {final_block_count:,}")
 
-    # Save blocks
+    # Save blocks with canonical BLOCK_FIELDS from schemas.py
+    # The UDTF already returns block_size (not company_count) via build_udtf_return_type()
     logger.info(f"Saving UUID blocks to {output_path}")
-    uuid_blocks.select("block_key", "block_key_type", "companies").coalesce(1).write.mode(
-        "overwrite"
-    ).json(output_path)
+    uuid_blocks.select(*BLOCK_FIELDS).coalesce(1).write.mode("overwrite").json(output_path)
 
     logger.info("UUID blocking complete!")
 
