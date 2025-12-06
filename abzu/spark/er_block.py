@@ -528,19 +528,26 @@ def build_blocks(
         logger.info(f"No blocks exceeded max size of {actual_max_block_size}, no splitting needed")
 
     # Save combined blocks separately
+    # Use ignoreNullFields=false to preserve all Company fields even when null
     combined_blocks_json_path = os.path.join(output_path, "combined_blocks.json")
     logger.info(f"Persisting combined blocks to {combined_blocks_json_path}")
-    combined_blocks_final.repartition(1).write.mode("overwrite").json(combined_blocks_json_path)
+    combined_blocks_final.repartition(1).write.mode("overwrite").option(
+        "ignoreNullFields", "false"
+    ).json(combined_blocks_json_path)
 
     # Save first_word_only blocks separately
     first_word_json_path = os.path.join(output_path, "first_word_blocks.json")
     logger.info(f"Persisting first word blocks to {first_word_json_path}")
-    first_word_blocks_final.repartition(1).write.mode("overwrite").json(first_word_json_path)
+    first_word_blocks_final.repartition(1).write.mode("overwrite").option(
+        "ignoreNullFields", "false"
+    ).json(first_word_json_path)
 
     # Save acronym_only blocks separately
     acronym_json_path = os.path.join(output_path, "acronym_blocks.json")
     logger.info(f"Persisting acronym blocks to {acronym_json_path}")
-    acronym_blocks_final.repartition(1).write.mode("overwrite").json(acronym_json_path)
+    acronym_blocks_final.repartition(1).write.mode("overwrite").option(
+        "ignoreNullFields", "false"
+    ).json(acronym_json_path)
 
     # Handle companies with UNKNOWN block keys - create singleton blocks for them
     unblocked_blocks_df = None
@@ -583,7 +590,9 @@ def build_blocks(
     all_blocks_json_path = os.path.join(output_path, "all_blocks.json")
 
     logger.info(f"Persisting all blocks to {all_blocks_json_path}")
-    all_blocks_df.repartition(1).write.mode("overwrite").json(all_blocks_json_path)
+    all_blocks_df.repartition(1).write.mode("overwrite").option("ignoreNullFields", "false").json(
+        all_blocks_json_path
+    )
 
     # Count total blocks and companies in unified output
     all_blocks_count = all_blocks_df.count()

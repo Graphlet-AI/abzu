@@ -78,7 +78,9 @@ def build_uuid_blocks(
         empty_blocks = spark.createDataFrame(
             [], schema="block_key string, block_key_type string, companies array<struct<>>"
         )
-        empty_blocks.coalesce(1).write.mode("overwrite").json(output_path)
+        empty_blocks.coalesce(1).write.mode("overwrite").option("ignoreNullFields", "false").json(
+            output_path
+        )
         return
 
     # Get company fields
@@ -143,8 +145,11 @@ def build_uuid_blocks(
 
     # Save blocks with canonical BLOCK_FIELDS from schemas.py
     # The UDTF already returns block_size (not company_count) via build_udtf_return_type()
+    # Use ignoreNullFields=false to preserve all fields even when null (prevents schema drift)
     logger.info(f"Saving UUID blocks to {output_path}")
-    uuid_blocks.select(*BLOCK_FIELDS).coalesce(1).write.mode("overwrite").json(output_path)
+    uuid_blocks.select(*BLOCK_FIELDS).coalesce(1).write.mode("overwrite").option(
+        "ignoreNullFields", "false"
+    ).json(output_path)
 
     logger.info("UUID blocking complete!")
 
@@ -264,8 +269,11 @@ def deduplicate_resolved_companies(
     logger.info(f"  Output:     {output_count:,} companies")
 
     # Save final deduplicated companies
+    # Use ignoreNullFields=false to preserve all Company fields even when null
     logger.info(f"Saving final deduplicated companies to {output_path}")
-    final_companies_df.coalesce(1).write.mode("overwrite").json(output_path)
+    final_companies_df.coalesce(1).write.mode("overwrite").option("ignoreNullFields", "false").json(
+        output_path
+    )
 
     return {
         "input_count": input_count,
