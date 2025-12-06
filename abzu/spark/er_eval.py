@@ -301,8 +301,6 @@ def evaluate_er_matches(
     ).select(
         "uuid",
         "name",
-        "match_block_key",
-        "match_block_key_type",
         F.explode("source_uuids").alias("source_uuid"),
     )
 
