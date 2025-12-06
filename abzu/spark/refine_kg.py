@@ -115,29 +115,48 @@ def refine_knowledge_graph(
 
     # Deduplicate nodes - companies appear in multiple blocks with same UUID
     print(f"Nodes before deduplication: {filtered_companies_df.count():,}")
-    deduplicated_nodes_df = filtered_companies_df.groupBy("uuid").agg(
-        # Keep first non-null value for scalar fields
-        F.first("name", ignorenulls=True).alias("name"),
-        F.first("cik", ignorenulls=True).alias("cik"),
-        F.first("description", ignorenulls=True).alias("description"),
-        F.first("ceo", ignorenulls=True).alias("ceo"),
-        F.first("employees", ignorenulls=True).alias("employees"),
-        F.first("founded_year", ignorenulls=True).alias("founded_year"),
-        F.first("headquarters_location", ignorenulls=True).alias("headquarters_location"),
-        F.first("jurisdiction", ignorenulls=True).alias("jurisdiction"),
-        F.first("linkedin_url", ignorenulls=True).alias("linkedin_url"),
-        F.first("revenue_usd", ignorenulls=True).alias("revenue_usd"),
-        F.first("website_url", ignorenulls=True).alias("website_url"),
-        F.first("ticker", ignorenulls=True).alias("ticker"),
-        # Union all source_uuids from duplicate records
-        F.array_distinct(F.flatten(F.collect_set("source_uuids"))).alias("source_uuids"),
-        # Union match_skip_history
-        F.array_distinct(F.flatten(F.collect_set("match_skip_history"))).alias(
-            "match_skip_history"
-        ),
-        # For match_skip: prefer false (matched) over true (skipped)
-        F.min("match_skip").alias("match_skip"),
-    )
+
+    # Build aggregation expressions dynamically based on available columns
+    # This handles cases where some columns (like cik) may be missing from older data
+    available_columns = set(filtered_companies_df.columns)
+    agg_exprs = []
+
+    # Scalar fields to aggregate with first()
+    scalar_fields = [
+        "name",
+        "cik",
+        "description",
+        "ceo",
+        "employees",
+        "founded_year",
+        "headquarters_location",
+        "jurisdiction",
+        "linkedin_url",
+        "revenue_usd",
+        "website_url",
+        "ticker",
+    ]
+    for field in scalar_fields:
+        if field in available_columns:
+            agg_exprs.append(F.first(field, ignorenulls=True).alias(field))
+
+    # Array fields to aggregate with collect_set + flatten
+    if "source_uuids" in available_columns:
+        agg_exprs.append(
+            F.array_distinct(F.flatten(F.collect_set("source_uuids"))).alias("source_uuids")
+        )
+    if "match_skip_history" in available_columns:
+        agg_exprs.append(
+            F.array_distinct(F.flatten(F.collect_set("match_skip_history"))).alias(
+                "match_skip_history"
+            )
+        )
+
+    # Boolean field - prefer false (matched) over true (skipped)
+    if "match_skip" in available_columns:
+        agg_exprs.append(F.min("match_skip").alias("match_skip"))
+
+    deduplicated_nodes_df = filtered_companies_df.groupBy("uuid").agg(*agg_exprs)
     print(f"Nodes after deduplication: {deduplicated_nodes_df.count():,}")
 
     # Save the deduplicated nodes (companies with edges only)
