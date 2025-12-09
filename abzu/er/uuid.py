@@ -217,20 +217,10 @@ async def process_block_with_uuid_mapping(
             comp_copy["uuid"] = None
             comp_copy["source_ids"] = None
 
-            # Map old source_uuids to source_ids
-            # IMPORTANT: Exclude the company's own ID from source_ids to prevent duplicates
-            source_ids: list[int] = []
-            if (
-                "source_uuids" in comp_copy
-                and isinstance(comp_copy["source_uuids"], list)
-                and len(comp_copy["source_uuids"]) > 0
-            ):
-                # Map each source_uuid to an integer ID, excluding the company's own ID
-                source_ids = [
-                    mapped_id
-                    for uuid in comp_copy["source_uuids"]
-                    if uuid and (mapped_id := mapper.add_uuid(uuid)) != comp_id
-                ]
+            # DO NOT send source_ids to BAML - they can have up to 1000 entries
+            # which bloats context and confuses the LLM. We cache source_uuids locally
+            # and restore them after BAML returns.
+            # The source_uuids are already cached in input_companies_by_uuid above.
 
             # Handle ticker field - normalize to dict format
             ticker_data = comp_copy.get("ticker")
@@ -290,6 +280,10 @@ async def process_block_with_uuid_mapping(
                     ticker = ticker_data
 
             # Create Company object
+            # IMPORTANT: We send empty source_ids and source_uuids to BAML.
+            # The source_uuids can have up to 1000 entries which would bloat the LLM context
+            # and confuse the model. We cache source_uuids locally (in input_companies_by_uuid)
+            # and restore them after BAML returns the resolved companies.
             company = Company(
                 id=comp_copy["id"],  # Use the integer ID
                 uuid=None,  # Clear UUID for BAML
@@ -305,8 +299,8 @@ async def process_block_with_uuid_mapping(
                 founded_year=comp_copy.get("founded_year"),
                 ceo=comp_copy.get("ceo"),
                 linkedin_url=comp_copy.get("linkedin_url"),
-                source_ids=source_ids,  # Send the mapped source_ids to BAML
-                source_uuids=[],
+                source_ids=[],  # Empty - we restore source_uuids after BAML returns
+                source_uuids=[],  # Empty - we restore after BAML returns
                 match_skip=None,  # BAML should leave this unaltered
                 match_skip_history=None,  # BAML should leave this unaltered
             )
@@ -342,63 +336,64 @@ async def process_block_with_uuid_mapping(
                 company_list=company_list, merge_companies_example_set=merge_companies_example_set
             )
 
+        # Since we sent empty source_ids to BAML, we need to restore source_uuids
+        # by tracking which input companies were merged into which output companies.
+        #
+        # Strategy:
+        # 1. BAML returns companies with IDs - each output ID maps back to an input UUID
+        # 2. Input IDs that are NOT in output IDs were merged into some output company
+        # 3. We need to determine which output company absorbed which input companies
+        #
+        # Since BAML uses source_ids to track merges, and we sent empty source_ids,
+        # BAML will return source_ids indicating which input IDs were merged.
+        # We map those back to UUIDs and collect their original source_uuids.
+
         # Track which UUIDs appear in the BAML results
         output_uuids: set[str] = set()
 
         # Track which UUIDs became output record IDs (master records in MDM style)
-        # These should NOT be flagged as missing even if not in source_uuids
         master_record_uuids: set[str] = set()
 
         # Convert resolved companies back to dictionaries with UUID mapping restored
         resolved_companies = []
         for company in result.companies:
 
-            # Map the source_ids from BAML back to UUIDs
-            # BAML should have accumulated all source_ids as per its prompt
-            source_uuids_list = mapper.map_ids_to_uuids(company.source_ids) or []
-
             # Track the master record UUID (the output company's ID maps back to an input UUID)
-            # In MDM-style merging, this UUID becomes the master and won't be in source_ids
             master_uuid = mapper.get_uuid(company.id)
             if master_uuid:
                 master_record_uuids.add(master_uuid)
 
-            # Build source_uuids from the source_ids returned by BAML
-            # In Interpretation 1 (MDM-style), source_ids contains the OTHER records merged in,
-            # NOT including the master record's own ID
-            # We trust BAML's output and map the IDs back to UUIDs directly
-            if source_uuids_list:
-                # BAML returned source_ids - company was merged
-                # IMPORTANT: Add master UUID to maintain complete provenance
-                # Even though BAML's MDM-style doesn't include master in source_ids,
-                # we need ALL input UUIDs traceable for edge/relationship tracking
-                all_uuids = set(source_uuids_list)
-                if master_uuid:
-                    all_uuids.add(master_uuid)
-                source_uuids_final = sorted(list(all_uuids))
-            else:
-                # BAML returned empty source_ids - company was NOT merged
-                # Preserve original source_uuids to maintain provenance chain
-                if master_uuid:
-                    original_company = input_companies_by_uuid.get(master_uuid)
-                    if original_company and original_company.get("source_uuids"):
-                        # Preserve existing source_uuids from input
-                        source_uuids_final = original_company["source_uuids"]
-                        logger.debug(
-                            f"Preserving source_uuids for unmerged company {company.name}: {source_uuids_final}"
-                        )
-                    else:
-                        # New singleton or first occurrence - use own UUID as source
-                        source_uuids_final = [master_uuid]
-                        logger.debug(
-                            f"Setting self-reference source_uuid for company {company.name}: [{master_uuid}]"
-                        )
-                else:
-                    # Edge case - no master UUID (shouldn't happen)
-                    source_uuids_final = None
-                    logger.warning(
-                        f"No master UUID found for company {company.name}, source_uuids will be null"
-                    )
+            # Map the source_ids from BAML back to UUIDs
+            # These are the IDs of input companies that were merged into this output company
+            merged_input_uuids = mapper.map_ids_to_uuids(company.source_ids) or []
+
+            # Collect ALL source_uuids from:
+            # 1. The master company's original source_uuids
+            # 2. All merged companies' original source_uuids
+            all_source_uuids: set[str] = set()
+
+            # Add master company's source_uuids
+            if master_uuid:
+                original_master = input_companies_by_uuid.get(master_uuid)
+                if original_master:
+                    original_source_uuids = original_master.get("source_uuids")
+                    if original_source_uuids and isinstance(original_source_uuids, list):
+                        all_source_uuids.update(original_source_uuids)
+                # Always include the master UUID itself
+                all_source_uuids.add(master_uuid)
+
+            # Add source_uuids from all merged companies
+            for merged_uuid in merged_input_uuids:
+                # Add the merged company's UUID
+                all_source_uuids.add(merged_uuid)
+                # Add all of its source_uuids
+                merged_company = input_companies_by_uuid.get(merged_uuid)
+                if merged_company:
+                    merged_source_uuids = merged_company.get("source_uuids")
+                    if merged_source_uuids and isinstance(merged_source_uuids, list):
+                        all_source_uuids.update(merged_source_uuids)
+
+            source_uuids_final = sorted(list(all_source_uuids)) if all_source_uuids else None
 
             # Track all UUIDs that appear in the output
             if source_uuids_final:
