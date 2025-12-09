@@ -102,6 +102,14 @@ def refine_knowledge_graph(
     refined_edges_df.write.mode("overwrite").parquet(output_edges_path)
     logger.info(f"Refined knowledge graph edges saved to: {output_edges_path}")
 
+    # Also save edges as single JSON file for inspection with jq
+    output_edges_json = output_edges_path.replace(".parquet", ".jsonl")
+    print(f"Saving edges to JSON: {output_edges_json}")
+    refined_edges_df.coalesce(1).write.mode("overwrite").option("ignoreNullFields", "false").json(
+        output_edges_json
+    )
+    logger.info(f"Refined knowledge graph edges (JSON) saved to: {output_edges_json}")
+
     # Filter out companies with degree zero (no edges)
     connected_src_nodes = refined_edges_df.select("src")
     connected_dst_nodes = refined_edges_df.select(F.col("dst").alias("src"))
@@ -164,3 +172,11 @@ def refine_knowledge_graph(
     print(f"Saving nodes to: {output_nodes_path}")
     deduplicated_nodes_df.write.mode("overwrite").parquet(output_nodes_path)
     logger.info(f"Refined knowledge graph nodes saved to: {output_nodes_path}")
+
+    # Also save nodes as single JSON file for inspection with jq
+    output_nodes_json = output_nodes_path.replace(".parquet", ".jsonl")
+    print(f"Saving nodes to JSON: {output_nodes_json}")
+    deduplicated_nodes_df.coalesce(1).write.mode("overwrite").option(
+        "ignoreNullFields", "false"
+    ).json(output_nodes_json)
+    logger.info(f"Refined knowledge graph nodes (JSON) saved to: {output_nodes_json}")
