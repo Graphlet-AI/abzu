@@ -277,6 +277,11 @@ def build_knowledge_graph(
     if logger.isEnabledFor(logging.DEBUG):
         companies_df.show(5, truncate=100, vertical=True)
 
+    # Clean company names - remove carriage returns and extra whitespace
+    companies_df = companies_df.withColumn(
+        "name", F.trim(F.regexp_replace(F.col("name"), r"[\r\n]+", " "))
+    )
+
     # Put the uuid, url columns first
     companies_df = companies_df.select(
         ["uuid", "url", "name", "description"]

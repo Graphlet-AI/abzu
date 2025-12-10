@@ -87,7 +87,8 @@ def _():
         for node, attrs in G_copy.nodes(data=True):
             for key, value in attrs.items():
                 if (prop_types[key] == str) and needs_replacement(value):
-                    G_copy.nodes[node][key] = 0
+                    G_copy.nodes[node][key] = "0"
+
         return G_copy
 
     return (needs_replacement,)
@@ -97,22 +98,16 @@ def _():
 def _():
     node_df = pd.read_parquet("data/refined_knowledge_graph/nodes.parquet")
 
-    # Flatten nested ticker struct into separate columns
+    # Convert ticker struct to string for Graphistry compatibility
     if "ticker" in node_df.columns:
-        ticker_df = pd.json_normalize(node_df["ticker"].dropna())
-        if not ticker_df.empty:
-            ticker_df = ticker_df.add_prefix("ticker_")
-            ticker_df.index = node_df["ticker"].dropna().index
-            node_df = node_df.join(ticker_df)
-        node_df = node_df.drop(columns=["ticker"])
+        node_df["ticker"] = node_df["ticker"].apply(
+            lambda x: x.get("symbol", "") if isinstance(x, dict) else ""
+        )
 
-    # Convert array columns to strings for Graphistry compatibility
+    # Count source_uuids but keep as list
     if "source_uuids" in node_df.columns:
         node_df["source_uuid_count"] = node_df["source_uuids"].apply(
             lambda x: len(x) if x is not None else 0
-        )
-        node_df["source_uuids"] = node_df["source_uuids"].apply(
-            lambda x: ", ".join(x) if x is not None else ""
         )
     if "match_skip_history" in node_df.columns:
         node_df["match_skip_history"] = node_df["match_skip_history"].apply(
@@ -161,7 +156,16 @@ def _(relationship_df):
     edge_df = relationship_df[relationship_df.src.notnull() & relationship_df.dst.notnull()].copy()
 
     # Fill NaN values for Graphistry compatibility
-    edge_df = edge_df.fillna("")
+    # Handle numeric columns separately to avoid mixed types
+    for col in edge_df.columns:
+        if edge_df[col].dtype in ["float64", "int64", "float32", "int32"]:
+            edge_df[col] = edge_df[col].fillna(0)
+        else:
+            edge_df[col] = edge_df[col].fillna("")
+
+    # Ensure amount column is numeric (it may have mixed types)
+    if "amount" in edge_df.columns:
+        edge_df["amount"] = pd.to_numeric(edge_df["amount"], errors="coerce").fillna(0)
 
     edge_df.count()
     return (edge_df,)
@@ -195,10 +199,17 @@ def _(G, node_df):
     node_attributes_df = node_attributes_df.set_index("id")
 
     # Fill NaN values appropriately for Graphistry
-    node_attributes_df = node_attributes_df.fillna("")
+    # Handle numeric columns separately to avoid mixed types
+    for col in node_attributes_df.columns:
+        if node_attributes_df[col].dtype in ["float64", "int64", "float32", "int32"]:
+            node_attributes_df[col] = node_attributes_df[col].fillna(0)
+        else:
+            node_attributes_df[col] = node_attributes_df[col].fillna("")
 
     node_attributes = node_attributes_df.to_dict("index")
     nx.set_node_attributes(G, node_attributes)
+
+    print(node_attributes[0])
     return (node_attributes,)
 
 
