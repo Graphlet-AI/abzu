@@ -364,14 +364,16 @@ def deduplicate_resolved_companies(
     )
 
     # Apply UUID deduplication
-    uuid_has_matches = os.path.exists(uuid_matches_path.replace(".json", ""))
+    # match_entities outputs a single JSON file, so check for that
+    uuid_has_matches = os.path.exists(uuid_matches_path)
 
     if uuid_has_matches:
         uuid_matches_df = spark.read.json(uuid_matches_path)
 
-        # Get UUIDs that were in UUID blocks
+        # Get UUIDs that were in UUID blocks (from original_companies, not resolved)
+        # These are the UUIDs we need to exclude from the left_anti join
         matched_uuids_df = (
-            uuid_matches_df.select(F.explode("resolved_companies").alias("company"))
+            uuid_matches_df.select(F.explode("original_companies").alias("company"))
             .select("company.uuid")
             .distinct()
         )
@@ -391,7 +393,10 @@ def deduplicate_resolved_companies(
         )
 
         # Combine after UUID dedup
-        after_uuid_df = uuid_deduplicated_df.union(unique_companies_df)
+        # Use unionByName to match columns by name instead of position, preventing schema misalignment
+        after_uuid_df = uuid_deduplicated_df.unionByName(
+            unique_companies_df, allowMissingColumns=True
+        )
         uuid_dedup_count = input_count - after_uuid_df.count()
         logger.info(f"UUID deduplication merged {uuid_dedup_count:,} companies")
     else:
@@ -440,14 +445,16 @@ def deduplicate_resolved_companies(
     )
 
     # Apply name deduplication
-    name_has_matches = os.path.exists(name_matches_path.replace(".json", ""))
+    # match_entities outputs a single JSON file, so check for that
+    name_has_matches = os.path.exists(name_matches_path)
 
     if name_has_matches:
         name_matches_df = spark.read.json(name_matches_path)
 
-        # Get UUIDs that were in name blocks
+        # Get UUIDs that were in name blocks (from original_companies, not resolved)
+        # These are the UUIDs we need to exclude from the left_anti join
         name_matched_uuids_df = (
-            name_matches_df.select(F.explode("resolved_companies").alias("company"))
+            name_matches_df.select(F.explode("original_companies").alias("company"))
             .select("company.uuid")
             .distinct()
         )
@@ -465,7 +472,10 @@ def deduplicate_resolved_companies(
         unique_after_name_df = after_uuid_df.join(name_matched_uuids_df, on="uuid", how="left_anti")
 
         # Combine after name dedup
-        final_companies_df = name_deduplicated_df.union(unique_after_name_df)
+        # Use unionByName to match columns by name instead of position, preventing schema misalignment
+        final_companies_df = name_deduplicated_df.unionByName(
+            unique_after_name_df, allowMissingColumns=True
+        )
         name_dedup_count = after_uuid_count - final_companies_df.count()
         logger.info(f"Name deduplication merged {name_dedup_count:,} companies")
     else:

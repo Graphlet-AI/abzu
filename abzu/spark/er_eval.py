@@ -10,6 +10,7 @@ from pyspark.sql import DataFrame, SparkSession
 from abzu.config import config
 from abzu.logs import get_logger
 from abzu.spark.config import get_spark_session
+from abzu.spark.schemas import get_company_spark_schema
 
 logger = get_logger(__name__)
 
@@ -75,7 +76,9 @@ def evaluate_er_matches(
         raise FileNotFoundError(error_msg)
 
     logger.info(f"Loading matches from {matches_json_path}")
-    matches_df: DataFrame = spark.read.json(matches_json_path)
+    # Use the Company schema to ensure correct types (especially match_skip_history as array<long>)
+    company_schema = get_company_spark_schema()
+    matches_df: DataFrame = spark.read.schema(company_schema).json(matches_json_path)
 
     # No need for JSON deserialization anymore since we're using PySpark to save
     # The data is already in the correct format with proper struct arrays
@@ -107,7 +110,7 @@ def evaluate_er_matches(
             logger.info(
                 f"Loading previous iteration ({prev_iteration}) results from {prev_iteration_path}"
             )
-            previous_iteration_df = spark.read.json(prev_iteration_path)
+            previous_iteration_df = spark.read.schema(company_schema).json(prev_iteration_path)
         else:
             logger.info(
                 f"Previous iteration ({prev_iteration}) output not found at {prev_iteration_path}, skipping comparison"
