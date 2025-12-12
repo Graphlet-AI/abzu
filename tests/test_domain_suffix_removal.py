@@ -82,6 +82,12 @@ def test_remove_domain_suffix_edge_cases():
     assert remove_domain_suffix("Example Corp.") == "Example Corp."
     # Multiple periods with domain suffix at end
     assert remove_domain_suffix("St. John's Corp.com") == "St. John's Corp"
+    # Domain suffix in middle of name (should NOT be removed)
+    assert remove_domain_suffix("Company.com Inc") == "Company.com Inc"
+    assert remove_domain_suffix("Tech.io Ltd") == "Tech.io Ltd"
+    # Domain suffix at end (should be removed)
+    assert remove_domain_suffix("Example.com") == "Example"
+    assert remove_domain_suffix("Startup.io") == "Startup"
 
 
 def test_get_first_word_with_periods(spark):
