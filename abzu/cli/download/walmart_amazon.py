@@ -103,9 +103,13 @@ def walmart_amazon(output_dir: str, force: bool) -> None:
                     # Save as Parquet
                     df.to_parquet(parquet_path, index=False, engine="pyarrow")
 
-                    click.echo(
-                        f"  ✓ Saved {len(df):,} rows to {parquet_path.relative_to(Path.cwd())}"
-                    )
+                    # Try to show relative path, fallback to absolute if outside CWD
+                    try:
+                        display_path = parquet_path.relative_to(Path.cwd())
+                    except ValueError:
+                        display_path = parquet_path
+
+                    click.echo(f"  ✓ Saved {len(df):,} rows to {display_path}")
                     converted += 1
 
                 except Exception as e:
