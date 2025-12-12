@@ -96,6 +96,19 @@ def refine_knowledge_graph(
     refined_edges_df = refined_edges_df.distinct()
     print(f"Refined edges count (after distinct): {refined_edges_df.count():,}")
 
+    # Normalize products and technologies to title case for consistency
+    # This turns ["Russell", "russell", "RUSSell"] into ["Russell", "Russell", "Russell"]
+    if "products" in refined_edges_df.columns:
+        refined_edges_df = refined_edges_df.withColumn(
+            "products",
+            F.transform("products", lambda x: F.initcap(x)),
+        )
+    if "technologies" in refined_edges_df.columns:
+        refined_edges_df = refined_edges_df.withColumn(
+            "technologies",
+            F.transform("technologies", lambda x: F.initcap(x)),
+        )
+
     # Save the refined edges
     output_edges_path = output_paths["edges"]
     print(f"Saving edges to: {output_edges_path}")
