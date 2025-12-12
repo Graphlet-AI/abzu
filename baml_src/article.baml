@@ -162,7 +162,7 @@ class Company {
   @description("City, state, country")
 
   jurisdiction string?
-  @description("State or country where the company is incorporated")
+  @description("2-letter state or country where the company is incorporated")
 
   revenue_usd int?
 
