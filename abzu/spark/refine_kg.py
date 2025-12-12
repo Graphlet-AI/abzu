@@ -131,7 +131,9 @@ def refine_knowledge_graph(
         F.array_distinct(
             F.transform(
                 "products",
-                lambda x: F.when(F.upper(x) == x, F.upper(x)).otherwise(F.initcap(x)),
+                lambda x: F.when(
+                    (F.upper(x) == x) & (F.length(x) > 1), F.upper(x)
+                ).otherwise(F.initcap(x)),
             )
         ),
     )
@@ -140,7 +142,9 @@ def refine_knowledge_graph(
         F.array_distinct(
             F.transform(
                 "technologies",
-                lambda x: F.when(F.upper(x) == x, F.upper(x)).otherwise(F.initcap(x)),
+                lambda x: F.when(
+                    (F.upper(x) == x) & (F.length(x) > 1), F.upper(x)
+                ).otherwise(F.initcap(x)),
             )
         ),
     )
