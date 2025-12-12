@@ -64,9 +64,13 @@ def names(
         output_path = config.get("process.kg.er.paths.names.blocks_dir").format(iteration=iteration)
 
     # Pass max_block_size to build_blocks
-    build_blocks(
-        input_path=companies_path,
-        output_path=output_path,
-        local_mode=local_mode if local_mode else None,
-        max_block_size=max_block_size,
-    )
+    try:
+        build_blocks(
+            input_path=companies_path,
+            output_path=output_path,
+            local_mode=local_mode if local_mode else None,
+            max_block_size=max_block_size,
+        )
+    except FileNotFoundError as e:
+        click.echo(str(e), err=True)
+        raise click.exceptions.Exit(1)

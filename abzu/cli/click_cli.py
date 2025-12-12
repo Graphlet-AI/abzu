@@ -23,7 +23,7 @@ class LazyGroup(click.Group):
             import_path = self.lazy_subcommands[name]
             module_name, attr_name = import_path.rsplit(":", 1)
             module = __import__(module_name, fromlist=[attr_name])
-            return getattr(module, attr_name)
+            return getattr(module, attr_name)  # type: ignore[no-any-return]
         return None
 
 
@@ -35,6 +35,7 @@ class LazyGroup(click.Group):
         "config": "abzu.cli.config:config",
         "crawl": "abzu.cli.crawl:crawl",
         "data": "abzu.cli.data:data",
+        "download": "abzu.cli.download:download",
         "dump": "abzu.cli.dump:dump",
         "zuban": "abzu.cli.zuban:zuban",
         "process": "abzu.cli.process:process",

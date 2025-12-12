@@ -1,4 +1,4 @@
-"""CLI commands for entity resolution processing."""
+"""CLI commands for downloading datasets."""
 
 from typing import Any
 
@@ -16,14 +16,7 @@ class OrderedLazyGroup(click.Group):
 
     def list_commands(self, ctx: click.Context) -> list[str]:
         """Return commands in the order they were added."""
-        return [
-            "all",
-            "block",
-            "match",
-            "final",
-            "eval",
-            "clean",
-        ]
+        return list(self.lazy_subcommands.keys())
 
     def get_command(self, ctx: click.Context, name: str) -> click.Command | None:
         if name in self.lazy_subcommands:
@@ -37,14 +30,9 @@ class OrderedLazyGroup(click.Group):
 @click.command(
     cls=OrderedLazyGroup,
     lazy_subcommands={
-        "all": "abzu.cli.process.er.all:all",
-        "block": "abzu.cli.process.er.block:block",
-        "match": "abzu.cli.process.er.match:match",
-        "final": "abzu.cli.process.er.final:final",
-        "eval": "abzu.cli.process.er.eval:eval",
-        "clean": "abzu.cli.process.er.clean:clean",
+        "walmart-amazon": "abzu.cli.download.walmart_amazon:walmart_amazon",
     },
 )
-def er() -> None:
-    """Entity resolution commands."""
+def download() -> None:
+    """Download and process external datasets."""
     pass

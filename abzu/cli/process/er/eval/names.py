@@ -16,9 +16,9 @@ from abzu.config import config
 @click.option(
     "--matches-path",
     "-m",
-    default=config.get("process.kg.er.paths.names.matches"),
+    default=config.get("process.kg.er.paths.names.final"),
     type=click.Path(exists=False, file_okay=True, dir_okay=True),
-    help="Path to names matches file (with {format} placeholder)",
+    help="Path to deduplicated companies file (with {format} placeholder)",
 )
 @click.option(
     "--raw-companies-path",
@@ -51,10 +51,14 @@ def names(
     # Import heavy Spark module only when command is executed
     from abzu.spark.er_eval import evaluate_er_matches
 
-    evaluate_er_matches(
-        matches_path=matches_path,
-        raw_companies_path=raw_companies_path,
-        output_path=output_path,
-        iteration=iteration,
-        local_mode=local_mode if local_mode else None,
-    )
+    try:
+        evaluate_er_matches(
+            matches_path=matches_path,
+            raw_companies_path=raw_companies_path,
+            output_path=output_path,
+            iteration=iteration,
+            local_mode=local_mode if local_mode else None,
+        )
+    except FileNotFoundError as e:
+        click.echo(str(e), err=True)
+        raise click.exceptions.Exit(1)

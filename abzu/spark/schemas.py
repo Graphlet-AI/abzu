@@ -1,5 +1,7 @@
 """Spark schema definitions using Sparkdantic for BAML types."""
 
+from typing import cast
+
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame
 from pyspark.sql.types import (
@@ -13,7 +15,7 @@ from pyspark.sql.types import (
 )
 from sparkdantic import SparkModel
 
-from abzu.baml_client.types import Company, Ticker
+from abzu.baml_client.types import Company, CompanyList, Ticker
 from abzu.logs import get_logger
 
 logger = get_logger(__name__)
@@ -21,6 +23,11 @@ logger = get_logger(__name__)
 # Rebuild the models to resolve forward references
 Company.model_rebuild()
 Ticker.model_rebuild()
+CompanyList.model_rebuild()
+
+# Block schema field names - the canonical source of truth for ER block schemas
+# These match the BAML CompanyList type
+BLOCK_FIELDS = ["block_key", "block_key_type", "companies", "block_size"]
 
 
 class SparkTicker(Ticker, SparkModel):
@@ -96,7 +103,7 @@ def get_company_spark_schema() -> StructType:
 
     # Convert all IntegerType fields to LongType to handle large values
     # This is needed for fields like revenue_usd which can be in billions
-    company_schema = convert_ints_to_longs(company_schema)
+    company_schema = cast(StructType, convert_ints_to_longs(company_schema))
 
     return company_schema
 
@@ -198,9 +205,42 @@ def build_udtf_return_type() -> str:
     # Get the company struct fields
     company_struct = build_udtf_company_struct_string()
 
-    # Build the complete return type
+    # Build the complete return type - uses BLOCK_FIELDS for consistency
     return (
         f"block_key: string, block_key_type: string, "
         f"companies: array<struct<{company_struct}>>, "
         f"block_size: long"
     )
+
+
+def get_block_fields() -> list[str]:
+    """Get the expected field names for ER blocks.
+
+    Returns:
+        List of field names that should be present in block DataFrames/JSON.
+        These match the BAML CompanyList type.
+    """
+    return BLOCK_FIELDS.copy()
+
+
+def validate_block_schema(columns: list[str]) -> None:
+    """Validate that a block DataFrame has the required fields.
+
+    Args:
+        columns: List of column names from a DataFrame
+
+    Raises:
+        ValueError: If required block fields are missing
+    """
+    required_fields = set(BLOCK_FIELDS)
+    actual_fields = set(columns)
+    missing_fields = required_fields - actual_fields
+
+    if missing_fields:
+        raise ValueError(
+            f"Block schema validation failed. Missing required fields: {missing_fields}. "
+            f"Expected fields: {BLOCK_FIELDS}. "
+            f"Actual fields: {list(columns)}. "
+            f"This is likely a bug in the ER pipeline - blocks must include all fields "
+            f"from the BAML CompanyList type."
+        )

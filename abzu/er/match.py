@@ -16,6 +16,7 @@ from abzu.config import config
 from abzu.er.uuid import process_block_with_uuid_mapping
 from abzu.logs import get_logger
 from abzu.spark.config import get_spark_session
+from abzu.spark.schemas import validate_block_schema
 from abzu.utils import save_jsonl
 
 logger = get_logger(__name__)
@@ -49,12 +50,13 @@ async def process_block(
             iteration=iteration,
         )
 
-        # If the block was resolved, generate new UUIDs for the resolved companies
+        # If the block was resolved, ALWAYS generate new UUIDs for the resolved companies
+        # This ensures resolved entities are distinct from their source companies
         if result.get("was_resolved") and "resolved_companies" in result:
             for company in result["resolved_companies"]:
-                if "uuid" not in company or not company["uuid"]:
-                    company["uuid"] = str(uuid.uuid4())
-                    logger.debug(f"Generated new UUID for resolved company: {company['name']}")
+                # Always generate new UUID for resolved companies (don't reuse original UUIDs)
+                company["uuid"] = str(uuid.uuid4())
+                logger.debug(f"Generated new UUID for resolved company: {company['name']}")
 
         return result
 
@@ -159,6 +161,19 @@ def match_entities(
     if min_block_size is not None or max_block_size is not None:
         logger.info(f"Block size range: {min_block_size or 'any'}:{max_block_size or 'any'}")
 
+    # Check if blocks file exists
+    if not Path(blocks_json_path).exists():
+        error_msg = (
+            f"Blocks file not found: {blocks_json_path}\n\n"
+            f"The matching step requires blocks from the blocking step.\n"
+            f"Please run the blocking step first:\n"
+            f"  abzu process er block names --iteration {iteration}\n\n"
+            f"Or run the complete pipeline:\n"
+            f"  abzu process er all names --iteration {iteration}"
+        )
+        logger.error(error_msg)
+        raise FileNotFoundError(error_msg)
+
     # Load blocks from JSON using PySpark to preserve Python lists
 
     # Create or get SparkSession
@@ -193,6 +208,10 @@ def match_entities(
         df["companies"] = df["companies"].apply(convert_row_to_dict)
 
     logger.info(f"Loaded {len(df)} blocks")
+
+    # Validate block schema - ensures block_size and other required fields are present
+    # This catches schema drift issues early, before they cause cryptic KeyErrors
+    validate_block_schema(df.columns.tolist())
 
     # Separate singleton blocks from multi-company blocks
     singleton_blocks = df[df["block_size"] == 1].copy()
@@ -459,33 +478,52 @@ def match_entities(
         else pd.DataFrame()
     )
 
+    # Calculate comprehensive statistics
+    total_original = resolved_blocks["original_count"].sum() if len(resolved_blocks) > 0 else 0
+    total_resolved = resolved_blocks["resolved_count"].sum() if len(resolved_blocks) > 0 else 0
+    reduction_count = total_original - total_resolved if total_original > 0 else 0
+    reduction_pct = (reduction_count / total_original * 100) if total_original > 0 else 0
+
+    logger.info("\n" + "=" * 60)
+    logger.info(f"ENTITY RESOLUTION MATCHING SUMMARY - ITERATION {iteration}")
     logger.info("=" * 60)
-    logger.info("ENTITY RESOLUTION MATCHING SUMMARY")
-    logger.info("=" * 60)
-    logger.info(f"Total blocks processed: {len(results_df)}")
-    logger.info(f"Successfully resolved: {len(resolved_blocks)}")
-    logger.info(f"Errors encountered: {len(error_blocks)}")
+    logger.info("WHAT IS MATCHING?")
+    logger.info("  Uses BAML (LLM-based matching) to identify duplicate companies within blocks")
+    logger.info("  Merges duplicates into single 'resolved' companies with new UUIDs")
+    logger.info("")
+    logger.info("INPUT DATA:")
+    logger.info(f"  Total blocks from blocking stage: {len(results_df):,}")
+    logger.info(
+        f"  Multi-company blocks (matchable): {len(resolved_blocks):,} ({len(resolved_blocks) / len(results_df) * 100:.1f}%)"
+    )
+    logger.info(
+        f"  Singleton blocks (pass-through): {len(singleton_results):,} ({len(singleton_results) / len(results_df) * 100:.1f}%)"
+    )
+    logger.info("")
+    logger.info("MATCHING RESULTS:")
+    logger.info(
+        f"  Blocks successfully resolved: {len(resolved_blocks):,} / {len(results_df) - len(singleton_results):,}"
+    )
+    logger.info(f"  Companies before matching: {total_original:,}")
+    logger.info(f"  Companies after matching: {total_resolved:,}")
+    logger.info(f"  Companies merged: {reduction_count:,} ({reduction_pct:.1f}% reduction)")
+    logger.info(f"  API errors encountered: {len(error_blocks):,}")
     if len(error_blocks) > 0:
         error_path = "data/er/iterations/{iteration}/errors.parquet".format(iteration=iteration)
-        logger.info(f"  → Error blocks saved to: {error_path}")
-        logger.info(f"  → {error_recovery_count} companies recovered from error blocks")
+        logger.info(f"    └─ Error blocks saved to: {error_path}")
+        logger.info(f"    └─ Companies recovered: {error_recovery_count:,}")
     logger.info("")
-    logger.info("PROCESSING STATISTICS:")
-    logger.info(f"  Companies not matched in this iteration: {skipped_in_iteration}")
-    logger.info(f"    - Singleton blocks (no matching needed): {singleton_records}")
-    logger.info(f"    - Recovered from BAML API errors: {error_recovered_records}")
-    logger.info(f"    - Recovered because BAML dropped from output: {uuid_recovered_records}")
+    logger.info("RECOVERY STATISTICS:")
+    logger.info(f"  Total companies not matched: {skipped_in_iteration:,}")
+    logger.info(f"    ├─ Singleton blocks (no matching possible): {singleton_records:,}")
+    logger.info(f"    ├─ Recovered from BAML API errors: {error_recovered_records:,}")
+    logger.info(f"    └─ Recovered from BAML dropped output: {uuid_recovered_records:,}")
     logger.info("")
-    logger.info(
-        "Note: Resolved companies have new UUIDs; single-company blocks retain original UUIDs"
-    )
-
-    if len(resolved_blocks) > 0:
-        total_original = resolved_blocks["original_count"].sum()
-        total_resolved = resolved_blocks["resolved_count"].sum()
-        logger.info("")
-        logger.info(f"Total companies before: {total_original}")
-        logger.info(f"Total companies after: {total_resolved}")
-        logger.info(f"Reduction: {total_original - total_resolved} companies merged")
-
+    logger.info("UUID TRACKING:")
+    logger.info("  ✓ Resolved companies receive NEW UUIDs (not reusing originals)")
+    logger.info("  ✓ Singleton blocks retain original UUIDs")
+    logger.info("  ✓ All original UUIDs preserved in source_uuids arrays")
+    logger.info("")
+    logger.info("OUTPUT FILE:")
+    logger.info(f"  Matches saved to: {output_json_path}")
     logger.info("=" * 60)
