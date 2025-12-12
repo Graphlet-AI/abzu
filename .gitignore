@@ -27,3 +27,4 @@ abzu/__pycache__
 scripts
 notebooks/__marimo__
 .DS_Store
+__marimo__
