@@ -221,9 +221,6 @@ def _(node_df, pa, pd, relationship_df):
     print(f"Total edges: {edge_df.count():,}")
 
     # Debugging column parsing
-    for c in node_df.columns:
-        print("trying col", c)
-        pa.Table.from_pandas(node_df[[c]])
     return (edge_df,)
 
 
