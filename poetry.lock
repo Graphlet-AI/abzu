@@ -2039,15 +2039,13 @@ numpy = ">=1.7"
 
 [[package]]
 name = "graphistry"
-version = "0.36.2"
+version = "0.46.1+17.g643744ee"
 description = "A visual graph analytics library for extracting, transforming, displaying, and sharing big graphs with end-to-end GPU acceleration"
 optional = false
 python-versions = ">=3.8"
 groups = ["main"]
-files = [
-    {file = "graphistry-0.36.2-py3-none-any.whl", hash = "sha256:0ef49df6b898b7750c709b9919d56817875b056d4a2606cdbfe294e7efe618ba"},
-    {file = "graphistry-0.36.2.tar.gz", hash = "sha256:9d4755aa288595c1f0c11d519d51b0639be3b224f9db37a00b849b647cfe0804"},
-]
+files = []
+develop = false
 
 [package.dependencies]
 numpy = "*"
@@ -2061,23 +2059,32 @@ squarify = "*"
 typing-extensions = "*"
 
 [package.extras]
-ai = ["dgl", "faiss-cpu", "joblib", "scikit-learn", "scipy", "sentence-transformers", "skrub", "torch", "umap-learn"]
-all = ["cudf-cu12 (==24.12.*)", "cugraph-cu12 (==24.12.*)", "cuml-cu12 (==24.12.*)", "dask-cudf-cu12 (==24.12.*)", "dgl", "faiss-cpu", "google-cloud-spanner", "gremlinpython", "igraph", "ipython", "joblib", "neo4j", "neotime", "networkx (>=2.5)", "nx-cugraph-cu12 (==24.12.*)", "openpyxl (==3.1.0)", "pygraphviz", "scikit-learn", "scipy", "sentence-transformers", "skrub", "torch", "umap-learn", "xlrd"]
+ai = ["faiss-cpu", "joblib", "scikit-learn", "scipy", "scipy", "sentence-transformers", "skrub", "torch", "umap-learn"]
+all = ["azure-identity", "azure-kusto-data", "cudf-cu12 (==24.12.*)", "cugraph-cu12 (==24.12.*)", "cuml-cu12 (==24.12.*)", "dask-cudf-cu12 (==24.12.*)", "dgl (==2.1.0)", "faiss-cpu", "google-cloud-spanner", "gremlinpython", "igraph", "ipython", "joblib", "neo4j", "neotime", "networkx (>=2.5)", "nx-cugraph-cu12 (==24.12.*)", "openpyxl (==3.1.0)", "pygraphviz", "scikit-learn", "scipy", "sentence-transformers", "skrub", "torch", "torch (==2.0.1)", "torchdata (==0.6.1)", "umap-learn", "xlrd"]
 bolt = ["neo4j", "neotime"]
 build = ["build"]
-dev = ["Jinja2 (==3.1.4)", "build", "docutils (==0.21.2)", "flake8 (>=5.0)", "google-cloud-spanner", "gremlinpython", "igraph", "ipython", "ipython (==8.28)", "mock", "mypy", "myst-parser (==4.0.0)", "nbsphinx (==0.9.5)", "neo4j", "neotime", "networkx (>=2.5)", "numba (>=0.57.1)", "openpyxl (==3.1.0)", "pandas-stubs", "pygments (>2.10)", "pytest", "pytest-xdist", "sphinx (==8.0.2)", "sphinx-book-theme (==1.1.3)", "sphinx-copybutton (==0.5.2)", "types-requests", "types-tqdm", "xlrd"]
-docs = ["Jinja2 (==3.1.4)", "docutils (==0.21.2)", "ipython (==8.28)", "myst-parser (==4.0.0)", "nbsphinx (==0.9.5)", "pygments (>2.10)", "sphinx (==8.0.2)", "sphinx-book-theme (==1.1.3)", "sphinx-copybutton (==0.5.2)"]
+dev = ["Jinja2 (==3.1.4)", "azure-identity", "azure-kusto-data", "build", "docutils (==0.21.2)", "flake8 (>=5.0)", "google-cloud-spanner", "gremlinpython", "hypothesis", "igraph", "ipykernel (==6.29.5)", "ipython", "ipython", "ipython (==8.28)", "mock", "mypy", "myst-parser (==4.0.0)", "nbsphinx (==0.9.5)", "neo4j", "neotime", "networkx (>=2.5)", "numba (>=0.57.1)", "openpyxl (==3.1.0)", "pandas-stubs", "pygments (>2.10)", "pytest", "pytest-xdist", "rstcheck[sphinx] (>=6.0)", "sphinx (==8.0.2)", "sphinx-book-theme (==1.1.3)", "sphinx-copybutton (==0.5.2)", "types-requests", "types-tqdm", "xlrd"]
+dgl-cpu = ["dgl (==2.1.0)", "torch (==2.0.1)", "torchdata (==0.6.1)"]
+dgl-gpu = ["dgl-cu12 (==2.4.0)", "torch (==2.4.1)"]
+docs = ["Jinja2 (==3.1.4)", "docutils (==0.21.2)", "ipykernel (==6.29.5)", "ipython (==8.28)", "myst-parser (==4.0.0)", "nbsphinx (==0.9.5)", "pygments (>2.10)", "rstcheck[sphinx] (>=6.0)", "sphinx (==8.0.2)", "sphinx-book-theme (==1.1.3)", "sphinx-copybutton (==0.5.2)"]
 gremlin = ["gremlinpython"]
 igraph = ["igraph"]
 jupyter = ["ipython"]
+kusto = ["azure-identity", "azure-kusto-data"]
 networkx = ["networkx (>=2.5)"]
 nodexl = ["openpyxl (==3.1.0)", "xlrd"]
 pygraphviz = ["pygraphviz"]
 rapids = ["cudf-cu12 (==24.12.*)", "cugraph-cu12 (==24.12.*)", "cuml-cu12 (==24.12.*)", "dask-cudf-cu12 (==24.12.*)", "nx-cugraph-cu12 (==24.12.*)"]
 spanner = ["google-cloud-spanner"]
-test = ["flake8 (>=5.0)", "ipython", "mock", "mypy", "pandas-stubs", "pytest", "pytest-xdist", "types-requests", "types-tqdm"]
+test = ["flake8 (>=5.0)", "hypothesis", "ipython", "mock", "mypy", "pandas-stubs", "pytest", "pytest-xdist", "types-requests", "types-tqdm"]
 testai = ["numba (>=0.57.1)"]
 umap-learn = ["scikit-learn", "scipy", "skrub", "umap-learn"]
+
+[package.source]
+type = "git"
+url = "https://github.com/graphistry/pygraphistry.git"
+reference = "refs/pull/868/head"
+resolved_reference = "643744eeceece0e6d5a84fe4d255988cc4fe8855"
 
 [[package]]
 name = "greenlet"
@@ -9841,4 +9848,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = "3.12.*"
-content-hash = "e662240dc7ee2c3a3057ed9d98f4d62ee0442d90e8f89eb63875e6e1eb69157b"
+content-hash = "f50784950477b4ca970a364574990980c3b492be15e9b04705773edb9ee03dbb"

@@ -23,7 +23,7 @@ pyspark = "^3.5.5"
 python-dateutil = "^2.9.0.post0"
 pydantic = "^2.11.3"
 pandas = "^2.2.3"
-graphistry = "^0.36.0"
+graphistry = {git = "https://github.com/graphistry/pygraphistry.git", rev = "refs/pull/868/head"}
 pyarrow = "^19.0.1"
 seaborn = "^0.13.2"
 networkx = "^3.4.2"
