@@ -21,14 +21,124 @@ logger = get_logger(__name__)
 
 MAX_BLOCK_SIZE = config.get("process.kg.er.max_block_size", 50)
 
+# Known domain suffixes to remove from company names
+# Sorted by length (longest first) for efficient matching
+DOMAIN_SUFFIXES = tuple(
+    sorted(
+        {
+            ".com",
+            ".org",
+            ".net",
+            ".edu",
+            ".gov",
+            ".mil",
+            ".int",
+            ".io",
+            ".ai",
+            ".co",
+            ".uk",
+            ".us",
+            ".ca",
+            ".au",
+            ".de",
+            ".fr",
+            ".jp",
+            ".cn",
+            ".in",
+            ".br",
+            ".ru",
+            ".it",
+            ".es",
+            ".nl",
+            ".se",
+            ".no",
+            ".dk",
+            ".fi",
+            ".pl",
+            ".mx",
+            ".kr",
+            ".tw",
+            ".sg",
+            ".hk",
+            ".nz",
+            ".ie",
+            ".be",
+            ".ch",
+            ".at",
+            ".cz",
+            ".za",
+            ".il",
+            ".ae",
+            ".sa",
+            ".th",
+            ".vn",
+            ".ph",
+            ".id",
+            ".my",
+            ".pk",
+            ".bd",
+            ".ng",
+            ".ke",
+            ".ug",
+            ".tz",
+            ".gh",
+            ".zm",
+            ".zw",
+            ".biz",
+            ".info",
+            ".name",
+            ".pro",
+            ".museum",
+            ".coop",
+            ".aero",
+            ".xxx",
+            ".travel",
+            ".mobi",
+            ".tel",
+            ".asia",
+            ".cat",
+            ".jobs",
+            ".post",
+        },
+        key=len,
+        reverse=True,
+    )
+)
+
+
+def remove_domain_suffix(name: str) -> str:
+    """
+    Remove known domain suffixes from a company name.
+
+    This function only removes recognized domain suffixes (e.g., .com, .org, .net)
+    to avoid incorrectly removing legitimate periods in company names like
+    "St. Jude Medical" or "Dr. Pepper".
+
+    Args:
+        name: The company name to process
+
+    Returns:
+        The name with domain suffix removed if present, otherwise the original name
+    """
+    if not name:
+        return name
+
+    name_lower = name.lower()
+    for suffix in DOMAIN_SUFFIXES:
+        if name_lower.endswith(suffix):
+            # Remove the suffix and return
+            return name[: -len(suffix)].strip()
+
+    return name
+
 
 @F.udf(T.StringType())
 def get_first_word(name: str) -> str | None:
     """Extract first word if it's at least 1 character, removing domain suffixes."""
     if not name or not name.strip():
         return "UNKNOWN"  # Fallback for empty names
-    # Remove domain suffix (everything after and including first ".")
-    name_without_suffix = name.split(".")[0].strip()
+    # Remove domain suffix (only known TLDs like .com, .org, etc.)
+    name_without_suffix = remove_domain_suffix(name.strip())
     words = name_without_suffix.split()
     return words[0].upper() if words else "UNKNOWN"
 
@@ -38,8 +148,8 @@ def get_acronym(name: str) -> str | None:
     """Generate acronyms from company names, fallback to first word if no acronym."""
     if not name or not name.strip():
         return "UNKNOWN"  # Fallback for empty names
-    # Remove domain suffix (everything after and including first ".")
-    name_without_suffix = name.split(".")[0].strip()
+    # Remove domain suffix (only known TLDs like .com, .org, etc.)
+    name_without_suffix = remove_domain_suffix(name.strip())
     acronym = get_acronyms(name_without_suffix)
     if acronym:
         return acronym
