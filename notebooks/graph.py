@@ -116,15 +116,6 @@ def _(defaultdict, np):
             return ", ".join(str(item) for item in x)
         return str(x)
 
-    def safe_dict_to_string(x):
-        """Convert dict to string representation, handling None."""
-        if x is None:
-            return ""
-        if isinstance(x, dict):
-            # Convert dict to a readable string format
-            return "; ".join(f"{k}={v}" for k, v in x.items() if v is not None)
-        return str(x)
-
     return needs_replacement, safe_array_to_string
 
 
