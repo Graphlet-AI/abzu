@@ -84,7 +84,6 @@ async def process_blocks_async(
 
     # Process with progress bar
     results = []
-    pbar: Any
     with tqdm(total=len(tasks), desc="Processing blocks") as pbar:
         for coro in asyncio.as_completed(tasks):
             result = await coro
