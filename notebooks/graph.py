@@ -142,6 +142,11 @@ if "country" in relationship_df.columns:
     relationship_df = relationship_df.drop(columns=["country"])
 
 # Convert array columns to strings for Graphistry compatibility (handles numpy arrays)
+if "urls" in relationship_df.columns:
+    relationship_df["url_count"] = relationship_df["urls"].apply(
+        lambda x: len(x) if x is not None and hasattr(x, "__len__") else 0
+    )
+    relationship_df["urls"] = relationship_df["urls"].apply(safe_array_to_string)
 if "products" in relationship_df.columns:
     relationship_df["products"] = relationship_df["products"].apply(safe_array_to_string)
 if "technologies" in relationship_df.columns:

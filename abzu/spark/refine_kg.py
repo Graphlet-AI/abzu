@@ -90,24 +90,42 @@ def refine_knowledge_graph(
     )
 
     refined_edges_df.show(20, False)
-    print(f"Refined edges count (before distinct): {refined_edges_df.count():,}")
+    print(f"Refined edges count (before deduplication): {refined_edges_df.count():,}")
 
-    # Remove duplicate edges
-    refined_edges_df = refined_edges_df.distinct()
-    print(f"Refined edges count (after distinct): {refined_edges_df.count():,}")
+    # Deduplicate edges by grouping on (src, dst, relationship) and aggregating other fields
+    # This prevents duplicate relationships from appearing multiple times when the same
+    # relationship is mentioned in multiple articles with different URLs
+    edge_agg_exprs = [
+        # Keep the first non-null description
+        F.first("description", ignorenulls=True).alias("description"),
+        # Collect all unique URLs as source references
+        F.array_distinct(F.collect_list("url")).alias("urls"),
+        # Keep first non-null for scalar fields
+        F.first("posted_at", ignorenulls=True).alias("posted_at"),
+        F.first("amount", ignorenulls=True).alias("amount"),
+        F.first("country", ignorenulls=True).alias("country"),
+        F.first("currency", ignorenulls=True).alias("currency"),
+        F.first("date", ignorenulls=True).alias("date"),
+        F.first("percentage", ignorenulls=True).alias("percentage"),
+        F.first("quarter", ignorenulls=True).alias("quarter"),
+        # Merge all products and technologies arrays, then deduplicate
+        F.array_distinct(F.flatten(F.collect_list("products"))).alias("products"),
+        F.array_distinct(F.flatten(F.collect_list("technologies"))).alias("technologies"),
+    ]
+
+    refined_edges_df = refined_edges_df.groupBy("src", "dst", "relationship").agg(*edge_agg_exprs)
+    print(f"Refined edges count (after deduplication): {refined_edges_df.count():,}")
 
     # Normalize products and technologies to title case for consistency
     # This turns ["Russell", "russell", "RUSSell"] into ["Russell", "Russell", "Russell"]
-    if "products" in refined_edges_df.columns:
-        refined_edges_df = refined_edges_df.withColumn(
-            "products",
-            F.transform("products", lambda x: F.initcap(x)),
-        )
-    if "technologies" in refined_edges_df.columns:
-        refined_edges_df = refined_edges_df.withColumn(
-            "technologies",
-            F.transform("technologies", lambda x: F.initcap(x)),
-        )
+    refined_edges_df = refined_edges_df.withColumn(
+        "products",
+        F.array_distinct(F.transform("products", lambda x: F.initcap(x))),
+    )
+    refined_edges_df = refined_edges_df.withColumn(
+        "technologies",
+        F.array_distinct(F.transform("technologies", lambda x: F.initcap(x))),
+    )
 
     # Save the refined edges
     output_edges_path = output_paths["edges"]
