@@ -120,11 +120,11 @@ def refine_knowledge_graph(
     # This turns ["Russell", "russell", "RUSSell"] into ["Russell", "Russell", "Russell"]
     refined_edges_df = refined_edges_df.withColumn(
         "products",
-        F.array_distinct(F.transform("products", lambda x: F.initcap(x))),
+        F.array_distinct(F.transform("products", F.initcap)),
     )
     refined_edges_df = refined_edges_df.withColumn(
         "technologies",
-        F.array_distinct(F.transform("technologies", lambda x: F.initcap(x))),
+        F.array_distinct(F.transform("technologies", F.initcap)),
     )
 
     # Save the refined edges
