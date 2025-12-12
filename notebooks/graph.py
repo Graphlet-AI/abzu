@@ -1,44 +1,38 @@
 import marimo
 
 __generated_with = "0.14.17"
-app = marimo.App(width="medium")
+app = marimo.App()
 
 
 @app.cell
 def _():
     import os
     from collections import defaultdict
-    from typing import Union
 
     import graphistry
     import matplotlib.pyplot as plt
     import networkx as nx
     import numpy as np
     import pandas as pd
+    import pyarrow as pa
     import seaborn as sns
-    from networkx import DiGraph, Graph
 
     sns.set_theme(style="white", context="poster")
+
+    GRAPHISTRY_USERNAME = os.getenv("GRAPHISTRY_USERNAME")
+    GRAPHISTRY_PASSWORD = os.getenv("GRAPHISTRY_PASSWORD")
     return (
-        DiGraph,
-        Graph,
-        Union,
+        GRAPHISTRY_PASSWORD,
+        GRAPHISTRY_USERNAME,
         defaultdict,
         graphistry,
         np,
         nx,
-        os,
+        pa,
         pd,
         plt,
         sns,
     )
-
-
-@app.cell
-def _(os):
-    GRAPHISTRY_USERNAME = os.getenv("GRAPHISTRY_USERNAME")
-    GRAPHISTRY_PASSWORD = os.getenv("GRAPHISTRY_PASSWORD")
-    return GRAPHISTRY_PASSWORD, GRAPHISTRY_USERNAME
 
 
 @app.cell
@@ -70,14 +64,14 @@ def _():
     }
     FAVICON_URL = "https://graphlet.ai/assets/icons/favicon.ico"
     LOGO = {
-        "url": "https://graphlet.ai/assets/Branding/Graphlet%20AI.svg",
+        "url": "https://rjurneyopen.s3.amazonaws.com/Graphlet-AI-Logo-Transparent.png",
         "dimensions": {"maxWidth": 100, "maxHeight": 100},
     }
     return FAVICON_URL, GRAPHISTRY_PARAMS, LOGO
 
 
 @app.cell
-def _(DiGraph, Graph, Union, defaultdict):
+def _(defaultdict, np):
     #
     # Graphistry has trouble with null values - this can break a visualization when coloring by value. This utility imputes nulls.
     #
@@ -107,36 +101,90 @@ def _(DiGraph, Graph, Union, defaultdict):
         for node, attrs in G_copy.nodes(data=True):
             for key, value in attrs.items():
                 if (prop_types[key] == str) and needs_replacement(value):
-                    G_copy.nodes[node][key] = 0
+                    G_copy.nodes[node][key] = "0"
+
         return G_copy
 
-    return (clean_graph, needs_replacement)
+    def safe_array_to_string(x):
+        """Convert array/list/ndarray to comma-separated string, handling None and numpy arrays."""
+        if x is None:
+            return ""
+        # Handle numpy arrays by converting to list first
+        if isinstance(x, np.ndarray):
+            x = x.tolist()
+        if isinstance(x, (list, tuple)):
+            return ", ".join(str(item) for item in x)
+        return str(x)
+
+    return needs_replacement, safe_array_to_string
 
 
 @app.cell
-def _(pd):
-    company_df = pd.read_parquet("data/knowledge_graph/companies.parquet")
-    company_df
-    return (company_df,)
+def _(pd, safe_array_to_string):
+    node_df = pd.read_parquet("data/refined_knowledge_graph/nodes.parquet")
+
+    # Flatten nested ticker struct into separate columns
+    if "ticker" in node_df.columns:
+        # First, check if there are any non-null ticker values
+        non_null_tickers = node_df["ticker"].dropna()
+        if len(non_null_tickers) > 0:
+            ticker_df = pd.json_normalize(non_null_tickers)
+            if not ticker_df.empty:
+                ticker_df = ticker_df.add_prefix("ticker_")
+                ticker_df.index = non_null_tickers.index
+                node_df = node_df.join(ticker_df)
+        node_df = node_df.drop(columns=["ticker"])
+
+    # Convert array columns to strings for Graphistry compatibility
+    if "source_uuids" in node_df.columns:
+        node_df["source_uuid_count"] = node_df["source_uuids"].apply(
+            lambda x: len(x) if x is not None and hasattr(x, "__len__") else 0
+        )
+        node_df["source_uuids"] = node_df["source_uuids"].apply(safe_array_to_string)
+    if "match_skip_history" in node_df.columns:
+        node_df["match_skip_history"] = node_df["match_skip_history"].apply(safe_array_to_string)
+
+    # Fill any remaining NaN values with empty strings for string columns
+    for n_col in node_df.select_dtypes(include=["object"]).columns:
+        node_df[n_col] = node_df[n_col].fillna("")
+
+    node_df
+    return (node_df,)
 
 
 @app.cell
-def _(pd):
-    product_df = pd.read_parquet("data/knowledge_graph/products.parquet")
-    product_df
-    return
+def _(pd, safe_array_to_string):
+    relationship_df = pd.read_parquet("data/refined_knowledge_graph/edges.parquet")
 
+    # Flatten nested country struct into separate columns
+    if "country" in relationship_df.columns:
+        # First, check if there are any non-null country values
+        non_null_countries = relationship_df["country"].dropna()
+        if len(non_null_countries) > 0:
+            country_df = pd.json_normalize(non_null_countries)
+            if not country_df.empty:
+                country_df = country_df.add_prefix("country_")
+                country_df.index = non_null_countries.index
+                relationship_df = relationship_df.join(country_df)
+        relationship_df = relationship_df.drop(columns=["country"])
 
-@app.cell
-def _(pd):
-    technology_df = pd.read_parquet("data/knowledge_graph/technologies.parquet")
-    technology_df
-    return
+    # Convert array columns to strings for Graphistry compatibility (handles numpy arrays)
+    if "urls" in relationship_df.columns:
+        relationship_df["url_count"] = relationship_df["urls"].apply(
+            lambda x: len(x) if x is not None and hasattr(x, "__len__") else 0
+        )
+        relationship_df["urls"] = relationship_df["urls"].apply(safe_array_to_string)
+    if "products" in relationship_df.columns:
+        relationship_df["products"] = relationship_df["products"].apply(safe_array_to_string)
+    if "technologies" in relationship_df.columns:
+        relationship_df["technologies"] = relationship_df["technologies"].apply(
+            safe_array_to_string
+        )
 
+    # Fill any remaining NaN values with empty strings for string columns
+    for r_col in relationship_df.select_dtypes(include=["object"]).columns:
+        relationship_df[r_col] = relationship_df[r_col].fillna("")
 
-@app.cell
-def _(pd):
-    relationship_df = pd.read_parquet("data/knowledge_graph/relationships.parquet")
     relationship_df
     return (relationship_df,)
 
@@ -148,42 +196,77 @@ def _(relationship_df):
 
 
 @app.cell
-def _(relationship_df):
-    edge_df = relationship_df[relationship_df.src.notnull() & relationship_df.dst.notnull()]
-    edge_df.count()
+def _(node_df, pa, pd, relationship_df):
+    edge_df = relationship_df[relationship_df.src.notnull() & relationship_df.dst.notnull()].copy()
+
+    # Convert ALL columns to strings for Graphistry/Arrow compatibility
+    # Some columns (amount, percentage, country_gdp) are float64 with NaN values,
+    # which when mixed with strings cause Arrow conversion errors
+    for col in edge_df.columns:
+        # Convert everything to string, handling NaN/None values
+        edge_df[col] = edge_df[col].apply(lambda x: "" if pd.isna(x) else str(x))
+
+    # Fill NaN values for Graphistry compatibility
+    edge_df = edge_df.fillna("")
+
+    print(f"Total edges: {edge_df.count():,}")
+
+    # Debugging column parsing
     return (edge_df,)
 
 
 @app.cell
-def _(edge_df):
-    edge_df
-    return
-
-
-@app.cell
-def _(company_df, edge_df, nx, pd):
-    # 1. Create a map `uuid_to_int`
-    all_uuids = pd.concat([company_df["uuid"], edge_df["src"], edge_df["dst"]]).unique()
+def _(edge_df, node_df, nx, pd):
+    # 1. Create a map `uuid_to_int`.
+    all_uuids = pd.concat([node_df["uuid"], edge_df["src"], edge_df["dst"]]).unique()
     uuid_to_int = {uuid: i for i, uuid in enumerate(all_uuids)}
 
     # Add an integer ID to the company dataframe
-    company_df["id"] = company_df["uuid"].map(uuid_to_int)
+    node_df["id"] = node_df["uuid"].map(uuid_to_int)
 
     # Replace src and dst in edge_df with integer IDs
     edge_df["src"] = edge_df["src"].map(uuid_to_int)
     edge_df["dst"] = edge_df["dst"].map(uuid_to_int)
 
     # 2. Create the graph with integer IDs
-    G = nx.DiGraph()
+    G = nx.from_pandas_edgelist(
+        edge_df, source="src", target="dst", edge_attr=True, create_using=nx.DiGraph()
+    )
 
-    # Add nodes with attributes from the company dataframe
+    G.nodes
+    return (G,)
+
+
+@app.cell
+def _(
+    FAVICON_URL,
+    G,
+    GRAPHISTRY_PARAMS,
+    LOGO,
+    edge_df,
+    graphistry,
+    node_df,
+    nx,
+):
+    # Add nodes with ALL attributes from the company dataframe
     # set_index is important here so the keys of the dict are the node IDs
-    node_attributes = company_df[["id", "name", "description"]].set_index("id").to_dict("index")
-    # G.add_nodes_from takes an iterable of (node, attribute_dict)
+    node_attributes_df = node_df[node_df["id"].notnull()].copy()
+    node_attributes_df = node_attributes_df.set_index("id")
+
+    # Fill NaN values appropriately for Graphistry
+    # node_attributes_df = node_attributes_df.fillna("")
+
+    node_attributes = node_attributes_df.to_dict("index")
+
+    # Add node attributes to the graph
+    nx.set_node_attributes(G, node_attributes)
+
+    # Also ensure all nodes have attributes (some nodes from edges may not be in node_df)
     G.add_nodes_from(node_attributes.items())
 
     # Add edges from the edge dataframe
     # .values creates a numpy array of [src, dst] pairs
+
     G.add_edges_from(
         [
             (row["src"], row["dst"], row.drop(["src", "dst"]).to_dict())
@@ -202,7 +285,33 @@ def _(company_df, edge_df, nx, pd):
 
     # Display a summary of the created graph
     print(G)
-    return (G,)
+
+    # Create Graphistry visualization object
+    g = (
+        graphistry.bind(
+            source="src",
+            destination="dst",
+            node="id",
+            point_title="name",
+            point_label="name",
+        )
+        .scene_settings(
+            edge_opacity=0.4,
+        )
+        .addStyle(
+            page={
+                "title": "Knowledge Graph",
+                "favicon": FAVICON_URL,
+            },
+            logo=LOGO,
+        )
+        .settings(
+            url_params=GRAPHISTRY_PARAMS,
+            height=800,
+        )
+    )
+    g.plot(G)
+    return
 
 
 @app.cell
@@ -252,7 +361,7 @@ def _(G, np, nx):
 
 
 @app.cell
-def _(G, nx, plt, sns):
+def _(G, defaultdict, needs_replacement, nx, plt, sns):
     # Get connected components and their sizes
     components = nx.connected_components(G.to_undirected())
     component_sizes = [len(c) for c in components]
@@ -261,26 +370,17 @@ def _(G, nx, plt, sns):
     plt.figure(figsize=(10, 6))
 
     # Use seaborn to create the histogram
-    sns.histplot(component_sizes, kde=True, bins=30, log_scale=False)
-    plt.title("Histogram of Connected Component Sizes")
+    sns.histplot(component_sizes, kde=True, bins=30, log_scale=True)
+    plt.title("Histogram of Connected Component Sizes - Finance Graph")
     plt.xlabel("Component Size")
     plt.ylabel("Count")
     plt.show()
-    return
 
+    clustering_coeffs = nx.clustering(G)
 
-@app.cell
-def _():
-    # clustering_coeffs = nx.clustering(G)
+    for c_node, clustering_coeff in clustering_coeffs.items():
+        G.nodes[c_node]["clustering_coefficient"] = clustering_coeff
 
-    # for c_node, clustering_coeff in clustering_coeffs.items():
-    #     G.nodes[c_node]['clustering_coefficient'] = clustering_coeff
-
-    return
-
-
-@app.cell
-def _(G, defaultdict, needs_replacement):
     G_clean = G.copy()
 
     # Profile the types in fields
@@ -308,22 +408,18 @@ def _(G, defaultdict, needs_replacement):
         for key, value in attrs.items():
             if (prop_types[key] == str) and needs_replacement(value):
                 G_clean.nodes[node][key] = 0
+
+    G_clean.nodes(data=True)
     return (G_clean,)
 
 
 @app.cell
-def _(G_clean):
-    G_clean.nodes(data=True)
-    return
-
-
-@app.cell
-def _(FAVICON_URL, GRAPHISTRY_PARAMS, G_clean, LOGO, graphistry):
-    g = (
+def _(FAVICON_URL, GRAPHISTRY_PARAMS, G_clean, graphistry):
+    g2 = (
         graphistry.bind(
             source="src",
             destination="dst",
-            node="nodeid",
+            node="id",
             point_title="name",
             point_label="name",
         )
@@ -332,17 +428,17 @@ def _(FAVICON_URL, GRAPHISTRY_PARAMS, G_clean, LOGO, graphistry):
         )
         .addStyle(
             page={
-                "title": "Abzu Capital Graph",
+                "title": "Graphlet Capital Graph",
                 "favicon": FAVICON_URL,
             },
-            logo=LOGO,
+            # logo=LOGO,
         )
         .settings(
             url_params=GRAPHISTRY_PARAMS,
             height=800,
         )
     )
-    g.plot(G_clean)
+    g2.plot(G_clean)
     return
 
 

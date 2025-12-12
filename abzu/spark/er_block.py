@@ -21,13 +21,125 @@ logger = get_logger(__name__)
 
 MAX_BLOCK_SIZE = config.get("process.kg.er.max_block_size", 50)
 
+# Known domain suffixes to remove from company names
+# Sorted by length (longest first) for efficient matching
+DOMAIN_SUFFIXES = tuple(
+    sorted(
+        {
+            ".com",
+            ".org",
+            ".net",
+            ".edu",
+            ".gov",
+            ".mil",
+            ".int",
+            ".io",
+            ".ai",
+            ".co",
+            ".uk",
+            ".us",
+            ".ca",
+            ".au",
+            ".de",
+            ".fr",
+            ".jp",
+            ".cn",
+            ".in",
+            ".br",
+            ".ru",
+            ".it",
+            ".es",
+            ".nl",
+            ".se",
+            ".no",
+            ".dk",
+            ".fi",
+            ".pl",
+            ".mx",
+            ".kr",
+            ".tw",
+            ".sg",
+            ".hk",
+            ".nz",
+            ".ie",
+            ".be",
+            ".ch",
+            ".at",
+            ".cz",
+            ".za",
+            ".il",
+            ".ae",
+            ".sa",
+            ".th",
+            ".vn",
+            ".ph",
+            ".id",
+            ".my",
+            ".pk",
+            ".bd",
+            ".ng",
+            ".ke",
+            ".ug",
+            ".tz",
+            ".gh",
+            ".zm",
+            ".zw",
+            ".biz",
+            ".info",
+            ".name",
+            ".pro",
+            ".museum",
+            ".coop",
+            ".aero",
+            ".xxx",
+            ".travel",
+            ".mobi",
+            ".tel",
+            ".asia",
+            ".cat",
+            ".jobs",
+            ".post",
+        },
+        key=len,
+        reverse=True,
+    )
+)
+
+
+def remove_domain_suffix(name: str) -> str:
+    """
+    Remove known domain suffixes from a company name.
+
+    This function only removes recognized domain suffixes (e.g., .com, .org, .net)
+    to avoid incorrectly removing legitimate periods in company names like
+    "St. Jude Medical" or "Dr. Pepper".
+
+    Args:
+        name: The company name to process
+
+    Returns:
+        The name with domain suffix removed if present, otherwise the original name
+    """
+    if not name:
+        return name
+
+    name_lower = name.lower()
+    for suffix in DOMAIN_SUFFIXES:
+        if name_lower.endswith(suffix):
+            # Remove the suffix and return
+            return name[: -len(suffix)].strip()
+
+    return name
+
 
 @F.udf(T.StringType())
 def get_first_word(name: str) -> str | None:
-    """Extract first word if it's at least 1 character."""
+    """Extract first word if it's at least 1 character, removing domain suffixes."""
     if not name or not name.strip():
         return "UNKNOWN"  # Fallback for empty names
-    words = name.strip().split()
+    # Remove domain suffix (only known TLDs like .com, .org, etc.)
+    name_without_suffix = remove_domain_suffix(name.strip())
+    words = name_without_suffix.split()
     return words[0].upper() if words else "UNKNOWN"
 
 
@@ -36,11 +148,13 @@ def get_acronym(name: str) -> str | None:
     """Generate acronyms from company names, fallback to first word if no acronym."""
     if not name or not name.strip():
         return "UNKNOWN"  # Fallback for empty names
-    acronym = get_acronyms(name)
+    # Remove domain suffix (only known TLDs like .com, .org, etc.)
+    name_without_suffix = remove_domain_suffix(name.strip())
+    acronym = get_acronyms(name_without_suffix)
     if acronym:
         return acronym
     # Fallback to first word if no acronym can be generated
-    words = name.strip().split()
+    words = name_without_suffix.split()
     return words[0].upper() if words else "UNKNOWN"
 
 
@@ -75,6 +189,19 @@ def build_blocks(
         raise ValueError(
             "There is an unsubstituted {format} in the output path. Remove {format} from the path."
         )
+
+    # Check if input file exists
+    if not os.path.exists(input_path):
+        error_msg = (
+            f"Companies file not found: {input_path}\n\n"
+            f"The blocking step requires company data.\n"
+            f"For iteration 1, please ensure you have run the KG raw processing step:\n"
+            f"  abzu process kg raw\n\n"
+            f"For iteration 2+, the previous iteration's resolved companies are used.\n"
+            f"Please ensure the previous iteration completed successfully."
+        )
+        logger.error(error_msg)
+        raise FileNotFoundError(error_msg)
 
     # Create SparkSession with appropriate configuration
     spark: SparkSession = get_spark_session(
@@ -443,6 +570,12 @@ def build_blocks(
     acronym_only_blocks.createOrReplaceTempView("acronym_blocks_temp")
 
     # 4) Apply the UDTF using SQL with LATERAL syntax - only select UDTF output columns
+    # Count blocks before splitting
+    combined_blocks_before = combined_blocks.count()
+    first_word_blocks_before = first_word_only_blocks.count()
+    acronym_blocks_before = acronym_only_blocks.count()
+    total_blocks_before = combined_blocks_before + first_word_blocks_before + acronym_blocks_before
+
     combined_blocks_final = (
         spark.sql(
             """
@@ -476,20 +609,55 @@ def build_blocks(
         .cache()
     )
 
+    # Count blocks after splitting
+    combined_blocks_after = combined_blocks_final.count()
+    first_word_blocks_after = first_word_blocks_final.count()
+    acronym_blocks_after = acronym_blocks_final.count()
+    total_blocks_after = combined_blocks_after + first_word_blocks_after + acronym_blocks_after
+
+    # Report on block splitting
+    total_sub_blocks_created = total_blocks_after - total_blocks_before
+    if total_sub_blocks_created > 0:
+        logger.info(
+            f"Block splitting created {total_sub_blocks_created:,} additional sub-blocks "
+            f"({total_blocks_before:,} → {total_blocks_after:,})"
+        )
+        logger.info(
+            f"  Combined blocks: {combined_blocks_before:,} → {combined_blocks_after:,} "
+            f"(+{combined_blocks_after - combined_blocks_before:,})"
+        )
+        logger.info(
+            f"  First-word blocks: {first_word_blocks_before:,} → {first_word_blocks_after:,} "
+            f"(+{first_word_blocks_after - first_word_blocks_before:,})"
+        )
+        logger.info(
+            f"  Acronym blocks: {acronym_blocks_before:,} → {acronym_blocks_after:,} "
+            f"(+{acronym_blocks_after - acronym_blocks_before:,})"
+        )
+    else:
+        logger.info(f"No blocks exceeded max size of {actual_max_block_size}, no splitting needed")
+
     # Save combined blocks separately
+    # Use ignoreNullFields=false to preserve all Company fields even when null
     combined_blocks_json_path = os.path.join(output_path, "combined_blocks.json")
     logger.info(f"Persisting combined blocks to {combined_blocks_json_path}")
-    combined_blocks_final.repartition(1).write.mode("overwrite").json(combined_blocks_json_path)
+    combined_blocks_final.repartition(1).write.mode("overwrite").option(
+        "ignoreNullFields", "false"
+    ).json(combined_blocks_json_path)
 
     # Save first_word_only blocks separately
     first_word_json_path = os.path.join(output_path, "first_word_blocks.json")
     logger.info(f"Persisting first word blocks to {first_word_json_path}")
-    first_word_blocks_final.repartition(1).write.mode("overwrite").json(first_word_json_path)
+    first_word_blocks_final.repartition(1).write.mode("overwrite").option(
+        "ignoreNullFields", "false"
+    ).json(first_word_json_path)
 
     # Save acronym_only blocks separately
     acronym_json_path = os.path.join(output_path, "acronym_blocks.json")
     logger.info(f"Persisting acronym blocks to {acronym_json_path}")
-    acronym_blocks_final.repartition(1).write.mode("overwrite").json(acronym_json_path)
+    acronym_blocks_final.repartition(1).write.mode("overwrite").option(
+        "ignoreNullFields", "false"
+    ).json(acronym_json_path)
 
     # Handle companies with UNKNOWN block keys - create singleton blocks for them
     unblocked_blocks_df = None
@@ -532,7 +700,9 @@ def build_blocks(
     all_blocks_json_path = os.path.join(output_path, "all_blocks.json")
 
     logger.info(f"Persisting all blocks to {all_blocks_json_path}")
-    all_blocks_df.repartition(1).write.mode("overwrite").json(all_blocks_json_path)
+    all_blocks_df.repartition(1).write.mode("overwrite").option("ignoreNullFields", "false").json(
+        all_blocks_json_path
+    )
 
     # Count total blocks and companies in unified output
     all_blocks_count = all_blocks_df.count()
@@ -580,37 +750,80 @@ def build_blocks(
     original_first_word_count = first_word_only_blocks.count()
     original_acronym_count = acronym_only_blocks.count()
 
+    # Calculate additional metrics for summary
+    total_company_instances = (
+        combined_companies_count
+        + first_word_only_companies_count
+        + acronym_only_companies_count
+        + (unblocked_count if unblocked_count > 0 else 0)
+    )
+    duplication_factor = total_company_instances / total_companies if total_companies > 0 else 0
+
+    # Count singleton blocks accurately
+    singleton_blocks = 0
+    multi_company_blocks = 0
+    for block_type_df in [combined_blocks_final, first_word_blocks_final, acronym_blocks_final]:
+        if block_type_df is not None:
+            singleton_blocks += block_type_df.filter(F.col("block_size") == F.lit(1)).count()
+            multi_company_blocks += block_type_df.filter(
+                F.col("block_size") > F.lit(1)  # type: ignore[call-arg,operator]
+            ).count()
+
+    logger.info("\n" + "=" * 60)
+    logger.info("ENTITY RESOLUTION BLOCKING SUMMARY")
     logger.info("=" * 60)
-    logger.info("ENTITY RESOLUTION BLOCKS CREATED")
-    logger.info("=" * 60)
-    logger.info(f"Total companies: {total_companies:,}")
-    logger.info("")
+    logger.info("WHAT IS BLOCKING?")
+    logger.info("  Groups similar companies together to reduce comparisons")
     logger.info(
-        f"Combined Blocks (overlapping keys): {combined_block_count:,} blocks with {combined_companies_count:,} companies"
+        f"  Without blocking: {total_companies:,} × {total_companies:,} = {total_companies * total_companies:,} comparisons"
+    )
+    logger.info(f"  With blocking: Only compare within {total_blocks:,} small blocks")
+    logger.info("")
+    logger.info("INPUT DATA:")
+    logger.info(f"  Total unique companies: {total_companies:,}")
+    logger.info("")
+    logger.info("BLOCKING STRATEGY RESULTS:")
+    logger.info(
+        f"  Combined Blocks (both strategies agree): {combined_block_count:,} blocks, {combined_companies_count:,} companies"
     )
     if combined_block_count != original_combined_count:
-        logger.info(f"  (Split from {original_combined_count:,} original blocks)")
-    logger.info(f"  Saved to: {combined_blocks_json_path}")
+        logger.info(
+            f"    └─ Split from {original_combined_count:,} original blocks (chunks > {actual_max_block_size})"
+        )
     logger.info(
-        f"First Word Only Blocks: {first_word_only_count:,} blocks with {first_word_only_companies_count:,} companies"
+        f"  First Word Only Blocks: {first_word_only_count:,} blocks, {first_word_only_companies_count:,} companies"
     )
     if first_word_only_count != original_first_word_count:
-        logger.info(f"  (Split from {original_first_word_count:,} original blocks)")
-    logger.info(f"  Saved to: {first_word_json_path}")
+        logger.info(f"    └─ Split from {original_first_word_count:,} original blocks")
     logger.info(
-        f"Acronym Only Blocks: {acronym_only_count:,} blocks with {acronym_only_companies_count:,} companies"
+        f"  Acronym Only Blocks: {acronym_only_count:,} blocks, {acronym_only_companies_count:,} companies"
     )
     if acronym_only_count != original_acronym_count:
-        logger.info(f"  (Split from {original_acronym_count:,} original blocks)")
-    logger.info(f"  Saved to: {acronym_json_path}")
+        logger.info(f"    └─ Split from {original_acronym_count:,} original blocks")
     if unblocked_count > 0:
         logger.info(
-            f"Unblocked Companies (singleton blocks): {unblocked_count:,} blocks with {unblocked_count:,} companies"
+            f"  Unblocked (no valid keys): {unblocked_count:,} singleton blocks, {unblocked_count:,} companies"
         )
-        logger.info("  (Companies with no valid block keys)")
+    logger.info("")
+    logger.info("BLOCK STATISTICS:")
+    logger.info(f"  Total blocks created: {total_blocks:,}")
     logger.info(
-        f"Total Blocks: {total_blocks:,} blocks (all blocks ≤ {actual_max_block_size} companies)"
+        f"  Singleton blocks (no match possible): {singleton_blocks:,} ({singleton_blocks / total_blocks * 100:.1f}%)"
     )
+    logger.info(
+        f"  Multi-company blocks (matchable): {multi_company_blocks:,} ({multi_company_blocks / total_blocks * 100:.1f}%)"
+    )
+    logger.info(f"  Maximum block size: {actual_max_block_size} companies")
+    logger.info(f"  Company instances across blocks: {total_company_instances:,}")
+    logger.info(
+        f"  Duplication factor: {duplication_factor:.2f}x (companies appear in multiple blocks)"
+    )
+    logger.info("")
+    logger.info("OUTPUT FILES:")
+    logger.info(f"  Combined blocks: {combined_blocks_json_path}")
+    logger.info(f"  First word blocks: {first_word_json_path}")
+    logger.info(f"  Acronym blocks: {acronym_json_path}")
+    logger.info(f"  All blocks unified: {all_blocks_json_path}")
     logger.info("=" * 60)
 
     # Clean up

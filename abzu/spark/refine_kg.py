@@ -90,7 +90,64 @@ def refine_knowledge_graph(
     )
 
     refined_edges_df.show(20, False)
-    print(f"Refined edges count: {refined_edges_df.count():,}")
+    print(f"Refined edges count (before deduplication): {refined_edges_df.count():,}")
+
+    # Deduplicate edges by grouping on (src, dst, relationship) and aggregating other fields
+    # This prevents duplicate relationships from appearing multiple times when the same
+    # relationship is mentioned in multiple articles with different URLs
+    edge_agg_exprs = [
+        # Keep the first non-null description
+        F.first("description", ignorenulls=True).alias("description"),
+        # Collect all unique URLs as source references
+        F.array_distinct(F.collect_list("url")).alias("urls"),
+        # Keep first non-null for scalar fields
+        F.first("posted_at", ignorenulls=True).alias("posted_at"),
+        F.first("amount", ignorenulls=True).alias("amount"),
+        F.first("country", ignorenulls=True).alias("country"),
+        F.first("currency", ignorenulls=True).alias("currency"),
+        F.first("date", ignorenulls=True).alias("date"),
+        F.first("percentage", ignorenulls=True).alias("percentage"),
+        F.first("quarter", ignorenulls=True).alias("quarter"),
+        # Merge all products and technologies arrays, then deduplicate
+        F.array_distinct(F.flatten(F.collect_list("products"))).alias("products"),
+        F.array_distinct(F.flatten(F.collect_list("technologies"))).alias("technologies"),
+    ]
+
+    refined_edges_df = refined_edges_df.groupBy("src", "dst", "relationship").agg(*edge_agg_exprs)
+    print(f"Refined edges count (after deduplication): {refined_edges_df.count():,}")
+
+    # Normalize products and technologies for consistency
+    # Strategy: Preserve all-uppercase terms (likely acronyms like IBM, AWS, API)
+    # and use title case for everything else
+    # Examples:
+    #   - "IBM", "ibm", "Ibm" -> "IBM" (all-uppercase preserved)
+    #   - "Russell", "russell", "RUSSell" -> "Russell" (title case)
+    #   - "API", "api" -> "API" (all-uppercase preserved)
+    # Note: This doesn't handle mixed-case brand names like "iPhone" or "PostgreSQL"
+    # which would become "Iphone" and "Postgresql". A more sophisticated solution
+    # would require a dictionary of known terms.
+    refined_edges_df = refined_edges_df.withColumn(
+        "products",
+        F.array_distinct(
+            F.transform(
+                "products",
+                lambda x: F.when(
+                    (F.upper(x) == x) & (F.length(x) > 1), F.upper(x)
+                ).otherwise(F.initcap(x)),
+            )
+        ),
+    )
+    refined_edges_df = refined_edges_df.withColumn(
+        "technologies",
+        F.array_distinct(
+            F.transform(
+                "technologies",
+                lambda x: F.when(
+                    (F.upper(x) == x) & (F.length(x) > 1), F.upper(x)
+                ).otherwise(F.initcap(x)),
+            )
+        ),
+    )
 
     # Save the refined edges
     output_edges_path = output_paths["edges"]
@@ -98,8 +155,81 @@ def refine_knowledge_graph(
     refined_edges_df.write.mode("overwrite").parquet(output_edges_path)
     logger.info(f"Refined knowledge graph edges saved to: {output_edges_path}")
 
-    # Save the nodes (companies)
+    # Also save edges as single JSON file for inspection with jq
+    output_edges_json = output_edges_path.replace(".parquet", ".jsonl")
+    print(f"Saving edges to JSON: {output_edges_json}")
+    refined_edges_df.coalesce(1).write.mode("overwrite").option("ignoreNullFields", "false").json(
+        output_edges_json
+    )
+    logger.info(f"Refined knowledge graph edges (JSON) saved to: {output_edges_json}")
+
+    # Filter out companies with degree zero (no edges)
+    connected_src_nodes = refined_edges_df.select("src")
+    connected_dst_nodes = refined_edges_df.select(F.col("dst").alias("src"))
+    connected_nodes = connected_src_nodes.union(connected_dst_nodes).distinct()
+
+    print(f"Total companies before filtering: {companies_df.count():,}")
+    filtered_companies_df = companies_df.join(
+        connected_nodes, companies_df.uuid == connected_nodes.src, how="inner"
+    ).drop("src")
+    print(f"Total companies after filtering (degree > 0): {filtered_companies_df.count():,}")
+
+    # Deduplicate nodes - companies appear in multiple blocks with same UUID
+    print(f"Nodes before deduplication: {filtered_companies_df.count():,}")
+
+    # Build aggregation expressions dynamically based on available columns
+    # This handles cases where some columns (like cik) may be missing from older data
+    available_columns = set(filtered_companies_df.columns)
+    agg_exprs = []
+
+    # Scalar fields to aggregate with first()
+    scalar_fields = [
+        "name",
+        "cik",
+        "description",
+        "ceo",
+        "employees",
+        "founded_year",
+        "headquarters_location",
+        "jurisdiction",
+        "linkedin_url",
+        "revenue_usd",
+        "website_url",
+        "ticker",
+    ]
+    for field in scalar_fields:
+        if field in available_columns:
+            agg_exprs.append(F.first(field, ignorenulls=True).alias(field))
+
+    # Array fields to aggregate with collect_set + flatten
+    if "source_uuids" in available_columns:
+        agg_exprs.append(
+            F.array_distinct(F.flatten(F.collect_set("source_uuids"))).alias("source_uuids")
+        )
+    if "match_skip_history" in available_columns:
+        agg_exprs.append(
+            F.array_distinct(F.flatten(F.collect_set("match_skip_history"))).alias(
+                "match_skip_history"
+            )
+        )
+
+    # Boolean field - prefer false (matched) over true (skipped)
+    if "match_skip" in available_columns:
+        agg_exprs.append(F.min("match_skip").alias("match_skip"))
+
+    deduplicated_nodes_df = filtered_companies_df.groupBy("uuid").agg(*agg_exprs)
+    print(f"Nodes after deduplication: {deduplicated_nodes_df.count():,}")
+
+    # Save the deduplicated nodes (companies with edges only)
     output_nodes_path = output_paths["nodes"]
     print(f"Saving nodes to: {output_nodes_path}")
-    companies_df.write.mode("overwrite").parquet(output_nodes_path)
+    deduplicated_nodes_df.write.mode("overwrite").parquet(output_nodes_path)
     logger.info(f"Refined knowledge graph nodes saved to: {output_nodes_path}")
+
+    # Also save nodes as single JSON file for inspection with jq
+    output_nodes_json = output_nodes_path.replace(".parquet", ".jsonl")
+    print(f"Saving nodes to JSON: {output_nodes_json}")
+    deduplicated_nodes_df.coalesce(1).write.mode("overwrite").option(
+        "ignoreNullFields", "false"
+    ).json(output_nodes_json)
+    logger.info(f"Refined knowledge graph nodes (JSON) saved to: {output_nodes_json}")

@@ -277,6 +277,11 @@ def build_knowledge_graph(
     if logger.isEnabledFor(logging.DEBUG):
         companies_df.show(5, truncate=100, vertical=True)
 
+    # Clean company names - remove carriage returns and extra whitespace
+    companies_df = companies_df.withColumn(
+        "name", F.trim(F.regexp_replace(F.col("name"), r"[\r\n]+", " "))
+    )
+
     # Put the uuid, url columns first
     companies_df = companies_df.select(
         ["uuid", "url", "name", "description"]
@@ -446,12 +451,56 @@ def build_knowledge_graph(
         F.col("src").isNotNull() & F.col("dst").isNotNull()  # type: ignore[call-arg]
     )
 
+    #
+    # Replace product/technology UUIDs with names for visualization
+    #
+    logger.info("Replacing product/technology UUIDs with names...")
+
+    # Create lookup maps for products and technologies (uuid -> name)
+    products_lookup = products_df.select(
+        F.col("uuid").alias("product_uuid"),
+        F.col("name").alias("product_name"),
+    ).distinct()
+
+    technologies_lookup = technologies_df.select(
+        F.col("uuid").alias("tech_uuid"),
+        F.col("name").alias("tech_name"),
+    ).distinct()
+
+    # Collect lookups as broadcast variables for efficiency
+    products_map = {row["product_uuid"]: row["product_name"] for row in products_lookup.collect()}
+    technologies_map = {row["tech_uuid"]: row["tech_name"] for row in technologies_lookup.collect()}
+
+    # Broadcast the maps
+    products_map_bc = spark.sparkContext.broadcast(products_map)
+    technologies_map_bc = spark.sparkContext.broadcast(technologies_map)
+
+    # UDFs that use the broadcast variables
+    @F.udf(T.ArrayType(T.StringType()))
+    def replace_product_uuids(uuids: list) -> list:
+        if uuids is None:
+            return None
+        return [products_map_bc.value.get(uuid, uuid) for uuid in uuids if uuid is not None]
+
+    @F.udf(T.ArrayType(T.StringType()))
+    def replace_tech_uuids(uuids: list) -> list:
+        if uuids is None:
+            return None
+        return [technologies_map_bc.value.get(uuid, uuid) for uuid in uuids if uuid is not None]
+
+    # Apply the UDFs to replace UUIDs with names
+    relationships_with_names_df = relationships_clean_df.withColumn(
+        "products", replace_product_uuids(F.col("products"))
+    ).withColumn("technologies", replace_tech_uuids(F.col("technologies")))
+
     relationships_output_path = os.path.join(output_path, "relationships.parquet")
-    relationships_clean_df.repartition(1).write.mode("overwrite").parquet(relationships_output_path)
+    relationships_with_names_df.repartition(1).write.mode("overwrite").parquet(
+        relationships_output_path
+    )
     logger.info(f"Saved {relationships_df.count():,} relationships to {relationships_output_path}")
 
     relationships_jsonl_output_path = os.path.join(output_path, "relationships.jsonl")
-    relationships_clean_df.repartition(1).write.mode("overwrite").json(
+    relationships_with_names_df.repartition(1).write.mode("overwrite").json(
         relationships_jsonl_output_path
     )
     logger.info(f"Saved relationships to {relationships_jsonl_output_path}")

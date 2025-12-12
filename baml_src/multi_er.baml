@@ -99,12 +99,10 @@ test TwoCompanyTest {
             uuid null
             exchange "UQ"
             symbol "TSLA"
-            source_text_snippet null
           }
           description "Tesla is a leader in electric transportation and energy storage, producing high-performance EVs, solar solutions, battery systems, and pioneering autonomous driving software to accelerate the global shift toward sustainable energy."
           founded_year 2003
           ceo "Elon Musk"
-          source_text_snippet null
           source_ids null
           source_uuids null
         }
@@ -116,11 +114,9 @@ test TwoCompanyTest {
             id 4
             uuid null
             symbol "TSLA"
-            source_text_snippet null
           }
           description "Tesla is known for its electric car innovations and has developed the Powerwall home battery, launched in 2015 to advance accessible solar energy storage and reliable backup power for homes"
           headquarters_location "Austin, United States"
-          source_text_snippet null
           source_ids null
           source_uuids null
         }
@@ -143,12 +139,10 @@ test UUIDTrackingTest {
             uuid null
             exchange "UQ"
             symbol "TSLA"
-            source_text_snippet null
           }
           description "Tesla is a leader in electric transportation and energy storage, producing high-performance EVs, solar solutions, battery systems, and pioneering autonomous driving software to accelerate the global shift toward sustainable energy."
           founded_year 2003
           ceo "Elon Musk"
-          source_text_snippet null
           source_ids null
           source_uuids null
         }
@@ -160,11 +154,9 @@ test UUIDTrackingTest {
             id 4
             uuid null
             symbol "TSLA"
-            source_text_snippet null
           }
           description "Tesla is known for its electric car innovations and has developed the Powerwall home battery, launched in 2015 to advance accessible solar energy storage and reliable backup power for homes"
           headquarters_location "Austin, United States"
-          source_text_snippet null
           source_ids null
           source_uuids null
         }
@@ -187,13 +179,11 @@ test MultipleSourceUUIDsTest {
             uuid null
             exchange "UQ"
             symbol "NVDA"
-            source_text_snippet null
           }
           description "Leading AI and GPU technology company specializing in artificial intelligence computing and graphics processing"
           headquarters_location "Santa Clara, CA"
           founded_year 1993
           ceo "Jensen Huang"
-          source_text_snippet null
           source_ids null
           source_uuids ["original-doc-uuid-456", "article-uuid-789"]
         }
@@ -205,13 +195,11 @@ test MultipleSourceUUIDsTest {
             id 2
             uuid null
             symbol "NVDA"
-            source_text_snippet null
           }
           description "Graphics processing unit manufacturer and AI computing leader known for GeForce, Quadro, and data center products"
           website_url "https://nvidia.com"
           revenue_usd 26974000000
           employees 22473
-          source_text_snippet null
           source_ids null
           source_uuids ["news-uuid-def", "report-uuid-ghi", "blog-uuid-jkl"]
         }
@@ -222,7 +210,6 @@ test MultipleSourceUUIDsTest {
           ticker null
           description "Technology company that designs GPUs for gaming and professional markets, as well as system on a chip units"
           linkedin_url "https://www.linkedin.com/company/nvidia/"
-          source_text_snippet null
           source_ids null
           source_uuids ["wiki-uuid-mno", "sec-filing-uuid-pqr"]
         }
@@ -251,8 +238,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -270,8 +256,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -289,8 +274,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -324,8 +308,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -343,8 +326,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -362,8 +344,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -381,8 +362,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -400,8 +380,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -419,8 +398,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -438,8 +416,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -457,8 +434,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -476,8 +452,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -495,8 +470,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -514,8 +488,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -533,8 +506,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -552,8 +524,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -571,8 +542,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -590,8 +560,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -609,8 +578,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -628,8 +596,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -647,8 +614,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -666,8 +632,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -685,8 +650,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -704,8 +668,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -723,8 +686,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -742,8 +704,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -761,8 +722,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -780,8 +740,7 @@ test WikiEnrichTest {
                     founded_year 1993
                     ceo "Jensen Huang"
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -799,8 +758,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -818,8 +776,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -837,8 +794,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -856,8 +812,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -875,8 +830,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -894,8 +848,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -913,8 +866,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -932,8 +884,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -951,8 +902,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -970,8 +920,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -989,8 +938,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -1008,8 +956,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -1027,8 +974,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -1046,8 +992,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -1065,8 +1010,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -1084,8 +1028,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -1103,8 +1046,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -1122,8 +1064,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -1141,8 +1082,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -1160,8 +1100,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -1179,8 +1118,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -1198,8 +1136,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -1217,8 +1154,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -1236,8 +1172,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -1255,8 +1190,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -1274,8 +1208,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -1293,8 +1226,7 @@ test WikiEnrichTest {
                     founded_year 1975
                     ceo "Steve Ballmer"
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -1312,8 +1244,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -1336,8 +1267,7 @@ test WikiEnrichTest {
                     founded_year 1993
                     ceo "Jensen Huang"
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -1355,8 +1285,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo "Sam Altman"
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -1374,8 +1303,7 @@ test WikiEnrichTest {
                     founded_year 1977
                     ceo "Phil White"
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -1393,8 +1321,7 @@ test WikiEnrichTest {
                     founded_year 2015
                     ceo "Tom Kalinske"
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -1412,8 +1339,7 @@ test WikiEnrichTest {
                     founded_year null
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -1431,8 +1357,7 @@ test WikiEnrichTest {
                     founded_year 1865
                     ceo "Masayoshi Son"
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -1450,8 +1375,7 @@ test WikiEnrichTest {
                     founded_year 1865
                     ceo "Masayoshi Son"
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
                 {
@@ -1469,8 +1393,7 @@ test WikiEnrichTest {
                     founded_year 2017
                     ceo null
                     linkedin_url null
-                    source_text_snippet null
-                    source_ids null
+                            source_ids null
                     source_uuids null
                 }
             ]
