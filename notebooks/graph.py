@@ -218,8 +218,6 @@ def _(node_df, pa, pd, relationship_df):
     # Fill NaN values for Graphistry compatibility
     edge_df = edge_df.fillna("")
 
-    print(f"Total edges: {edge_df.count():,}")
-
     # Debugging column parsing
     for c in node_df.columns:
         print("trying col", c)
@@ -322,7 +320,7 @@ def _(
             height=800,
         )
     )
-    g.plot(G)
+    g.plot(G, validate=False, warn=True)
     return
 
 
@@ -450,12 +448,7 @@ def _(FAVICON_URL, GRAPHISTRY_PARAMS, G_clean, graphistry):
             height=800,
         )
     )
-    g2.plot(G_clean)
-    return
-
-
-@app.cell
-def _():
+    g2.plot(G_clean, validate=False, warn=True)
     return
 
 
