@@ -249,11 +249,14 @@ async def process_articles_async(
     """
     # Process in batches - starting with the most recent articles
     all_results: list[IndustryArticle | BaseException | None] = []
-    for i in tqdm(reversed(range(0, len(articles), batch_size))):
+    batch_indices = list(reversed(range(0, len(articles), batch_size)))
+    total_batches = len(batch_indices)
+
+    for batch_num, i in enumerate(
+        tqdm(batch_indices, desc="Processing articles", unit="batch"), start=1
+    ):
         batch = articles[i : i + batch_size]
-        logger.info(
-            f"Processing batch {i // batch_size + 1}/{(len(articles) + batch_size - 1) // batch_size}"
-        )
+        logger.info(f"Processing batch {batch_num}/{total_batches}")
         batch_results = await process_batch(batch)
         all_results.extend(batch_results)
 
