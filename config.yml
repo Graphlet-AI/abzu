@@ -144,10 +144,13 @@ process:
       output: "${base_dir}/knowledge_graph"
 
     tickers:
-      input: "${process.kg.raw.output}/companies.jsonl"
-      tickers_file: "${base_dir}/sec/company_tickers.json"
+      url: "https://www.sec.gov/files/company_tickers.json"
+      cache: "${base_dir}/sec/company_tickers.json"
+      input: "${process.kg.raw.output}/companies.parquet"
       output: "${process.kg.raw.output}/companies_with_tickers.jsonl"
       company_batch_size: 20
+    
+    
 
     wiki:
       input: "${process.kg.tickers.output}"
