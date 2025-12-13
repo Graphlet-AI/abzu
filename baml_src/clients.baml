@@ -40,17 +40,17 @@ client<llm> Gemini20Flash {
     }
 }
 
-// client<llm> Gemini25FlashLite {
-//     provider google-ai
-//     retry_policy Exponential
-//     options {
-//         model "gemini-2.5-flash-lite"
-//         api_key env.GEMINI_API_KEY
-//         generationConfig {
-//             temperature 0.0
-//         }
-//     }
-// }
+client<llm> Gemini25FlashLite {
+    provider google-ai
+    retry_policy Exponential
+    options {
+        model "gemini-2.5-flash-lite"
+        api_key env.GEMINI_API_KEY
+        generationConfig {
+            temperature 0.0
+        }
+    }
+}
 
 // client<llm> Gemini25Pro {
 //     provider google-ai

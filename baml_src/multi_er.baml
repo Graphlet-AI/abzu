@@ -8,7 +8,7 @@ class CompanyList {
 
 function MultiEntityResolution(company_list: CompanyList) -> CompanyList {
   // see clients.baml
-  client Gemini20Flash
+  client Gemini25FlashLite
 
   // The prompt uses Jinja syntax. Change the models or this text and watch the prompt preview change!
   prompt #"
@@ -60,7 +60,7 @@ template_string FewShotCompanies(examples: MergeCompanyExampleSet) #"
 
 function FewShotMultiEntityResolution(company_list: CompanyList, merge_companies_example_set: MergeCompanyExampleSet) -> CompanyList {
   // see clients.baml
-  client Gemini20Flash
+  client Gemini25FlashLite
 
   // The prompt uses Jinja syntax. Change the models or this text and watch the prompt preview change!
   prompt #"

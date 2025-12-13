@@ -12,7 +12,7 @@ class ResolvedCompany {
 
 function FinalEntityResolution(duplicate_group: DuplicateCompanyGroup) -> ResolvedCompany {
   // see clients.baml
-  client Gemini20Flash
+  client Gemini25FlashLite
 
   // The prompt uses Jinja syntax
   prompt #"
