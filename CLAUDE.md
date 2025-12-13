@@ -123,6 +123,15 @@ Test one iteration of the full entity resolution pipeline each time you make cha
 - Space Lines - never create a line with only spaces.
 - Imports - don't check if things are installed and handle it with a try/except. Instead, assume they are installed and import them directly. If they are not installed, the code will fail at runtime, which is acceptable in this project.
 
+## File Formats
+
+Always save data in two formats:
+
+1. Parquet - for efficient processing with Spark and Pandas without processing sub-folders manually.
+2. Single file JSONL - for debugging and manual inspection.
+
+When writing code that outputs data, ensure both formats are written unless explicitly instructed otherwise.
+
 ## Development Guidelines
 
 - Command Line Interfaces - at the end of your coding tasks, please alter the 'abzu' CLI to accommodate the changes. It is a Python / Click CLI.
