@@ -124,40 +124,48 @@ def load_tickers(tickers_path: str) -> list[dict[str, Any]]:
 
 
 def load_companies(companies_path: str) -> list[dict[str, Any]]:
-    """Load companies from JSONL file or Spark output directory.
+    """Load companies from Parquet file or directory.
 
     Args:
-        companies_path: Path to the companies.jsonl file or Spark output directory
+        companies_path: Path to the companies.parquet file or Spark output directory
 
     Returns:
         List of company dictionaries
     """
-    import glob
-    import os
+    import math
+
+    import numpy as np
+    import pandas as pd
 
     logger.info(f"Loading companies from {companies_path}")
 
-    # Handle Spark output directory (contains part-*.json files)
-    if os.path.isdir(companies_path):
-        part_files = glob.glob(os.path.join(companies_path, "part-*.json"))
-        if part_files:
-            companies: list[dict[str, Any]] = []
-            for part_file in sorted(part_files):
-                companies.extend(load_jsonl(part_file))
-            logger.info(f"Loaded {len(companies):,} companies from Spark output directory")
-            return companies
+    # Pandas read_parquet handles both files and directories
+    df = pd.read_parquet(companies_path)
 
-    # Regular JSONL file
-    companies = load_jsonl(companies_path)
+    # Convert to list of dicts
+    companies = df.to_dict(orient="records")
+
+    # Replace NaN/NaT with None for Pydantic compatibility
+    # Pandas converts null integers to float NaN, which Pydantic rejects
+    for company in companies:
+        for key, value in company.items():
+            if isinstance(value, float) and math.isnan(value):
+                company[key] = None
+            elif isinstance(value, np.floating) and np.isnan(value):
+                company[key] = None
+            elif pd.isna(value):
+                company[key] = None
+
     logger.info(f"Loaded {len(companies):,} companies")
     return companies
 
 
-def convert_to_baml_company(company_dict: dict[str, Any]) -> Company:
+def convert_to_baml_company(company_dict: dict[str, Any], company_id: int) -> Company:
     """Convert a company dictionary to a BAML Company object.
 
     Args:
         company_dict: Dictionary with company fields
+        company_id: Consecutive integer ID for this company
 
     Returns:
         BAML Company object
@@ -174,7 +182,7 @@ def convert_to_baml_company(company_dict: dict[str, Any]) -> Company:
             )
 
     return Company(
-        id=company_dict.get("id", 0),
+        id=company_id,
         uuid=company_dict.get("uuid"),
         name=company_dict.get("name", ""),
         cik=company_dict.get("cik"),
@@ -188,7 +196,7 @@ def convert_to_baml_company(company_dict: dict[str, Any]) -> Company:
         founded_year=company_dict.get("founded_year"),
         ceo=company_dict.get("ceo"),
         linkedin_url=company_dict.get("linkedin_url"),
-        source_ids=company_dict.get("source_ids"),
+        source_ids=None,  # Don't use source_ids from previous iterations
         source_uuids=company_dict.get("source_uuids"),
         match_skip=company_dict.get("match_skip"),
         match_skip_reason=company_dict.get("match_skip_reason"),
@@ -208,7 +216,7 @@ def convert_to_baml_ticker(ticker_dict: dict[str, Any], ticker_id: int) -> Ticke
     """
     return Ticker(
         id=ticker_id,
-        uuid=None,
+        uuid=ticker_dict.get("uuid"),
         symbol=ticker_dict.get("symbol", ""),
         exchange=ticker_dict.get("exchange"),
     )
@@ -244,6 +252,7 @@ async def process_tickers_async(
     output_path: str,
     url: str = config.get("process.kg.tickers.url"),
     company_batch_size: int = config.get("process.kg.tickers.company_batch_size"),
+    limit: int | None = None,
     download: bool = True,
 ) -> int:
     """Process companies and match them with SEC tickers.
@@ -254,6 +263,7 @@ async def process_tickers_async(
         output_path: Path to write enriched companies
         url: URL to download SEC tickers from
         company_batch_size: Number of companies per batch
+        limit: Maximum number of companies to process (for testing)
         download: Whether to download tickers from SEC (uses cache if exists)
 
     Returns:
@@ -267,6 +277,11 @@ async def process_tickers_async(
     companies_data = load_companies(companies_path)
     tickers_data = load_tickers(tickers_path)
 
+    # Apply limit if specified
+    if limit is not None:
+        companies_data = companies_data[:limit]
+        logger.info(f"Limited to {len(companies_data):,} companies")
+
     if not companies_data:
         logger.error("No companies to process")
         return 1
@@ -275,8 +290,8 @@ async def process_tickers_async(
         logger.error("No tickers to process")
         return 1
 
-    # Convert to BAML objects
-    baml_companies = [convert_to_baml_company(c) for c in companies_data]
+    # Convert to BAML objects with consecutive integer IDs
+    baml_companies = [convert_to_baml_company(c, i) for i, c in enumerate(companies_data)]
     # Send ALL tickers with each request - LLM will find matches
     baml_tickers = [convert_to_baml_ticker(t, i) for i, t in enumerate(tickers_data)]
 
@@ -286,9 +301,14 @@ async def process_tickers_async(
     all_results: list[Company] = []
     start_time = time.time()
 
-    for i in tqdm(range(0, len(baml_companies), company_batch_size)):
+    total_batches = (len(baml_companies) + company_batch_size - 1) // company_batch_size
+    for i in tqdm(
+        range(0, len(baml_companies), company_batch_size),
+        desc="Matching tickers",
+        total=total_batches,
+    ):
         batch = baml_companies[i : i + company_batch_size]
-        logger.info(f"Processing batch {i // company_batch_size + 1}")
+        logger.info(f"Processing batch {i // company_batch_size + 1}/{total_batches}")
 
         matched = await match_tickers_batch(batch, baml_tickers)
         all_results.extend(matched)
@@ -317,6 +337,7 @@ def process_tickers(
     output_path: str = config.get("process.kg.tickers.output"),
     url: str = config.get("process.kg.tickers.url"),
     company_batch_size: int = config.get("process.kg.tickers.company_batch_size"),
+    limit: int | None = None,
     download: bool = True,
 ) -> int:
     """Process companies and match them with SEC tickers.
@@ -329,6 +350,7 @@ def process_tickers(
         output_path: Path to write enriched companies
         url: URL to download SEC tickers from
         company_batch_size: Number of companies per batch
+        limit: Maximum number of companies to process (for testing)
         download: Whether to download tickers from SEC (uses cache if exists)
 
     Returns:
@@ -341,6 +363,7 @@ def process_tickers(
             output_path,
             url,
             company_batch_size,
+            limit,
             download,
         )
     )

@@ -47,6 +47,14 @@ from abzu.config import config
     help="Number of companies per BAML batch (all tickers sent each batch).",
 )
 @click.option(
+    "-n",
+    "--limit",
+    "limit",
+    type=int,
+    default=None,
+    help="Maximum number of companies to process (for testing).",
+)
+@click.option(
     "--download/--no-download",
     default=True,
     help="Download tickers from SEC EDGAR (uses cache if exists).",
@@ -57,6 +65,7 @@ def tickers(
     output_path: str,
     url: str,
     company_batch_size: int,
+    limit: int | None,
     download: bool,
 ) -> int:
     """Match companies with SEC tickers using BAML LLM extraction.
@@ -72,5 +81,6 @@ def tickers(
         output_path=output_path,
         url=url,
         company_batch_size=company_batch_size,
+        limit=limit,
         download=download,
     )
