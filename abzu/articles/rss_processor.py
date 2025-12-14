@@ -10,19 +10,19 @@ logger = get_logger(__name__)
 
 def process_rss_feeds(
     feeds_file: Optional[str] = None,
-    input_dir: str = config.get("process.rss.input_dir"),
+    input_path: str = config.get("process.rss.input_dir"),
     output_dir: str = config.get("process.rss.output_dir"),
     batch_size: int = 5,
 ) -> int:
-    """Process all RSS feed articles defined in configuration or a feeds file.
+    """Process RSS feed articles from a file, directory, or configuration.
 
     Parameters
     ----------
     feeds_file:
         Optional path to the feeds.txt file with ``source:url`` pairs.
         If not provided, uses feeds from configuration.
-    input_dir:
-        Directory where the crawled JSONL files are stored.
+    input_path:
+        Path to a single JSONL file or directory containing crawled JSONL files.
     output_dir:
         Directory where processed JSONL files will be written.
     batch_size:
@@ -32,10 +32,20 @@ def process_rss_feeds(
     int
         ``0`` on success, ``1`` if any feed processing fails.
     """
-    input_base = Path(input_dir)
+    input_path_obj = Path(input_path)
     output_base = Path(output_dir)
     output_base.mkdir(parents=True, exist_ok=True)
 
+    # If input is a single file, process it directly
+    if input_path_obj.is_file():
+        source = input_path_obj.stem  # e.g., "planet-analog" from "planet-analog.jsonl"
+        output_file = output_base / f"processed_{source}.jsonl"
+
+        logger.info("Processing single RSS file: %s", input_path_obj)
+        return process_main(str(input_path_obj), str(output_file), batch_size)
+
+    # Input is a directory - process multiple sources
+    input_base = input_path_obj
     any_failed = False
 
     # Get feed sources either from file or configuration

@@ -32,6 +32,7 @@ class LazyGroup(click.Group):
     lazy_subcommands={
         "raw": "abzu.cli.process.kg.raw:raw",
         "refine": "abzu.cli.process.kg.refine:refine",
+        "tickers": "abzu.cli.process.kg.tickers:tickers",
     },
 )
 def kg() -> None:

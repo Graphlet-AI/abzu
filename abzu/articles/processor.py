@@ -94,7 +94,7 @@ def get_client_registry() -> ClientRegistry:
     cr: ClientRegistry = ClientRegistry()
 
     cr.add_llm_client(
-        name="Gemini25Flash",
+        name="Gemini25FlashLite",
         provider="google-ai",
         options={
             "model": "gemini-2.5-flash",
@@ -106,7 +106,7 @@ def get_client_registry() -> ClientRegistry:
     )
 
     cr.add_llm_client(
-        name="Gemini25Pro",
+        name="Gemini25FlashLite",
         provider="google-ai",
         options={
             "model": "gemini-2.5-pro",
@@ -118,7 +118,7 @@ def get_client_registry() -> ClientRegistry:
     )
 
     # Start with cheaper Gemini 2.5 Flash, fall back to 2.5 Pro
-    cr.set_primary("Gemini25Flash")
+    cr.set_primary("Gemini25FlashLite")
 
     return cr
 
@@ -151,16 +151,6 @@ async def process_article_async(
         #
         # Will try this later...
         #
-
-        # try:
-        #     result = await async_b.ExtractIndustryArticle(article_text, {"client_registry": cr})
-        # except BamlValidationError as e:
-        #     logger.error(f"BAML validation error: {e}")
-        #     # Retry exceptions with Gemini 2.5 Pro
-        #     cr.set_primary("Gemini25Pro")
-        #     result = await async_b.ExtractIndustryArticle(article_text, {"client_registry": cr})
-        # finally:
-        #     cr.set_primary("Gemini25Flash")
 
         try:
             result = await async_b.ExtractIndustryArticle(article_text)
