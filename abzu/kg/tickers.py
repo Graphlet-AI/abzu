@@ -246,23 +246,43 @@ async def match_tickers_batch(
         return companies
 
 
+def chunk_list(lst: list, num_chunks: int) -> list[list]:
+    """Split a list into approximately equal chunks.
+
+    Args:
+        lst: List to split
+        num_chunks: Number of chunks to create
+
+    Returns:
+        List of chunks
+    """
+    chunk_size = (len(lst) + num_chunks - 1) // num_chunks
+    return [lst[i : i + chunk_size] for i in range(0, len(lst), chunk_size)]
+
+
 async def process_tickers_async(
     companies_path: str,
     tickers_path: str,
     output_path: str,
     url: str = config.get("process.kg.tickers.url"),
     company_batch_size: int = config.get("process.kg.tickers.company_batch_size"),
+    ticker_chunks: int = config.get("process.kg.tickers.ticker_chunks", 10),
     limit: int | None = None,
     download: bool = True,
 ) -> int:
     """Process companies and match them with SEC tickers.
+
+    Splits tickers into chunks (default 10) to reduce context size per LLM call.
+    Each company batch is processed against each ticker chunk, ensuring all
+    companies are checked against all tickers.
 
     Args:
         companies_path: Path to companies.jsonl
         tickers_path: Path to cache/load SEC tickers
         output_path: Path to write enriched companies
         url: URL to download SEC tickers from
-        company_batch_size: Number of companies per batch
+        company_batch_size: Number of companies per batch (default 100)
+        ticker_chunks: Number of chunks to split tickers into (default 10)
         limit: Maximum number of companies to process (for testing)
         download: Whether to download tickers from SEC (uses cache if exists)
 
@@ -292,33 +312,65 @@ async def process_tickers_async(
 
     # Convert to BAML objects with consecutive integer IDs
     baml_companies = [convert_to_baml_company(c, i) for i, c in enumerate(companies_data)]
-    # Send ALL tickers with each request - LLM will find matches
-    baml_tickers = [convert_to_baml_ticker(t, i) for i, t in enumerate(tickers_data)]
 
-    logger.info(f"Processing {len(baml_companies):,} companies with {len(baml_tickers):,} tickers")
+    # Split tickers into chunks
+    ticker_data_chunks = chunk_list(tickers_data, ticker_chunks)
+    actual_ticker_chunks = len(ticker_data_chunks)
 
-    # Process in batches
-    all_results: list[Company] = []
+    # Convert each ticker chunk to BAML objects with consecutive IDs within chunk
+    baml_ticker_chunks = [
+        [convert_to_baml_ticker(t, i) for i, t in enumerate(chunk)] for chunk in ticker_data_chunks
+    ]
+
+    # Calculate total LLM calls
+    num_company_batches = (len(baml_companies) + company_batch_size - 1) // company_batch_size
+    total_llm_calls = num_company_batches * actual_ticker_chunks
+
+    logger.info(f"Processing {len(baml_companies):,} companies with {len(tickers_data):,} tickers")
+    logger.info(f"  Company batches: {num_company_batches} (batch size: {company_batch_size})")
+    logger.info(
+        f"  Ticker chunks: {actual_ticker_chunks} (~{len(tickers_data) // actual_ticker_chunks:,} tickers each)"
+    )
+    logger.info(f"  Total LLM calls: {total_llm_calls:,}")
+
+    # Track results - company_id -> best matched company (with ticker if found)
+    company_results: dict[int, Company] = {c.id: c for c in baml_companies}
+
     start_time = time.time()
 
-    total_batches = (len(baml_companies) + company_batch_size - 1) // company_batch_size
+    # Process each company batch against each ticker chunk
     for i in tqdm(
         range(0, len(baml_companies), company_batch_size),
         desc="Matching tickers",
-        total=total_batches,
+        total=num_company_batches,
     ):
-        batch = baml_companies[i : i + company_batch_size]
-        logger.info(f"Processing batch {i // company_batch_size + 1}/{total_batches}")
+        company_batch = baml_companies[i : i + company_batch_size]
+        batch_num = i // company_batch_size + 1
 
-        matched = await match_tickers_batch(batch, baml_tickers)
-        all_results.extend(matched)
+        for chunk_idx, ticker_chunk in enumerate(baml_ticker_chunks):
+            logger.debug(
+                f"Processing batch {batch_num}/{num_company_batches} "
+                f"with ticker chunk {chunk_idx + 1}/{actual_ticker_chunks}"
+            )
+
+            matched = await match_tickers_batch(company_batch, ticker_chunk)
+
+            # Update results - keep ticker if one was matched
+            for company in matched:
+                if company.ticker is not None:
+                    company_results[company.id] = company
 
     elapsed = time.time() - start_time
-    logger.info(f"Processed {len(all_results):,} companies in {elapsed:.2f}s")
+    logger.info(f"Processed {len(company_results):,} companies in {elapsed:.2f}s")
+
+    # Collect final results
+    all_results = list(company_results.values())
 
     # Count matches
     matched_count = sum(1 for c in all_results if c.ticker is not None)
-    logger.info(f"Matched {matched_count:,} companies with tickers")
+    logger.info(
+        f"Matched {matched_count:,} companies with tickers ({matched_count * 100 / len(all_results):.1f}%)"
+    )
 
     # Save results
     results_data = [c.model_dump() for c in all_results]
@@ -337,12 +389,14 @@ def process_tickers(
     output_path: str = config.get("process.kg.tickers.output"),
     url: str = config.get("process.kg.tickers.url"),
     company_batch_size: int = config.get("process.kg.tickers.company_batch_size"),
+    ticker_chunks: int = config.get("process.kg.tickers.ticker_chunks", 10),
     limit: int | None = None,
     download: bool = True,
 ) -> int:
     """Process companies and match them with SEC tickers.
 
     Downloads tickers from SEC EDGAR if not already cached.
+    Splits tickers into chunks to reduce context size per LLM call.
 
     Args:
         companies_path: Path to companies.jsonl or companies.parquet
@@ -350,6 +404,7 @@ def process_tickers(
         output_path: Path to write enriched companies
         url: URL to download SEC tickers from
         company_batch_size: Number of companies per batch
+        ticker_chunks: Number of chunks to split tickers into (default 10)
         limit: Maximum number of companies to process (for testing)
         download: Whether to download tickers from SEC (uses cache if exists)
 
@@ -363,6 +418,7 @@ def process_tickers(
             output_path,
             url,
             company_batch_size,
+            ticker_chunks,
             limit,
             download,
         )

@@ -8,9 +8,9 @@ function AddTickersToCompanies(company_list: CompanyList, ticker_list: TickerLis
 
   // The prompt uses Jinja syntax. Change the models or this text and watch the prompt preview change!
   prompt #"
-    Examine the following sets of companies and tickers and match the tickers with the companies based on their names representing the same entity. Merge the matched records, adding a Ticker to each Company that matches. If the company name in the ticker differs from the company name, use the full corporate name.
+    Examine the following sets of companies and tickers and match the tickers with the companies based on their names representing the same entity. Merge the matched records, adding a Ticker to each Company that matches. If the company name in the ticker differs from the company name, use the full corporate name. Include the name of the exchange from the ticker record.
 
-    Return a set of companies with tickers merged into the ticker field.
+    Return a set of companies with tickers merged into the ticker field. Return the original company if no matching ticker is found.
 
     {# special macro to print the output instructions. #}
     {{ ctx.output_format(hoist_classes=["Company", "Ticker", "CompanyList"]) }}
@@ -5200,6 +5200,819 @@ test BasicTest {
                     id 1026
                     symbol "CDSC"
                     exchange "UQ"
+                }
+            ]
+        }
+    }
+}
+test RandomCompaniesTickerMatchTest {
+    functions [AddTickersToCompanies]
+    args {
+        company_list {
+            companies [
+                {
+                    id 0
+                    name "Atgenomix SeqsLab"
+                    ticker null
+                    description "Atgenomix SeqsLab is a Spark-native platform designed to address the challenges of health omics data analysis."
+                    website_url null
+                    headquarters_location null
+                    revenue_usd null
+                    employees null
+                    founded_year null
+                    ceo null
+                    linkedin_url null
+                    source_ids null
+                    source_uuids null
+                }
+                {
+                    id 1
+                    name "NTT"
+                    ticker null
+                    description "NTT is a data center operator."
+                    website_url null
+                    headquarters_location null
+                    revenue_usd null
+                    employees null
+                    founded_year null
+                    ceo null
+                    linkedin_url null
+                    source_ids null
+                    source_uuids null
+                }
+                {
+                    id 2
+                    name "Stack Infrastructure"
+                    ticker null
+                    description "A company that develops and operates data centers."
+                    website_url null
+                    headquarters_location null
+                    revenue_usd null
+                    employees null
+                    founded_year null
+                    ceo null
+                    linkedin_url null
+                    source_ids null
+                    source_uuids null
+                }
+                {
+                    id 3
+                    name "Zoomlion"
+                    ticker null
+                    description "Zoomlion is a company that showcases robotics innovations at World Robot Conference."
+                    website_url null
+                    headquarters_location null
+                    revenue_usd null
+                    employees null
+                    founded_year null
+                    ceo null
+                    linkedin_url null
+                    source_ids null
+                    source_uuids null
+                }
+                {
+                    id 4
+                    name "Terabeam"
+                    ticker null
+                    description "Terabeam is a company."
+                    website_url null
+                    headquarters_location null
+                    revenue_usd null
+                    employees null
+                    founded_year null
+                    ceo null
+                    linkedin_url null
+                    source_ids null
+                    source_uuids null
+                }
+                {
+                    id 5
+                    name "Samsung"
+                    ticker null
+                    description "Samsung is a multinational conglomerate company with a wide range of businesses, including electronics, semiconductors, and telecommunications."
+                    website_url null
+                    headquarters_location null
+                    revenue_usd null
+                    employees null
+                    founded_year null
+                    ceo null
+                    linkedin_url null
+                    source_ids null
+                    source_uuids null
+                }
+                {
+                    id 6
+                    name "Cipher Mining Inc."
+                    ticker null
+                    description "Cipher Mining Inc. is a company focused on cryptocurrency mining."
+                    website_url null
+                    headquarters_location null
+                    revenue_usd null
+                    employees null
+                    founded_year null
+                    ceo null
+                    linkedin_url null
+                    source_ids null
+                    source_uuids null
+                }
+                {
+                    id 7
+                    name "Prometheus Hyperscale"
+                    ticker null
+                    description "Prometheus Hyperscale is a data center firm."
+                    website_url null
+                    headquarters_location null
+                    revenue_usd null
+                    employees null
+                    founded_year null
+                    ceo null
+                    linkedin_url null
+                    source_ids null
+                    source_uuids null
+                }
+                {
+                    id 8
+                    name "Diversified"
+                    ticker null
+                    description "Company that produces Geo Week."
+                    website_url null
+                    headquarters_location null
+                    revenue_usd null
+                    employees null
+                    founded_year null
+                    ceo null
+                    linkedin_url null
+                    source_ids null
+                    source_uuids null
+                }
+                {
+                    id 9
+                    name "Flex"
+                    ticker null
+                    description "Flex is a company that announces new AI infrastructure platform to speed deployment by up to 30 percent."
+                    website_url null
+                    headquarters_location null
+                    revenue_usd null
+                    employees null
+                    founded_year null
+                    ceo null
+                    linkedin_url null
+                    source_ids null
+                    source_uuids null
+                }
+                {
+                    id 10
+                    name "NVIDIA"
+                    ticker null
+                    description "NVIDIA is a technology company that designs graphics processing units (GPUs)."
+                    website_url null
+                    headquarters_location null
+                    revenue_usd null
+                    employees null
+                    founded_year null
+                    ceo null
+                    linkedin_url null
+                    source_ids null
+                    source_uuids null
+                }
+                {
+                    id 11
+                    name "Cardinal Kinetic"
+                    ticker null
+                    description "Cardinal Kinetic is a company that develops motion control solutions."
+                    website_url null
+                    headquarters_location null
+                    revenue_usd null
+                    employees null
+                    founded_year null
+                    ceo null
+                    linkedin_url null
+                    source_ids null
+                    source_uuids null
+                }
+                {
+                    id 12
+                    name "MUFG"
+                    ticker null
+                    description "MUFG is a Japanese financial institution."
+                    website_url null
+                    headquarters_location null
+                    revenue_usd null
+                    employees null
+                    founded_year null
+                    ceo null
+                    linkedin_url null
+                    source_ids null
+                    source_uuids null
+                }
+                {
+                    id 13
+                    name "TSMC"
+                    ticker null
+                    description "Taiwan Semiconductor Manufacturing Company (TSMC) is a semiconductor foundry."
+                    website_url null
+                    headquarters_location null
+                    revenue_usd null
+                    employees null
+                    founded_year null
+                    ceo null
+                    linkedin_url null
+                    source_ids null
+                    source_uuids null
+                }
+                {
+                    id 14
+                    name "Equinix, Inc."
+                    ticker null
+                    description "Equinix, Inc. is a global digital infrastructure company that provides data center and interconnection services."
+                    website_url null
+                    headquarters_location null
+                    revenue_usd null
+                    employees null
+                    founded_year null
+                    ceo null
+                    linkedin_url null
+                    source_ids null
+                    source_uuids null
+                }
+                {
+                    id 15
+                    name "Cisco Systems, Inc."
+                    ticker null
+                    description "Cisco Systems, Inc. is a networking hardware and software company."
+                    website_url null
+                    headquarters_location null
+                    revenue_usd null
+                    employees null
+                    founded_year null
+                    ceo null
+                    linkedin_url null
+                    source_ids null
+                    source_uuids null
+                }
+                {
+                    id 16
+                    name "Murata Manufacturing Co., Ltd."
+                    ticker null
+                    description "Murata Manufacturing is a Japanese manufacturer of electronic components."
+                    website_url null
+                    headquarters_location null
+                    revenue_usd null
+                    employees null
+                    founded_year null
+                    ceo null
+                    linkedin_url null
+                    source_ids null
+                    source_uuids null
+                }
+                {
+                    id 17
+                    name "Sprint"
+                    ticker null
+                    description "Sprint Corporation was a telecommunications company providing wireless services and internet access."
+                    website_url null
+                    headquarters_location null
+                    revenue_usd null
+                    employees null
+                    founded_year null
+                    ceo null
+                    linkedin_url null
+                    source_ids null
+                    source_uuids null
+                }
+                {
+                    id 18
+                    name "CIMIC"
+                    ticker null
+                    description "CIMIC is a construction company."
+                    website_url null
+                    headquarters_location null
+                    revenue_usd null
+                    employees null
+                    founded_year null
+                    ceo null
+                    linkedin_url null
+                    source_ids null
+                    source_uuids null
+                }
+                {
+                    id 19
+                    name "Pelagian"
+                    ticker null
+                    description "Pelagian is a company."
+                    website_url null
+                    headquarters_location null
+                    revenue_usd null
+                    employees null
+                    founded_year null
+                    ceo null
+                    linkedin_url null
+                    source_ids null
+                    source_uuids null
+                }
+            ]
+        }
+        ticker_list {
+            tickers [
+                {
+                    id 0
+                    symbol "MSFT"
+                    exchange null
+                }
+                {
+                    id 1
+                    symbol "NVDA"
+                    exchange null
+                }
+                {
+                    id 2
+                    symbol "AAPL"
+                    exchange null
+                }
+                {
+                    id 3
+                    symbol "AMZN"
+                    exchange null
+                }
+                {
+                    id 4
+                    symbol "GOOGL"
+                    exchange null
+                }
+                {
+                    id 5
+                    symbol "META"
+                    exchange null
+                }
+                {
+                    id 6
+                    symbol "TSLA"
+                    exchange null
+                }
+                {
+                    id 7
+                    symbol "AVGO"
+                    exchange null
+                }
+                {
+                    id 8
+                    symbol "BRK-B"
+                    exchange null
+                }
+                {
+                    id 9
+                    symbol "WMT"
+                    exchange null
+                }
+                {
+                    id 10
+                    symbol "JPM"
+                    exchange null
+                }
+                {
+                    id 11
+                    symbol "V"
+                    exchange null
+                }
+                {
+                    id 12
+                    symbol "LLY"
+                    exchange null
+                }
+                {
+                    id 13
+                    symbol "SPY"
+                    exchange null
+                }
+                {
+                    id 14
+                    symbol "MA"
+                    exchange null
+                }
+                {
+                    id 15
+                    symbol "NFLX"
+                    exchange null
+                }
+                {
+                    id 16
+                    symbol "COST"
+                    exchange null
+                }
+                {
+                    id 17
+                    symbol "ORCL"
+                    exchange null
+                }
+                {
+                    id 18
+                    symbol "XOM"
+                    exchange null
+                }
+                {
+                    id 19
+                    symbol "PG"
+                    exchange null
+                }
+                {
+                    id 20
+                    symbol "JNJ"
+                    exchange null
+                }
+                {
+                    id 21
+                    symbol "HD"
+                    exchange null
+                }
+                {
+                    id 22
+                    symbol "SAP"
+                    exchange null
+                }
+                {
+                    id 23
+                    symbol "BAC"
+                    exchange null
+                }
+                {
+                    id 24
+                    symbol "ABBV"
+                    exchange null
+                }
+                {
+                    id 25
+                    symbol "NVO"
+                    exchange null
+                }
+                {
+                    id 26
+                    symbol "KO"
+                    exchange null
+                }
+                {
+                    id 27
+                    symbol "PLTR"
+                    exchange null
+                }
+                {
+                    id 28
+                    symbol "ASML"
+                    exchange null
+                }
+                {
+                    id 29
+                    symbol "PM"
+                    exchange null
+                }
+                {
+                    id 30
+                    symbol "BABA"
+                    exchange null
+                }
+                {
+                    id 31
+                    symbol "TMUS"
+                    exchange null
+                }
+                {
+                    id 32
+                    symbol "UNH"
+                    exchange null
+                }
+                {
+                    id 33
+                    symbol "GE"
+                    exchange null
+                }
+                {
+                    id 34
+                    symbol "CRM"
+                    exchange null
+                }
+                {
+                    id 35
+                    symbol "TM"
+                    exchange null
+                }
+                {
+                    id 36
+                    symbol "CSCO"
+                    exchange null
+                }
+                {
+                    id 37
+                    symbol "WFC"
+                    exchange null
+                }
+                {
+                    id 38
+                    symbol "IBM"
+                    exchange null
+                }
+                {
+                    id 39
+                    symbol "CVX"
+                    exchange null
+                }
+                {
+                    id 40
+                    symbol "ABT"
+                    exchange null
+                }
+                {
+                    id 41
+                    symbol "NVS"
+                    exchange null
+                }
+                {
+                    id 42
+                    symbol "AZN"
+                    exchange null
+                }
+                {
+                    id 43
+                    symbol "MCD"
+                    exchange null
+                }
+                {
+                    id 44
+                    symbol "LIN"
+                    exchange null
+                }
+                {
+                    id 45
+                    symbol "INTU"
+                    exchange null
+                }
+                {
+                    id 46
+                    symbol "NOW"
+                    exchange null
+                }
+                {
+                    id 47
+                    symbol "HSBC"
+                    exchange null
+                }
+                {
+                    id 48
+                    symbol "AXP"
+                    exchange null
+                }
+                {
+                    id 49
+                    symbol "MS"
+                    exchange null
+                }
+                {
+                    id 50
+                    symbol "QQQ"
+                    exchange null
+                }
+                {
+                    id 51
+                    symbol "DIS"
+                    exchange null
+                }
+                {
+                    id 52
+                    symbol "T"
+                    exchange null
+                }
+                {
+                    id 53
+                    symbol "ISRG"
+                    exchange null
+                }
+                {
+                    id 54
+                    symbol "ACN"
+                    exchange null
+                }
+                {
+                    id 55
+                    symbol "SHEL"
+                    exchange null
+                }
+                {
+                    id 56
+                    symbol "MRK"
+                    exchange null
+                }
+                {
+                    id 57
+                    symbol "HDB"
+                    exchange null
+                }
+                {
+                    id 58
+                    symbol "FMX"
+                    exchange null
+                }
+                {
+                    id 59
+                    symbol "VZ"
+                    exchange null
+                }
+                {
+                    id 60
+                    symbol "GS"
+                    exchange null
+                }
+                {
+                    id 61
+                    symbol "RTX"
+                    exchange null
+                }
+                {
+                    id 62
+                    symbol "PEP"
+                    exchange null
+                }
+                {
+                    id 63
+                    symbol "RY"
+                    exchange null
+                }
+                {
+                    id 64
+                    symbol "BKNG"
+                    exchange null
+                }
+                {
+                    id 65
+                    symbol "AMD"
+                    exchange null
+                }
+                {
+                    id 66
+                    symbol "ADBE"
+                    exchange null
+                }
+                {
+                    id 67
+                    symbol "UBER"
+                    exchange null
+                }
+                {
+                    id 68
+                    symbol "BX"
+                    exchange null
+                }
+                {
+                    id 69
+                    symbol "PGR"
+                    exchange null
+                }
+                {
+                    id 70
+                    symbol "CAT"
+                    exchange null
+                }
+                {
+                    id 71
+                    symbol "TXN"
+                    exchange null
+                }
+                {
+                    id 72
+                    symbol "MUFG"
+                    exchange null
+                }
+                {
+                    id 73
+                    symbol "SONY"
+                    exchange null
+                }
+                {
+                    id 74
+                    symbol "SCHW"
+                    exchange null
+                }
+                {
+                    id 75
+                    symbol "QCOM"
+                    exchange null
+                }
+                {
+                    id 76
+                    symbol "SPGI"
+                    exchange null
+                }
+                {
+                    id 77
+                    symbol "UL"
+                    exchange null
+                }
+                {
+                    id 78
+                    symbol "BA"
+                    exchange null
+                }
+                {
+                    id 79
+                    symbol "BSX"
+                    exchange null
+                }
+                {
+                    id 80
+                    symbol "AMGN"
+                    exchange null
+                }
+                {
+                    id 81
+                    symbol "TMO"
+                    exchange null
+                }
+                {
+                    id 82
+                    symbol "BLK"
+                    exchange null
+                }
+                {
+                    id 83
+                    symbol "SYK"
+                    exchange null
+                }
+                {
+                    id 84
+                    symbol "HON"
+                    exchange null
+                }
+                {
+                    id 85
+                    symbol "NEE"
+                    exchange null
+                }
+                {
+                    id 86
+                    symbol "TJX"
+                    exchange null
+                }
+                {
+                    id 87
+                    symbol "C"
+                    exchange null
+                }
+                {
+                    id 88
+                    symbol "DE"
+                    exchange null
+                }
+                {
+                    id 89
+                    symbol "PDD"
+                    exchange null
+                }
+                {
+                    id 90
+                    symbol "GILD"
+                    exchange null
+                }
+                {
+                    id 91
+                    symbol "BUD"
+                    exchange null
+                }
+                {
+                    id 92
+                    symbol "SHOP"
+                    exchange null
+                }
+                {
+                    id 93
+                    symbol "DHR"
+                    exchange null
+                }
+                {
+                    id 94
+                    symbol "SPOT"
+                    exchange null
+                }
+                {
+                    id 95
+                    symbol "PFE"
+                    exchange null
+                }
+                {
+                    id 96
+                    symbol "UNP"
+                    exchange null
+                }
+                {
+                    id 97
+                    symbol "ADP"
+                    exchange null
+                }
+                {
+                    id 98
+                    symbol "ARM"
+                    exchange null
+                }
+                {
+                    id 99
+                    symbol "MELI"
+                    exchange null
                 }
             ]
         }

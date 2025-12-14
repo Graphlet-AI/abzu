@@ -44,7 +44,15 @@ from abzu.config import config
     "company_batch_size",
     type=int,
     default=config.get("process.kg.tickers.company_batch_size"),
-    help="Number of companies per BAML batch (all tickers sent each batch).",
+    help="Number of companies per BAML batch.",
+)
+@click.option(
+    "-c",
+    "--ticker-chunks",
+    "ticker_chunks",
+    type=int,
+    default=config.get("process.kg.tickers.ticker_chunks", 10),
+    help="Number of chunks to split tickers into (reduces context per LLM call).",
 )
 @click.option(
     "-n",
@@ -65,6 +73,7 @@ def tickers(
     output_path: str,
     url: str,
     company_batch_size: int,
+    ticker_chunks: int,
     limit: int | None,
     download: bool,
 ) -> int:
@@ -81,6 +90,7 @@ def tickers(
         output_path=output_path,
         url=url,
         company_batch_size=company_batch_size,
+        ticker_chunks=ticker_chunks,
         limit=limit,
         download=download,
     )
