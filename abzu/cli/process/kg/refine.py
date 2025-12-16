@@ -12,8 +12,34 @@ from abzu.config import config
     default=config.get("process.kg.er.iteration", 3),
     help="ER iteration number to use for resolved companies.",
 )
-def refine(iteration: int) -> int:
-    """Refine knowledge graph by mapping relationships to resolved companies."""
+@click.option(
+    "--wiki/--no-wiki",
+    "enrich_wiki",
+    default=False,
+    help="Enrich companies with Wikipedia data after refinement.",
+)
+@click.option(
+    "--wiki-batch-size",
+    type=int,
+    default=config.get("process.kg.wiki.concurrent", 5),
+    help="Number of concurrent Wikipedia requests.",
+)
+@click.option(
+    "--wiki-limit",
+    type=int,
+    default=None,
+    help="Maximum number of companies to enrich with Wikipedia (for testing).",
+)
+def refine(
+    iteration: int,
+    enrich_wiki: bool,
+    wiki_batch_size: int,
+    wiki_limit: int | None,
+) -> int:
+    """Refine knowledge graph by mapping relationships to resolved companies.
+
+    Optionally enriches companies with Wikipedia data using --wiki flag.
+    """
     # Import heavy module only when command is executed
     from abzu.kg.processor import process_refine_kg
 
@@ -31,4 +57,7 @@ def refine(iteration: int) -> int:
         input_paths=input_paths,
         output_paths=output_paths,
         iteration=iteration,
+        enrich_wiki=enrich_wiki,
+        wiki_batch_size=wiki_batch_size,
+        wiki_limit=wiki_limit,
     )

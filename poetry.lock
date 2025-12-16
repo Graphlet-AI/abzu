@@ -887,15 +887,19 @@ files = [
 
 [[package]]
 name = "cleanco"
-version = "2.3"
+version = "2.4-dev"
 description = "Python library to process company names"
 optional = false
-python-versions = "*"
+python-versions = "^3.8"
 groups = ["main"]
-files = [
-    {file = "cleanco-2.3-py3-none-any.whl", hash = "sha256:7ab4672cdfdabe2375a608686da86005b33df6f347ebf7849c9d0e2651f27e01"},
-    {file = "cleanco-2.3.tar.gz", hash = "sha256:26b899b2be871be288408205686c5a1dd5f3ab085b709d041a77f3e3049d2961"},
-]
+files = []
+develop = false
+
+[package.source]
+type = "git"
+url = "https://github.com/Graphlet-AI/cleanco.git"
+reference = "rjurney/disco"
+resolved_reference = "6439f9e792b3ecf2650ff68f5ee541f385726434"
 
 [[package]]
 name = "cleo"
@@ -9884,4 +9888,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = "3.12.*"
-content-hash = "6371a844bc55c2d47208684c817511758d13f8aeb6e4e4281448e177c3b07daf"
+content-hash = "ededc40582754a53ef1db64977561cda617d817d41b7c77198a163346aa70208"

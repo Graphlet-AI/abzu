@@ -1,16 +1,20 @@
-"""Ticker matching module for enriching companies with SEC ticker data."""
+"""Ticker matching module for enriching companies with SEC ticker data.
 
-import asyncio
+Uses embedding-based similarity to match company names from SEC tickers
+to company names in the knowledge graph.
+"""
+
 import json
-import time
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
+import numpy as np
 import requests
+import torch
+from sentence_transformers import SentenceTransformer
+from sentence_transformers.util import cos_sim
 from tqdm import tqdm
 
-from abzu.baml_client.async_client import b as async_b
-from abzu.baml_client.types import Company, CompanyList, Ticker, TickerList
 from abzu.config import config
 from abzu.logs import get_logger
 from abzu.utils import load_jsonl, save_jsonl
@@ -23,8 +27,6 @@ USER_AGENT = "AbzuBot/1.0 (russell.jurney@gmail.com)"
 def download_sec_tickers(
     cache_path: str = config.get("process.kg.tickers.cache"),
     url: str = config.get("process.kg.tickers.url"),
-    input: str = config.get("process.kg.raw.output"),
-    output: str = config.get("process.kg.tickers.output"),
     force: bool = False,
 ) -> str:
     """Download SEC tickers from SEC EDGAR if not cached.
@@ -32,8 +34,6 @@ def download_sec_tickers(
     Args:
         cache_path: Path to cache the downloaded file
         url: URL to download SEC tickers from
-        input: Path to raw KG companies output directory
-        output: Path to write companies with tickers
         force: Force re-download even if cached
 
     Returns:
@@ -160,129 +160,106 @@ def load_companies(companies_path: str) -> list[dict[str, Any]]:
     return companies
 
 
-def convert_to_baml_company(company_dict: dict[str, Any], company_id: int) -> Company:
-    """Convert a company dictionary to a BAML Company object.
+class TickerMatcher:
+    """Match companies with SEC tickers using embedding similarity."""
 
-    Args:
-        company_dict: Dictionary with company fields
-        company_id: Consecutive integer ID for this company
+    def __init__(self, model_name: str = "intfloat/e5-base-v2"):
+        """Initialize the ticker matcher with an embedding model.
 
-    Returns:
-        BAML Company object
-    """
-    ticker = None
-    if company_dict.get("ticker"):
-        ticker_data = company_dict["ticker"]
-        if isinstance(ticker_data, dict):
-            ticker = Ticker(
-                id=ticker_data.get("id"),
-                uuid=ticker_data.get("uuid"),
-                symbol=ticker_data.get("symbol", ""),
-                exchange=ticker_data.get("exchange"),
-            )
+        Args:
+            model_name: Name of the sentence-transformers model to use
+        """
+        device: Literal["cpu", "cuda", "mps"]
+        if torch.cuda.is_available():
+            device = "cuda"
+        elif torch.backends.mps.is_available():
+            device = "mps"
+        else:
+            device = "cpu"
 
-    return Company(
-        id=company_id,
-        uuid=company_dict.get("uuid"),
-        name=company_dict.get("name", ""),
-        cik=company_dict.get("cik"),
-        ticker=ticker,
-        description=company_dict.get("description", ""),
-        website_url=company_dict.get("website_url"),
-        headquarters_location=company_dict.get("headquarters_location"),
-        jurisdiction=company_dict.get("jurisdiction"),
-        revenue_usd=company_dict.get("revenue_usd"),
-        employees=company_dict.get("employees"),
-        founded_year=company_dict.get("founded_year"),
-        ceo=company_dict.get("ceo"),
-        linkedin_url=company_dict.get("linkedin_url"),
-        source_ids=None,  # Don't use source_ids from previous iterations
-        source_uuids=company_dict.get("source_uuids"),
-        match_skip=company_dict.get("match_skip"),
-        match_skip_reason=company_dict.get("match_skip_reason"),
-        match_skip_history=company_dict.get("match_skip_history"),
-    )
+        logger.info(f"Loading embedding model {model_name} on {device}")
+        self.model = SentenceTransformer(model_name, device=device)
+        self.device = device
 
+    def encode_names(self, names: list[str], batch_size: int = 64) -> np.ndarray:
+        """Encode company names into embeddings.
 
-def convert_to_baml_ticker(ticker_dict: dict[str, Any], ticker_id: int) -> Ticker:
-    """Convert a ticker dictionary to a BAML Ticker object.
+        Args:
+            names: List of company names
+            batch_size: Batch size for encoding
 
-    Args:
-        ticker_dict: Dictionary with cik, name, symbol, and exchange fields
-        ticker_id: Unique ID for this ticker
+        Returns:
+            Numpy array of embeddings
+        """
+        embeddings = self.model.encode(
+            names,
+            normalize_embeddings=True,
+            show_progress_bar=True,
+            batch_size=batch_size,
+        )
+        return embeddings
 
-    Returns:
-        BAML Ticker object
-    """
-    return Ticker(
-        id=ticker_id,
-        uuid=ticker_dict.get("uuid"),
-        symbol=ticker_dict.get("symbol", ""),
-        exchange=ticker_dict.get("exchange"),
-    )
+    def find_matches(
+        self,
+        company_names: list[str],
+        ticker_names: list[str],
+        threshold: float = 0.85,
+    ) -> list[tuple[int, int, float]]:
+        """Find matches between company names and ticker names.
 
+        Args:
+            company_names: List of company names from KG
+            ticker_names: List of company names from SEC tickers
+            threshold: Minimum similarity threshold for a match
 
-async def match_tickers_batch(
-    companies: list[Company],
-    tickers: list[Ticker],
-) -> list[Company]:
-    """Match a batch of companies with tickers using BAML.
+        Returns:
+            List of (company_idx, ticker_idx, similarity) tuples
+        """
+        logger.info(f"Encoding {len(company_names):,} company names...")
+        company_embeddings = self.encode_names(company_names)
 
-    Args:
-        companies: List of BAML Company objects
-        tickers: List of BAML Ticker objects
+        logger.info(f"Encoding {len(ticker_names):,} ticker names...")
+        ticker_embeddings = self.encode_names(ticker_names)
 
-    Returns:
-        List of Company objects with tickers matched
-    """
-    company_list = CompanyList(companies=companies)
-    ticker_list = TickerList(tickers=tickers)
+        logger.info("Computing similarities...")
+        # Compute cosine similarity matrix
+        similarities = cos_sim(company_embeddings, ticker_embeddings).numpy()
 
-    try:
-        result = await async_b.AddTickersToCompanies(company_list, ticker_list)
-        return result.companies
-    except Exception as e:
-        logger.error(f"Error matching tickers: {e}")
-        return companies
+        # Find best matches above threshold
+        matches = []
+        for i in tqdm(range(len(company_names)), desc="Finding matches"):
+            best_j = int(np.argmax(similarities[i]))
+            best_sim = float(similarities[i, best_j])
+            if best_sim >= threshold:
+                matches.append((i, best_j, best_sim))
+
+        return matches
 
 
-def chunk_list(lst: list, num_chunks: int) -> list[list]:
-    """Split a list into approximately equal chunks.
-
-    Args:
-        lst: List to split
-        num_chunks: Number of chunks to create
-
-    Returns:
-        List of chunks
-    """
-    chunk_size = (len(lst) + num_chunks - 1) // num_chunks
-    return [lst[i : i + chunk_size] for i in range(0, len(lst), chunk_size)]
-
-
-async def process_tickers_async(
-    companies_path: str,
-    tickers_path: str,
-    output_path: str,
+def process_tickers(
+    companies_path: str = config.get("process.kg.tickers.input"),
+    tickers_path: str = config.get("process.kg.tickers.cache"),
+    output_path: str = config.get("process.kg.tickers.output"),
     url: str = config.get("process.kg.tickers.url"),
-    company_batch_size: int = config.get("process.kg.tickers.company_batch_size"),
-    ticker_chunks: int = config.get("process.kg.tickers.ticker_chunks", 10),
+    threshold: float = 0.85,
+    model_name: str = "intfloat/e5-base-v2",
     limit: int | None = None,
     download: bool = True,
+    **kwargs: Any,  # Accept but ignore old BAML-related args
 ) -> int:
-    """Process companies and match them with SEC tickers.
+    """Process companies and match them with SEC tickers using embeddings.
 
-    Splits tickers into chunks (default 10) to reduce context size per LLM call.
-    Each company batch is processed against each ticker chunk, ensuring all
-    companies are checked against all tickers.
+    Uses embedding similarity to match company names from the knowledge graph
+    with company names from SEC ticker data. Only matches above the similarity
+    threshold are assigned.
 
     Args:
-        companies_path: Path to companies.jsonl
+        companies_path: Path to companies.jsonl or companies.parquet
         tickers_path: Path to cache/load SEC tickers
         output_path: Path to write enriched companies
         url: URL to download SEC tickers from
-        company_batch_size: Number of companies per batch (default 100)
-        ticker_chunks: Number of chunks to split tickers into (default 10)
+        threshold: Minimum similarity threshold for a match (0-1)
+        model_name: Embedding model to use
         limit: Maximum number of companies to process (for testing)
         download: Whether to download tickers from SEC (uses cache if exists)
 
@@ -310,116 +287,56 @@ async def process_tickers_async(
         logger.error("No tickers to process")
         return 1
 
-    # Convert to BAML objects with consecutive integer IDs
-    baml_companies = [convert_to_baml_company(c, i) for i, c in enumerate(companies_data)]
+    logger.info(f"Processing {len(companies_data):,} companies with {len(tickers_data):,} tickers")
+    logger.info(f"Using similarity threshold: {threshold}")
 
-    # Split tickers into chunks
-    ticker_data_chunks = chunk_list(tickers_data, ticker_chunks)
-    actual_ticker_chunks = len(ticker_data_chunks)
+    # Extract names
+    company_names = [c.get("name", "") for c in companies_data]
+    ticker_names = [t.get("name", "") for t in tickers_data]
 
-    # Convert each ticker chunk to BAML objects with consecutive IDs within chunk
-    baml_ticker_chunks = [
-        [convert_to_baml_ticker(t, i) for i, t in enumerate(chunk)] for chunk in ticker_data_chunks
-    ]
+    # Initialize matcher and find matches
+    matcher = TickerMatcher(model_name=model_name)
+    matches = matcher.find_matches(company_names, ticker_names, threshold=threshold)
 
-    # Calculate total LLM calls
-    num_company_batches = (len(baml_companies) + company_batch_size - 1) // company_batch_size
-    total_llm_calls = num_company_batches * actual_ticker_chunks
+    logger.info(f"Found {len(matches):,} matches above threshold {threshold}")
 
-    logger.info(f"Processing {len(baml_companies):,} companies with {len(tickers_data):,} tickers")
-    logger.info(f"  Company batches: {num_company_batches} (batch size: {company_batch_size})")
-    logger.info(
-        f"  Ticker chunks: {actual_ticker_chunks} (~{len(tickers_data) // actual_ticker_chunks:,} tickers each)"
-    )
-    logger.info(f"  Total LLM calls: {total_llm_calls:,}")
+    # Build lookup from company index to ticker data
+    match_lookup = {company_idx: (ticker_idx, sim) for company_idx, ticker_idx, sim in matches}
 
-    # Track results - company_id -> best matched company (with ticker if found)
-    company_results: dict[int, Company] = {c.id: c for c in baml_companies}
-
-    start_time = time.time()
-
-    # Process each company batch against each ticker chunk
-    for i in tqdm(
-        range(0, len(baml_companies), company_batch_size),
-        desc="Matching tickers",
-        total=num_company_batches,
+    # Enrich companies with matched tickers
+    enriched_companies = []
+    for i, company in tqdm(
+        enumerate(companies_data), desc="Enriching companies", total=len(companies_data)
     ):
-        company_batch = baml_companies[i : i + company_batch_size]
-        batch_num = i // company_batch_size + 1
-
-        for chunk_idx, ticker_chunk in enumerate(baml_ticker_chunks):
+        enriched = company.copy()
+        if i in match_lookup:
+            ticker_idx, similarity = match_lookup[i]
+            ticker_data = tickers_data[ticker_idx]
+            enriched["ticker"] = {
+                "symbol": ticker_data.get("symbol", ""),
+                "name": ticker_data.get("name", ""),
+                "exchange": ticker_data.get("exchange"),
+                "cik": ticker_data.get("cik"),
+            }
+            enriched["ticker_similarity"] = similarity
             logger.debug(
-                f"Processing batch {batch_num}/{num_company_batches} "
-                f"with ticker chunk {chunk_idx + 1}/{actual_ticker_chunks}"
+                f"Matched '{company.get('name')}' -> '{ticker_data.get('name')}' "
+                f"({ticker_data.get('symbol')}) with similarity {similarity:.3f}"
             )
-
-            matched = await match_tickers_batch(company_batch, ticker_chunk)
-
-            # Update results - keep ticker if one was matched
-            for company in matched:
-                if company.ticker is not None:
-                    company_results[company.id] = company
-
-    elapsed = time.time() - start_time
-    logger.info(f"Processed {len(company_results):,} companies in {elapsed:.2f}s")
-
-    # Collect final results
-    all_results = list(company_results.values())
+        enriched_companies.append(enriched)
 
     # Count matches
-    matched_count = sum(1 for c in all_results if c.ticker is not None)
+    matched_count = len(matches)
     logger.info(
-        f"Matched {matched_count:,} companies with tickers ({matched_count * 100 / len(all_results):.1f}%)"
+        f"Matched {matched_count:,} companies with tickers "
+        f"({matched_count * 100 / len(companies_data):.1f}%)"
     )
 
     # Save results
-    results_data = [c.model_dump() for c in all_results]
-    if save_jsonl(results_data, output_path, create_backup=True):
+    if save_jsonl(enriched_companies, output_path, create_backup=True):
         logger.info(f"Saved enriched companies to {output_path}")
     else:
         logger.error(f"Failed to save results to {output_path}")
         return 1
 
     return 0
-
-
-def process_tickers(
-    companies_path: str = config.get("process.kg.tickers.input"),
-    tickers_path: str = config.get("process.kg.tickers.cache"),
-    output_path: str = config.get("process.kg.tickers.output"),
-    url: str = config.get("process.kg.tickers.url"),
-    company_batch_size: int = config.get("process.kg.tickers.company_batch_size"),
-    ticker_chunks: int = config.get("process.kg.tickers.ticker_chunks", 10),
-    limit: int | None = None,
-    download: bool = True,
-) -> int:
-    """Process companies and match them with SEC tickers.
-
-    Downloads tickers from SEC EDGAR if not already cached.
-    Splits tickers into chunks to reduce context size per LLM call.
-
-    Args:
-        companies_path: Path to companies.jsonl or companies.parquet
-        tickers_path: Path to cache/load SEC tickers
-        output_path: Path to write enriched companies
-        url: URL to download SEC tickers from
-        company_batch_size: Number of companies per batch
-        ticker_chunks: Number of chunks to split tickers into (default 10)
-        limit: Maximum number of companies to process (for testing)
-        download: Whether to download tickers from SEC (uses cache if exists)
-
-    Returns:
-        0 on success, 1 on failure
-    """
-    return asyncio.run(
-        process_tickers_async(
-            companies_path,
-            tickers_path,
-            output_path,
-            url,
-            company_batch_size,
-            ticker_chunks,
-            limit,
-            download,
-        )
-    )

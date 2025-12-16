@@ -88,6 +88,12 @@ Test one iteration of the full entity resolution pipeline each time you make cha
 4. **KG Refine**: Deduplicate and enrich → refined Parquet files
 5. **APIs**: Enrich with financial/SEC data
 
+### Semantic Matching
+
+- **Blocking**: Semantic clustering to group similar entities. See @markdown/BLOCKING.md
+- **Matching**: LLM-based pairwise entity comparison. See @abzu/er/match.py
+- **Evaluation**: Precision/recall metrics against ground truth
+
 ## Code Style
 
 - KISS: KEEP IT SIMPLE STUPID. Do not over-engineer solutions. ESPECIALLY for Spark / PySpark.

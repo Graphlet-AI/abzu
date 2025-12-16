@@ -30,7 +30,7 @@ networkx = "^3.4.2"
 matplotlib = "^3.10.1"
 graphframes-latest = "^0.8.3"
 requests = "^2.32.3"
-cleanco = "^2.2.0"
+cleanco = {git = "https://github.com/Graphlet-AI/cleanco.git", rev = "rjurney/disco"}
 click = "^8.1.8"
 langchain = "^0.3.24"
 langchain-community = "^0.3.23"

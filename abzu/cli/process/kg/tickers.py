@@ -39,20 +39,18 @@ from abzu.config import config
     help="URL to download SEC tickers from.",
 )
 @click.option(
-    "-b",
-    "--batch-size",
-    "company_batch_size",
-    type=int,
-    default=config.get("process.kg.tickers.company_batch_size"),
-    help="Number of companies per BAML batch.",
+    "--threshold",
+    type=float,
+    default=0.85,
+    help="Minimum similarity threshold for a match (0-1).",
 )
 @click.option(
-    "-c",
-    "--ticker-chunks",
-    "ticker_chunks",
-    type=int,
-    default=config.get("process.kg.tickers.ticker_chunks", 10),
-    help="Number of chunks to split tickers into (reduces context per LLM call).",
+    "-m",
+    "--model",
+    "model_name",
+    type=str,
+    default="intfloat/e5-base-v2",
+    help="Embedding model to use for similarity matching.",
 )
 @click.option(
     "-n",
@@ -72,15 +70,17 @@ def tickers(
     tickers_path: str,
     output_path: str,
     url: str,
-    company_batch_size: int,
-    ticker_chunks: int,
+    threshold: float,
+    model_name: str,
     limit: int | None,
     download: bool,
 ) -> int:
-    """Match companies with SEC tickers using BAML LLM extraction.
+    """Match companies with SEC tickers using embedding similarity.
+
+    Uses embedding-based similarity matching to find the best ticker match
+    for each company. Only matches above the similarity threshold are assigned.
 
     Downloads ticker data from SEC EDGAR automatically and caches it locally.
-    Uses the cached file on subsequent runs.
     """
     from abzu.kg.tickers import process_tickers
 
@@ -89,8 +89,8 @@ def tickers(
         tickers_path=tickers_path,
         output_path=output_path,
         url=url,
-        company_batch_size=company_batch_size,
-        ticker_chunks=ticker_chunks,
+        threshold=threshold,
+        model_name=model_name,
         limit=limit,
         download=download,
     )
