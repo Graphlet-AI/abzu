@@ -188,7 +188,8 @@ class Company {
   @description("Leave unaltered. Reason why this company was skipped (error_recovery or missing_in_match_output).")
 
   match_skip_history int[]?
-  @description("Leave unaltered. List of iteration numbers where this company was skipped.")}
+  @description("Leave unaltered. List of iteration numbers where this company was skipped.")
+}
 
 class Product {
   id int
