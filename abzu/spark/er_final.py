@@ -32,7 +32,7 @@ def build_uuid_blocks(
     as first_word and acronym blocking.
 
     Args:
-        input_path: Path to matches.json from previous matching step
+        input_path: Path to matches.jsonl from previous matching step
         output_path: Path to save UUID blocks
         local_mode: Whether to run in local mode
         max_block_size: Maximum companies per block before splitting
@@ -78,9 +78,7 @@ def build_uuid_blocks(
         empty_blocks = spark.createDataFrame(
             [], schema="block_key string, block_key_type string, companies array<struct<>>"
         )
-        empty_blocks.coalesce(1).write.mode("overwrite").option("ignoreNullFields", "false").json(
-            output_path
-        )
+        empty_blocks.coalesce(1).write.mode("overwrite").parquet(output_path)
         return
 
     # Get company fields
@@ -145,11 +143,8 @@ def build_uuid_blocks(
 
     # Save blocks with canonical BLOCK_FIELDS from schemas.py
     # The UDTF already returns block_size (not company_count) via build_udtf_return_type()
-    # Use ignoreNullFields=false to preserve all fields even when null (prevents schema drift)
     logger.info(f"Saving UUID blocks to {output_path}")
-    uuid_blocks.select(*BLOCK_FIELDS).coalesce(1).write.mode("overwrite").option(
-        "ignoreNullFields", "false"
-    ).json(output_path)
+    uuid_blocks.select(*BLOCK_FIELDS).coalesce(1).write.mode("overwrite").parquet(output_path)
 
     logger.info("UUID blocking complete!")
 
@@ -167,7 +162,7 @@ def build_name_blocks(
     that have identical names but different UUIDs.
 
     Args:
-        input_path: Path to matches.json from previous matching step
+        input_path: Path to matches.jsonl from previous matching step
         output_path: Path to save name blocks
         local_mode: Whether to run in local mode
         max_block_size: Maximum companies per block before splitting
@@ -218,9 +213,7 @@ def build_name_blocks(
         empty_blocks = spark.createDataFrame(
             [], schema="block_key string, block_key_type string, companies array<struct<>>"
         )
-        empty_blocks.coalesce(1).write.mode("overwrite").option("ignoreNullFields", "false").json(
-            output_path
-        )
+        empty_blocks.coalesce(1).write.mode("overwrite").parquet(output_path)
         return
 
     # Get company fields
@@ -286,9 +279,7 @@ def build_name_blocks(
 
     # Save blocks with canonical BLOCK_FIELDS from schemas.py
     logger.info(f"Saving name blocks to {output_path}")
-    name_blocks.select(*BLOCK_FIELDS).coalesce(1).write.mode("overwrite").option(
-        "ignoreNullFields", "false"
-    ).json(output_path)
+    name_blocks.select(*BLOCK_FIELDS).coalesce(1).write.mode("overwrite").parquet(output_path)
 
     logger.info("Name blocking complete!")
 
@@ -309,7 +300,7 @@ def deduplicate_resolved_companies(
     3. Output final deduplicated companies
 
     Args:
-        matches_path: Path to matches.json from previous matching step
+        matches_path: Path to matches.parquet from previous matching step
         output_path: Path to save final deduplicated companies
         iteration: Iteration number
         local_mode: Whether to run in local mode
@@ -353,7 +344,7 @@ def deduplicate_resolved_companies(
 
     # Match companies within UUID blocks
     logger.info("Matching companies within UUID blocks...")
-    uuid_matches_path = output_path.replace("companies_final", "uuid_matches")
+    uuid_matches_path = output_path.replace("companies_final.parquet", "uuid_matches.jsonl")
 
     match_entities(
         blocks_path=uuid_blocks_path,
@@ -364,7 +355,6 @@ def deduplicate_resolved_companies(
     )
 
     # Apply UUID deduplication
-    # match_entities outputs a single JSON file, so check for that
     uuid_has_matches = os.path.exists(uuid_matches_path)
 
     if uuid_has_matches:
@@ -412,7 +402,7 @@ def deduplicate_resolved_companies(
 
     # Save intermediate results for name blocking
     intermediate_path = output_path.replace("companies_final", "after_uuid_dedup")
-    # Create a structure that build_name_blocks expects (matches.json format)
+    # Create a structure that build_name_blocks expects (matches.parquet format)
     intermediate_df = (
         after_uuid_df.select(F.struct("*").alias("company"))
         .groupBy()
@@ -420,9 +410,7 @@ def deduplicate_resolved_companies(
         .withColumn("block_key", F.lit("intermediate"))
         .withColumn("block_key_type", F.lit("intermediate"))
     )
-    intermediate_df.coalesce(1).write.mode("overwrite").option("ignoreNullFields", "false").json(
-        intermediate_path
-    )
+    intermediate_df.coalesce(1).write.mode("overwrite").parquet(intermediate_path)
 
     name_blocks_path = output_path.replace("companies_final", "name_blocks")
     build_name_blocks(
@@ -434,7 +422,7 @@ def deduplicate_resolved_companies(
 
     # Match companies within name blocks
     logger.info("Matching companies within name blocks...")
-    name_matches_path = output_path.replace("companies_final", "name_matches")
+    name_matches_path = output_path.replace("companies_final.parquet", "name_matches.jsonl")
 
     match_entities(
         blocks_path=name_blocks_path,
@@ -445,7 +433,6 @@ def deduplicate_resolved_companies(
     )
 
     # Apply name deduplication
-    # match_entities outputs a single JSON file, so check for that
     name_has_matches = os.path.exists(name_matches_path)
 
     if name_has_matches:
@@ -495,9 +482,7 @@ def deduplicate_resolved_companies(
 
     # Save final deduplicated companies
     logger.info(f"Saving final deduplicated companies to {output_path}")
-    final_companies_df.coalesce(1).write.mode("overwrite").option("ignoreNullFields", "false").json(
-        output_path
-    )
+    final_companies_df.coalesce(1).write.mode("overwrite").parquet(output_path)
 
     return {
         "input_count": input_count,

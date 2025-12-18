@@ -2,6 +2,7 @@
 
 import json
 import os
+from typing import Any
 
 import pytest
 from pyspark.sql import SparkSession
@@ -12,10 +13,10 @@ from abzu.spark.schemas import normalize_company_dataframe
 
 
 @pytest.fixture(scope="module")
-def spark():
+def spark() -> SparkSession:  # type: ignore
     """Create a SparkSession for testing."""
     spark = (
-        SparkSession.builder.master("local[1]")
+        SparkSession.builder.master("local[1]")  # type: ignore
         .appName("test_er_block_udtf")
         .config("spark.sql.shuffle.partitions", "1")
         .config("spark.ui.enabled", "false")
@@ -26,7 +27,7 @@ def spark():
     spark.stop()
 
 
-def create_raw_companies_data():
+def create_raw_companies_data() -> list[dict[str, Any]]:
     """Create sample raw company data (first iteration input)."""
     return [
         {
@@ -160,29 +161,29 @@ def test_er_blocking_first_iteration(spark, tmp_path):
     build_blocks(input_path=input_path, output_path=output_path, local_mode=True, stop_spark=False)
 
     # Check output files exist
-    assert os.path.exists(os.path.join(output_path, "all_blocks.parquet"))
+    assert os.path.exists(os.path.join(output_path, "union_blocks.parquet"))
     assert os.path.exists(os.path.join(output_path, "combined_blocks.parquet"))
 
     # Load and validate blocks
-    all_blocks = spark.read.parquet(os.path.join(output_path, "all_blocks.parquet"))
+    union_blocks = spark.read.parquet(os.path.join(output_path, "union_blocks.parquet"))
 
     # Check schema
-    assert "block_key" in all_blocks.columns
-    assert "block_key_type" in all_blocks.columns
-    assert "companies" in all_blocks.columns
-    assert "block_size" in all_blocks.columns
+    assert "block_key" in union_blocks.columns
+    assert "block_key_type" in union_blocks.columns
+    assert "companies" in union_blocks.columns
+    assert "block_size" in union_blocks.columns
 
     # Check we have blocks
-    assert all_blocks.count() > 0
+    assert union_blocks.count() > 0
 
     # Check company struct doesn't have block fields
-    companies_schema = all_blocks.schema["companies"].dataType.elementType
+    companies_schema = union_blocks.schema["companies"].dataType.elementType
     field_names = [field.name for field in companies_schema.fields]
     assert "block_key" not in field_names
     assert "block_key_type" not in field_names
 
     # Verify data integrity
-    sample_block = all_blocks.filter(F.col("block_key") == "APPLE").collect()
+    sample_block = union_blocks.filter(F.col("block_key") == "APPLE").collect()
     if sample_block:
         companies = sample_block[0]["companies"]
         assert len(companies) > 0
@@ -208,27 +209,27 @@ def test_er_blocking_second_iteration(spark, tmp_path):
     build_blocks(input_path=input_path, output_path=output_path, local_mode=True, stop_spark=False)
 
     # Check output files exist
-    assert os.path.exists(os.path.join(output_path, "all_blocks.parquet"))
+    assert os.path.exists(os.path.join(output_path, "union_blocks.parquet"))
 
     # Load and validate blocks
-    all_blocks = spark.read.parquet(os.path.join(output_path, "all_blocks.parquet"))
+    union_blocks = spark.read.parquet(os.path.join(output_path, "union_blocks.parquet"))
 
     # Check we have blocks
-    assert all_blocks.count() > 0
+    assert union_blocks.count() > 0
 
     # Check company struct doesn't have contamination from block fields
-    companies_schema = all_blocks.schema["companies"].dataType.elementType
+    companies_schema = union_blocks.schema["companies"].dataType.elementType
     field_names = [field.name for field in companies_schema.fields]
     assert "block_key" not in field_names
     assert "block_key_type" not in field_names
 
     # Load the JSON to verify field mapping is correct
-    all_blocks_json_path = os.path.join(output_path, "all_blocks.json")
+    union_blocks_json_path = os.path.join(output_path, "union_blocks.json")
 
     # Find the first JSON file in the directory
-    json_files = [f for f in os.listdir(all_blocks_json_path) if f.endswith(".json")]
+    json_files = [f for f in os.listdir(union_blocks_json_path) if f.endswith(".json")]
     if json_files:
-        json_file_path = os.path.join(all_blocks_json_path, json_files[0])
+        json_file_path = os.path.join(union_blocks_json_path, json_files[0])
 
         # Read first line of JSON
         with open(json_file_path) as f:
@@ -273,8 +274,8 @@ def test_schema_consistency_across_iterations(spark, tmp_path):
     build_blocks(resolved_path, resolved_output, local_mode=True, stop_spark=False)
 
     # Load results
-    raw_blocks = spark.read.parquet(os.path.join(raw_output, "all_blocks.parquet"))
-    resolved_blocks = spark.read.parquet(os.path.join(resolved_output, "all_blocks.parquet"))
+    raw_blocks = spark.read.parquet(os.path.join(raw_output, "union_blocks.parquet"))
+    resolved_blocks = spark.read.parquet(os.path.join(resolved_output, "union_blocks.parquet"))
 
     # Compare schemas
     raw_company_schema = raw_blocks.schema["companies"].dataType.elementType

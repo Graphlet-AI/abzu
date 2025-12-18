@@ -212,7 +212,10 @@ def build_blocks(
 
     # Load companies (always in regular format after UUID resolution)
     logger.info(f"Loading companies from {input_path}")
-    companies_df_raw: DataFrame = spark.read.json(input_path)
+    if input_path.endswith(".parquet") or input_path.endswith(".parquet/"):
+        companies_df_raw: DataFrame = spark.read.parquet(input_path)
+    else:
+        companies_df_raw = spark.read.json(input_path)
 
     # Normalize schema to ensure consistency across iterations
     logger.info("Normalizing company schema to match BAML definition...")
@@ -421,7 +424,10 @@ def build_blocks(
     logger.info("Grouping complete company records by blocking keys...")
 
     # Join filtered companies back with full company data
-    full_companies_df_raw = spark.read.json(input_path)
+    if input_path.endswith(".parquet") or input_path.endswith(".parquet/"):
+        full_companies_df_raw = spark.read.parquet(input_path)
+    else:
+        full_companies_df_raw = spark.read.json(input_path)
     # Normalize again to ensure consistency
     full_companies_df = normalize_company_dataframe(
         full_companies_df_raw, preserve_extra_fields=False
@@ -639,26 +645,19 @@ def build_blocks(
         logger.info(f"No blocks exceeded max size of {actual_max_block_size}, no splitting needed")
 
     # Save combined blocks separately
-    # Use ignoreNullFields=false to preserve all Company fields even when null
-    combined_blocks_json_path = os.path.join(output_path, "combined_blocks.json")
-    logger.info(f"Persisting combined blocks to {combined_blocks_json_path}")
-    combined_blocks_final.repartition(1).write.mode("overwrite").option(
-        "ignoreNullFields", "false"
-    ).json(combined_blocks_json_path)
+    combined_blocks_path = os.path.join(output_path, "combined_blocks.parquet")
+    logger.info(f"Persisting combined blocks to {combined_blocks_path}")
+    combined_blocks_final.repartition(1).write.mode("overwrite").parquet(combined_blocks_path)
 
     # Save first_word_only blocks separately
-    first_word_json_path = os.path.join(output_path, "first_word_blocks.json")
-    logger.info(f"Persisting first word blocks to {first_word_json_path}")
-    first_word_blocks_final.repartition(1).write.mode("overwrite").option(
-        "ignoreNullFields", "false"
-    ).json(first_word_json_path)
+    first_word_path = os.path.join(output_path, "first_word_blocks.parquet")
+    logger.info(f"Persisting first word blocks to {first_word_path}")
+    first_word_blocks_final.repartition(1).write.mode("overwrite").parquet(first_word_path)
 
     # Save acronym_only blocks separately
-    acronym_json_path = os.path.join(output_path, "acronym_blocks.json")
-    logger.info(f"Persisting acronym blocks to {acronym_json_path}")
-    acronym_blocks_final.repartition(1).write.mode("overwrite").option(
-        "ignoreNullFields", "false"
-    ).json(acronym_json_path)
+    acronym_path = os.path.join(output_path, "acronym_blocks.parquet")
+    logger.info(f"Persisting acronym blocks to {acronym_path}")
+    acronym_blocks_final.repartition(1).write.mode("overwrite").parquet(acronym_path)
 
     # Handle companies with UNKNOWN block keys - create singleton blocks for them
     unblocked_blocks_df = None
@@ -684,34 +683,34 @@ def build_blocks(
 
         logger.info(f"Created {unblocked_blocks_df.count()} singleton blocks for UNKNOWN companies")
 
-    # Create unified all_blocks output by combining all block types
-    logger.info("Creating unified all_blocks output...")
+    # Create unified union_blocks output by combining all block types
+    logger.info("Creating unified union_blocks output...")
     if unblocked_blocks_df is not None:
-        all_blocks_df = (
+        union_blocks_df = (
             combined_blocks_final.unionByName(first_word_blocks_final)
             .unionByName(acronym_blocks_final)
             .unionByName(unblocked_blocks_df)
         )
     else:
-        all_blocks_df = combined_blocks_final.unionByName(first_word_blocks_final).unionByName(
+        union_blocks_df = combined_blocks_final.unionByName(first_word_blocks_final).unionByName(
             acronym_blocks_final
         )
 
-    # Save all_blocks to both JSON and Parquet formats
-    all_blocks_json_path = os.path.join(output_path, "all_blocks.json")
+    # Save union_blocks to Parquet format
+    union_blocks_path = os.path.join(output_path, "union_blocks.parquet")
 
-    logger.info(f"Persisting all blocks to {all_blocks_json_path}")
-    all_blocks_df.repartition(1).write.mode("overwrite").option("ignoreNullFields", "false").json(
-        all_blocks_json_path
-    )
+    logger.info(f"Persisting all blocks to {union_blocks_path}")
+    union_blocks_df.repartition(1).write.mode("overwrite").parquet(union_blocks_path)
 
     # Count total blocks and companies in unified output
-    all_blocks_count = all_blocks_df.count()
-    all_blocks_companies = all_blocks_df.agg(
+    union_blocks_count = union_blocks_df.count()
+    union_blocks_companies = union_blocks_df.agg(
         F.coalesce(F.sum("block_size"), F.lit(0)).alias("total")
     ).collect()[0]["total"]
 
-    logger.info(f"Unified all_blocks: {all_blocks_count} blocks, {all_blocks_companies} companies")
+    logger.info(
+        f"Unified union_blocks: {union_blocks_count} blocks, {union_blocks_companies} companies"
+    )
 
     # Count blocks by type (after filtering and splitting)
     combined_block_count = combined_blocks_final.count()
@@ -821,10 +820,10 @@ def build_blocks(
     )
     logger.info("")
     logger.info("OUTPUT FILES:")
-    logger.info(f"  Combined blocks: {combined_blocks_json_path}")
-    logger.info(f"  First word blocks: {first_word_json_path}")
-    logger.info(f"  Acronym blocks: {acronym_json_path}")
-    logger.info(f"  All blocks unified: {all_blocks_json_path}")
+    logger.info(f"  Combined blocks: {combined_blocks_path}")
+    logger.info(f"  First word blocks: {first_word_path}")
+    logger.info(f"  Acronym blocks: {acronym_path}")
+    logger.info(f"  All blocks unified: {union_blocks_path}")
     logger.info("=" * 60)
 
     # Clean up

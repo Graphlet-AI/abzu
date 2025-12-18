@@ -159,19 +159,19 @@ def run_single_iteration(
     # Load blocks - handle partitioned JSON output
     blocks_data = []
 
-    # Try all_blocks.json first (might be a directory with part files)
-    all_blocks_path = os.path.join(blocks_path, "all_blocks.json")
-    if os.path.isdir(all_blocks_path):
+    # Try union_blocks.json first (might be a directory with part files)
+    union_blocks_path = os.path.join(blocks_path, "union_blocks.json")
+    if os.path.isdir(union_blocks_path):
         # Load all part-*.json files from the directory
         import glob
 
-        part_files = glob.glob(os.path.join(all_blocks_path, "part-*.json"))
+        part_files = glob.glob(os.path.join(union_blocks_path, "part-*.json"))
         for part_file in sorted(part_files):
             with open(part_file, "r") as f:
                 blocks_data.extend([json.loads(line) for line in f])
-    elif os.path.isfile(all_blocks_path):
+    elif os.path.isfile(union_blocks_path):
         # Single file
-        with open(all_blocks_path, "r") as f:
+        with open(union_blocks_path, "r") as f:
             blocks_data = [json.loads(line) for line in f]
     else:
         # Try alternative location - combined_blocks.json
@@ -299,7 +299,7 @@ def run_single_iteration(
         ]
     )
 
-    matches_df = spark.createDataFrame(matched_blocks, schema=matches_schema)  # type: ignore[type-var]
+    matches_df = spark.createDataFrame(matched_blocks, schema=matches_schema)  # type: ignore[arg-type]
     matches_df.write.mode("overwrite").parquet(matches_parquet_path)
 
     # Step 3: Evaluation

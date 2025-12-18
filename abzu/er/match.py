@@ -17,7 +17,6 @@ from abzu.er.uuid import process_block_with_uuid_mapping
 from abzu.logs import get_logger
 from abzu.spark.config import get_spark_session
 from abzu.spark.schemas import validate_block_schema
-from abzu.utils import save_jsonl
 
 logger = get_logger(__name__)
 
@@ -142,20 +141,20 @@ def match_entities(
     Match entities within blocks using BAML MultiEntityResolution.
 
     Args:
-        blocks_path: Path to the blocks parquet file (with {iteration} and {format} placeholders)
-        output_path: Path to save the matched entities (with {iteration} and {format} placeholders)
+        blocks_path: Path to the blocks parquet file (with {iteration} placeholder)
+        output_path: Path to save the matched entities JSONL file (with {iteration} placeholder)
         iteration: Iteration number for multi-round ER processing
         batch_size: Number of concurrent API calls
         limit: Maximum number of blocks to process (for testing)
         min_block_size: Minimum block size to process (inclusive)
         max_block_size: Maximum block size to process (inclusive)
     """
-    # Format paths with iteration and format early for logging
-    blocks_json_path = blocks_path.format(iteration=iteration, format="json")
-    output_json_path = output_path.format(iteration=iteration, format="json")
+    # Format paths with iteration
+    blocks_parquet_path = blocks_path.format(iteration=iteration)
+    output_jsonl_path = output_path.format(iteration=iteration)
 
-    logger.info(f"Starting entity matching from {blocks_json_path}")
-    logger.info(f"Output path: {output_json_path}")
+    logger.info(f"Starting entity matching from {blocks_parquet_path}")
+    logger.info(f"Output path: {output_jsonl_path}")
     logger.info(f"Batch size: {batch_size}")
     if limit:
         logger.info(f"Limiting to {limit} blocks")
@@ -163,9 +162,9 @@ def match_entities(
         logger.info(f"Block size range: {min_block_size or 'any'}:{max_block_size or 'any'}")
 
     # Check if blocks file exists
-    if not Path(blocks_json_path).exists():
+    if not Path(blocks_parquet_path).exists():
         error_msg = (
-            f"Blocks file not found: {blocks_json_path}\n\n"
+            f"Blocks file not found: {blocks_parquet_path}\n\n"
             f"The matching step requires blocks from the blocking step.\n"
             f"Please run the blocking step first:\n"
             f"  abzu process er block names --iteration {iteration}\n\n"
@@ -175,7 +174,7 @@ def match_entities(
         logger.error(error_msg)
         raise FileNotFoundError(error_msg)
 
-    # Load blocks from JSON using PySpark to preserve Python lists
+    # Load blocks from Parquet using PySpark to preserve Python lists
 
     # Create or get SparkSession
     spark = get_spark_session(f"EntityResolutionMatch_Iteration{iteration}")
@@ -183,8 +182,8 @@ def match_entities(
     # Disable Arrow optimization to preserve Python object types
     spark.conf.set("spark.sql.execution.arrow.pyspark.enabled", "false")
 
-    # Load JSON file with Spark (preserves lists as Python lists, not numpy arrays)
-    spark_df = spark.read.json(blocks_json_path)
+    # Load Parquet file with Spark (preserves lists as Python lists, not numpy arrays)
+    spark_df = spark.read.parquet(blocks_parquet_path)
 
     # Convert to pandas DataFrame
     # With Arrow disabled, toPandas() preserves Python lists without converting to numpy arrays
@@ -426,8 +425,8 @@ def match_entities(
     # No longer need ensure_list workaround - PySpark handles None values properly
 
     # Create output directory if it doesn't exist
-    json_output_path_obj = Path(output_json_path)
-    output_dir = json_output_path_obj.parent
+    jsonl_output_path_obj = Path(output_jsonl_path)
+    output_dir = jsonl_output_path_obj.parent
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Save error blocks to a separate file for debugging if any exist
@@ -440,11 +439,12 @@ def match_entities(
     if len(error_blocks) > 0:
         logger.warning(f"Found {len(error_blocks)} blocks with errors")
 
-    # Backup existing JSON file if it exists
-    backup_file(json_output_path_obj)
+    # Backup existing JSONL file if it exists
+    backup_file(jsonl_output_path_obj)
 
-    # Save to JSON format
-    save_jsonl(results_df, json_output_path_obj)
+    # Save to JSONL format using pandas
+    results_df.to_json(output_jsonl_path, orient="records", lines=True)
+    logger.info(f"Saved {len(results_df)} resolved blocks to {output_jsonl_path}")
 
     # Count recovered records by category
     error_recovered_records = 0  # Recovered from BAML API errors
@@ -526,5 +526,5 @@ def match_entities(
     logger.info("  ✓ All original UUIDs preserved in source_uuids arrays")
     logger.info("")
     logger.info("OUTPUT FILE:")
-    logger.info(f"  Matches saved to: {output_json_path}")
+    logger.info(f"  Matches saved to: {output_jsonl_path}")
     logger.info("=" * 60)

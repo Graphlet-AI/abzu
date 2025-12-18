@@ -161,14 +161,13 @@ process:
       paths:
         input: "${process.kg.raw.output}/companies.parquet"
         output: "${base_dir}/er/"
-        # Names workflow paths (supports iterations and formats)
+        # Names workflow paths (iteration subdirectories)
         names:
-          # Use iteration subdirectories for multi-round processing
           blocks_dir: "${base_dir}/er/iterations/{iteration}/"
-          blocks: "${base_dir}/er/iterations/{iteration}/union_blocks.{format}"
-          matches: "${base_dir}/er/iterations/{iteration}/matches.{format}"
-          final: "${base_dir}/er/iterations/{iteration}/companies_final.{format}"
-          eval: "${base_dir}/er/iterations/{iteration}/companies_resolved.{format}"
+          blocks: "${base_dir}/er/iterations/{iteration}/union_blocks.parquet"
+          matches: "${base_dir}/er/iterations/{iteration}/matches.jsonl"
+          final: "${base_dir}/er/iterations/{iteration}/companies_final.parquet"
+          eval: "${base_dir}/er/iterations/{iteration}/companies_resolved.parquet"
       max_block_size: 50
       iteration: 3
 

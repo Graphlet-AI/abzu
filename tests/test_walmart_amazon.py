@@ -1,8 +1,6 @@
 """Tests for the walmart_amazon download CLI command."""
 
-import io
 import zipfile
-from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pandas as pd
@@ -134,9 +132,7 @@ def test_walmart_amazon_http_error(tmp_path):
     with patch("abzu.cli.download.walmart_amazon.requests.get") as mock_get:
         # Simulate an HTTP error
         mock_response = Mock()
-        mock_response.raise_for_status.side_effect = requests.exceptions.HTTPError(
-            "404 Not Found"
-        )
+        mock_response.raise_for_status.side_effect = requests.exceptions.HTTPError("404 Not Found")
         mock_get.return_value = mock_response
 
         result = runner.invoke(walmart_amazon, ["-o", str(output_dir)])
