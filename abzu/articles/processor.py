@@ -94,7 +94,7 @@ def get_client_registry() -> ClientRegistry:
     cr: ClientRegistry = ClientRegistry()
 
     cr.add_llm_client(
-        name="Gemini25FlashLite",
+        name="Gemini20Flash",
         provider="google-ai",
         options={
             "model": "gemini-2.5-flash",
@@ -106,7 +106,7 @@ def get_client_registry() -> ClientRegistry:
     )
 
     cr.add_llm_client(
-        name="Gemini25FlashLite",
+        name="Gemini20Flash",
         provider="google-ai",
         options={
             "model": "gemini-2.5-pro",
@@ -118,7 +118,7 @@ def get_client_registry() -> ClientRegistry:
     )
 
     # Start with cheaper Gemini 2.5 Flash, fall back to 2.5 Pro
-    cr.set_primary("Gemini25FlashLite")
+    cr.set_primary("Gemini20Flash")
 
     return cr
 

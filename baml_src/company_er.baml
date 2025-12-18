@@ -19,7 +19,7 @@ class EntityResolutionResponse {
 
 function EntityResolution(company_one: Company, company_two: Company) -> EntityResolutionResponse {
   // see clients.baml
-  client Gemini25FlashLite
+  client Gemini20Flash
 
   // The prompt uses Jinja syntax. Change the models or this text and watch the prompt preview change!
   prompt #"

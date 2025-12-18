@@ -4,7 +4,7 @@ class TickerList {
 
 function AddTickersToCompanies(company_list: CompanyList, ticker_list: TickerList) -> CompanyList {
   // see clients.baml
-  client Gemini25FlashLite
+  client Gemini20Flash
 
   // The prompt uses Jinja syntax. Change the models or this text and watch the prompt preview change!
   prompt #"
