@@ -159,13 +159,13 @@ process:
 
     er:
       paths:
-        input: "${process.kg.wiki.output}"
+        input: "${process.kg.raw.output}/companies.parquet"
         output: "${base_dir}/er/"
         # Names workflow paths (supports iterations and formats)
         names:
           # Use iteration subdirectories for multi-round processing
           blocks_dir: "${base_dir}/er/iterations/{iteration}/"
-          blocks: "${base_dir}/er/iterations/{iteration}/all_blocks.{format}"
+          blocks: "${base_dir}/er/iterations/{iteration}/union_blocks.{format}"
           matches: "${base_dir}/er/iterations/{iteration}/matches.{format}"
           final: "${base_dir}/er/iterations/{iteration}/companies_final.{format}"
           eval: "${base_dir}/er/iterations/{iteration}/companies_resolved.{format}"
