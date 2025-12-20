@@ -50,6 +50,10 @@ Test one iteration of the full entity resolution pipeline each time you make cha
 - API operations: `abzu api financialdatasets`, `abzu api sec download --ticker NVDA`
 - Run pipeline steps: `abzu steps`
 
+## Bloomberg Exchange Data Standard
+
+Download and use the [Bloomberg Exchange codes](https://www.inforeachinc.com/wp-content/uploads/exchanges.xlsx) for encoding all BAML or other `Ticker.exchange` fields. Use the two letter Bloomberg code not `NASDAQ`, etc. or if unknown use the three letter code `UNK`.
+
 ## Architecture Overview
 
 ### Project Structure
