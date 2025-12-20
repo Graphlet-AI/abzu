@@ -664,10 +664,9 @@ function ExtractForm10K(filing_text: string) -> Form10K {
     {# Output format instructions #}
     {{ ctx.output_format(hoist_classes=[
       "Company", "Ticker", "Product", "Technology", "Executive", "RiskFactor",
-      "BusinessSegment", "GeographicMarket", "Competitor", "Customer", "Supplier",
-      "IntellectualProperty", "Acquisition", "RevenueStream",
-      "MaterialContract", "FinancialMetric", "GuidanceMetric", "GovernanceItem",
-      "Form10KRelationship"
+      "BusinessSegment", "GeographicMarket","RevenueStream",
+      "FinancialMetric", "GuidanceMetric", "GovernanceItem",
+      "Relationship"
     ]) }}
 
     {{ _.role("user") }}

@@ -34,6 +34,10 @@ client<llm> Gemini20Flash {
     options {
         model "gemini-2.0-flash"
         api_key env.GEMINI_API_KEY
+        http {
+            time_to_first_token_timeout_ms 60000
+            idle_timeout_ms 120000
+        }
         generationConfig {
             temperature 0.0
         }
@@ -46,6 +50,10 @@ client<llm> Gemini25FlashLite {
     options {
         model "gemini-2.5-flash-lite"
         api_key env.GEMINI_API_KEY
+        http {
+            time_to_first_token_timeout_ms 60000
+            idle_timeout_ms 120000
+        }
         generationConfig {
             temperature 0.0
         }

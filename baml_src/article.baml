@@ -159,7 +159,7 @@ class Company {
   website_url string?
 
   headquarters_location string?
-  @description("City, state, country")
+  @description("City, state, country. Infer the country if only city is given.")
 
   jurisdiction string?
   @description("2-letter state or country where the company is incorporated")
@@ -269,6 +269,9 @@ enum RelationshipType {
   SupplyAgreement @description("Long-term supply agreement")
   LicenseIn @description("Company licenses technology from another")
   LicenseOut @description("Company licenses technology to another")
+  MaterialContract @description("Material contract between companies")
+  RevenueStream @description("Significant revenue stream from another company")
+  IntellectualProperty @description("Intellectual property relationship")
 }
 
 class Relationship {
