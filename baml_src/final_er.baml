@@ -71,7 +71,7 @@ test TwoDuplicatesTest {
           ticker {
             id 0
             uuid null
-            exchange "NASDAQ"
+            exchange "UQ"
             symbol "AAPL"
           }
           description "Technology company"
@@ -124,7 +124,7 @@ test ThreeDuplicatesWithNullsTest {
             id 0
             uuid null
             symbol "NVDA"
-            exchange "NASDAQ"
+            exchange "UQ"
           }
           description null
           headquarters_location "Santa Clara, CA"
