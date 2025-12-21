@@ -59,6 +59,7 @@ playwright = "^1.54.0"
 sparkdantic = {git = "https://github.com/Graphlet-AI/sparkdantic.git", rev = "fix-forward-references"}
 wandb = "0.23.0"
 sec-edgar-api = "^1.1.0"
+pyspark-mcp = ">=0.0.3"
 
 [tool.poetry.group.dev.dependencies]
 flake8 = "^7.2.0"
