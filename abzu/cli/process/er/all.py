@@ -224,6 +224,12 @@ def all(
     eval_path = config.get("process.kg.er.paths.names.eval").format(
         iteration=iteration, format="json"
     )
+    uuid_blocks_path = config.get("process.kg.er.paths.names.uuid_blocks").format(
+        iteration=iteration
+    )
+    uuid_matches_path = config.get("process.kg.er.paths.names.uuid_matches").format(
+        iteration=iteration
+    )
 
     # Step 1: Blocking
     click.echo(f"[1/4] BLOCKING (max_block_size={max_block_size})")
@@ -287,6 +293,8 @@ def all(
         final_metrics = deduplicate_resolved_companies(
             matches_path=matches_path,
             output_path=final_path,
+            uuid_blocks_path=uuid_blocks_path,
+            uuid_matches_path=uuid_matches_path,
             iteration=iteration,
             batch_size=batch_size,
             local_mode=local_mode if local_mode else None,
