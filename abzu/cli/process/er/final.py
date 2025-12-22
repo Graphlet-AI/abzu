@@ -17,6 +17,20 @@ logger = get_logger(__name__)
     help="Iteration number to process",
 )
 @click.option(
+    "--matches-path",
+    "-m",
+    default=config.get("process.kg.er.paths.names.matches"),
+    type=str,
+    help="Path to matches JSONL file (with {iteration} placeholder)",
+)
+@click.option(
+    "--output-path",
+    "-o",
+    default=config.get("process.kg.er.paths.names.final"),
+    type=str,
+    help="Path to output final companies file (with {iteration} placeholder)",
+)
+@click.option(
     "--batch-size",
     "-b",
     default=5,
@@ -31,6 +45,8 @@ logger = get_logger(__name__)
 )
 def final(
     iteration: int,
+    matches_path: str,
+    output_path: str,
     batch_size: int,
     local_mode: bool,
 ) -> None:
@@ -44,13 +60,9 @@ def final(
     """
     from abzu.spark.er_final import deduplicate_resolved_companies
 
-    # Get paths from config
-    matches_path = config.get("process.kg.er.paths.names.matches").format(
-        iteration=iteration, format="json"
-    )
-    final_path = config.get("process.kg.er.paths.names.final").format(
-        iteration=iteration, format="json"
-    )
+    # Format paths with iteration
+    matches_path = matches_path.format(iteration=iteration)
+    final_path = output_path.format(iteration=iteration)
 
     click.echo(f"Final deduplication for iteration {iteration}")
     click.echo(f"Input:  {matches_path}")
