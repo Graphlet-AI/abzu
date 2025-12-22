@@ -27,10 +27,9 @@ Do not be afraid to question what I say. Do not always respond with "You're righ
 
 Test one iteration of the full entity resolution pipeline each time you make changes to entity resolution code:
 
-- Block with `abzu process er block names --iteration 1 -m 30`
+- Block with `abzu process er block names --iteration 1 -m 100`
 - Match with `abzu process er match names --iteration 1 -b 50` - note you can use the `-n` option to limit the number of rows processed for faster testing.
 - Evaluate with `abzu process er eval names --iteration 1`
-- Evaluate with `abzu process er final --iteration 1`
 
 You can do all of these steps in one command with `abzu process er all --iteration 1 -m 100 -b 40 ` to process only 1000 rows for faster testing.
 
@@ -148,6 +147,10 @@ We use our own branch of SparkDantic for schema management to convert from BAML/
 
 When in doubt, specify the schema when loading data into Spark DataFrames to avoid schema inference issues.
 
+## Golden Rule of Schema: NEVER CHANGE A PYSPARK SCHEMA WITHOUT EXPLICIT PERMISSION.
+
+You may change return types in functions, add new fields to schemas, and make non-breaking changes. But you may not remove fields from schemas or change field types without explicit permission.
+
 ## File Formats
 
 Always save data in two formats:
@@ -228,7 +231,7 @@ logger.error(f"Failed to process: {error}")
 
 ### Spark Development
 
-Use the following style guide [README.md](abzu/spark/README.md) for Spark development: @abzu/spark/README.md
+Use the following style and logic guide [abzu/spark/README.md](abzu/spark/README.md) for Spark development: @abzu/spark/README.md
 
 For PySpark UDTF (User-Defined Table Functions) usage, refer to the [UDTF Guide](markdown/UDTF.md): @markdown/UDTF.md
 

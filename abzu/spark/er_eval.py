@@ -132,7 +132,17 @@ def evaluate_er_matches(
 
     # Input is exploded resolved_companies from match step
     logger.info("Using resolved companies from match step...")
-    resolved_companies_df = matches_df
+
+    # Deduplicate exact copies before any counting/evaluation
+    pre_dedup_count = matches_df.count()
+    resolved_companies_df = matches_df.distinct()
+    post_dedup_count = resolved_companies_df.count()
+    exact_duplicates_removed = pre_dedup_count - post_dedup_count
+    if exact_duplicates_removed > 0:
+        logger.info(
+            f"Removed {exact_duplicates_removed:,} exact duplicate records "
+            f"({pre_dedup_count:,} → {post_dedup_count:,})"
+        )
 
     # Split into BAML-processed vs skipped companies
     baml_processed_df = resolved_companies_df.filter(

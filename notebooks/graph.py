@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.14.17"
+__generated_with = "0.18.4"
 app = marimo.App()
 
 
@@ -14,7 +14,6 @@ def _():
     import networkx as nx
     import numpy as np
     import pandas as pd
-    import pyarrow as pa
     import seaborn as sns
 
     sns.set_theme(style="white", context="poster")
@@ -28,7 +27,6 @@ def _():
         graphistry,
         np,
         nx,
-        pa,
         pd,
         plt,
         sns,
@@ -196,7 +194,7 @@ def _(relationship_df):
 
 
 @app.cell
-def _(node_df, pa, pd, relationship_df):
+def _(pd, relationship_df):
     edge_df = relationship_df[relationship_df.src.notnull() & relationship_df.dst.notnull()].copy()
 
     # Convert ALL columns to strings for Graphistry/Arrow compatibility
@@ -208,8 +206,7 @@ def _(node_df, pa, pd, relationship_df):
 
     # Fill NaN values for Graphistry compatibility
     edge_df = edge_df.fillna("")
-
-    print(f"Total edges: {edge_df.count():,}")
+    print(f"Total edges: {len(edge_df):,}")
 
     # Debugging column parsing
     return (edge_df,)
@@ -238,16 +235,7 @@ def _(edge_df, node_df, nx, pd):
 
 
 @app.cell
-def _(
-    FAVICON_URL,
-    G,
-    GRAPHISTRY_PARAMS,
-    LOGO,
-    edge_df,
-    graphistry,
-    node_df,
-    nx,
-):
+def _(G, edge_df, node_df, nx):
     # Add nodes with ALL attributes from the company dataframe
     # set_index is important here so the keys of the dict are the node IDs
     node_attributes_df = node_df[node_df["id"].notnull()].copy()
@@ -286,6 +274,12 @@ def _(
     # Display a summary of the created graph
     print(G)
 
+    # Display the number of nodes without a 'name' property
+    return
+
+
+@app.cell
+def _(FAVICON_URL, G, GRAPHISTRY_PARAMS, LOGO, graphistry):
     # Create Graphistry visualization object
     g = (
         graphistry.bind(
@@ -439,6 +433,11 @@ def _(FAVICON_URL, GRAPHISTRY_PARAMS, G_clean, graphistry):
         )
     )
     g2.plot(G_clean, validate=False, warn=True)
+    return
+
+
+@app.cell
+def _():
     return
 
 
