@@ -442,6 +442,11 @@ def match_entities(
     # Backup existing JSONL file if it exists
     backup_file(jsonl_output_path_obj)
 
+    # # Deduplicate the pandas UDF
+    # duplicates = results_df.duplicated().count()
+    # logger.info(f"Found {duplicates} duplicate rows before deduplicating before saving")
+    # results_df = results_df.drop_duplicates()
+
     # Save to JSONL format using pandas
     results_df.to_json(output_jsonl_path, orient="records", lines=True)
     logger.info(f"Saved {len(results_df)} resolved blocks to {output_jsonl_path}")
