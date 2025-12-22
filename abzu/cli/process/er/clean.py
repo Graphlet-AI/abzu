@@ -42,8 +42,8 @@ def clean(base_path: str, iteration: int | None, dry_run: bool, force: bool) -> 
     patterns_to_clean = [
         "*_blocks.parquet",
         "*_blocks.json",
-        "all_blocks.parquet",
-        "all_blocks.json",
+        "union_blocks.parquet",
+        "union_blocks.json",
         "combined_blocks.parquet",
         "combined_blocks.json",
         "matches.parquet",

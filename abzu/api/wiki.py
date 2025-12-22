@@ -2,15 +2,20 @@
 
 import asyncio
 import re
+import warnings
 from pathlib import Path
 from typing import Any, Optional
 
 import aiohttp
 import mwparserfromhell
 import wikipedia
+from bs4 import GuessedAtParserWarning
 
 from abzu.logs import get_logger
 from abzu.utils import append_jsonl
+
+# Suppress Wikipedia library's HTML parser warning
+warnings.filterwarnings("ignore", category=GuessedAtParserWarning)
 
 logger = get_logger(__name__)
 
@@ -104,16 +109,13 @@ def wikitext_to_markdown(wikitext: str) -> str:
     return markdown.strip()
 
 
-def extract_company_info(
-    page_data: dict[str, Any], ticker: Optional[str] = None, name: Optional[str] = None
-) -> dict[str, Any]:
+def extract_company_info(page_data: dict[str, Any], name: str) -> dict[str, Any]:
     """
     Extract structured company information from Wikipedia page data.
 
     Args:
         page_data: Wikipedia page data with plain text content
-        ticker: Stock ticker if provided
-        name: Company name if provided
+        name: Company name
 
     Returns:
         Dictionary with structured company information
@@ -122,31 +124,24 @@ def extract_company_info(
     content = page_data.get("content", "")
     summary = page_data.get("summary", "")
     title = page_data.get("title", "")
-    url = page_data.get("url", "")
 
-    # Try to extract ticker from content if not provided
-    ticker_symbol = ticker
+    # Try to extract ticker from content
+    ticker_symbol = None
     ticker_exchange = None
 
-    if not ticker_symbol:
-        # For NVIDIA specifically, we know it's NVDA on NASDAQ
-        if "Nvidia" in title:
-            ticker_symbol = "NVDA"
-            ticker_exchange = "NASDAQ"
-        else:
-            # Simple patterns for common exchanges in plain text
-            exchange_patterns = [
-                (r"NASDAQ:\s*([A-Z]{1,5})", "NASDAQ"),
-                (r"NYSE:\s*([A-Z]{1,5})", "NYSE"),
-                (r"traded as ([A-Z]{1,5})", None),
-            ]
+    # Simple patterns for common exchanges in plain text
+    exchange_patterns = [
+        (r"NASDAQ:\s*([A-Z]{1,5})", "NASDAQ"),
+        (r"NYSE:\s*([A-Z]{1,5})", "NYSE"),
+        (r"traded as ([A-Z]{1,5})", None),
+    ]
 
-            for pattern, exchange in exchange_patterns:
-                match = re.search(pattern, content)
-                if match:
-                    ticker_symbol = match.group(1)
-                    ticker_exchange = exchange
-                    break
+    for pattern, exchange in exchange_patterns:
+        match = re.search(pattern, content)
+        if match:
+            ticker_symbol = match.group(1)
+            ticker_exchange = exchange
+            break
 
     # Initialize result with structured format
     result = {
@@ -264,96 +259,94 @@ def extract_company_info(
     return result
 
 
-def crawl_company_structured(
-    ticker: Optional[str] = None, name: Optional[str] = None
-) -> dict[str, Any]:
+def crawl_company_structured(name: str) -> dict[str, Any]:
     """
     Crawl Wikipedia page for a company and return structured data.
 
     Args:
-        ticker: Stock ticker symbol
         name: Company name
 
     Returns:
         Dictionary with structured company information
     """
     # Get plain text content from wikipedia package
-    page_data = crawl_company_wikipedia(ticker=ticker, name=name)
+    page_data = crawl_company_wikipedia(name=name)
 
     # Extract structured information from the plain text
-    structured_data = extract_company_info(page_data, ticker=ticker, name=name)
+    structured_data = extract_company_info(page_data, name=name)
 
     return structured_data
 
 
-def crawl_company_wikipedia(
-    ticker: Optional[str] = None, name: Optional[str] = None
+async def crawl_company_structured_async(
+    session: aiohttp.ClientSession,
+    name: str,
 ) -> dict[str, Any]:
     """
-    Crawl Wikipedia page for a company.
+    Async version: Crawl Wikipedia page for a company and return structured data.
 
     Args:
-        ticker: Stock ticker symbol
+        session: aiohttp ClientSession for making requests
+        name: Company name
+
+    Returns:
+        Dictionary with structured company information
+    """
+    # Get plain text content from wikipedia package (async version)
+    page_data = await crawl_company_wikipedia_async(session, name=name)
+
+    # Extract structured information from the plain text
+    structured_data = extract_company_info(page_data, name=name)
+
+    return structured_data
+
+
+def crawl_company_wikipedia(name: str) -> dict[str, Any]:
+    """
+    Crawl Wikipedia page for a company using company name.
+
+    Args:
         name: Company name
 
     Returns:
         Dictionary with Wikipedia content
     """
-    if not ticker and not name:
-        raise ValueError("Either ticker or name must be provided")
+    if not name:
+        raise ValueError("Company name must be provided")
 
     # Set Wikipedia language
     wikipedia.set_lang("en")
 
-    # Try different search variations
-    search_terms = []
-    if ticker:
-        search_terms.extend(
-            [f"{ticker} (company)", f"{ticker} Inc", f"{ticker} Corporation", ticker]
-        )
-    if name:
-        search_terms.extend([name, f"{name} (company)", f"{name} Inc", f"{name} Corporation"])
-
     page = None
-    used_search_term = None
 
-    # Search for the Wikipedia page using various search terms
-    for term in search_terms:
-        logger.info(f"Trying search term: {term}")
+    # Search Wikipedia with just the company name
+    logger.info(f"Searching Wikipedia for: {name}")
+    search_results = wikipedia.search(name, results=3)
 
-        # Use wikipedia package to search for pages
-        search_results = wikipedia.search(term, results=3)
-        if search_results:
-            # Try to get the first search result
-            for result in search_results:
-                try:
-                    # Get the page using wikipedia package
-                    page = wikipedia.page(result, auto_suggest=False)
-                    used_search_term = term
-                    logger.info(f"Found page: {page.title}")
-                    break
-                except wikipedia.exceptions.DisambiguationError as e:
-                    # Handle disambiguation pages by trying the first option
-                    if e.options:
-                        try:
-                            page = wikipedia.page(e.options[0], auto_suggest=False)
-                            used_search_term = term
-                            logger.info(f"Found page from disambiguation: {page.title}")
-                            break
-                        except Exception:
-                            continue
-                except wikipedia.exceptions.PageError:
-                    continue
-                except Exception as e:
-                    logger.warning(f"Error getting page for {result}: {e}")
-                    continue
-
-        if page:
-            break
+    if search_results:
+        # Try the first result that works
+        for result in search_results:
+            try:
+                page = wikipedia.page(result, auto_suggest=False)
+                logger.info(f"Found page: {page.title}")
+                break
+            except wikipedia.exceptions.DisambiguationError as e:
+                # Take the first option from disambiguation
+                if e.options:
+                    try:
+                        page = wikipedia.page(e.options[0], auto_suggest=False)
+                        logger.info(f"Found page from disambiguation: {page.title}")
+                        break
+                    except Exception:
+                        continue
+            except wikipedia.exceptions.PageError:
+                continue
+            except Exception as e:
+                logger.warning(f"Error getting page for {result}: {e}")
+                continue
 
     if not page:
-        search_type = f"ticker {ticker}" if ticker else f"company {name}"
-        raise ValueError(f"Could not find Wikipedia page for {search_type}")
+        raise ValueError(f"Could not find Wikipedia page for {name}")
 
     # Get the plain text content from wikipedia package
     content = page.content
@@ -377,9 +370,7 @@ def crawl_company_wikipedia(
         "content": content,
         "categories": categories,
         "links": links,
-        "search_ticker": ticker,
         "search_name": name,
-        "search_term_used": used_search_term,
     }
 
     logger.info(f"Successfully crawled Wikipedia page: {page.title}")
@@ -393,8 +384,7 @@ def crawl_company_wikipedia(
 
 async def crawl_company_wikipedia_async(
     session: aiohttp.ClientSession,
-    ticker: Optional[str] = None,
-    name: Optional[str] = None,
+    name: str,
     raw: bool = False,
 ) -> dict[str, Any]:
     """
@@ -402,75 +392,49 @@ async def crawl_company_wikipedia_async(
 
     Args:
         session: aiohttp ClientSession for making requests
-        ticker: Stock ticker symbol
         name: Company name
         raw: If True, return raw wikitext instead of Markdown (default: False)
 
     Returns:
         Dictionary with Wikipedia content in Markdown or raw wikitext format
     """
-    if not ticker and not name:
-        raise ValueError("Either ticker or name must be provided")
+    if not name:
+        raise ValueError("Company name must be provided")
 
     # Set Wikipedia language
     wikipedia.set_lang("en")
 
-    # Try different search variations
-    search_terms = []
-    if ticker:
-        search_terms.extend(
-            [f"{ticker} (company)", f"{ticker} Inc", f"{ticker} Corporation", ticker]
-        )
-    if name:
-        search_terms.extend([name, f"{name} (company)", f"{name} Inc", f"{name} Corporation"])
-
     page = None
-    used_search_term = None
 
-    # Search for the Wikipedia page using various search terms
-    for term in search_terms:
-        logger.info(f"Trying search term: {term}")
+    # Search Wikipedia with just the company name
+    logger.info(f"Searching Wikipedia for: {name}")
+    loop = asyncio.get_event_loop()
+    search_results = await loop.run_in_executor(None, wikipedia.search, name, 3)
 
-        # Use wikipedia package to search for pages (this is synchronous)
-        # We run it in a thread pool to avoid blocking
-        loop = asyncio.get_event_loop()
-        search_results = await loop.run_in_executor(None, wikipedia.search, term, 3)
-
-        if search_results:
-            # Try to get the first search result
-            for result in search_results:
-                try:
-                    # Get the page using wikipedia package (run in thread pool)
-                    page = await loop.run_in_executor(None, wikipedia.page, result, False)
-                    used_search_term = term
-                    if page:
-                        logger.info(f"Found page: {page.title}")
-                    break
-                except wikipedia.exceptions.DisambiguationError as e:
-                    # Handle disambiguation pages by trying the first option
-                    if e.options:
-                        try:
-                            page = await loop.run_in_executor(
-                                None, wikipedia.page, e.options[0], False
-                            )
-                            used_search_term = term
-                            if page:
-                                logger.info(f"Found page from disambiguation: {page.title}")
-                            break
-                        except Exception:
-                            continue
-                except wikipedia.exceptions.PageError:
-                    continue
-                except Exception as e:
-                    logger.warning(f"Error getting page for {result}: {e}")
-                    continue
-
-        if page:
-            break
+    if search_results:
+        # Try the first result that works
+        for result in search_results:
+            try:
+                page = await loop.run_in_executor(None, wikipedia.page, result, False)
+                logger.info(f"Found page: {page.title}")
+                break
+            except wikipedia.exceptions.DisambiguationError as e:
+                # Take the first option from disambiguation
+                if e.options:
+                    try:
+                        page = await loop.run_in_executor(None, wikipedia.page, e.options[0], False)
+                        logger.info(f"Found page from disambiguation: {page.title}")
+                        break
+                    except Exception:
+                        continue
+            except wikipedia.exceptions.PageError:
+                continue
+            except Exception as e:
+                logger.warning(f"Error getting page for {result}: {e}")
+                continue
 
     if not page:
-        search_type = f"ticker {ticker}" if ticker else f"company {name}"
-        raise ValueError(f"Could not find Wikipedia page for {search_type}")
+        raise ValueError(f"Could not find Wikipedia page for {name}")
 
     # Get the raw MediaWiki wikitext using async HTTP
     # NOTE: We use the Wikipedia API directly here because the wikipedia package
@@ -540,9 +504,7 @@ async def crawl_company_wikipedia_async(
         "content": content,
         "categories": categories,
         "links": links,
-        "search_ticker": ticker,
         "search_name": name,
-        "search_term_used": used_search_term,
     }
 
     logger.info(f"Successfully crawled Wikipedia page: {page.title}")
@@ -565,7 +527,7 @@ async def crawl_companies_batch_async(
     Results are written to output file as they complete.
 
     Args:
-        companies: List of company dictionaries with 'ticker' and/or 'name' fields
+        companies: List of company dictionaries with 'name' field
         output_file: Path to output file for results (optional)
         max_concurrent: Maximum number of concurrent requests (default: 5)
         raw: If True, return raw wikitext instead of Markdown (default: False)
@@ -582,12 +544,12 @@ async def crawl_companies_batch_async(
     ) -> dict[str, Any]:
         """Crawl a single company with semaphore rate limiting."""
         async with semaphore:
+            name = company.get("name")
+            if not name:
+                return {"error": "No company name provided", "company": company}
+
             try:
-                ticker = company.get("ticker")
-                name = company.get("name")
-                result = await crawl_company_wikipedia_async(
-                    session, ticker=ticker, name=name, raw=raw
-                )
+                result = await crawl_company_wikipedia_async(session, name=name, raw=raw)
 
                 # Write to output file if provided
                 if output_file:
@@ -596,11 +558,10 @@ async def crawl_companies_batch_async(
 
                 return result
             except Exception as e:
-                logger.error(f"Error crawling {company}: {e}")
+                logger.error(f"Error crawling {name}: {e}")
                 error_result = {
                     "error": str(e),
-                    "search_ticker": company.get("ticker"),
-                    "search_name": company.get("name"),
+                    "search_name": name,
                 }
 
                 # Write error to output file if provided

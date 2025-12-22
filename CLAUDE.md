@@ -19,7 +19,7 @@ Do not be afraid to question what I say. Do not always respond with "You're righ
 - Test specific cache modes: `poetry run pytest -e ABZU_CACHE_MODE=hybrid tests/test_sync.py`
 - Lint: `pre-commit run` is better than `poetry run flake8`. Don't use `--all-files` with pre-commit.
 - Format: `poetry run black abzu tests`, `poetry run isort abzu tests`
-- Type check: `poetry run zuban check`
+- Type check: `poetry run mypy abzu`
 - Place temporary scripts for debugging in the `scripts/` directory.
 - Use the `pqrs` utility to inspect Parquet files: `pqrs schema <path_to_parquet_file>`, `pqrs row-count <path_to_parquet_file>`, `pqrs head <path_to_parquet_file>`
 
@@ -30,6 +30,9 @@ Test one iteration of the full entity resolution pipeline each time you make cha
 - Block with `abzu process er block names --iteration 1 -m 30`
 - Match with `abzu process er match names --iteration 1 -b 50` - note you can use the `-n` option to limit the number of rows processed for faster testing.
 - Evaluate with `abzu process er eval names --iteration 1`
+- Evaluate with `abzu process er final --iteration 1`
+
+You can do all of these steps in one command with `abzu process er all --iteration 1 -m 100 -b 40 ` to process only 1000 rows for faster testing.
 
 ### Docker Development (via Taskfile)
 
@@ -49,6 +52,10 @@ Test one iteration of the full entity resolution pipeline each time you make cha
 - Build KG: `abzu process kg raw`, then `abzu process kg refine`
 - API operations: `abzu api financialdatasets`, `abzu api sec download --ticker NVDA`
 - Run pipeline steps: `abzu steps`
+
+## Bloomberg Exchange Data Standard
+
+Download and use the [Bloomberg Exchange codes](https://www.inforeachinc.com/wp-content/uploads/exchanges.xlsx) for encoding all BAML or other `Ticker.exchange` fields. Use the two letter Bloomberg code not `NASDAQ`, etc. or if unknown use the three letter code `UNK`.
 
 ## Architecture Overview
 
@@ -88,6 +95,12 @@ Test one iteration of the full entity resolution pipeline each time you make cha
 4. **KG Refine**: Deduplicate and enrich → refined Parquet files
 5. **APIs**: Enrich with financial/SEC data
 
+### Semantic Matching
+
+- **Blocking**: Semantic clustering to group similar entities. See @markdown/BLOCKING.md
+- **Matching**: LLM-based pairwise entity comparison. See @abzu/er/match.py
+- **Evaluation**: Precision/recall metrics against ground truth
+
 ## Code Style
 
 - KISS: KEEP IT SIMPLE STUPID. Do not over-engineer solutions. ESPECIALLY for Spark / PySpark.
@@ -107,11 +120,11 @@ Test one iteration of the full entity resolution pipeline each time you make cha
 - Tests: Use pytest for testing, include type hints in test functions, use fixtures for setup/teardown
 - Tests: Don't make a class to contain unit tests. Just write the tests in pytest style.
 - Type hints: Use Python 3.9 type hints for all function parameters and return types. Use `list`, `dict`, `tuple`, etc. instead of `List`, `Dict`, `Tuple` from the `typing` module. Use `Optional` from the `typing` module for optional parameters.
-- Type checking: Use zuban for type checking, run zuban before committing code
+- Type checking: Use mypy for type checking, run mypy before committing code
 - Logging: Use logging for error handling, avoid print statements. Always use `from abzu.logs import get_logger` and `logger = get_logger(__name__)`
 - Documentation: Use Sphinx for documentation, include docstrings in all public functions/classes
 - Code style: Follow PEP 8 for Python code style, use flake8 for linting
-- Zuban: Use zuban for type checking, it is a faster version of mypy. Run zuban via pre-commit before committing code. Configure it in `pyproject.toml` under `[tool.zuban]`.
+- Mypy: Use mypy for type checking. Run mypy via pre-commit before committing code. Configure it in `pyproject.toml` under `[tool.mypy]`.
 - Pre-commit: Use pre-commit for linting and formatting, configure it in `.pre-commit-config.yaml`
 - Git: Use git for version control, commit often with clear messages, use branches for new features/bug fixes. Always test new features in the CLI before you commit them.
 - Poetry: Use poetry for dependency management and packaging, configure it in `pyproject.toml`
@@ -122,6 +135,27 @@ Test one iteration of the full entity resolution pipeline each time you make cha
 - Submodules - submodules go under `subs/`. Ignore them completely. Never write to submodules in anything you do.
 - Space Lines - never create a line with only spaces.
 - Imports - don't check if things are installed and handle it with a try/except. Instead, assume they are installed and import them directly. If they are not installed, the code will fail at runtime, which is acceptable in this project.
+
+## Schema Management
+
+All schemas are currently defined in `baml_src/` files, which are used to generate the schemas in `abzu/baml_client/types.py`. There is code in `abzu/ dit the BAML source files in `baml_src/`and regenerate the client with`baml-cli generate`.
+
+When defining new schemas, ensure they are compatible with PySpark and include all necessary fields for data processing.
+
+### SparkDantic
+
+We use our own branch of SparkDantic for schema management to convert from BAML/PyDantic schemas to PySpark. Do not use the original SparkDantic package. Always use the code in `sparkdantic @ git+https://github.com/Graphlet-AI/sparkdantic.git@ff1d38d595b2c62700ccba6c10dc613832fe368c` until we get our [SparkDantic PR](https://github.com/mitchelllisle/sparkdantic/pull/799) merged. When making changes to schemas, ensure compatibility with our SparkDantic fork.
+
+When in doubt, specify the schema when loading data into Spark DataFrames to avoid schema inference issues.
+
+## File Formats
+
+Always save data in two formats:
+
+1. Parquet - for efficient processing with Spark and Pandas without processing sub-folders manually.
+2. Single file JSONL - for debugging and manual inspection.
+
+When writing code that outputs data, ensure both formats are written unless explicitly instructed otherwise. We serialize entire records in Parquet format in ALL stages except for `abzu/er/match.py` because of a Parquet error in nested structures.
 
 ## Development Guidelines
 
@@ -141,7 +175,7 @@ Test one iteration of the full entity resolution pipeline each time you make cha
 - Flake8 - fix flake8 errors without being asked and without my verification.
 - Black - fix black errors without being asked and without my verification.
 - Isort - fix isort errors without being asked and without my verification.
-- Zuban - fix zuban errors without being asked and without my verification.
+- Mypy - fix mypy errors without being asked and without my verification.
 - Pre-commit - fix pre-commit errors without being asked and without my verification.
 - New Modules - create a folder for a new module without being asked and without my verification.
 - **init**.py - add these files to new module directories without being asked and without my verification.
@@ -217,7 +251,7 @@ In addition, when writing PySpark code:
 
 - Python 3.12 required
 - Core packages: pyspark==3.5.5, scrapy==2.11, baml, kuzu, discord.py
-- Development tools: poetry, black, isort, flake8, zuban, pytest
+- Development tools: poetry, black, isort, flake8, mypy, pytest
 - See pyproject.toml for complete dependency list
 
 ### Environment Variables

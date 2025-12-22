@@ -174,15 +174,22 @@ def process_refine_kg(
         "edges": config.get("process.kg.refine.output.edges"),
     },
     iteration: int = 3,
+    enrich_wiki: bool = False,
+    wiki_batch_size: int = 5,
+    wiki_limit: int | None = None,
 ) -> int:
     """Refine the knowledge graph by mapping relationships to resolved companies.
 
-    This function calls the refine_knowledge_graph function directly.
+    This function calls the refine_knowledge_graph function directly,
+    and optionally enriches companies with Wikipedia data.
 
     Args:
-        input_dir: Path to the directory with raw knowledge graph
-        output_dir: Directory to store the refined knowledge graph
+        input_paths: Paths to input data (companies and relationships)
+        output_paths: Paths to output data (nodes and edges)
         iteration: ER iteration number to use for resolved companies
+        enrich_wiki: Whether to enrich companies with Wikipedia data
+        wiki_batch_size: Number of concurrent Wikipedia requests
+        wiki_limit: Maximum number of companies to enrich (for testing)
 
     Returns:
         0 on success, 1 on failure
@@ -199,6 +206,26 @@ def process_refine_kg(
             input_paths=input_paths, output_paths=output_paths, iteration=iteration
         )
         logger.info("Knowledge graph refinement completed successfully")
+
+        # Optionally enrich with Wikipedia data
+        if enrich_wiki:
+            logger.info("Enriching companies with Wikipedia data...")
+            from abzu.kg.wiki import process_wiki
+
+            # The nodes are saved as JSONL - use that path
+            nodes_jsonl = output_paths["nodes"].replace(".parquet", ".jsonl")
+            enriched_output = nodes_jsonl.replace(".jsonl", "_enriched.jsonl")
+
+            result = process_wiki(
+                companies_path=nodes_jsonl,
+                output_path=enriched_output,
+                limit=wiki_limit,
+                tickers_only=False,  # Enrich all companies, not just those with tickers
+                batch_size=wiki_batch_size,
+            )
+            if result != 0:
+                logger.warning("Wikipedia enrichment had issues but continuing")
+
         return 0
 
     except Exception as e:

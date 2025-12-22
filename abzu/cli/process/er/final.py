@@ -17,6 +17,13 @@ logger = get_logger(__name__)
     help="Iteration number to process",
 )
 @click.option(
+    "--output-path",
+    "-o",
+    default=config.get("process.kg.er.paths.names.final"),
+    type=str,
+    help="Path to output final companies file (with {iteration} placeholder)",
+)
+@click.option(
     "--batch-size",
     "-b",
     default=5,
@@ -31,6 +38,7 @@ logger = get_logger(__name__)
 )
 def final(
     iteration: int,
+    output_path: str,
     batch_size: int,
     local_mode: bool,
 ) -> None:
@@ -44,13 +52,9 @@ def final(
     """
     from abzu.spark.er_final import deduplicate_resolved_companies
 
-    # Get paths from config
-    matches_path = config.get("process.kg.er.paths.names.matches").format(
-        iteration=iteration, format="json"
-    )
-    final_path = config.get("process.kg.er.paths.names.final").format(
-        iteration=iteration, format="json"
-    )
+    # Format paths with iteration
+    matches_path = config.get("process.kg.er.paths.names.matches").format(iteration=iteration)
+    final_path = output_path.format(iteration=iteration)
 
     click.echo(f"Final deduplication for iteration {iteration}")
     click.echo(f"Input:  {matches_path}")
@@ -61,6 +65,12 @@ def final(
         metrics = deduplicate_resolved_companies(
             matches_path=matches_path,
             output_path=final_path,
+            uuid_blocks_path=config.get("process.kg.er.paths.names.uuid_blocks").format(
+                iteration=iteration
+            ),
+            uuid_matches_path=config.get("process.kg.er.paths.names.uuid_matches").format(
+                iteration=iteration
+            ),
             iteration=iteration,
             batch_size=batch_size,
             local_mode=local_mode if local_mode else None,

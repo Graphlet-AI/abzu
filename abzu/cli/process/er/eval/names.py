@@ -16,9 +16,9 @@ from abzu.config import config
 @click.option(
     "--matches-path",
     "-m",
-    default=config.get("process.kg.er.paths.names.final"),
+    default=config.get("process.kg.er.paths.names.matches"),
     type=click.Path(exists=False, file_okay=True, dir_okay=True),
-    help="Path to deduplicated companies file (with {format} placeholder)",
+    help="Path to matches.jsonl file from match step",
 )
 @click.option(
     "--raw-companies-path",
@@ -32,7 +32,7 @@ from abzu.config import config
     "-o",
     default=config.get("process.kg.er.paths.names.eval"),
     type=click.Path(exists=False, file_okay=True, dir_okay=False),
-    help="Path to save evaluation results (with {format} placeholder)",
+    help="Path to save evaluation results",
 )
 @click.option(
     "--local-mode",

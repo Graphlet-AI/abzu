@@ -19,14 +19,55 @@ from abzu.utils import load_jsonl, save_jsonl
 logger = get_logger(__name__)
 
 
+# Titles that indicate blocked or invalid articles (Cloudflare, CAPTCHA, etc.)
+INVALID_TITLES = [
+    "just a moment...",
+    "access denied",
+    "please wait...",
+    "checking your browser",
+    "attention required",
+    "one more step",
+    "verify you are human",
+]
+
+# Minimum content length for a valid article (in characters)
+MIN_CONTENT_LENGTH = 200
+
+
+def is_valid_article(article: dict[str, Any]) -> bool:
+    """Check if an article is valid for processing.
+
+    Filters out Cloudflare-blocked pages, CAPTCHAs, and articles with insufficient content.
+
+    Args:
+        article: Dictionary containing article data
+
+    Returns:
+        True if article is valid for processing, False otherwise
+    """
+    title = (article.get("title") or "").lower().strip()
+    content = article.get("content") or ""
+
+    # Check for blocked/invalid titles
+    for invalid_title in INVALID_TITLES:
+        if invalid_title in title:
+            return False
+
+    # Check minimum content length
+    if len(content) < MIN_CONTENT_LENGTH:
+        return False
+
+    return True
+
+
 def load_articles(file_path: str) -> list[dict[str, Any]]:
-    """Load articles from a JSONL file and deduplicate them.
+    """Load articles from a JSONL file, deduplicate and filter invalid ones.
 
     Args:
         file_path: Path to the JSONL file containing articles
 
     Returns:
-        List of deduplicated article dictionaries
+        List of valid, deduplicated article dictionaries
     """
     logger.info(f"Loading articles from {file_path}")
     articles = load_jsonl(file_path)
@@ -38,7 +79,14 @@ def load_articles(file_path: str) -> list[dict[str, Any]]:
     deduped_articles = deduplicate_articles(articles)
     logger.info(f"After deduplication: {len(deduped_articles)} unique articles")
 
-    return deduped_articles
+    # Filter out invalid articles (Cloudflare blocks, CAPTCHAs, too short)
+    valid_articles = [a for a in deduped_articles if is_valid_article(a)]
+    filtered_count = len(deduped_articles) - len(valid_articles)
+    if filtered_count > 0:
+        logger.info(f"Filtered out {filtered_count} invalid articles (blocked/too short)")
+    logger.info(f"Valid articles for processing: {len(valid_articles)}")
+
+    return valid_articles
 
 
 def get_client_registry() -> ClientRegistry:
@@ -46,7 +94,7 @@ def get_client_registry() -> ClientRegistry:
     cr: ClientRegistry = ClientRegistry()
 
     cr.add_llm_client(
-        name="Gemini25Flash",
+        name="Gemini20Flash",
         provider="google-ai",
         options={
             "model": "gemini-2.5-flash",
@@ -58,7 +106,7 @@ def get_client_registry() -> ClientRegistry:
     )
 
     cr.add_llm_client(
-        name="Gemini25Pro",
+        name="Gemini20Flash",
         provider="google-ai",
         options={
             "model": "gemini-2.5-pro",
@@ -70,7 +118,7 @@ def get_client_registry() -> ClientRegistry:
     )
 
     # Start with cheaper Gemini 2.5 Flash, fall back to 2.5 Pro
-    cr.set_primary("Gemini25Flash")
+    cr.set_primary("Gemini20Flash")
 
     return cr
 
@@ -97,22 +145,12 @@ async def process_article_async(
     try:
         # Content is already extracted text, just pass it to BAML
         logger.info(
-            f"Processing article: {article.get('title', 'Empty Article') | 'Empty Article'} posted at {article.get('posted_at', 'Unknown Time') | 'Unknown Time'} ({len(article_text):,} chars)"
+            f"Processing article: {article.get('title') or 'Empty Article'} posted at {article.get('posted_at') or 'Unknown Time'} ({len(article_text):,} chars)"
         )
 
         #
         # Will try this later...
         #
-
-        # try:
-        #     result = await async_b.ExtractIndustryArticle(article_text, {"client_registry": cr})
-        # except BamlValidationError as e:
-        #     logger.error(f"BAML validation error: {e}")
-        #     # Retry exceptions with Gemini 2.5 Pro
-        #     cr.set_primary("Gemini25Pro")
-        #     result = await async_b.ExtractIndustryArticle(article_text, {"client_registry": cr})
-        # finally:
-        #     cr.set_primary("Gemini25Flash")
 
         try:
             result = await async_b.ExtractIndustryArticle(article_text)
@@ -201,11 +239,14 @@ async def process_articles_async(
     """
     # Process in batches - starting with the most recent articles
     all_results: list[IndustryArticle | BaseException | None] = []
-    for i in tqdm(reversed(range(0, len(articles), batch_size))):
+    batch_indices = list(reversed(range(0, len(articles), batch_size)))
+    total_batches = len(batch_indices)
+
+    for batch_num, i in enumerate(
+        tqdm(batch_indices, desc="Processing articles", unit="batch"), start=1
+    ):
         batch = articles[i : i + batch_size]
-        logger.info(
-            f"Processing batch {i // batch_size + 1}/{(len(articles) + batch_size - 1) // batch_size}"
-        )
+        logger.info(f"Processing batch {batch_num}/{total_batches}")
         batch_results = await process_batch(batch)
         all_results.extend(batch_results)
 

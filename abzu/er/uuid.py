@@ -130,7 +130,7 @@ async def process_block_with_uuid_mapping(
     companies_data = block["companies"]
 
     # Log the input companies and their source_uuids
-    logger.debug(f"Processing block {block_key} with {len(companies_data)} companies")
+    logger.debug(f"Processing block {block_key} with {len(companies_data):,} companies")
     for i, comp in enumerate(companies_data):
         logger.debug(
             f"  Company {i}: uuid={comp.get('uuid')}, source_uuids={comp.get('source_uuids')}"
@@ -171,7 +171,7 @@ async def process_block_with_uuid_mapping(
         }
 
     try:
-        logger.info(f"Processing block '{block_key}' with {len(companies_data)} companies")
+        logger.debug(f"Processing block '{block_key}' with {len(companies_data)} companies")
 
         # Create UUID mapper for this block
         mapper = UUIDMapper()

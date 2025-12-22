@@ -1,6 +1,7 @@
 """CLI for running complete entity resolution cycle (block, match, eval)."""
 
 import json
+import os
 import time
 from datetime import timedelta
 from pathlib import Path
@@ -172,11 +173,18 @@ def get_evaluation_metrics(eval_path: str, metrics_path: str) -> dict[str, int |
     is_flag=True,
     help="Run in local mode",
 )
+@click.option(
+    "--debug",
+    "-d",
+    is_flag=True,
+    help="Enable BAML debug output (shows LLM input/output)",
+)
 def all(
     iteration: int,
     max_block_size: int,
     batch_size: int,
     local_mode: bool,
+    debug: bool,
 ) -> None:
     """Run complete entity resolution cycle: block, match, final, and evaluate.
 
@@ -188,6 +196,10 @@ def all(
 
     At the end, prints a comprehensive report of the entire cycle.
     """
+    # Set BAML log level before importing BAML (must be set before import)
+    if not debug:
+        os.environ["BAML_LOG"] = "warn"
+
     from abzu.er.match import match_entities
     from abzu.spark.er_block import build_blocks
     from abzu.spark.er_eval import evaluate_er_matches
@@ -223,6 +235,12 @@ def all(
     )
     eval_path = config.get("process.kg.er.paths.names.eval").format(
         iteration=iteration, format="json"
+    )
+    uuid_blocks_path = config.get("process.kg.er.paths.names.uuid_blocks").format(
+        iteration=iteration
+    )
+    uuid_matches_path = config.get("process.kg.er.paths.names.uuid_matches").format(
+        iteration=iteration
     )
 
     # Step 1: Blocking
@@ -287,6 +305,8 @@ def all(
         final_metrics = deduplicate_resolved_companies(
             matches_path=matches_path,
             output_path=final_path,
+            uuid_blocks_path=uuid_blocks_path,
+            uuid_matches_path=uuid_matches_path,
             iteration=iteration,
             batch_size=batch_size,
             local_mode=local_mode if local_mode else None,

@@ -491,7 +491,7 @@ def crawl_site(
                 cast(Any, reactor).stop()
 
         # Schedule the timeout (5 minutes)
-        timeout_id = cast(Any, reactor).callLater(300, timeout_handler)
+        timeout_id = cast(Any, reactor).callLater(3000, timeout_handler)
 
         # Start the process
         d = process_batches()

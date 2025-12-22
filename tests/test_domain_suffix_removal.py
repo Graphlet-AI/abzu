@@ -10,7 +10,7 @@ from abzu.spark.er_block import remove_domain_suffix
 def spark():
     """Create a SparkSession for testing."""
     spark = (
-        SparkSession.builder.master("local[1]")
+        SparkSession.builder.master("local[1]")  # type: ignore[attr-defined]
         .appName("test_domain_suffix")
         .config("spark.sql.shuffle.partitions", "1")
         .config("spark.ui.enabled", "false")
@@ -92,8 +92,9 @@ def test_remove_domain_suffix_edge_cases():
 
 def test_get_first_word_with_periods(spark):
     """Test that get_first_word preserves legitimate periods."""
-    from abzu.spark.er_block import get_first_word
     from pyspark.sql import functions as F
+
+    from abzu.spark.er_block import get_first_word
 
     # Create test DataFrame
     test_data = [
@@ -117,8 +118,9 @@ def test_get_first_word_with_periods(spark):
 
 def test_get_acronym_with_periods(spark):
     """Test that get_acronym handles periods correctly."""
-    from abzu.spark.er_block import get_acronym
     from pyspark.sql import functions as F
+
+    from abzu.spark.er_block import get_acronym
 
     # Create test DataFrame
     test_data = [
