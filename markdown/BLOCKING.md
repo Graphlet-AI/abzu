@@ -39,3 +39,9 @@ Modern embeddings are capable of blocking entire JSON records or individual fiel
 ### Block Size
 
 This is something that can be controlld through hyperparameters in the clustering algorithm. We need to keep these small to manage compute costs, but large enough to capture potential matches.
+
+## Multiple Blocking Strategies
+
+Implementing multiple blocking strategies (first word of name and acroym) as in 'abzu process er block names' creates a challenge introduced by using two name based blocking strategies (first word and acronym). Each strategy generates its own golden record in a block and we must then block on `uuid` or `name` to reduce records down to a single golden record.
+
+This is the purpose of the `abzu process er final` step, which uses `uuid` and `name` blocking to group records from the union of name based blocks into final blocks for matching.
