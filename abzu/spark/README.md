@@ -577,10 +577,6 @@ df = (
 
 WIP - To enforce consistent code style, each main repository should have [Pylint](https://www.pylint.org/) enabled, with the same configuration. We provide some PySpark specific checkers you can include in your Pylint to match the rules listed in this document. These checkers for Pylint still need some more energy put into them, but feel free to contribute and improve them.
 
-# Data formats - Save data in Parquet and JSON Lines
-
-Save all datasets in both Parquet and JSON Lines formats. This ensures we can easily inspect the data in a human-readable format (JSON Lines) with `jq` while also benefiting from the performance and storage efficiency of Parquet.
-
 # Things to NEVER Do
 
 Never replace part of a path that didn't come from @config.yml with a parameter such as:
