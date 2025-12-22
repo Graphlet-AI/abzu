@@ -133,6 +133,18 @@ Download and use the [Bloomberg Exchange codes](https://www.inforeachinc.com/wp-
 - Space Lines - never create a line with only spaces.
 - Imports - don't check if things are installed and handle it with a try/except. Instead, assume they are installed and import them directly. If they are not installed, the code will fail at runtime, which is acceptable in this project.
 
+## Schema Management
+
+All schemas are currently defined in `baml_src/` files, which are used to generate the schemas in `abzu/baml_client/types.py`. There is code in `abzu/ dit the BAML source files in `baml_src/`and regenerate the client with`baml-cli generate`.
+
+When defining new schemas, ensure they are compatible with PySpark and include all necessary fields for data processing.
+
+### SparkDantic
+
+We use our own branch of SparkDantic for schema management to convert from BAML/PyDantic schemas to PySpark. Do not use the original SparkDantic package. Always use the code in `sparkdantic @ git+https://github.com/Graphlet-AI/sparkdantic.git@ff1d38d595b2c62700ccba6c10dc613832fe368c` until we get our [SparkDantic PR](https://github.com/mitchelllisle/sparkdantic/pull/799) merged. When making changes to schemas, ensure compatibility with our SparkDantic fork.
+
+When in doubt, specify the schema when loading data into Spark DataFrames to avoid schema inference issues.
+
 ## File Formats
 
 Always save data in two formats:
@@ -140,7 +152,7 @@ Always save data in two formats:
 1. Parquet - for efficient processing with Spark and Pandas without processing sub-folders manually.
 2. Single file JSONL - for debugging and manual inspection.
 
-When writing code that outputs data, ensure both formats are written unless explicitly instructed otherwise.
+When writing code that outputs data, ensure both formats are written unless explicitly instructed otherwise. We serialize entire records in Parquet format in ALL stages except for `abzu/er/match.py` because of a Parquet error in nested structures.
 
 ## Development Guidelines
 
