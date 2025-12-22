@@ -580,3 +580,13 @@ WIP - To enforce consistent code style, each main repository should have [Pylint
 # Data formats - Save data in Parquet and JSON Lines
 
 Save all datasets in both Parquet and JSON Lines formats. This ensures we can easily inspect the data in a human-readable format (JSON Lines) with `jq` while also benefiting from the performance and storage efficiency of Parquet.
+
+# Things to NEVER Do
+
+Never replace part of a path that didn't come from @config.yml with a parameter such as:
+
+```python
+uuid_blocks_path = output_path.replace("companies_final.parquet", "uuid_blocks.parquet")
+```
+
+This makes it impossible to track dependencies between datasets. Always use explicit parameters for paths from `abzu.config.config.get` or function parameters.
