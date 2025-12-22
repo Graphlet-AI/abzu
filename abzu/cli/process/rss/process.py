@@ -16,10 +16,11 @@ from abzu.config import config
 )
 @click.option(
     "-i",
-    "--input-dir",
+    "--input",
+    "input_path",
     default=config.get("process.rss.input_dir"),
-    type=click.Path(dir_okay=True, file_okay=False),
-    help="Directory containing crawled RSS JSONL files",
+    type=click.Path(exists=True),
+    help="Input directory or single JSONL file to process",
 )
 @click.option(
     "-o",
@@ -35,15 +36,16 @@ from abzu.config import config
     default=5,
     help="Number of articles to process concurrently",
 )
-def rss(feeds_file: str, input_dir: str, output_dir: str, batch_size: int) -> int:
+def rss(feeds_file: str, input_path: str, output_dir: str, batch_size: int) -> int:
     """Process RSS articles through the LLM extraction pipeline.
 
     By default, uses feeds defined in config.yml under crawl.rss.feeds.
     Can optionally use a feeds file for backward compatibility.
+    Accepts either a directory of JSONL files or a single JSONL file.
     """
     return process_rss_feeds(
         feeds_file=feeds_file,
-        input_dir=input_dir,
+        input_path=input_path,
         output_dir=output_dir,
         batch_size=batch_size,
     )

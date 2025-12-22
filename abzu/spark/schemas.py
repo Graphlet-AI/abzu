@@ -6,10 +6,12 @@ import pyspark.sql.functions as F
 from pyspark.sql import DataFrame
 from pyspark.sql.types import (
     ArrayType,
+    BooleanType,
     DataType,
     IntegerType,
     LongType,
     MapType,
+    StringType,
     StructField,
     StructType,
 )
@@ -138,6 +140,10 @@ def normalize_company_dataframe(df: DataFrame, preserve_extra_fields: bool = Fal
     # Get expected fields from Company model
     expected_fields = list(Company.model_fields.keys())
 
+    # Get the correct schema types for each field
+    company_schema = get_company_spark_schema()
+    field_types = {field.name: field.dataType for field in company_schema.fields}
+
     # Get current DataFrame columns
     current_columns = df.columns
 
@@ -159,8 +165,12 @@ def normalize_company_dataframe(df: DataFrame, preserve_extra_fields: bool = Fal
         if field in current_columns:
             select_list.append(F.col(field))
         else:
-            # Add missing field as null with correct alias
-            select_list.append(F.lit(None).alias(field))
+            # Add missing field as null with correct type from BAML schema
+            field_type = field_types.get(field)
+            if field_type:
+                select_list.append(F.lit(None).cast(field_type).alias(field))
+            else:
+                select_list.append(F.lit(None).alias(field))
 
     # Optionally preserve extra fields at the end
     if preserve_extra_fields:
@@ -244,3 +254,27 @@ def validate_block_schema(columns: list[str]) -> None:
             f"This is likely a bug in the ER pipeline - blocks must include all fields "
             f"from the BAML CompanyList type."
         )
+
+
+def get_matches_schema() -> StructType:
+    """Get the Spark schema for reading matches.jsonl files.
+
+    The matches file contains blocks with resolved_companies arrays.
+    This schema enforces correct BAML types when reading JSON.
+
+    Returns:
+        StructType schema for matches JSON file
+    """
+    company_schema = get_company_spark_schema()
+
+    return StructType(
+        [
+            StructField("block_key", StringType(), True),
+            StructField("block_key_type", StringType(), True),
+            StructField("original_companies", ArrayType(company_schema), True),
+            StructField("resolved_companies", ArrayType(company_schema), True),
+            StructField("original_count", LongType(), True),
+            StructField("resolved_count", LongType(), True),
+            StructField("was_resolved", BooleanType(), True),
+        ]
+    )

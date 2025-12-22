@@ -267,9 +267,11 @@ def main() -> None:
         logger.info(f"Found {len(posts)} blog posts")
 
         # Save post list for inspection
-        with open("dcbyte_posts_extracted.json", "w") as f:
+        extracted_path = Path("data/dcbyte_posts_extracted.json")
+        extracted_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(extracted_path, "w") as f:
             json.dump(posts, f, indent=2)
-        logger.info("Post list saved to dcbyte_posts_extracted.json")
+        logger.info(f"Post list saved to {extracted_path}")
 
         # Fetch full content for each post
         Path(output_path).parent.mkdir(parents=True, exist_ok=True)

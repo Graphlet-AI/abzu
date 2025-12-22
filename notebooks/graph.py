@@ -310,7 +310,7 @@ def _(
             height=800,
         )
     )
-    g.plot(G)
+    g.plot(G, validate=False, warn=True)
     return
 
 
@@ -438,12 +438,7 @@ def _(FAVICON_URL, GRAPHISTRY_PARAMS, G_clean, graphistry):
             height=800,
         )
     )
-    g2.plot(G_clean)
-    return
-
-
-@app.cell
-def _():
+    g2.plot(G_clean, validate=False, warn=True)
     return
 
 

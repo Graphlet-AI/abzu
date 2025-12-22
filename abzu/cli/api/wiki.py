@@ -5,6 +5,7 @@ import json
 import click
 
 from abzu.api.wiki import crawl_company_structured
+from abzu.config import config
 from abzu.logs import get_logger
 
 logger = get_logger(__name__)
@@ -25,78 +26,54 @@ logger = get_logger(__name__)
     "--input",
     "-i",
     type=click.Path(exists=True),
-    help="Input JSON Lines file with 'name' or 'ticker' fields",
+    default=config.get("process.kg.wiki.input"),
+    help="Input JSON Lines file with 'name' or 'ticker' fields.",
 )
 @click.option(
     "--output",
     "-o",
     type=click.Path(),
-    help="Output file path for JSON results",
+    default=config.get("process.kg.wiki.output"),
+    help="Output file path for JSON results.",
 )
 @click.option(
     "--concurrent",
     "-c",
     type=int,
-    default=5,
-    help="Number of concurrent requests for batch processing",
+    default=config.get("process.kg.wiki.concurrent"),
+    help="Number of concurrent requests for batch processing.",
 )
-def wiki(ticker: str, name: str, input: str, output: str, concurrent: int) -> None:
-    """Crawl Wikipedia page for a company by ticker or name."""
-    if not ticker and not name and not input:
-        raise click.UsageError("Either --ticker, --name, or --input must be provided")
+def wiki(ticker: str, name: str, input: str, output: str, concurrent: int) -> int:
+    """Crawl Wikipedia page for a company by ticker or name.
 
-    if (ticker or name) and input:
-        raise click.UsageError("Cannot use --ticker/--name with --input")
-
-    # Process single company
+    For single company lookups, use --ticker or --name.
+    For batch processing, use --input to process a JSONL file of companies
+    and enrich them with Wikipedia metadata.
+    """
+    # Single company lookup mode
     if ticker or name:
+        if input and input != config.get("process.kg.wiki.input"):
+            raise click.UsageError("Cannot use --ticker/--name with --input")
+
         try:
             result = crawl_company_structured(ticker=ticker, name=name)
 
-            if output:
+            if output and output != config.get("process.kg.wiki.output"):
                 with open(output, "w") as f:
                     json.dump(result, f, indent=2)
             else:
                 print(json.dumps(result, indent=2))
+            return 0
 
         except Exception as e:
             logger.error(f"Failed to crawl Wikipedia: {e}")
             raise click.ClickException(str(e))
 
-    # Process batch from file
-    else:
-        results = []
+    # Batch processing mode - enrich companies with Wikipedia data
+    from abzu.kg.wiki import process_wiki
 
-        with open(input, "r") as f:
-            for line_num, line in enumerate(f, 1):
-                line = line.strip()
-                if not line:
-                    # Skip empty lines
-                    continue
-                try:
-                    data = json.loads(line)
-                    company_ticker = data.get("ticker")
-                    company_name = data.get("name")
-
-                    if not company_ticker and not company_name:
-                        logger.warning(
-                            f"Line {line_num}: No 'ticker' or 'name' field found, skipping"
-                        )
-                        continue
-
-                    result = crawl_company_structured(ticker=company_ticker, name=company_name)
-                    results.append(result)
-
-                except json.JSONDecodeError as e:
-                    logger.error(f"Line {line_num}: Invalid JSON - {e}")
-                except Exception as e:
-                    logger.error(f"Line {line_num}: Failed to crawl - {e}")
-
-        # Output results
-        if output:
-            with open(output, "w") as f:
-                for result in results:
-                    f.write(json.dumps(result) + "\n")
-        else:
-            for result in results:
-                print(json.dumps(result, indent=2))
+    return process_wiki(
+        companies_path=input,
+        output_path=output,
+        concurrent=concurrent,
+    )

@@ -159,7 +159,7 @@ class Company {
   website_url string?
 
   headquarters_location string?
-  @description("City, state, country")
+  @description("City, state, country. Infer the country if only city is given.")
 
   jurisdiction string?
   @description("2-letter state or country where the company is incorporated")
@@ -188,7 +188,8 @@ class Company {
   @description("Leave unaltered. Reason why this company was skipped (error_recovery or missing_in_match_output).")
 
   match_skip_history int[]?
-  @description("Leave unaltered. List of iteration numbers where this company was skipped.")}
+  @description("Leave unaltered. List of iteration numbers where this company was skipped.")
+}
 
 class Product {
   id int
@@ -256,6 +257,21 @@ enum RelationshipType {
   Licensing @description("One company licenses a technology to another company")
   Subsidiary @description("One company is owned by another company and operates independently")
   OEM @description("Original Equipment Manufacturer relationship")
+
+  // New relationship types for 10-K
+  Competitor @description("Companies that compete in the same markets")
+  Customer @description("Company is a customer of another")
+  JointVenture @description("Companies formed a joint venture")
+  Litigation @description("Companies are in legal proceedings")
+  Regulatory @description("Regulatory relationship (oversight, approval, etc.)")
+  ResearchCollaboration @description("Companies collaborate on R&D")
+  DistributionAgreement @description("Distribution or channel partnership")
+  SupplyAgreement @description("Long-term supply agreement")
+  LicenseIn @description("Company licenses technology from another")
+  LicenseOut @description("Company licenses technology to another")
+  MaterialContract @description("Material contract between companies")
+  RevenueStream @description("Significant revenue stream from another company")
+  IntellectualProperty @description("Intellectual property relationship")
 }
 
 class Relationship {
@@ -292,6 +308,18 @@ class Relationship {
 
   quarter string?
   @description("Actual or projected financial quarter of the deal in ISO-8601 format. This is the quarter of the year when a relationship took place or will take place.")
+
+  contract_duration_years int?
+  @description("Contract term if applicable")
+
+  segment_ids int[]?
+  @description("Business segment IDs where relationship applies")
+
+  geographic_scope string?
+  @description("Geographic scope of relationship")
+
+  is_material bool?
+  @description("Whether relationship is material to business")
 }
 
 class NewsSource {

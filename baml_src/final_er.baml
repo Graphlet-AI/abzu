@@ -62,30 +62,29 @@ test TwoDuplicatesTest {
   args {
     duplicate_group {
       uuid "test-uuid-123"
-      match_block_keys ["APPLE", "AAPL_ACRONYM"]
+      match_block_keys ["APPLE"]
       duplicate_companies [
         {
-          id 1
+          id 0
           uuid "test-uuid-123"
           name "Apple Inc."
           ticker {
-            id 1
+            id 0
             uuid null
-            exchange "NASDAQ"
+            exchange "UQ"
             symbol "AAPL"
           }
           description "Technology company"
           founded_year 1976
-          source_ids [1, 2]
           source_uuids ["source-1", "source-2"]
           match_skip_history null
         }
         {
-          id 2
+          id 1
           uuid "test-uuid-123"
           name "Apple"
           ticker {
-            id 2
+            id 1
             uuid null
             symbol "AAPL"
           }
@@ -93,7 +92,6 @@ test TwoDuplicatesTest {
           headquarters_location "Cupertino, CA"
           revenue_usd 394328000000
           employees 164000
-          source_ids [3]
           source_uuids ["source-3", "source-4"]
           match_skip_history [1]
         }
@@ -110,38 +108,36 @@ test ThreeDuplicatesWithNullsTest {
       match_block_keys ["NVIDIA", "NVDA_ACRONYM", "NVIDIA_COMBINED"]
       duplicate_companies [
         {
-          id 10
+          id 0
           uuid "nvidia-uuid-456"
           name "Nvidia"
           ticker null
           description "GPU manufacturer"
-          source_ids null
           source_uuids ["doc-1"]
           match_skip_history null
         }
         {
-          id 11
+          id 1
           uuid "nvidia-uuid-456"
           name "NVIDIA Corp"
           ticker {
-            id 5
+            id 0
             uuid null
             symbol "NVDA"
-            exchange "NASDAQ"
+            exchange "UQ"
           }
           description null
           headquarters_location "Santa Clara, CA"
           founded_year 1993
-          source_ids [10]
           source_uuids ["doc-2", "doc-3"]
           match_skip_history [1, 2]
         }
         {
-          id 12
+          id 2
           uuid "nvidia-uuid-456"
           name "Nvidia Corporation"
           ticker {
-            id 6
+            id 1
             uuid null
             symbol "NVDA"
           }
@@ -149,7 +145,6 @@ test ThreeDuplicatesWithNullsTest {
           revenue_usd 60922000000
           employees 29600
           ceo "Jensen Huang"
-          source_ids [11, 12]
           source_uuids ["doc-4"]
           match_skip_history [2]
         }

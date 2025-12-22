@@ -10,13 +10,13 @@ from pyspark.sql import DataFrame, SparkSession
 from abzu.config import config
 from abzu.logs import get_logger
 from abzu.spark.config import get_spark_session
-from abzu.spark.schemas import get_company_spark_schema
+from abzu.spark.schemas import get_company_spark_schema, get_matches_schema
 
 logger = get_logger(__name__)
 
 
 def evaluate_er_matches(
-    matches_path: str = config.get("process.kg.er.paths.names.final"),
+    matches_path: str = config.get("process.kg.er.paths.names.matches"),
     raw_companies_path: str = os.path.join(
         config.get("process.kg.raw.output"), "companies.parquet"
     ),
@@ -29,14 +29,14 @@ def evaluate_er_matches(
 
     This function:
     1. Explodes resolved companies from blocks
-    2. Creates companies_resolved.json/parquet files
+    2. Creates companies_resolved.parquet files
     3. Reports metrics on data reduction and UUID overlap
     4. Validates source_uuids against ORIGINAL raw companies data
     5. Removes invalid source_uuids and reports error percentage
     6. For iteration 2+, tracks coverage against both original and previous iteration
 
     Args:
-        matches_path: Path to the final deduplicated companies file from ER final step
+        matches_path: Path to matches.jsonl from the ER match step
         raw_companies_path: Path to the ORIGINAL raw companies parquet file (iteration 0)
         output_path: Directory path to save evaluation results
         iteration: Iteration number (1, 2, 3, etc.)
@@ -48,17 +48,16 @@ def evaluate_er_matches(
         local_mode=local_mode,
     )
 
-    # Format matches_path for reading (should have {iteration} and {format} placeholders)
-    # Use JSON instead of Parquet because Parquet loses source_uuids
-    matches_json_path = matches_path.format(iteration=iteration, format="json")
+    # Format matches_path for reading (should have {iteration} placeholder)
+    matches_jsonl_path = matches_path.format(iteration=iteration)
 
     # Check if required input files exist
-    if not os.path.exists(matches_json_path):
+    if not os.path.exists(matches_jsonl_path):
         error_msg = (
-            f"Final deduplicated companies file not found: {matches_json_path}\n\n"
-            f"The evaluation step requires output from the final deduplication step.\n"
-            f"Please run the final deduplication step first:\n"
-            f"  abzu process er final --iteration {iteration}\n\n"
+            f"Matches file not found: {matches_jsonl_path}\n\n"
+            f"The evaluation step requires output from the match step.\n"
+            f"Please run the match step first:\n"
+            f"  abzu process er match names --iteration {iteration}\n\n"
             f"Or run the complete pipeline:\n"
             f"  abzu process er all names --iteration {iteration}"
         )
@@ -75,17 +74,22 @@ def evaluate_er_matches(
         logger.error(error_msg)
         raise FileNotFoundError(error_msg)
 
-    logger.info(f"Loading matches from {matches_json_path}")
-    # Use the Company schema to ensure correct types (especially match_skip_history as array<long>)
-    company_schema = get_company_spark_schema()
-    matches_df: DataFrame = spark.read.schema(company_schema).json(matches_json_path)
+    logger.info(f"Loading matches from {matches_jsonl_path}")
+    # Read block records from matches.jsonl with explicit schema to enforce BAML types
+    blocks_df: DataFrame = spark.read.json(matches_jsonl_path, schema=get_matches_schema())
 
-    # No need for JSON deserialization anymore since we're using PySpark to save
-    # The data is already in the correct format with proper struct arrays
+    # Explode resolved_companies from blocks to get individual companies
+    logger.info("Exploding resolved_companies from blocks...")
+    matches_df = blocks_df.select(F.explode("resolved_companies").alias("company")).select(
+        "company.*"
+    )
 
     # Load the ORIGINAL raw companies (always the same, regardless of iteration)
     logger.info(f"Loading ORIGINAL raw companies from {raw_companies_path}")
-    original_raw_companies_df: DataFrame = spark.read.json(raw_companies_path)
+    if raw_companies_path.endswith(".parquet") or raw_companies_path.endswith(".parquet/"):
+        original_raw_companies_df: DataFrame = spark.read.parquet(raw_companies_path)
+    else:
+        original_raw_companies_df = spark.read.json(raw_companies_path)
 
     # For iteration 2+, also load the previous iteration's output for comparison
     previous_iteration_df: Optional[DataFrame] = None
@@ -93,7 +97,7 @@ def evaluate_er_matches(
         prev_iteration = iteration - 1
         # Check if output_path has {iteration} placeholder
         if "{iteration}" in output_path:
-            prev_iteration_path = output_path.format(iteration=prev_iteration, format="json")
+            prev_iteration_path = output_path.format(iteration=prev_iteration)
         else:
             # If no iteration placeholder, construct path based on current path
             # Replace current iteration with previous iteration in the path
@@ -102,7 +106,7 @@ def evaluate_er_matches(
             prev_iteration_path = re.sub(
                 f"iteration_{iteration}",
                 f"iteration_{prev_iteration}",
-                output_path.format(format="json"),
+                output_path,
             )
 
         # Check if the previous iteration output exists
@@ -110,22 +114,24 @@ def evaluate_er_matches(
             logger.info(
                 f"Loading previous iteration ({prev_iteration}) results from {prev_iteration_path}"
             )
-            previous_iteration_df = spark.read.schema(company_schema).json(prev_iteration_path)
+            company_schema = get_company_spark_schema()
+            previous_iteration_df = spark.read.schema(company_schema).parquet(prev_iteration_path)
         else:
             logger.info(
                 f"Previous iteration ({prev_iteration}) output not found at {prev_iteration_path}, skipping comparison"
             )
 
-    total_blocks = matches_df.count()
-    logger.info(f"Loaded {total_blocks:,} blocks from matches")
+    total_blocks = blocks_df.count()
+    total_companies = matches_df.count()
+    logger.info(f"Loaded {total_blocks:,} blocks containing {total_companies:,} resolved companies")
 
     # Show sample of matches data
     if logger.isEnabledFor(logging.DEBUG):
         logger.info("Sample input data:")
         matches_df.show(3, truncate=False)
 
-    # Input is already exploded and deduplicated from final step
-    logger.info("Using deduplicated companies from final step...")
+    # Input is exploded resolved_companies from match step
+    logger.info("Using resolved companies from match step...")
     resolved_companies_df = matches_df
 
     # Split into BAML-processed vs skipped companies
@@ -230,6 +236,12 @@ def evaluate_er_matches(
     unique_baml_processed = baml_processed_df.select("uuid").distinct().count()
     logger.info(f"BAML-processed companies (after matching): {unique_baml_processed:,} unique")
 
+    # Just plain deduplicate records
+    more_unique_baml_processed = baml_processed_df.distinct().count()
+    logger.info(
+        f"Deduplicated BAML-processed companies to ensure uniqueness: {more_unique_baml_processed:,} unique"
+    )
+
     # To calculate reduction, we need to know how many companies WENT INTO matching
     # This is: total original companies - skipped companies
     # Skipped companies are those with match_skip=True, which includes singletons
@@ -241,7 +253,7 @@ def evaluate_er_matches(
     reduction_from_matching_pct = (
         (reduction_from_matching / companies_that_went_into_matching) * 100
         if companies_that_went_into_matching > 0
-        else 0
+        else 0.0
     )
     logger.info(
         f"Data reduction from matching: {reduction_from_matching:,} companies merged ({reduction_from_matching_pct:.2f}%)"
@@ -252,7 +264,7 @@ def evaluate_er_matches(
     ids_dropped_pct = (
         (ids_dropped_by_baml / companies_that_went_into_matching) * 100
         if companies_that_went_into_matching > 0
-        else 0
+        else 0.0
     )
     logger.info(
         f"IDs dropped by BAML: {ids_dropped_by_baml:,} ({ids_dropped_pct:.2f}%) - recovered via UUID tracking"
@@ -262,7 +274,7 @@ def evaluate_er_matches(
     total_output_companies = unique_baml_processed + skipped_records
     total_reduction = total_original_companies - total_output_companies
     total_reduction_pct = (
-        (total_reduction / total_original_companies) * 100 if total_original_companies > 0 else 0
+        (total_reduction / total_original_companies) * 100 if total_original_companies > 0 else 0.0
     )
     logger.info(
         f"Total reduction (original → output): {total_reduction:,} companies ({total_reduction_pct:.2f}%)"
@@ -276,7 +288,7 @@ def evaluate_er_matches(
     overlap_with_original_pct = (
         (overlapping_with_original / unique_baml_processed) * 100
         if unique_baml_processed > 0
-        else 0
+        else 0.0
     )
     logger.info(
         f"UUID overlap with ORIGINAL (BAML-processed only): {overlapping_with_original:,} ({overlap_with_original_pct:.2f}%)"
@@ -291,7 +303,7 @@ def evaluate_er_matches(
         overlap_with_prev_pct = (
             (overlapping_with_prev / unique_baml_processed) * 100
             if unique_baml_processed > 0
-            else 0
+            else 0.0
         )
         logger.info(
             f"UUID overlap with PREVIOUS iteration (BAML-processed only): {overlapping_with_prev:,} ({overlap_with_prev_pct:.2f}%) - should be 0%"
@@ -319,7 +331,7 @@ def evaluate_er_matches(
     original_coverage_pct = (
         (tracked_original_uuids / unique_original_companies) * 100
         if unique_original_companies > 0
-        else 0
+        else 0.0
     )
     logger.info(
         f"Source UUID coverage of ORIGINAL: {tracked_original_uuids:,}/{unique_original_companies:,} ({original_coverage_pct:.2f}%)"
@@ -331,7 +343,7 @@ def evaluate_er_matches(
     if previous_iteration_df is not None:
         tracked_prev_uuids = unique_source_uuids_df.intersect(prev_uuids).count()
         prev_coverage_pct = (
-            (tracked_prev_uuids / unique_prev_companies) * 100 if unique_prev_companies > 0 else 0
+            (tracked_prev_uuids / unique_prev_companies) * 100 if unique_prev_companies > 0 else 0.0
         )
         logger.info(
             f"Source UUID coverage of PREVIOUS iteration: {tracked_prev_uuids:,}/{unique_prev_companies:,} ({prev_coverage_pct:.2f}%)"
@@ -344,10 +356,10 @@ def evaluate_er_matches(
     # Load UUIDs from ALL previous iterations (not just immediate previous)
     # This ensures we can validate source_uuids that chain through multiple iterations
     for prev_iter in range(1, iteration):
-        prev_iter_path = output_path.format(iteration=prev_iter, format="json")
+        prev_iter_path = output_path.format(iteration=prev_iter)
         if os.path.exists(prev_iter_path):
             logger.debug(f"Loading UUIDs from iteration {prev_iter} for validation")
-            prev_iter_df = spark.read.json(prev_iter_path)
+            prev_iter_df = spark.read.parquet(prev_iter_path)
             prev_iter_uuids = prev_iter_df.select("uuid").distinct()
             all_valid_uuids = all_valid_uuids.union(prev_iter_uuids).distinct()
         else:
@@ -379,16 +391,15 @@ def evaluate_er_matches(
     # that aren't in our current dataset but are still valid
     cleaned_resolved_companies = resolved_companies_df
 
-    # Save companies_resolved file as JSON
-    # Format the output path with iteration and format
-    companies_resolved_json = output_path.format(iteration=iteration, format="json")
+    # Save companies_resolved file as Parquet
+    companies_resolved_parquet = output_path.format(iteration=iteration)
 
-    logger.info(f"Saving companies_resolved.json to {companies_resolved_json}")
-    cleaned_resolved_companies.coalesce(1).write.mode("overwrite").option(
-        "ignoreNullFields", "false"
-    ).json(companies_resolved_json)
+    logger.info(f"Saving companies_resolved.parquet to {companies_resolved_parquet}")
+    cleaned_resolved_companies.coalesce(1).write.mode("overwrite").parquet(
+        companies_resolved_parquet
+    )
 
-    # Create and save evaluation metrics - both Parquet and single JSON file
+    # Create and save evaluation metrics as Parquet
     from pyspark.sql.types import (
         DoubleType,
         IntegerType,
@@ -454,13 +465,12 @@ def evaluate_er_matches(
     metrics_df = spark.createDataFrame(metrics_data, schema=metrics_schema)
 
     # Get the directory for metrics files
-    # Format the output_path first to get the actual directory with iteration number
-    formatted_output_path = output_path.format(iteration=iteration, format="json")
+    formatted_output_path = output_path.format(iteration=iteration)
     output_dir = os.path.dirname(formatted_output_path)
-    metrics_json_path = os.path.join(output_dir, "er_evaluation_metrics.json")
+    metrics_parquet_path = os.path.join(output_dir, "er_evaluation_metrics.parquet")
 
-    logger.info(f"Saving evaluation metrics (JSON) to {metrics_json_path}")
-    metrics_df.coalesce(1).write.mode("overwrite").json(metrics_json_path)
+    logger.info(f"Saving evaluation metrics to {metrics_parquet_path}")
+    metrics_df.coalesce(1).write.mode("overwrite").parquet(metrics_parquet_path)
 
     # Print final summary
     logger.info("\n" + "=" * 60)
@@ -560,8 +570,8 @@ def evaluate_er_matches(
             logger.info("  └─ Resolved companies reusing original UUIDs (BUG!)")
     logger.info("")
     logger.info("OUTPUT FILES:")
-    logger.info(f"  Resolved companies: {companies_resolved_json}")
-    logger.info(f"  Evaluation metrics: {metrics_json_path}")
+    logger.info(f"  Resolved companies: {companies_resolved_parquet}")
+    logger.info(f"  Evaluation metrics: {metrics_parquet_path}")
     logger.info("=" * 60)
 
     # Don't stop the SparkSession - let the caller manage its lifecycle

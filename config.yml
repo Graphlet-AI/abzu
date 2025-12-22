@@ -129,7 +129,7 @@ process:
         - "${process.rss.output_dir}/processed_new-atlas.jsonl"
         - "${process.rss.output_dir}/processed_nvidia-blog.jsonl"
         - "${process.rss.output_dir}/processed_nvidia-corp.jsonl"
-        - "${process.rss.output_dir}/processed_planet-analog.jsonl"
+        # - "${process.rss.output_dir}/processed_planet-analog.jsonl"
         - "${process.rss.output_dir}/processed_robohub.jsonl"
         - "${process.rss.output_dir}/processed_robotics-tomorrow-news.jsonl"
         - "${process.rss.output_dir}/processed_robotics-tomorrow-robotics.jsonl"
@@ -142,19 +142,32 @@ process:
         - "${process.rss.output_dir}/processed_wsj-tech.jsonl"
         # - "${chat.start.processed_articles}"
       output: "${base_dir}/knowledge_graph"
-    
+
+    tickers:
+      url: "https://www.sec.gov/files/company_tickers.json"
+      cache: "${base_dir}/sec/company_tickers.json"
+      input: "${process.kg.raw.output}/companies.parquet"
+      output: "${process.kg.raw.output}/companies_with_tickers.jsonl"
+      company_batch_size: 20
+
+    wiki:
+      input: "${process.kg.tickers.output}"
+      output: "${process.kg.raw.output}/companies_with_wiki.jsonl"
+      concurrent: 5
+
     er:
       paths:
-        input: "${process.kg.raw.output}/companies.jsonl"
+        input: "${process.kg.raw.output}/companies.parquet"
         output: "${base_dir}/er/"
-        # Names workflow paths (supports iterations and formats)
+        # Names workflow paths (iteration subdirectories)
         names:
-          # Use iteration subdirectories for multi-round processing
           blocks_dir: "${base_dir}/er/iterations/{iteration}/"
-          blocks: "${base_dir}/er/iterations/{iteration}/all_blocks.{format}"
-          matches: "${base_dir}/er/iterations/{iteration}/matches.{format}"
-          final: "${base_dir}/er/iterations/{iteration}/companies_final.{format}"
-          eval: "${base_dir}/er/iterations/{iteration}/companies_resolved.{format}"
+          blocks: "${base_dir}/er/iterations/{iteration}/union_blocks.parquet"
+          uuid_blocks: "${base_dir}/er/iterations/{iteration}/uuid_blocks.parquet"
+          uuid_matches: "${base_dir}/er/iterations/{iteration}/uuid_matches.jsonl"
+          matches: "${base_dir}/er/iterations/{iteration}/matches.jsonl"
+          final: "${base_dir}/er/iterations/{iteration}/companies_final.parquet"
+          eval: "${base_dir}/er/iterations/{iteration}/companies_resolved.parquet"
       max_block_size: 50
       iteration: 3
 
