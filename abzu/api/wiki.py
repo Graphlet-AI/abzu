@@ -416,14 +416,18 @@ async def crawl_company_wikipedia_async(
         for result in search_results:
             try:
                 page = await loop.run_in_executor(None, wikipedia.page, result, False)
-                logger.info(f"Found page: {page.title}")
+                if page is not None:
+                    logger.info(
+                        f"Found page: {page.title if hasattr(page, 'title') else 'No page title'}"
+                    )
                 break
             except wikipedia.exceptions.DisambiguationError as e:
                 # Take the first option from disambiguation
                 if e.options:
                     try:
                         page = await loop.run_in_executor(None, wikipedia.page, e.options[0], False)
-                        logger.info(f"Found page from disambiguation: {page.title}")
+                        if page is not None:
+                            logger.info(f"Found page from disambiguation: {page.title}")
                         break
                     except Exception:
                         continue
