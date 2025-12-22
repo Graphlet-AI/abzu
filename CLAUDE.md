@@ -148,6 +148,10 @@ We use our own branch of SparkDantic for schema management to convert from BAML/
 
 When in doubt, specify the schema when loading data into Spark DataFrames to avoid schema inference issues.
 
+## Golden Rule of Schema: NEVER CHANGE A PYSPARK SCHEMA WITHOUT EXPLICIT PERMISSION.
+
+You may change return types in functions, add new fields to schemas, and make non-breaking changes. But you may not remove fields from schemas or change field types without explicit permission.
+
 ## File Formats
 
 Always save data in two formats:
