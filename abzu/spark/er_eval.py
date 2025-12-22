@@ -10,7 +10,7 @@ from pyspark.sql import DataFrame, SparkSession
 from abzu.config import config
 from abzu.logs import get_logger
 from abzu.spark.config import get_spark_session
-from abzu.spark.schemas import get_company_spark_schema
+from abzu.spark.schemas import get_company_spark_schema, get_matches_schema
 
 logger = get_logger(__name__)
 
@@ -75,8 +75,8 @@ def evaluate_er_matches(
         raise FileNotFoundError(error_msg)
 
     logger.info(f"Loading matches from {matches_jsonl_path}")
-    # Read block records from matches.jsonl (contains resolved_companies arrays)
-    blocks_df: DataFrame = spark.read.json(matches_jsonl_path)
+    # Read block records from matches.jsonl with explicit schema to enforce BAML types
+    blocks_df: DataFrame = spark.read.json(matches_jsonl_path, schema=get_matches_schema())
 
     # Explode resolved_companies from blocks to get individual companies
     logger.info("Exploding resolved_companies from blocks...")
