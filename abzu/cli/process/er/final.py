@@ -68,6 +68,9 @@ def final(
             uuid_blocks_path=config.get("process.kg.er.paths.names.uuid_blocks").format(
                 iteration=iteration
             ),
+            uuid_matches_path=config.get("process.kg.er.paths.names.uuid_matches").format(
+                iteration=iteration
+            ),
             iteration=iteration,
             batch_size=batch_size,
             local_mode=local_mode if local_mode else None,

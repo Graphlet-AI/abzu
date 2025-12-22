@@ -164,6 +164,7 @@ process:
           blocks_dir: "${base_dir}/er/iterations/{iteration}/"
           blocks: "${base_dir}/er/iterations/{iteration}/union_blocks.parquet"
           uuid_blocks: "${base_dir}/er/iterations/{iteration}/uuid_blocks.parquet"
+          uuid_matches: "${base_dir}/er/iterations/{iteration}/uuid_matches.jsonl"
           matches: "${base_dir}/er/iterations/{iteration}/matches.jsonl"
           final: "${base_dir}/er/iterations/{iteration}/companies_final.parquet"
           eval: "${base_dir}/er/iterations/{iteration}/companies_resolved.parquet"

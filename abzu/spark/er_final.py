@@ -288,6 +288,7 @@ def deduplicate_resolved_companies(
     matches_path: str,
     output_path: str,
     uuid_blocks_path: str,
+    uuid_matches_path: str,
     iteration: int = 1,
     local_mode: Optional[bool] = None,
     batch_size: int = 10,
@@ -319,6 +320,7 @@ def deduplicate_resolved_companies(
     logger.info(f"Input:  {matches_path}")
     logger.info(f"Output: {output_path}")
     logger.info(f"UUID Blocks: {uuid_blocks_path}")
+    logger.info(f"UUID Matches: {uuid_matches_path}")
 
     # Read original matches to get input count
     original_matches_df = spark.read.json(matches_path)
@@ -345,7 +347,6 @@ def deduplicate_resolved_companies(
 
     # Match companies within UUID blocks
     logger.info("Matching companies within UUID blocks...")
-    uuid_matches_path = output_path.replace("companies_final.parquet", "uuid_matches.jsonl")
 
     match_entities(
         blocks_path=uuid_blocks_path,
