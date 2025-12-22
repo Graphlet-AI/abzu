@@ -590,3 +590,7 @@ uuid_blocks_path = output_path.replace("companies_final.parquet", "uuid_blocks.p
 ```
 
 This makes it impossible to track dependencies between datasets. Always use explicit parameters for paths from `abzu.config.config.get` or function parameters.
+
+# Search the `pyspark.sql.DataFrame` API before implementing custom logic
+
+Do a web search of the [PySpark DataFrame API](https://spark.apache.org/docs/latest/api/python/reference/index.html) and its sub-pages before implementing custom logic. Many common operations are already implemented in the API, and re-implementing them can lead to suboptimal performance or bugs. Do not re-implement storage functions or data manipulation functions that are already available in the API such as `pyspark.sql.DataFrame.fillna()`, `pypsark.sql.DataFrame.dropna()`, `pyspark.sql.DataFrame.replace()`, `pyspark.sql.DataFrame.distinct()` and more.

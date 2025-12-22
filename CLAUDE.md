@@ -232,7 +232,7 @@ logger.error(f"Failed to process: {error}")
 
 ### Spark Development
 
-Use the following style guide [README.md](abzu/spark/README.md) for Spark development: @abzu/spark/README.md
+Use the following style and logic guide [abzu/spark/README.md](abzu/spark/README.md) for Spark development: @abzu/spark/README.md
 
 For PySpark UDTF (User-Defined Table Functions) usage, refer to the [UDTF Guide](markdown/UDTF.md): @markdown/UDTF.md
 
