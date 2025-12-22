@@ -106,7 +106,7 @@ src_paths = ["abzu", "tests"]
 [tool.mypy]
 python_version = "3.12"
 files = ["abzu"]
-exclude = ["abzu/baml_client", "tests"]
+exclude = ["abzu/baml_client", "tests", "notebooks"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
