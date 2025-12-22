@@ -20,7 +20,7 @@ logger = get_logger(__name__)
 
 
 def build_uuid_blocks(
-    input_path: str,
+    matches_path: str,
     output_path: str,
     local_mode: Optional[bool] = None,
     max_block_size: int = 50,
@@ -32,7 +32,7 @@ def build_uuid_blocks(
     as first_word and acronym blocking.
 
     Args:
-        input_path: Path to matches.jsonl from previous matching step
+        matches_path: Path to matches.jsonl from previous matching step
         output_path: Path to save UUID blocks
         local_mode: Whether to run in local mode
         max_block_size: Maximum companies per block before splitting
@@ -42,8 +42,8 @@ def build_uuid_blocks(
         local_mode=local_mode,
     )
 
-    logger.info(f"Loading resolved companies from {input_path}")
-    matches_df: DataFrame = spark.read.json(input_path)
+    logger.info(f"Loading resolved companies from {matches_path}")
+    matches_df: DataFrame = spark.read.json(matches_path)
 
     # Explode resolved_companies from blocks
     logger.info("Exploding resolved companies from blocks...")
@@ -287,6 +287,7 @@ def build_name_blocks(
 def deduplicate_resolved_companies(
     matches_path: str,
     output_path: str,
+    uuid_blocks_path: str,
     iteration: int = 1,
     local_mode: Optional[bool] = None,
     batch_size: int = 10,
@@ -300,7 +301,7 @@ def deduplicate_resolved_companies(
     3. Output final deduplicated companies
 
     Args:
-        matches_path: Path to matches.parquet from previous matching step
+        matches_path: Path to matches.jsonl from previous matching step
         output_path: Path to save final deduplicated companies
         iteration: Iteration number
         local_mode: Whether to run in local mode
@@ -317,6 +318,7 @@ def deduplicate_resolved_companies(
     logger.info(f"Starting final deduplication for iteration {iteration}")
     logger.info(f"Input:  {matches_path}")
     logger.info(f"Output: {output_path}")
+    logger.info(f"UUID Blocks: {uuid_blocks_path}")
 
     # Read original matches to get input count
     original_matches_df = spark.read.json(matches_path)
@@ -334,9 +336,8 @@ def deduplicate_resolved_companies(
 
     # ========== PHASE 1: UUID BLOCKING ==========
     logger.info("=== Phase 1: UUID Blocking ===")
-    uuid_blocks_path = output_path.replace("companies_final", "uuid_blocks")
     build_uuid_blocks(
-        input_path=matches_path,
+        matches_path=matches_path,
         output_path=uuid_blocks_path,
         local_mode=local_mode,
         max_block_size=50,

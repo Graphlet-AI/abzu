@@ -149,8 +149,6 @@ process:
       input: "${process.kg.raw.output}/companies.parquet"
       output: "${process.kg.raw.output}/companies_with_tickers.jsonl"
       company_batch_size: 20
-    
-    
 
     wiki:
       input: "${process.kg.tickers.output}"
@@ -165,6 +163,7 @@ process:
         names:
           blocks_dir: "${base_dir}/er/iterations/{iteration}/"
           blocks: "${base_dir}/er/iterations/{iteration}/union_blocks.parquet"
+          uuid_blocks: "${base_dir}/er/iterations/{iteration}/uuid_blocks.parquet"
           matches: "${base_dir}/er/iterations/{iteration}/matches.jsonl"
           final: "${base_dir}/er/iterations/{iteration}/companies_final.parquet"
           eval: "${base_dir}/er/iterations/{iteration}/companies_resolved.parquet"
