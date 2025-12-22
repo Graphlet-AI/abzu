@@ -1,9 +1,10 @@
 """CLI for name similarity-based entity resolution matching."""
 
+import os
+
 import click
 
 from abzu.config import config
-from abzu.er.match import match_entities
 
 
 @click.command(context_settings={"show_default": True})
@@ -47,6 +48,12 @@ from abzu.er.match import match_entities
     default=None,
     help="Range of block sizes to process (e.g., 50:100)",
 )
+@click.option(
+    "--debug",
+    "-d",
+    is_flag=True,
+    help="Enable BAML debug output (shows LLM input/output)",
+)
 def names(
     iteration: int,
     blocks_path: str,
@@ -54,8 +61,15 @@ def names(
     batch_size: int,
     limit: int | None,
     size_range: str | None,
+    debug: bool,
 ) -> None:
     """Match entities within name similarity-based blocks."""
+    # Set BAML log level before importing BAML (must be set before import)
+    if not debug:
+        os.environ["BAML_LOG"] = "warn"
+
+    # Import after setting env var
+    from abzu.er.match import match_entities
 
     # Parse size range if provided
     min_size = None
