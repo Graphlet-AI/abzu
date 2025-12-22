@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Final cross-block deduplication using UUID and name blocking."""
 import os
-from typing import Optional
+from typing import Any, Optional
 
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame, SparkSession
 
+from abzu.config import config
 from abzu.er.match import match_entities
 from abzu.logs import get_logger
 from abzu.spark.config import get_spark_session
@@ -17,6 +18,8 @@ from abzu.spark.schemas import (
 )
 
 logger = get_logger(__name__)
+
+MAX_BLOCK_SIZE = config.get("process.kg.er.max_block_size", 50)
 
 
 def build_uuid_blocks(
@@ -37,6 +40,14 @@ def build_uuid_blocks(
         local_mode: Whether to run in local mode
         max_block_size: Maximum companies per block before splitting
     """
+    # Use provided max_block_size or fall back to config
+    if max_block_size:
+        logger.info(f"Using provided max block size of {max_block_size}")
+        actual_max_block_size = max_block_size
+    else:
+        logger.info(f"Using default max block size of {MAX_BLOCK_SIZE}")
+        actual_max_block_size = MAX_BLOCK_SIZE
+
     spark: SparkSession = get_spark_session(
         app_name="build_uuid_blocks",
         local_mode=local_mode,
@@ -94,11 +105,11 @@ def build_uuid_blocks(
         )
         .groupBy("block_key", "block_key_type")
         .agg(F.collect_list("company").alias("companies"))
-        .withColumn("company_count", F.size("companies"))
+        .withColumn("block_size", F.size("companies"))
     )
 
     logger.info("UUID block size distribution:")
-    uuid_blocks_temp.groupBy("company_count").count().orderBy("company_count").show(20)
+    uuid_blocks_temp.groupBy("block_size").count().orderBy("block_size").show(20)
 
     # Split large blocks
     logger.info(f"Splitting blocks larger than {max_block_size}...")
@@ -113,15 +124,15 @@ def build_uuid_blocks(
             self,
             block_key: str,
             block_key_type: str,
-            companies: list[dict],  # type: ignore
+            companies: list[dict[str, Any]],
             block_size: int,
         ):  # type: ignore
-            if block_size <= max_block_size:
+            if block_size <= actual_max_block_size:
                 yield (block_key, block_key_type, companies, block_size)
             else:
                 chunk_num = 1
-                for i in range(0, len(companies), max_block_size):
-                    chunk_companies = companies[i : i + max_block_size]
+                for i in range(0, len(companies), actual_max_block_size):
+                    chunk_companies = companies[i : i + actual_max_block_size]
                     chunk_key = f"{block_key}_chunk_{chunk_num}"
                     yield (chunk_key, block_key_type, chunk_companies, len(chunk_companies))
                     chunk_num += 1
@@ -134,7 +145,7 @@ def build_uuid_blocks(
     uuid_blocks = spark.sql(
         """
         SELECT udtf_output.* FROM uuid_blocks_temp,
-        LATERAL split_large_uuid_blocks(block_key, block_key_type, companies, company_count) AS udtf_output
+        LATERAL split_large_uuid_blocks(block_key, block_key_type, companies, block_size) AS udtf_output
         """
     )
 
@@ -231,11 +242,11 @@ def build_name_blocks(
         )
         .groupBy("block_key", "block_key_type")
         .agg(F.collect_list("company").alias("companies"))
-        .withColumn("company_count", F.size("companies"))
+        .withColumn("block_size", F.size("companies"))
     )
 
     logger.info("Name block size distribution:")
-    name_blocks_temp.groupBy("company_count").count().orderBy("company_count").show(20)
+    name_blocks_temp.groupBy("block_size").count().orderBy("block_size").show(20)
 
     # Split large blocks
     logger.info(f"Splitting blocks larger than {max_block_size}...")
@@ -270,7 +281,7 @@ def build_name_blocks(
     name_blocks = spark.sql(
         """
         SELECT udtf_output.* FROM name_blocks_temp,
-        LATERAL split_large_name_blocks(block_key, block_key_type, companies, company_count) AS udtf_output
+        LATERAL split_large_name_blocks(block_key, block_key_type, companies, block_size) AS udtf_output
         """
     )
 
