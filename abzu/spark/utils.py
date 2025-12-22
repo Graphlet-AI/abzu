@@ -96,7 +96,7 @@ def create_uuid_schema(original_schema: T.StructType) -> T.StructType:
             # Modify products array to change manufacturer from long to string
             # and technologies array from array<long> to array<string>
             product_fields = []
-            for prod_field in field.dataType.elementType.fields:
+            for prod_field in field.dataType.elementType.fields:  # type: ignore[attr-defined]
                 if prod_field.name == "manufacturer":
                     # Change manufacturer from long to string (UUID)
                     product_fields.append(T.StructField("manufacturer", T.StringType(), True))
@@ -112,7 +112,7 @@ def create_uuid_schema(original_schema: T.StructType) -> T.StructType:
         elif field.name == "technologies":
             # Modify technologies array to change developer from long to string
             tech_fields = []
-            for tech_field in field.dataType.elementType.fields:
+            for tech_field in field.dataType.elementType.fields:  # type: ignore[attr-defined]
                 if tech_field.name == "developer":
                     # Change developer from long to string (UUID)
                     tech_fields.append(T.StructField("developer", T.StringType(), True))
@@ -123,7 +123,7 @@ def create_uuid_schema(original_schema: T.StructType) -> T.StructType:
         elif field.name == "relationships":
             # Modify relationships array to change company refs and arrays to strings
             rel_fields = []
-            for rel_field in field.dataType.elementType.fields:
+            for rel_field in field.dataType.elementType.fields:  # type: ignore[attr-defined]
                 if rel_field.name in ["src_company", "dst_company"]:
                     # Change company refs from long to string (UUID)
                     rel_fields.append(T.StructField(rel_field.name, T.StringType(), True))
@@ -209,3 +209,55 @@ def update_entity_with_uuid(
         entity_dict["uuid"] = str(uuid.uuid4())
 
     return entity_dict
+
+
+def create_split_large_blocks_udtf(
+    udtf_return_type: str,
+    max_block_size: int,
+) -> type:
+    """Create a SplitLargeBlocks UDTF class with the given return type and max block size.
+
+    This factory function creates a PySpark UDTF that splits blocks larger than
+    max_block_size into smaller chunks. The UDTF is used for both regular ER blocking
+    and final UUID-based deduplication.
+
+    Parameters
+    ----------
+    udtf_return_type : str
+        The return type string for the UDTF, e.g.,
+        "block_key: string, block_key_type: string, companies: array<...>, block_size: long"
+    max_block_size : int
+        Maximum number of companies per block before splitting
+
+    Returns
+    -------
+    type
+        A decorated UDTF class that can be registered with spark.udtf.register()
+
+    Examples
+    --------
+    >>> udtf_return_type = build_udtf_return_type()
+    >>> SplitLargeBlocks = create_split_large_blocks_udtf(udtf_return_type, 50)
+    >>> spark.udtf.register("split_large_blocks", SplitLargeBlocks)
+    """
+
+    @F.udtf(returnType=udtf_return_type)  # type: ignore
+    class SplitLargeBlocks:
+        def eval(
+            self,
+            block_key: str,
+            block_key_type: str,
+            companies: list[dict[str, Any]],
+            block_size: int,
+        ):  # type: ignore
+            if block_size <= max_block_size:
+                yield (block_key, block_key_type, companies, block_size)
+            else:
+                chunk_num = 1
+                for i in range(0, len(companies), max_block_size):
+                    chunk_companies = companies[i : i + max_block_size]
+                    chunk_key = f"{block_key}_chunk_{chunk_num}"
+                    yield (chunk_key, block_key_type, chunk_companies, len(chunk_companies))
+                    chunk_num += 1
+
+    return SplitLargeBlocks

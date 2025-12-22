@@ -2,7 +2,7 @@
 """Entity resolution blocking strategies for company matching."""
 import logging
 import os
-from typing import Any, Optional
+from typing import Optional
 
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
@@ -16,6 +16,7 @@ from abzu.spark.schemas import (
     get_company_fields_without_blocks,
     normalize_company_dataframe,
 )
+from abzu.spark.utils import create_split_large_blocks_udtf
 
 logger = get_logger(__name__)
 
@@ -549,26 +550,8 @@ def build_blocks(
     )
     logger.debug(f"UDTF return type: {udtf_return_type}")
 
-    @F.udtf(returnType=udtf_return_type)  # type: ignore
-    class SplitLargeBlocks:
-        def eval(
-            self,
-            block_key: str,
-            block_key_type: str,
-            companies: list[dict[str, Any]],
-            block_size: int,
-        ):  # type: ignore
-            if block_size <= actual_max_block_size:
-                yield (block_key, block_key_type, companies, block_size)
-            else:
-                chunk_num = 1
-                for i in range(0, len(companies), actual_max_block_size):
-                    chunk_companies = companies[i : i + actual_max_block_size]
-                    chunk_key = f"{block_key}_chunk_{chunk_num}"
-                    yield (chunk_key, block_key_type, chunk_companies, len(chunk_companies))
-                    chunk_num += 1
-
-    # 2) Register the UDTF for SQL use
+    # Use shared UDTF factory from utils.py
+    SplitLargeBlocks = create_split_large_blocks_udtf(udtf_return_type, actual_max_block_size)
     spark.udtf.register("split_large_blocks", SplitLargeBlocks)  # type: ignore
 
     # 3) Create temp views for the DataFrames

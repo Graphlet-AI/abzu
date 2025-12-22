@@ -6,10 +6,12 @@ import pyspark.sql.functions as F
 from pyspark.sql import DataFrame
 from pyspark.sql.types import (
     ArrayType,
+    BooleanType,
     DataType,
     IntegerType,
     LongType,
     MapType,
+    StringType,
     StructField,
     StructType,
 )
@@ -244,3 +246,27 @@ def validate_block_schema(columns: list[str]) -> None:
             f"This is likely a bug in the ER pipeline - blocks must include all fields "
             f"from the BAML CompanyList type."
         )
+
+
+def get_matches_schema() -> StructType:
+    """Get the Spark schema for reading matches.jsonl files.
+
+    The matches file contains blocks with resolved_companies arrays.
+    This schema enforces correct BAML types when reading JSON.
+
+    Returns:
+        StructType schema for matches JSON file
+    """
+    company_schema = get_company_spark_schema()
+
+    return StructType(
+        [
+            StructField("block_key", StringType(), True),
+            StructField("block_key_type", StringType(), True),
+            StructField("original_companies", ArrayType(company_schema), True),
+            StructField("resolved_companies", ArrayType(company_schema), True),
+            StructField("original_count", LongType(), True),
+            StructField("resolved_count", LongType(), True),
+            StructField("was_resolved", BooleanType(), True),
+        ]
+    )
