@@ -236,6 +236,12 @@ def evaluate_er_matches(
     unique_baml_processed = baml_processed_df.select("uuid").distinct().count()
     logger.info(f"BAML-processed companies (after matching): {unique_baml_processed:,} unique")
 
+    # Just plain deduplicate records
+    more_unique_baml_processed = baml_processed_df.distinct().count()
+    logger.info(
+        f"Deduplicated BAML-processed companies to ensure uniqueness: {more_unique_baml_processed:,} unique"
+    )
+
     # To calculate reduction, we need to know how many companies WENT INTO matching
     # This is: total original companies - skipped companies
     # Skipped companies are those with match_skip=True, which includes singletons

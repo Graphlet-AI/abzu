@@ -30,6 +30,9 @@ Test one iteration of the full entity resolution pipeline each time you make cha
 - Block with `abzu process er block names --iteration 1 -m 30`
 - Match with `abzu process er match names --iteration 1 -b 50` - note you can use the `-n` option to limit the number of rows processed for faster testing.
 - Evaluate with `abzu process er eval names --iteration 1`
+- Evaluate with `abzu process er final --iteration 1`
+
+You can do all of these steps in one command with `abzu process er all --iteration 1 -m 100 -b 40 ` to process only 1000 rows for faster testing.
 
 ### Docker Development (via Taskfile)
 
