@@ -27,6 +27,13 @@ logger = get_logger(__name__)
     help="Iteration number for multi-round ER processing",
 )
 @click.option(
+    "--strategy",
+    "-s",
+    required=True,
+    type=click.Choice(["first_word", "acronym", "combined"]),
+    help="Blocking strategy to use (each produces non-overlapping blocks)",
+)
+@click.option(
     "--max-block-size",
     "-m",
     default=50,
@@ -54,6 +61,7 @@ logger = get_logger(__name__)
 )
 def all(
     iteration: int,
+    strategy: str,
     max_block_size: int,
     batch_size: int,
     local_mode: bool,
@@ -62,11 +70,18 @@ def all(
     """Run complete entity resolution cycle: block, match, and evaluate.
 
     This command orchestrates the full ER pipeline:
-    1. Block: Create similarity-based blocks of companies
+    1. Block: Create similarity-based blocks of companies using the specified strategy
     2. Match: Resolve entities within blocks using BAML
     3. Eval: Evaluate results, deduplicate exact copies, and generate metrics
 
-    At the end, prints a comprehensive report of the entire cycle.
+    Each strategy produces blocks where each company appears in exactly ONE block.
+    Run strategies sequentially across iterations for best results:
+
+    \b
+    Strategies:
+      first_word - Block by first word of name (e.g., "Apple Inc" -> "APPLE")
+      acronym    - Block by acronym (e.g., "IBM" -> "IBM")
+      combined   - Block only where BOTH strategies agree (highest precision)
     """
     # Set BAML log level before importing BAML (must be set before import)
     if not debug:
@@ -80,7 +95,7 @@ def all(
 
     # Print header
     click.echo("=" * 80)
-    click.echo(f"ENTITY RESOLUTION CYCLE - ITERATION {iteration}")
+    click.echo(f"ENTITY RESOLUTION CYCLE - ITERATION {iteration} - STRATEGY: {strategy.upper()}")
     click.echo("=" * 80)
     click.echo()
 
@@ -95,7 +110,7 @@ def all(
         companies_path = config.get("process.kg.er.paths.input")
 
     blocks_dir = config.get("process.kg.er.paths.names.blocks_dir").format(iteration=iteration)
-    blocks_path = config.get("process.kg.er.paths.names.blocks").format(iteration=iteration)
+    blocks_path = os.path.join(blocks_dir, f"{strategy}_blocks.parquet")
     matches_path = config.get("process.kg.er.paths.names.matches").format(iteration=iteration)
     eval_path = config.get("process.kg.er.paths.names.eval").format(iteration=iteration)
 
@@ -108,6 +123,7 @@ def all(
         build_blocks(
             input_path=companies_path,
             output_path=blocks_dir,
+            strategy=strategy,
             local_mode=local_mode if local_mode else None,
             max_block_size=max_block_size,
         )
@@ -189,7 +205,9 @@ def all(
     match_throughput = match_metrics["blocks_processed"] / match_time if match_time > 0 else 0
 
     click.echo("\n" + "=" * 80)
-    click.echo(f"ENTITY RESOLUTION CYCLE SUMMARY - ITERATION {iteration}")
+    click.echo(
+        f"ENTITY RESOLUTION CYCLE SUMMARY - ITERATION {iteration} - STRATEGY: {strategy.upper()}"
+    )
     click.echo("=" * 80)
     click.echo()
     click.echo("WHAT HAPPENED:")

@@ -16,11 +16,18 @@ from abzu.config import config
     help="Iteration number for multi-round ER processing",
 )
 @click.option(
+    "--strategy",
+    "-s",
+    required=True,
+    type=click.Choice(["first_word", "acronym", "combined"]),
+    help="Blocking strategy to match (must match the strategy used in blocking)",
+)
+@click.option(
     "--blocks-path",
     "-p",
-    default=config.get("process.kg.er.paths.names.blocks"),
+    default=None,
     type=click.Path(exists=False, file_okay=True, dir_okay=True),
-    help="Path to names blocks file (with {format} placeholder)",
+    help="Path to names blocks file (defaults to strategy-specific path)",
 )
 @click.option(
     "--output-path",
@@ -44,7 +51,7 @@ from abzu.config import config
 )
 @click.option(
     "--size-range",
-    "-s",
+    "-r",
     default=None,
     help="Range of block sizes to process (e.g., 50:100)",
 )
@@ -56,20 +63,29 @@ from abzu.config import config
 )
 def names(
     iteration: int,
-    blocks_path: str,
+    strategy: str,
+    blocks_path: str | None,
     output_path: str,
     batch_size: int,
     limit: int | None,
     size_range: str | None,
     debug: bool,
 ) -> None:
-    """Match entities within name similarity-based blocks."""
+    """Match entities within name similarity-based blocks.
+
+    The strategy must match the one used in the blocking step.
+    """
     # Set BAML log level before importing BAML (must be set before import)
     if not debug:
         os.environ["BAML_LOG"] = "warn"
 
     # Import after setting env var
     from abzu.er.match import match_entities
+
+    # Set blocks_path based on strategy if not provided
+    if blocks_path is None:
+        blocks_dir = config.get("process.kg.er.paths.names.blocks_dir").format(iteration=iteration)
+        blocks_path = os.path.join(blocks_dir, f"{strategy}_blocks.parquet")
 
     # Parse size range if provided
     min_size = None

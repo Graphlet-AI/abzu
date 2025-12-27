@@ -10,9 +10,9 @@ from sklearn.cluster import AgglomerativeClustering
 
 class E5EntityBlocker:
 
-    def __init__(self, model_name: str = "Qwen/Qwen3-Embedding-4B"):
+    def __init__(self, model_name: str = "intfloat/e5-base-v2") -> None:
         """
-        E5EntityBlocker blocks data and returns agglomerative clusters. Initialize with the large E5 model.
+        E5EntityBlocker blocks data and returns agglomerative clusters. Initialize with the E5 model.
         """
         device: Literal["cpu", "cuda", "mps"]
         if torch.cuda.is_available():
@@ -96,7 +96,7 @@ class E5EntityBlocker:
         cluster_labels = clustering.fit_predict(distance_matrix)
 
         # Organize results into blocks
-        blocks = {}
+        blocks: dict[int, list[str]] = {}
         for idx, label in enumerate(cluster_labels):
             if label not in blocks:
                 blocks[label] = []

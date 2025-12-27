@@ -14,6 +14,13 @@ from abzu.config import config
     help="Iteration number for multi-round ER processing",
 )
 @click.option(
+    "--strategy",
+    "-s",
+    required=True,
+    type=click.Choice(["first_word", "acronym", "combined"]),
+    help="Blocking strategy to use (each produces non-overlapping blocks)",
+)
+@click.option(
     "--companies-path",
     "-c",
     default=config.get("process.kg.er.paths.input"),
@@ -42,12 +49,24 @@ from abzu.config import config
 )
 def names(
     iteration: int,
+    strategy: str,
     companies_path: str,
     output_path: str | None,
     max_block_size: int,
     local_mode: bool,
 ) -> None:
-    """Build name similarity-based blocks for entity resolution."""
+    """Build name similarity-based blocks for entity resolution.
+
+    Each strategy produces blocks where each company appears in exactly ONE block,
+    eliminating duplicate processing paths. Run strategies sequentially across
+    iterations for best results:
+
+    \b
+    Strategies:
+      first_word - Block by first word of name (e.g., "Apple Inc" -> "APPLE")
+      acronym    - Block by acronym (e.g., "IBM" -> "IBM")
+      combined   - Block only where BOTH strategies agree (highest precision)
+    """
     # Import heavy Spark module only when command is executed
     from abzu.spark.er_block import build_blocks
 
@@ -63,11 +82,12 @@ def names(
     if output_path is None:
         output_path = config.get("process.kg.er.paths.names.blocks_dir").format(iteration=iteration)
 
-    # Pass max_block_size to build_blocks
+    # Pass strategy and max_block_size to build_blocks
     try:
         build_blocks(
             input_path=companies_path,
             output_path=output_path,
+            strategy=strategy,
             local_mode=local_mode if local_mode else None,
             max_block_size=max_block_size,
         )

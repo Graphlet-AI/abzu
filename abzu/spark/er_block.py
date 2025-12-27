@@ -163,20 +163,36 @@ def get_acronym(name: str) -> str | None:
 def build_blocks(
     input_path: str = config.get("process.kg.er.paths.input"),
     output_path: str = config.get("process.kg.er.paths.names.blocks_dir"),
+    strategy: str = "combined",
     local_mode: Optional[bool] = None,
     stop_spark: bool = True,
     max_block_size: Optional[int] = None,
 ) -> None:
     """
-    Analyze company blocking strategies by computing size distributions.
+    Build entity resolution blocks using a single blocking strategy.
+
+    Each strategy produces blocks where each company appears in exactly ONE block,
+    eliminating duplicate processing paths across iterations.
+
+    Strategies:
+    - first_word: Block by first word of company name (e.g., "Apple Inc" -> "APPLE")
+    - acronym: Block by acronym/initials (e.g., "International Business Machines" -> "IBM")
+    - combined: Block by companies matching BOTH first_word AND acronym (highest precision)
 
     Args:
         input_path: Path to the input companies parquet
         output_path: Path to save the output blocks
+        strategy: Blocking strategy to use (first_word, acronym, or combined)
         local_mode: Whether to run in local mode. If None, will be determined by environment
         stop_spark: Whether to stop the Spark session after processing
         max_block_size: Maximum block size (blocks larger than this will be chunked). If None, uses config value
     """
+    # Validate strategy
+    valid_strategies = ["first_word", "acronym", "combined"]
+    if strategy not in valid_strategies:
+        raise ValueError(f"Invalid strategy '{strategy}'. Must be one of: {valid_strategies}")
+    logger.info(f"Using blocking strategy: {strategy}")
+
     # Use provided max_block_size or fall back to config
     if max_block_size:
         logger.info(f"Using provided max block size of {max_block_size}")
@@ -385,161 +401,152 @@ def build_blocks(
     )
     logger.info("=" * 60)
 
-    # Keep ALL blocks (including single-record blocks)
-    logger.info("Processing all blocks (including single-record blocks)...")
+    # Build blocks for the selected strategy only
+    logger.info(f"Building blocks using '{strategy}' strategy...")
 
-    # Get all first word blocks (including size = 1)
-    first_word_multi_blocks = first_word_dist_df.select("first_word_block")
-
-    # Get all acronym blocks (including size = 1)
-    acronym_multi_blocks = acronym_dist_df.select("acronym_block")
-
-    # Filter companies to only include those in multi-company blocks
-    first_word_companies_filtered = companies_with_block_keys_df.join(
-        first_word_multi_blocks,
-        "first_word_block",
-        "inner",
-    ).select(
-        "uuid",
-        F.col("first_word_block").alias("block_key"),
-        F.lit("first_word").alias("block_key_type"),
-    )
-
-    acronym_companies_filtered = companies_with_block_keys_df.join(
-        acronym_multi_blocks,
-        "acronym_block",
-        "inner",
-    ).select(
-        "uuid",
-        F.col("acronym_block").alias("block_key"),
-        F.lit("acronym").alias("block_key_type"),
-    )
-
-    first_word_filtered_count = first_word_companies_filtered.count()
-    acronym_filtered_count = acronym_companies_filtered.count()
-
-    logger.info(f"First word blocks: {first_word_filtered_count:,} companies")
-    logger.info(f"Acronym blocks: {acronym_filtered_count:,} companies")
-
-    # Get complete company records and group by blocking keys
-    logger.info("Grouping complete company records by blocking keys...")
-
-    # Join filtered companies back with full company data
+    # Get complete company records
     if input_path.endswith(".parquet") or input_path.endswith(".parquet/"):
         full_companies_df_raw = spark.read.parquet(input_path)
     else:
         full_companies_df_raw = spark.read.json(input_path)
-    # Normalize again to ensure consistency
     full_companies_df = normalize_company_dataframe(
         full_companies_df_raw, preserve_extra_fields=False
-    )
-
-    # Identify overlapping block_keys between first_word and acronym strategies
-    logger.info("Identifying overlapping block_keys for merging...")
-
-    # Union first_word and acronym companies
-    all_companies_with_blocks = first_word_companies_filtered.union(acronym_companies_filtered)
-
-    # Find overlapping block_keys by counting distinct block_key_types per block_key
-    overlapping_keys = (
-        all_companies_with_blocks.groupBy("block_key")
-        .agg(F.countDistinct("block_key_type").alias("strategy_count"))
-        .filter(F.col("strategy_count") > 1)  # type: ignore
-        .select("block_key")
-    )
-
-    overlapping_count = overlapping_keys.count()
-    logger.info(f"Found {overlapping_count:,} overlapping block_keys between strategies")
-
-    # Create combined blocks for overlapping keys
-    combined_blocks_temp = (
-        all_companies_with_blocks.join(
-            overlapping_keys, "block_key", "inner"
-        )  # Only overlapping keys
-        .dropDuplicates(["block_key", "uuid"])  # Remove duplicate UUIDs within each block
-        .join(full_companies_df, "uuid", "inner")
     )
 
     # Get company fields without block-related fields
     company_fields = get_company_fields_without_blocks()
 
-    # Create struct with all company fields, using null for missing fields
-    # This ensures the struct matches the UDTF return type schema exactly
-    company_struct = F.struct(
-        *[
-            F.col(f) if f in combined_blocks_temp.columns else F.lit(None).alias(f)
-            for f in company_fields
-        ]
-    )
+    if strategy == "first_word":
+        # Block ALL companies by first_word - each company in exactly ONE block
+        logger.info("Creating first_word blocks (each company in exactly one block)...")
 
-    combined_blocks = (
-        combined_blocks_temp.groupBy("block_key")
-        .agg(
-            F.collect_list(company_struct).alias("companies"),
-            F.countDistinct("uuid").alias("block_size"),
+        blocks_with_companies = (
+            companies_with_block_keys_df.filter(
+                F.col("first_word_block").isNotNull() & (F.col("first_word_block") != "UNKNOWN")
+            )
+            .select("uuid", F.col("first_word_block").alias("block_key"))
+            .join(full_companies_df, "uuid", how="inner")
         )
-        .withColumn("block_key_type", F.lit("combined"))
-        .select("block_key", "block_key_type", "companies", "block_size")
-    )
 
-    # Show top 20 overlapping block_keys by company count
-    logger.info("Top 20 overlapping block_keys by company count:")
-    combined_blocks.select("block_key", "block_size").orderBy(F.desc("block_size")).show(
+        company_struct = F.struct(
+            *[
+                F.col(f) if f in blocks_with_companies.columns else F.lit(None).alias(f)
+                for f in company_fields
+            ]
+        )
+
+        strategy_blocks = (
+            blocks_with_companies.groupBy("block_key")
+            .agg(
+                F.collect_list(company_struct).alias("companies"),
+                F.countDistinct("uuid").alias("block_size"),
+            )
+            .withColumn("block_key_type", F.lit("first_word"))
+            .select("block_key", "block_key_type", "companies", "block_size")
+        )
+
+    elif strategy == "acronym":
+        # Block ALL companies by acronym - each company in exactly ONE block
+        logger.info("Creating acronym blocks (each company in exactly one block)...")
+
+        blocks_with_companies = (
+            companies_with_block_keys_df.filter(
+                F.col("acronym_block").isNotNull() & (F.col("acronym_block") != "UNKNOWN")
+            )
+            .select("uuid", F.col("acronym_block").alias("block_key"))
+            .join(full_companies_df, "uuid", how="inner")
+        )
+
+        company_struct = F.struct(
+            *[
+                F.col(f) if f in blocks_with_companies.columns else F.lit(None).alias(f)
+                for f in company_fields
+            ]
+        )
+
+        strategy_blocks = (
+            blocks_with_companies.groupBy("block_key")
+            .agg(
+                F.collect_list(company_struct).alias("companies"),
+                F.countDistinct("uuid").alias("block_size"),
+            )
+            .withColumn("block_key_type", F.lit("acronym"))
+            .select("block_key", "block_key_type", "companies", "block_size")
+        )
+
+    else:  # strategy == "combined"
+        # Block only companies where BOTH first_word AND acronym agree (intersection)
+        logger.info("Creating combined blocks (only companies where both strategies agree)...")
+
+        # Get companies with their block keys for both strategies
+        first_word_companies_df = (
+            companies_with_block_keys_df.filter(
+                F.col("first_word_block").isNotNull() & (F.col("first_word_block") != "UNKNOWN")
+            )
+            .select("uuid", F.col("first_word_block").alias("block_key"))
+            .withColumn("strategy", F.lit("first_word"))
+        )
+
+        acronym_companies_df = (
+            companies_with_block_keys_df.filter(
+                F.col("acronym_block").isNotNull() & (F.col("acronym_block") != "UNKNOWN")
+            )
+            .select("uuid", F.col("acronym_block").alias("block_key"))
+            .withColumn("strategy", F.lit("acronym"))
+        )
+
+        # Union and find overlapping block_keys (appear in both strategies)
+        all_companies_with_blocks = first_word_companies_df.union(acronym_companies_df)
+
+        overlapping_keys = (
+            all_companies_with_blocks.groupBy("block_key")
+            .agg(F.countDistinct("strategy").alias("strategy_count"))
+            .filter(F.col("strategy_count") > 1)
+            .select("block_key")
+        )
+
+        overlapping_count = overlapping_keys.count()
+        logger.info(f"Found {overlapping_count:,} overlapping block_keys between strategies")
+
+        # Create blocks only for overlapping keys
+        blocks_with_companies = (
+            all_companies_with_blocks.join(overlapping_keys, "block_key", how="inner")
+            .dropDuplicates(["block_key", "uuid"])
+            .join(full_companies_df, "uuid", how="inner")
+        )
+
+        company_struct = F.struct(
+            *[
+                F.col(f) if f in blocks_with_companies.columns else F.lit(None).alias(f)
+                for f in company_fields
+            ]
+        )
+
+        strategy_blocks = (
+            blocks_with_companies.groupBy("block_key")
+            .agg(
+                F.collect_list(company_struct).alias("companies"),
+                F.countDistinct("uuid").alias("block_size"),
+            )
+            .withColumn("block_key_type", F.lit("combined"))
+            .select("block_key", "block_key_type", "companies", "block_size")
+        )
+
+    # Show top 20 blocks by company count
+    logger.info(f"Top 20 {strategy} blocks by company count:")
+    strategy_blocks.select("block_key", "block_size").orderBy(F.desc("block_size")).show(
         20, truncate=False
     )
 
-    # Create separate blocks for non-overlapping keys
-    first_word_blocks_temp = (
-        all_companies_with_blocks.join(
-            overlapping_keys, "block_key", "left_anti"
-        )  # Exclude overlapping keys
-        .filter(F.col("block_key_type") == "first_word")
-        .dropDuplicates(["block_key", "uuid"])  # Remove any duplicate UUIDs
-        .join(full_companies_df, "uuid", "inner")
-    )
-
-    # Create struct with only company fields (reuse from above)
-    company_struct_first = F.struct(
-        *[F.col(f) for f in company_fields if f in first_word_blocks_temp.columns]
-    )
-
-    first_word_only_blocks = first_word_blocks_temp.groupBy("block_key", "block_key_type").agg(
-        F.collect_list(company_struct_first).alias("companies"),
-        F.countDistinct("uuid").alias("block_size"),
-    )
-
-    acronym_blocks_temp = (
-        all_companies_with_blocks.join(
-            overlapping_keys, "block_key", "left_anti"
-        )  # Exclude overlapping keys
-        .filter(F.col("block_key_type") == "acronym")
-        .dropDuplicates(["block_key", "uuid"])  # Remove any duplicate UUIDs
-        .join(full_companies_df, "uuid", "inner")
-    )
-
-    # Create struct with only company fields (reuse from above)
-    company_struct_acronym = F.struct(
-        *[F.col(f) for f in company_fields if f in acronym_blocks_temp.columns]
-    )
-
-    acronym_only_blocks = acronym_blocks_temp.groupBy("block_key", "block_key_type").agg(
-        F.collect_list(company_struct_acronym).alias("companies"),
-        F.countDistinct("uuid").alias("block_size"),
-    )
-
-    if logger.isEnabledFor(logging.DEBUG):
-        acronym_only_blocks.printSchema()
-
-    # Split large blocks (> 50 companies) into smaller chunks
+    # Split large blocks (> max_block_size companies) into smaller chunks
     logger.info(
         f"Splitting large blocks (> {actual_max_block_size} companies) into smaller chunks..."
     )
 
     # Build the UDTF returnType dynamically from the actual DataFrame schema
-    # Get the companies array element type from the first non-empty block
     from pyspark.sql.types import ArrayType
 
-    companies_field = combined_blocks.schema["companies"]
+    companies_field = strategy_blocks.schema["companies"]
     companies_array_type = companies_field.dataType
     assert isinstance(companies_array_type, ArrayType), "companies must be an ArrayType"
     companies_schema = companies_array_type.elementType.simpleString()
@@ -552,24 +559,17 @@ def build_blocks(
 
     # Use shared UDTF factory from utils.py
     SplitLargeBlocks = create_split_large_blocks_udtf(udtf_return_type, actual_max_block_size)
-    spark.udtf.register("split_large_blocks", SplitLargeBlocks)  # type: ignore
+    spark.udtf.register("split_large_blocks", SplitLargeBlocks)  # type: ignore[arg-type]
 
-    # 3) Create temp views for the DataFrames
-    combined_blocks.createOrReplaceTempView("combined_blocks_temp")
-    first_word_only_blocks.createOrReplaceTempView("first_word_blocks_temp")
-    acronym_only_blocks.createOrReplaceTempView("acronym_blocks_temp")
+    # Create temp view and apply UDTF
+    strategy_blocks.createOrReplaceTempView("strategy_blocks_temp")
 
-    # 4) Apply the UDTF using SQL with LATERAL syntax - only select UDTF output columns
-    # Count blocks before splitting
-    combined_blocks_before = combined_blocks.count()
-    first_word_blocks_before = first_word_only_blocks.count()
-    acronym_blocks_before = acronym_only_blocks.count()
-    total_blocks_before = combined_blocks_before + first_word_blocks_before + acronym_blocks_before
+    blocks_before = strategy_blocks.count()
 
-    combined_blocks_final = (
+    blocks_final = (
         spark.sql(
             """
-            SELECT udtf_output.* FROM combined_blocks_temp,
+            SELECT udtf_output.* FROM strategy_blocks_temp,
             LATERAL split_large_blocks(block_key, block_key_type, companies, block_size) AS udtf_output
             """
         )
@@ -577,183 +577,42 @@ def build_blocks(
         .cache()
     )
 
-    first_word_blocks_final = (
-        spark.sql(
-            """
-            SELECT udtf_output.* FROM first_word_blocks_temp,
-            LATERAL split_large_blocks(block_key, block_key_type, companies, block_size) AS udtf_output
-            """
-        )
-        .orderBy(F.col("block_size"))
-        .cache()
-    )
-
-    acronym_blocks_final = (
-        spark.sql(
-            """
-            SELECT udtf_output.* FROM acronym_blocks_temp,
-            LATERAL split_large_blocks(block_key, block_key_type, companies, block_size) AS udtf_output
-         """
-        )
-        .orderBy(F.col("block_size"))
-        .cache()
-    )
-
-    # Count blocks after splitting
-    combined_blocks_after = combined_blocks_final.count()
-    first_word_blocks_after = first_word_blocks_final.count()
-    acronym_blocks_after = acronym_blocks_final.count()
-    total_blocks_after = combined_blocks_after + first_word_blocks_after + acronym_blocks_after
+    blocks_after = blocks_final.count()
 
     # Report on block splitting
-    total_sub_blocks_created = total_blocks_after - total_blocks_before
-    if total_sub_blocks_created > 0:
+    sub_blocks_created = blocks_after - blocks_before
+    if sub_blocks_created > 0:
         logger.info(
-            f"Block splitting created {total_sub_blocks_created:,} additional sub-blocks "
-            f"({total_blocks_before:,} → {total_blocks_after:,})"
-        )
-        logger.info(
-            f"  Combined blocks: {combined_blocks_before:,} → {combined_blocks_after:,} "
-            f"(+{combined_blocks_after - combined_blocks_before:,})"
-        )
-        logger.info(
-            f"  First-word blocks: {first_word_blocks_before:,} → {first_word_blocks_after:,} "
-            f"(+{first_word_blocks_after - first_word_blocks_before:,})"
-        )
-        logger.info(
-            f"  Acronym blocks: {acronym_blocks_before:,} → {acronym_blocks_after:,} "
-            f"(+{acronym_blocks_after - acronym_blocks_before:,})"
+            f"Block splitting created {sub_blocks_created:,} additional sub-blocks "
+            f"({blocks_before:,} → {blocks_after:,})"
         )
     else:
         logger.info(f"No blocks exceeded max size of {actual_max_block_size}, no splitting needed")
 
-    # Save combined blocks separately
-    combined_blocks_path = os.path.join(output_path, "combined_blocks.parquet")
-    logger.info(f"Persisting combined blocks to {combined_blocks_path}")
-    combined_blocks_final.repartition(1).write.mode("overwrite").parquet(combined_blocks_path)
+    # Determine output path based on strategy
+    strategy_output_path = os.path.join(output_path, f"{strategy}_blocks.parquet")
+    logger.info(f"Persisting {strategy} blocks to {strategy_output_path}")
+    blocks_final.repartition(1).write.mode("overwrite").parquet(strategy_output_path)
 
-    # Save first_word_only blocks separately
-    first_word_path = os.path.join(output_path, "first_word_blocks.parquet")
-    logger.info(f"Persisting first word blocks to {first_word_path}")
-    first_word_blocks_final.repartition(1).write.mode("overwrite").parquet(first_word_path)
-
-    # Save acronym_only blocks separately
-    acronym_path = os.path.join(output_path, "acronym_blocks.parquet")
-    logger.info(f"Persisting acronym blocks to {acronym_path}")
-    acronym_blocks_final.repartition(1).write.mode("overwrite").parquet(acronym_path)
-
-    # Handle companies with UNKNOWN block keys - create singleton blocks for them
-    unblocked_blocks_df = None
-    if unknown_count > 0:
-        logger.info(
-            f"Creating singleton blocks for {unknown_count} companies with UNKNOWN block keys..."
-        )
-
-        # Get the full company data for companies with UNKNOWN keys
-        unknown_uuids = companies_with_unknown_keys.select("uuid")
-        unknown_companies_full = full_companies_df.join(unknown_uuids, "uuid", "inner")
-
-        # Create singleton blocks for each unknown company using DataFrame operations
-        # Each company becomes its own block with block_size=1
-        unblocked_blocks_df = unknown_companies_full.select(
-            F.concat(F.lit("UNBLOCKED_"), F.col("uuid")).alias("block_key"),
-            F.lit("unblocked").alias("block_key_type"),
-            F.array(F.struct(*[F.col(c) for c in unknown_companies_full.columns])).alias(
-                "companies"
-            ),
-            F.lit(1).alias("block_size"),
-        )
-
-        logger.info(f"Created {unblocked_blocks_df.count()} singleton blocks for UNKNOWN companies")
-
-    # Create unified union_blocks output by combining all block types
-    logger.info("Creating unified union_blocks output...")
-    if unblocked_blocks_df is not None:
-        union_blocks_df = (
-            combined_blocks_final.unionByName(first_word_blocks_final)
-            .unionByName(acronym_blocks_final)
-            .unionByName(unblocked_blocks_df)
-        )
-    else:
-        union_blocks_df = combined_blocks_final.unionByName(first_word_blocks_final).unionByName(
-            acronym_blocks_final
-        )
-
-    # Save union_blocks to Parquet format
-    union_blocks_path = os.path.join(output_path, "union_blocks.parquet")
-
-    logger.info(f"Persisting all blocks to {union_blocks_path}")
-    union_blocks_df.repartition(1).write.mode("overwrite").parquet(union_blocks_path)
-
-    # Count total blocks and companies in unified output
-    union_blocks_count = union_blocks_df.count()
-    union_blocks_companies = union_blocks_df.agg(
+    # Count blocks and companies
+    total_blocks = blocks_after
+    total_companies_in_blocks = blocks_final.agg(
         F.coalesce(F.sum("block_size"), F.lit(0)).alias("total")
     ).collect()[0]["total"]
 
-    logger.info(
-        f"Unified union_blocks: {union_blocks_count} blocks, {union_blocks_companies} companies"
-    )
-
-    # Count blocks by type (after filtering and splitting)
-    combined_block_count = combined_blocks_final.count()
-    first_word_only_count = first_word_blocks_final.count()
-    acronym_only_count = acronym_blocks_final.count()
-    unblocked_count = unblocked_blocks_df.count() if unblocked_blocks_df is not None else 0
-    total_blocks = (
-        combined_block_count + first_word_only_count + acronym_only_count + unblocked_count
-    )
+    # Count singleton vs multi-company blocks
+    singleton_blocks = blocks_final.filter(F.col("block_size") == 1).count()
+    multi_company_blocks = blocks_final.filter(F.col("block_size") > 1).count()
 
     # Debug: Show schema and sample data for verification
     if logger.isEnabledFor(logging.DEBUG):
-        logger.debug("Combined blocks final schema:")
-        combined_blocks_final.printSchema()
-        logger.debug("Sample combined blocks:")
-        combined_blocks_final.select("block_key", "block_size").show(5)
-
-    # Count companies in each block type (after filtering and splitting)
-    # Use coalesce to handle nulls properly
-    combined_sum_result = combined_blocks_final.agg(
-        F.coalesce(F.sum("block_size"), F.lit(0)).alias("total")
-    ).collect()
-    combined_companies_count = combined_sum_result[0]["total"]
-
-    first_word_sum_result = first_word_blocks_final.agg(
-        F.coalesce(F.sum("block_size"), F.lit(0)).alias("total")
-    ).collect()
-    first_word_only_companies_count = first_word_sum_result[0]["total"]
-
-    acronym_sum_result = acronym_blocks_final.agg(
-        F.coalesce(F.sum("block_size"), F.lit(0)).alias("total")
-    ).collect()
-    acronym_only_companies_count = acronym_sum_result[0]["total"]
-
-    # Get original counts before splitting for comparison
-    original_combined_count = combined_blocks.count()
-    original_first_word_count = first_word_only_blocks.count()
-    original_acronym_count = acronym_only_blocks.count()
-
-    # Calculate additional metrics for summary
-    total_company_instances = (
-        combined_companies_count
-        + first_word_only_companies_count
-        + acronym_only_companies_count
-        + (unblocked_count if unblocked_count > 0 else 0)
-    )
-    duplication_factor = total_company_instances / total_companies if total_companies > 0 else 0
-
-    # Count singleton blocks accurately
-    singleton_blocks = 0
-    multi_company_blocks = 0
-    for block_type_df in [combined_blocks_final, first_word_blocks_final, acronym_blocks_final]:
-        if block_type_df is not None:
-            singleton_blocks += block_type_df.filter(F.col("block_size") == F.lit(1)).count()
-            multi_company_blocks += block_type_df.filter(
-                F.col("block_size") > F.lit(1)  # type: ignore[call-arg,operator]
-            ).count()
+        logger.debug(f"{strategy} blocks final schema:")
+        blocks_final.printSchema()
+        logger.debug(f"Sample {strategy} blocks:")
+        blocks_final.select("block_key", "block_size").show(5)
 
     logger.info("\n" + "=" * 60)
-    logger.info("ENTITY RESOLUTION BLOCKING SUMMARY")
+    logger.info(f"ENTITY RESOLUTION BLOCKING SUMMARY - {strategy.upper()} STRATEGY")
     logger.info("=" * 60)
     logger.info("WHAT IS BLOCKING?")
     logger.info("  Groups similar companies together to reduce comparisons")
@@ -765,31 +624,24 @@ def build_blocks(
     logger.info("INPUT DATA:")
     logger.info(f"  Total unique companies: {total_companies:,}")
     logger.info("")
-    logger.info("BLOCKING STRATEGY RESULTS:")
-    logger.info(
-        f"  Combined Blocks (both strategies agree): {combined_block_count:,} blocks, {combined_companies_count:,} companies"
-    )
-    if combined_block_count != original_combined_count:
+    logger.info(f"STRATEGY: {strategy.upper()}")
+    if strategy == "first_word":
+        logger.info("  Blocks companies by first word of name (e.g., 'Apple Inc' -> 'APPLE')")
+    elif strategy == "acronym":
+        logger.info("  Blocks companies by acronym (e.g., 'IBM' -> 'IBM')")
+    else:  # combined
+        logger.info("  Blocks only companies where BOTH first_word AND acronym agree")
+        logger.info("  (Highest precision, may have lower recall)")
+    logger.info("")
+    logger.info("BLOCKING RESULTS:")
+    logger.info(f"  Blocks created: {total_blocks:,}")
+    logger.info(f"  Companies in blocks: {total_companies_in_blocks:,}")
+    if blocks_before != blocks_after:
         logger.info(
-            f"    └─ Split from {original_combined_count:,} original blocks (chunks > {actual_max_block_size})"
-        )
-    logger.info(
-        f"  First Word Only Blocks: {first_word_only_count:,} blocks, {first_word_only_companies_count:,} companies"
-    )
-    if first_word_only_count != original_first_word_count:
-        logger.info(f"    └─ Split from {original_first_word_count:,} original blocks")
-    logger.info(
-        f"  Acronym Only Blocks: {acronym_only_count:,} blocks, {acronym_only_companies_count:,} companies"
-    )
-    if acronym_only_count != original_acronym_count:
-        logger.info(f"    └─ Split from {original_acronym_count:,} original blocks")
-    if unblocked_count > 0:
-        logger.info(
-            f"  Unblocked (no valid keys): {unblocked_count:,} singleton blocks, {unblocked_count:,} companies"
+            f"  Blocks split (> {actual_max_block_size}): {blocks_before:,} → {blocks_after:,}"
         )
     logger.info("")
     logger.info("BLOCK STATISTICS:")
-    logger.info(f"  Total blocks created: {total_blocks:,}")
     logger.info(
         f"  Singleton blocks (no match possible): {singleton_blocks:,} ({singleton_blocks / total_blocks * 100:.1f}%)"
     )
@@ -797,20 +649,19 @@ def build_blocks(
         f"  Multi-company blocks (matchable): {multi_company_blocks:,} ({multi_company_blocks / total_blocks * 100:.1f}%)"
     )
     logger.info(f"  Maximum block size: {actual_max_block_size} companies")
-    logger.info(f"  Company instances across blocks: {total_company_instances:,}")
-    logger.info(
-        f"  Duplication factor: {duplication_factor:.2f}x (companies appear in multiple blocks)"
-    )
     logger.info("")
-    logger.info("OUTPUT FILES:")
-    logger.info(f"  Combined blocks: {combined_blocks_path}")
-    logger.info(f"  First word blocks: {first_word_path}")
-    logger.info(f"  Acronym blocks: {acronym_path}")
-    logger.info(f"  All blocks unified: {union_blocks_path}")
+    logger.info("OUTPUT FILE:")
+    logger.info(f"  {strategy_output_path}")
+    logger.info("")
+    logger.info("NEXT STEP:")
+    logger.info(
+        f"  Run matching with: abzu process er match names --iteration N --strategy {strategy}"
+    )
     logger.info("=" * 60)
 
     # Clean up
     companies_with_block_keys_df.unpersist()
+    blocks_final.unpersist()
     if stop_spark:
         spark.stop()
 
