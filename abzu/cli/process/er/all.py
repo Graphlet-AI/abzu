@@ -211,6 +211,9 @@ def all(
     click.echo(f"     • Processed {block_metrics['input_companies']:,} companies")
     click.echo(f"     • Created {block_metrics['blocks_created']:,} blocks")
     click.echo(f"     • Largest block: {block_metrics['largest_block']:,} companies")
+    click.echo("     • Top 10 largest blocks:")
+    for block in block_metrics["top_blocks"]:
+        click.echo(f"       - {block['block_key']}: {block['block_size']:,} companies")
     click.echo(f"     • Throughput: {block_throughput:,.0f} companies/sec")
     click.echo()
     click.echo(f"  2. Matching ({timedelta(seconds=int(match_time))}):")

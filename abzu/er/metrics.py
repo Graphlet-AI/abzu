@@ -1,7 +1,21 @@
+from typing import Any, TypedDict
+
 import pandas as pd
 
 
-def get_blocking_metrics(input_path: str, blocks_path: str) -> dict[str, int]:
+class BlockInfo(TypedDict):
+    block_key: str
+    block_size: int
+
+
+class BlockingMetrics(TypedDict):
+    input_companies: int
+    blocks_created: int
+    largest_block: int
+    top_blocks: list[BlockInfo]
+
+
+def get_blocking_metrics(input_path: str, blocks_path: str) -> BlockingMetrics:
     """Extract key metrics from blocking stage output (Parquet files)."""
     # Read input companies (Parquet)
     input_df = pd.read_parquet(input_path)
@@ -14,10 +28,18 @@ def get_blocking_metrics(input_path: str, blocks_path: str) -> dict[str, int]:
     # Get largest block size
     largest_block = blocks_df["block_size"].max() if "block_size" in blocks_df.columns else 0
 
+    # Get top 10 largest blocks with their keys
+    top_blocks: list[Any] = []
+    if "block_size" in blocks_df.columns and "block_key" in blocks_df.columns:
+        top_blocks = blocks_df.nlargest(10, "block_size")[["block_key", "block_size"]].to_dict(
+            "records"
+        )
+
     return {
         "input_companies": input_count,
         "blocks_created": blocks_count,
         "largest_block": int(largest_block),
+        "top_blocks": top_blocks,
     }
 
 
