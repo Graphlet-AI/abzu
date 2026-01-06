@@ -81,3 +81,52 @@ def get_evaluation_metrics(eval_path: str, metrics_path: str) -> dict[str, int |
         "final_companies": int(metrics.get("total_output_companies", 0)),
         "reduction_pct": float(metrics.get("total_reduction_pct", 0.0)),
     }
+
+
+class IterationMetrics(TypedDict):
+    iteration: int
+    blocks: int
+    companies_in: int
+    companies_out: int
+    reduction_pct: float
+
+
+def get_all_iteration_metrics(
+    current_iteration: int, base_path: str = "data/er/iterations"
+) -> list[IterationMetrics]:
+    """Collect metrics from all iterations 1 through current_iteration.
+
+    Args:
+        current_iteration: The current iteration number
+        base_path: Base path for iteration data
+
+    Returns:
+        List of metrics dictionaries, one per iteration
+    """
+    from pathlib import Path
+
+    results: list[IterationMetrics] = []
+
+    for i in range(1, current_iteration + 1):
+        metrics_path = Path(base_path) / str(i) / "er_evaluation_metrics.parquet"
+
+        if not metrics_path.exists():
+            continue
+
+        try:
+            df = pd.read_parquet(metrics_path)
+            row = df.iloc[0]
+
+            results.append(
+                {
+                    "iteration": i,
+                    "blocks": int(row.get("total_blocks", 0)),
+                    "companies_in": int(row.get("total_original_companies", 0)),
+                    "companies_out": int(row.get("total_output_companies", 0)),
+                    "reduction_pct": float(row.get("total_reduction_pct", 0.0)),
+                }
+            )
+        except Exception:
+            continue
+
+    return results

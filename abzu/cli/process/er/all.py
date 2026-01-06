@@ -9,6 +9,7 @@ import click
 
 from abzu.config import config
 from abzu.er.metrics import (
+    get_all_iteration_metrics,
     get_blocking_metrics,
     get_evaluation_metrics,
     get_matching_metrics,
@@ -247,6 +248,29 @@ def all(
     click.echo(f"  Resolved companies: {eval_path}")
     click.echo(f"  Evaluation metrics: {metrics_path}")
     click.echo()
+
+    # Print cross-iteration summary table
+    all_metrics = get_all_iteration_metrics(iteration)
+    if all_metrics:
+        click.echo("ITERATION HISTORY:")
+        click.echo(
+            "+" + "-" * 11 + "+" + "-" * 10 + "+" + "-" * 16 + "+" + "-" * 16 + "+" + "-" * 12 + "+"
+        )
+        click.echo(
+            f"| {'Iteration':^9} | {'Blocks':^8} | {'Companies In':^14} | {'Companies Out':^14} | {'Reduction':^10} |"
+        )
+        click.echo(
+            "+" + "-" * 11 + "+" + "-" * 10 + "+" + "-" * 16 + "+" + "-" * 16 + "+" + "-" * 12 + "+"
+        )
+        for m in all_metrics:
+            click.echo(
+                f"| {m['iteration']:^9} | {m['blocks']:>8,} | {m['companies_in']:>14,} | {m['companies_out']:>14,} | {m['reduction_pct']:>9.1f}% |"
+            )
+        click.echo(
+            "+" + "-" * 11 + "+" + "-" * 10 + "+" + "-" * 16 + "+" + "-" * 16 + "+" + "-" * 12 + "+"
+        )
+        click.echo()
+
     click.echo("✓ Entity resolution cycle completed successfully!")
     click.echo(
         "  Next step: Run iteration {0} with resolved companies as input".format(iteration + 1)
