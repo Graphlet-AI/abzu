@@ -70,7 +70,7 @@ def get_matching_metrics(matches_path: str) -> dict[str, int]:
     }
 
 
-def get_evaluation_metrics(eval_path: str, metrics_path: str) -> dict[str, int | float]:
+def get_evaluation_metrics(metrics_path: str) -> dict[str, int | float]:
     """Extract key metrics from evaluation stage output (Parquet files)."""
     # Read metrics (Parquet)
     metrics_df = pd.read_parquet(metrics_path)
