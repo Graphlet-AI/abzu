@@ -47,7 +47,7 @@ arxiv = "^2.2.0"
 anthropic = "^0.51.0"
 lxml = "^5.4.0"
 praw = "^7.8.1"
-sentence-transformers = "^5.0.0"
+sentence-transformers = ">=5.2.0"
 dapr = "^1.15.0"
 wikipedia = "^1.4.0"
 mwparserfromhell = "^0.7.2"
@@ -60,6 +60,7 @@ sparkdantic = {git = "https://github.com/Graphlet-AI/sparkdantic.git", rev = "fi
 wandb = "0.23.0"
 sec-edgar-api = "^1.1.0"
 pyspark-mcp = ">=0.0.3"
+mlflow = ">=3.8.1"
 
 [tool.poetry.group.dev.dependencies]
 flake8 = "^7.2.0"

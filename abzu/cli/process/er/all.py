@@ -1,148 +1,22 @@
 """CLI for running complete entity resolution cycle (block, match, eval)."""
 
-import json
 import os
 import time
 from datetime import timedelta
 from pathlib import Path
 
 import click
-import pandas as pd
 
 from abzu.config import config
+from abzu.er.metrics import (
+    get_all_iteration_metrics,
+    get_blocking_metrics,
+    get_evaluation_metrics,
+    get_matching_metrics,
+)
 from abzu.logs import get_logger
 
 logger = get_logger(__name__)
-
-
-def get_blocking_metrics(input_path: str, blocks_path: str) -> dict[str, int]:
-    """Extract key metrics from blocking stage output."""
-    try:
-        # Read input companies - handle both file and Spark directory
-        input_path_obj = Path(input_path)
-        if input_path_obj.is_dir():
-            # Spark directory - read all part files
-            part_files = list(input_path_obj.glob("part-*.json"))
-            if part_files:
-                input_df = pd.concat([pd.read_json(f, lines=True) for f in part_files])
-            else:
-                return {"input_companies": 0, "blocks_created": 0, "largest_block": 0}
-        else:
-            input_df = pd.read_json(input_path, lines=True)
-        input_count = len(input_df)
-
-        # Read blocks - handle both file and Spark directory
-        blocks_path_obj = Path(blocks_path)
-        if blocks_path_obj.is_dir():
-            # Spark directory - read all part files
-            part_files = list(blocks_path_obj.glob("part-*.json"))
-            if part_files:
-                blocks_df = pd.concat([pd.read_json(f, lines=True) for f in part_files])
-            else:
-                return {"input_companies": input_count, "blocks_created": 0, "largest_block": 0}
-        else:
-            blocks_df = pd.read_json(blocks_path, lines=True)
-        blocks_count = len(blocks_df)
-
-        # Get largest block size
-        largest_block = blocks_df["block_size"].max() if "block_size" in blocks_df.columns else 0
-
-        return {
-            "input_companies": input_count,
-            "blocks_created": blocks_count,
-            "largest_block": largest_block,
-        }
-    except Exception as e:
-        logger.warning(f"Could not extract blocking metrics: {e}")
-        return {"input_companies": 0, "blocks_created": 0, "largest_block": 0}
-
-
-def get_matching_metrics(matches_path: str) -> dict[str, int]:
-    """Extract key metrics from matching stage output."""
-    try:
-        # Read matches - handle both file and Spark directory
-        matches_path_obj = Path(matches_path)
-        if matches_path_obj.is_dir():
-            # Spark directory - read all part files
-            part_files = list(matches_path_obj.glob("part-*.json"))
-            if part_files:
-                matches_df = pd.concat([pd.read_json(f, lines=True) for f in part_files])
-            else:
-                return {"blocks_processed": 0, "total_companies": 0, "skipped": 0}
-        else:
-            matches_df = pd.read_json(matches_path, lines=True)
-        blocks_processed = len(matches_df)
-
-        # Explode resolved companies to count them
-        resolved_companies = []
-        for _, row in matches_df.iterrows():
-            companies = row.get("resolved_companies", [])
-            if isinstance(companies, list):
-                resolved_companies.extend(companies)
-
-        total_companies = len(resolved_companies)
-
-        # Count skipped/singletons
-        skipped = sum(
-            1 for c in resolved_companies if isinstance(c, dict) and c.get("match_skip") is True
-        )
-
-        return {
-            "blocks_processed": blocks_processed,
-            "total_companies": total_companies,
-            "skipped": skipped,
-        }
-    except Exception as e:
-        logger.warning(f"Could not extract matching metrics: {e}")
-        return {"blocks_processed": 0, "total_companies": 0, "skipped": 0}
-
-
-def get_evaluation_metrics(eval_path: str, metrics_path: str) -> dict[str, int | float]:
-    """Extract key metrics from evaluation stage output."""
-    try:
-        # Try to read the metrics JSON file first (more accurate)
-        metrics_path_obj = Path(metrics_path)
-        if metrics_path_obj.exists():
-            if metrics_path_obj.is_dir():
-                # Spark directory - read part file
-                part_files = sorted(list(metrics_path_obj.glob("part-*.json")))
-                if part_files:
-                    with open(part_files[0]) as f:
-                        metrics = json.load(f)
-                else:
-                    raise FileNotFoundError("No part files in metrics directory")
-            else:
-                # Single file
-                with open(metrics_path) as f:
-                    metrics = json.load(f)
-
-            return {
-                "original_companies": metrics.get("total_original_companies", 0),
-                "final_companies": metrics.get("total_output_companies", 0),
-                "reduction_pct": metrics.get("total_reduction_pct", 0.0),
-            }
-
-        # Fallback: read the resolved companies file
-        eval_path_obj = Path(eval_path)
-        if eval_path_obj.is_dir():
-            # Spark directory - read all part files
-            part_files = list(eval_path_obj.glob("part-*.json"))
-            if part_files:
-                eval_df = pd.concat([pd.read_json(f, lines=True) for f in part_files])
-            else:
-                return {"original_companies": 0, "final_companies": 0, "reduction_pct": 0.0}
-        else:
-            eval_df = pd.read_json(eval_path, lines=True)
-        final_count = len(eval_df)
-
-        return {
-            "original_companies": 0,
-            "final_companies": final_count,
-            "reduction_pct": 0.0,
-        }
-    except Exception as e:
-        logger.warning(f"Could not extract evaluation metrics: {e}")
-        return {"original_companies": 0, "final_companies": 0, "reduction_pct": 0.0}
 
 
 @click.command(context_settings={"show_default": True})
@@ -213,10 +87,10 @@ def all(
 
     # Configure paths based on iteration
     if iteration > 1:
-        # For later iterations, use previous iteration's resolved companies
+        # For later iterations, use previous iteration's resolved companies (Parquet)
         prev_iteration = iteration - 1
         companies_path = config.get("process.kg.er.paths.names.eval").format(
-            iteration=prev_iteration, format="json"
+            iteration=prev_iteration
         )
     else:
         companies_path = config.get("process.kg.er.paths.input")
@@ -296,7 +170,7 @@ def all(
 
         # Extract and display evaluation metrics
         eval_dir = str(Path(eval_path).parent)
-        metrics_path = str(Path(eval_dir) / "er_evaluation_metrics.json")
+        metrics_path = str(Path(eval_dir) / "er_evaluation_metrics.parquet")
         eval_metrics = get_evaluation_metrics(eval_path, metrics_path)
         click.echo(f"✓ Evaluation completed in {timedelta(seconds=int(eval_time))}")
         click.echo(f"  • Original companies: {eval_metrics['original_companies']:,}")
@@ -338,6 +212,9 @@ def all(
     click.echo(f"     • Processed {block_metrics['input_companies']:,} companies")
     click.echo(f"     • Created {block_metrics['blocks_created']:,} blocks")
     click.echo(f"     • Largest block: {block_metrics['largest_block']:,} companies")
+    click.echo("     • Top 10 largest blocks:")
+    for block in block_metrics["top_blocks"]:
+        click.echo(f"       - {block['block_key']}: {block['block_size']:,} companies")
     click.echo(f"     • Throughput: {block_throughput:,.0f} companies/sec")
     click.echo()
     click.echo(f"  2. Matching ({timedelta(seconds=int(match_time))}):")
@@ -371,6 +248,29 @@ def all(
     click.echo(f"  Resolved companies: {eval_path}")
     click.echo(f"  Evaluation metrics: {metrics_path}")
     click.echo()
+
+    # Print cross-iteration summary table
+    all_metrics = get_all_iteration_metrics(iteration)
+    if all_metrics:
+        click.echo("ITERATION HISTORY:")
+        click.echo(
+            "+" + "-" * 11 + "+" + "-" * 10 + "+" + "-" * 16 + "+" + "-" * 16 + "+" + "-" * 12 + "+"
+        )
+        click.echo(
+            f"| {'Iteration':^9} | {'Blocks':^8} | {'Companies In':^14} | {'Companies Out':^14} | {'Reduction':^10} |"
+        )
+        click.echo(
+            "+" + "-" * 11 + "+" + "-" * 10 + "+" + "-" * 16 + "+" + "-" * 16 + "+" + "-" * 12 + "+"
+        )
+        for m in all_metrics:
+            click.echo(
+                f"| {m['iteration']:^9} | {m['blocks']:>8,} | {m['companies_in']:>14,} | {m['companies_out']:>14,} | {m['reduction_pct']:>9.1f}% |"
+            )
+        click.echo(
+            "+" + "-" * 11 + "+" + "-" * 10 + "+" + "-" * 16 + "+" + "-" * 16 + "+" + "-" * 12 + "+"
+        )
+        click.echo()
+
     click.echo("✓ Entity resolution cycle completed successfully!")
     click.echo(
         "  Next step: Run iteration {0} with resolved companies as input".format(iteration + 1)

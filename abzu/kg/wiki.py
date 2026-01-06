@@ -1,44 +1,34 @@
 """Wikipedia enrichment module for companies."""
 
 import asyncio
-import glob
-import os
-from typing import Any
+from typing import Any, cast
 
 import aiohttp
+import pandas as pd
 from tqdm.asyncio import tqdm as atqdm
 
 from abzu.api.wiki import crawl_company_structured_async
 from abzu.config import config
 from abzu.logs import get_logger
-from abzu.utils import load_jsonl, save_jsonl
+from abzu.utils import save_jsonl
 
 logger = get_logger(__name__)
 
 
 def load_companies(companies_path: str) -> list[dict[str, Any]]:
-    """Load companies from JSONL file or Spark output directory.
+    """Load companies from Parquet file.
 
     Args:
-        companies_path: Path to the companies.jsonl file or Spark output directory
+        companies_path: Path to the companies Parquet file
 
     Returns:
         List of company dictionaries
     """
     logger.info(f"Loading companies from {companies_path}")
 
-    # Handle Spark output directory (contains part-*.json files)
-    if os.path.isdir(companies_path):
-        part_files = glob.glob(os.path.join(companies_path, "part-*.json"))
-        if part_files:
-            companies: list[dict[str, Any]] = []
-            for part_file in sorted(part_files):
-                companies.extend(load_jsonl(part_file))
-            logger.info(f"Loaded {len(companies):,} companies from Spark output directory")
-            return companies
-
-    # Regular JSONL file
-    companies = load_jsonl(companies_path)
+    # Read Parquet file
+    df = pd.read_parquet(companies_path)
+    companies = cast(list[dict[str, Any]], df.to_dict("records"))
     logger.info(f"Loaded {len(companies):,} companies")
     return companies
 
