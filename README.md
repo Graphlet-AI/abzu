@@ -6,35 +6,12 @@ A Knowledge Graph Bloomberg Terminal™ + Waters of wisdom... knowledge graph of
 
 ## Quick Start
 
-There are two ways to run Abzu:
-
-1. **Docker Setup**: Uses containers for a consistent environment
-2. **Local Setup**: Install directly on your machine
-
 ### System Requirements
 
 - Python 3.12
 - Java 11 (for Apache Spark)
-- Apache Spark 3.5.5
+- Apache Spark 3.5+
 - 4GB+ RAM recommended (for Spark processing)
-
-## Docker Setup Guide
-
-The easiest way to get started with Abzu is using Docker and Taskfile. This ensures a consistent development environment across all machines.
-
-### Pre-Requisites
-
-#### For Linux
-
-- Docker
-- Docker Compose
-- Bash shell
-
-#### For macOS
-
-- Docker Desktop (includes Docker and Docker Compose)
-- Zsh shell (default on macOS)
-- At least 4GB RAM allocated to Docker Desktop
 
 ### Initial Setup
 
@@ -45,131 +22,37 @@ git clone https://github.com/abzuc/abzu.git
 cd abzu
 ```
 
-2. Make the setup script executable and run it:
+2. Run the CLI to see the features the app has:
 
 ```bash
-chmod +x setup.sh
-./setup.sh
+./abzu --help
 ```
 
-The setup script will:
-
-- Detect your operating system (Linux or macOS)
-- Check for required dependencies (Docker and Docker Compose)
-- Install the appropriate version of Taskfile for your system
-- Add Taskfile to your PATH
-- Build the Docker container with all required dependencies
-
-3. After running the setup script, either:
-
-   - Run `source ~/.bashrc` (Linux) or `source ~/.zshrc` (macOS) to update your current shell
-   - Or restart your terminal
-
-4. Verify the installation:
-
-```bash
-task --version
-```
-
-### Running with Docker
-
-#### Method 1: Using Task Commands
-
-Taskfile provides convenient commands for common development tasks:
-
-```bash
-# Start the development container
-task up
-
-# Check service status
-task status
-
-# Stop the container
-task down
-
-# Open a shell in the container
-task shell
-
-# Run the crawler
-task crawl semianalysis
-task crawl theinformation
-
-# Process articles
-task process semianalysis
-task process theinformation
-
-# Process knowledge graph
-task kg raw
-task kg refine
-
-# Run API commands
-task api financialdatasets facts -f
-
-# Run tests
-task test
-
-# Run linting
-task lint
-
-# Format code
-task format
-
-# Clean up Docker resources
-task clean
-
-# Show all available tasks
-task help
-```
-
-#### Method 2: Using Container Shell
-
-1. Start the services:
-
-```bash
-task up
-```
-
-2. Open a shell in the container:
-
-```bash
-task shell
-```
-
-3. Inside the container, run commands with Poetry:
+3. Run commands:
 
 ```bash
 # Show help
-poetry run abzu --help
+abzu --help
 
 # Run crawler
-poetry run abzu crawl semianalysis
+abzu crawl semianalysis -b 10
 
 # Process articles
-poetry run abzu process articles semianalysis
+abzu process articles semianalysis
 
 # Process knowledge graph
-poetry run abzu process kg raw
+abzu process kg raw
 ```
-
-### Development Environment Features
-
-The Docker setup provides:
-
-- Jupyter Notebook server running on port 8888
-- Live code reloading (changes are reflected immediately)
-- Persistent data storage in the `data` directory
-- All dependencies managed by Poetry inside the container
-- Support for both local and distributed Spark modes
 
 ## Local Setup
 
-If you prefer not to use Docker, you can set up the project directly on your machine.
+You can set up the project directly on your machine.
 
 ### Pre-Requisites
 
 1. Python 3.12
 2. Java 11
-3. Apache Spark 3.5.5
+3. Apache Spark 3.5+
 
 ### Installation Steps
 
@@ -249,6 +132,13 @@ abzu process articles semianalysis
 
 # Process knowledge graph
 abzu process kg raw
+
+# Entity resolution
+abzu process er all --iteration 1 -m 50 -b 40
+abzu process er all --iteration 2 -m 50 -b 40
+abzu process er all --iteration 3 -m 50 -b 40
+abzu process er all --iteration 4 -m 50 -b 40
+abzu process er all --iteration 5 -m 50 -b 40
 ```
 
 ## Spark Processing Modes
