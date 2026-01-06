@@ -139,7 +139,7 @@ class Ticker {
 
 class Company {
   id int
-  @description("Unique among all objects. Add to source_ids when merging.")
+  @description("Unique among all objects. Add to source_ids when merging, never drop an id. Always remember and keep track of them when merging nodes.")
 
   uuid string?
   @description("A unique identifier for this object.")

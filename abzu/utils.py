@@ -616,6 +616,7 @@ def append_jsonl(
     try:
         with open(path, "a", encoding="utf-8") as f:
             f.write(json.dumps(data, ensure_ascii=False) + "\n")
+            f.flush()
         return True
     except Exception as e:
         logger.error(f"Failed to append data to {path}: {e}")
