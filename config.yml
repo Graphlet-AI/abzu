@@ -170,6 +170,8 @@ process:
           eval: "${base_dir}/er/iterations/{iteration}/companies_resolved.parquet"
       max_block_size: 50
       iteration: 3
+      model:
+        blocker: "intfloat/multilingual-e5-base"
 
     refine:
       input:
