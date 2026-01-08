@@ -100,6 +100,10 @@ Download and use the [Bloomberg Exchange codes](https://www.inforeachinc.com/wp-
 - **Matching**: LLM-based pairwise entity comparison. See @abzu/er/match.py
 - **Evaluation**: Precision/recall metrics against ground truth
 
+### Edge Resolution
+
+Merging duplicate edges between nodes post-entity resolution. See @markdown/EDGES.md
+
 ## Code Style
 
 - KISS: KEEP IT SIMPLE STUPID. Do not over-engineer solutions. ESPECIALLY for Spark / PySpark.
