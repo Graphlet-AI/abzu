@@ -118,7 +118,7 @@ class TestCompanyEmbedder:
         result = embedder.encode([], show_progress=False)
 
         assert isinstance(result, np.ndarray)
-        assert result.shape[0] == 0
+        assert result.shape == (0, 768)
 
     @patch("abzu.er.embeddings.SentenceTransformer")
     @patch("abzu.er.embeddings.get_torch_device")
