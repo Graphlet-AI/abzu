@@ -63,7 +63,7 @@ class CompanyEmbedder:
         -------
         np.ndarray
             Normalized embedding vectors of shape (n, embedding_dim).
-            For E5-large-base, embedding_dim is 768.
+            For multilingual-e5-base, embedding_dim is 768.
         """
 
         logger.info(f"Encoding {len(names):,} company names...")
