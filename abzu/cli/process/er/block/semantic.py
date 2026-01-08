@@ -37,7 +37,7 @@ from abzu.config import config
 @click.option(
     "--max-distance",
     "-d",
-    default=0.01,
+    default=None,
     type=float,
     help="Maximum distance threshold for clustering",
 )
