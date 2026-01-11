@@ -169,7 +169,7 @@ def match_entities(
             f"Please run the blocking step first:\n"
             f"  abzu process er block names --iteration {iteration}\n\n"
             f"Or run the complete pipeline:\n"
-            f"  abzu process er all names --iteration {iteration}"
+            f"  abzu process er all --iteration {iteration}"
         )
         logger.error(error_msg)
         raise FileNotFoundError(error_msg)

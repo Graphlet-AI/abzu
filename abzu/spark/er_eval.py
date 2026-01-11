@@ -59,7 +59,7 @@ def evaluate_er_matches(
             f"Please run the match step first:\n"
             f"  abzu process er match names --iteration {iteration}\n\n"
             f"Or run the complete pipeline:\n"
-            f"  abzu process er all names --iteration {iteration}"
+            f"  abzu process er all --iteration {iteration}"
         )
         logger.error(error_msg)
         raise FileNotFoundError(error_msg)
