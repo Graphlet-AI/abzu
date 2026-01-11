@@ -39,7 +39,7 @@ from abzu.config import config
     "-d",
     default=None,
     type=float,
-    help="Maximum distance threshold for clustering",
+    help="Maximum cosine distance threshold (None=no filtering, see output for recommendations)",
 )
 @click.option(
     "--batch-size",
@@ -53,16 +53,17 @@ def semantic(
     companies_path: str | None,
     output_path: str | None,
     target_block_size: int,
-    max_distance: float,
+    max_distance: float | None,
     batch_size: int,
 ) -> None:
     """Build semantic embedding-based blocks for entity resolution.
 
-    Uses KMeans clustering on E5-large-instruct embeddings to group
-    semantically similar company names into blocks.
+    Uses FAISS IVF clustering on E5-base embeddings to group semantically
+    similar company names into blocks. Outputs detailed analysis including
+    cosine distance distribution and Levenshtein distance metrics to help
+    tune parameters.
 
-    This is typically used as a second stage after heuristic blocking
-    to catch matches that name-based strategies miss.
+    Run without --max-distance first to see recommendations based on your data.
     """
     from abzu.spark.er_block_semantic import build_semantic_blocks
 
