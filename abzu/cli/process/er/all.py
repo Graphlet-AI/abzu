@@ -89,16 +89,14 @@ def all(
     if iteration > 1:
         # For later iterations, use previous iteration's resolved companies (Parquet)
         prev_iteration = iteration - 1
-        companies_path = config.get("process.kg.er.paths.names.eval").format(
-            iteration=prev_iteration
-        )
+        companies_path = config.get("process.kg.er.paths.eval").format(iteration=prev_iteration)
     else:
         companies_path = config.get("process.kg.er.paths.input")
 
-    blocks_dir = config.get("process.kg.er.paths.names.blocks_dir").format(iteration=iteration)
-    blocks_path = config.get("process.kg.er.paths.names.blocks").format(iteration=iteration)
-    matches_path = config.get("process.kg.er.paths.names.matches").format(iteration=iteration)
-    eval_path = config.get("process.kg.er.paths.names.eval").format(iteration=iteration)
+    blocks_dir = config.get("process.kg.er.paths.blocks_dir").format(iteration=iteration)
+    blocks_path = config.get("process.kg.er.paths.blocks").format(iteration=iteration)
+    matches_path = config.get("process.kg.er.paths.matches").format(iteration=iteration)
+    eval_path = config.get("process.kg.er.paths.eval").format(iteration=iteration)
 
     # Step 1: Blocking
     click.echo(f"[1/3] BLOCKING (max_block_size={max_block_size})")
@@ -171,7 +169,7 @@ def all(
         # Extract and display evaluation metrics
         eval_dir = str(Path(eval_path).parent)
         metrics_path = str(Path(eval_dir) / "er_evaluation_metrics.parquet")
-        eval_metrics = get_evaluation_metrics(eval_path, metrics_path)
+        eval_metrics = get_evaluation_metrics(metrics_path)
         click.echo(f"✓ Evaluation completed in {timedelta(seconds=int(eval_time))}")
         click.echo(f"  • Original companies: {eval_metrics['original_companies']:,}")
         click.echo(f"  • Final companies: {eval_metrics['final_companies']:,}")

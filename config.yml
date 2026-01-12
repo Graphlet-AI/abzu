@@ -159,7 +159,13 @@ process:
       paths:
         input: "${process.kg.raw.output}/companies.parquet"
         output: "${base_dir}/er/"
-        # Names workflow paths (iteration subdirectories)
+        # Iteration-based paths for blocking, matching, and evaluation
+        blocks_dir: "${base_dir}/er/iterations/{iteration}/"
+        blocks: "${base_dir}/er/iterations/{iteration}/union_blocks.parquet"
+        semantic_blocks: "${base_dir}/er/iterations/{iteration}/semantic_blocks.parquet"
+        matches: "${base_dir}/er/iterations/{iteration}/matches.jsonl"
+        eval: "${base_dir}/er/iterations/{iteration}/companies_resolved.parquet"
+        # Legacy names paths (for backwards compatibility)
         names:
           blocks_dir: "${base_dir}/er/iterations/{iteration}/"
           blocks: "${base_dir}/er/iterations/{iteration}/union_blocks.parquet"

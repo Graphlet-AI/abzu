@@ -72,15 +72,13 @@ def semantic(
         if iteration > 1:
             # For later iterations, use previous iteration's resolved companies
             prev_iteration = iteration - 1
-            companies_path = config.get("process.kg.er.paths.names.eval").format(
-                iteration=prev_iteration
-            )
+            companies_path = config.get("process.kg.er.paths.eval").format(iteration=prev_iteration)
         else:
             companies_path = config.get("process.kg.er.paths.input")
 
     # Set output path if not provided
     if output_path is None:
-        output_path = config.get("process.kg.er.paths.names.blocks_dir").format(iteration=iteration)
+        output_path = config.get("process.kg.er.paths.blocks_dir").format(iteration=iteration)
 
     try:
         build_semantic_blocks(

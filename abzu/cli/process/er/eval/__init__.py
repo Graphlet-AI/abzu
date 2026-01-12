@@ -16,7 +16,7 @@ from abzu.config import config
 @click.option(
     "--matches-path",
     "-m",
-    default=config.get("process.kg.er.paths.names.matches"),
+    default=config.get("process.kg.er.paths.matches"),
     type=click.Path(exists=False, file_okay=True, dir_okay=True),
     help="Path to matches.jsonl file from match step",
 )
@@ -30,7 +30,7 @@ from abzu.config import config
 @click.option(
     "--output-path",
     "-o",
-    default=config.get("process.kg.er.paths.names.eval"),
+    default=config.get("process.kg.er.paths.eval"),
     type=click.Path(exists=False, file_okay=True, dir_okay=False),
     help="Path to save evaluation results",
 )

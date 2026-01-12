@@ -57,7 +57,7 @@ def evaluate_er_matches(
             f"Matches file not found: {matches_jsonl_path}\n\n"
             f"The evaluation step requires output from the match step.\n"
             f"Please run the match step first:\n"
-            f"  abzu process er match names --iteration {iteration}\n\n"
+            f"  abzu process er match --iteration {iteration}\n\n"
             f"Or run the complete pipeline:\n"
             f"  abzu process er all --iteration {iteration}"
         )

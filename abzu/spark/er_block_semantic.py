@@ -549,7 +549,7 @@ def build_semantic_blocks(
     logger.info("Converting to Spark DataFrame...")
     blocks_spark = spark.createDataFrame(blocks_pd)
 
-    # Save semantic blocks
+    # Save semantic blocks to output directory
     semantic_blocks_path = os.path.join(output_path, "semantic_blocks.parquet")
     logger.info(f"Saving semantic blocks to {semantic_blocks_path}")
     blocks_spark.repartition(1).write.mode("overwrite").parquet(semantic_blocks_path)
