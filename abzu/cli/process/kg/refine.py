@@ -30,15 +30,38 @@ from abzu.config import config
     default=None,
     help="Maximum number of companies to enrich with Wikipedia (for testing).",
 )
+@click.option(
+    "--edge-er/--no-edge-er",
+    "use_edge_er",
+    default=False,
+    help="Use LLM-based edge resolution instead of simple deduplication.",
+)
+@click.option(
+    "--edge-er-batch-size",
+    type=int,
+    default=config.get("process.kg.refine.edge_er.batch_size", 5),
+    help="Batch size for concurrent edge ER API calls.",
+)
+@click.option(
+    "--edge-er-min-block-size",
+    type=int,
+    default=config.get("process.kg.refine.edge_er.min_block_size", 2),
+    help="Minimum edges per (src, dst) pair to trigger edge ER.",
+)
 def refine(
     iteration: int,
     enrich_wiki: bool,
     wiki_batch_size: int,
     wiki_limit: int | None,
+    use_edge_er: bool,
+    edge_er_batch_size: int,
+    edge_er_min_block_size: int,
 ) -> int:
     """Refine knowledge graph by mapping relationships to resolved companies.
 
     Optionally enriches companies with Wikipedia data using --wiki flag.
+    Use --edge-er to enable LLM-based edge resolution for merging duplicate
+    relationships between the same pair of resolved companies.
     """
     # Import heavy module only when command is executed
     from abzu.kg.processor import process_refine_kg
@@ -60,4 +83,7 @@ def refine(
         enrich_wiki=enrich_wiki,
         wiki_batch_size=wiki_batch_size,
         wiki_limit=wiki_limit,
+        use_edge_er=use_edge_er,
+        edge_er_batch_size=edge_er_batch_size,
+        edge_er_min_block_size=edge_er_min_block_size,
     )

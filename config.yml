@@ -186,6 +186,10 @@ process:
       output:
         nodes: "${base_dir}/refined_knowledge_graph/nodes.parquet"
         edges: "${base_dir}/refined_knowledge_graph/edges.parquet"
+      edge_er:
+        enabled: false
+        batch_size: 5
+        min_block_size: 2
 
 chat:
   start:

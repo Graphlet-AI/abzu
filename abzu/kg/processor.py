@@ -177,6 +177,9 @@ def process_refine_kg(
     enrich_wiki: bool = False,
     wiki_batch_size: int = 5,
     wiki_limit: int | None = None,
+    use_edge_er: bool = False,
+    edge_er_batch_size: int = 5,
+    edge_er_min_block_size: int = 2,
 ) -> int:
     """Refine the knowledge graph by mapping relationships to resolved companies.
 
@@ -190,6 +193,9 @@ def process_refine_kg(
         enrich_wiki: Whether to enrich companies with Wikipedia data
         wiki_batch_size: Number of concurrent Wikipedia requests
         wiki_limit: Maximum number of companies to enrich (for testing)
+        use_edge_er: Whether to use LLM-based edge resolution
+        edge_er_batch_size: Batch size for concurrent edge ER API calls
+        edge_er_min_block_size: Minimum edges per (src, dst) pair to trigger edge ER
 
     Returns:
         0 on success, 1 on failure
@@ -203,7 +209,12 @@ def process_refine_kg(
     try:
         logger.info(f"Refining knowledge graph using ER iteration {iteration}...")
         refine_knowledge_graph(
-            input_paths=input_paths, output_paths=output_paths, iteration=iteration
+            input_paths=input_paths,
+            output_paths=output_paths,
+            iteration=iteration,
+            use_edge_er=use_edge_er,
+            edge_er_batch_size=edge_er_batch_size,
+            edge_er_min_block_size=edge_er_min_block_size,
         )
         logger.info("Knowledge graph refinement completed successfully")
 

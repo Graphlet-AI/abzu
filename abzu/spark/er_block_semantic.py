@@ -139,6 +139,7 @@ EMBED_SCRIPT = """
 import json
 import sys
 import numpy as np
+import torch
 from sentence_transformers import SentenceTransformer
 
 # Read input
@@ -151,9 +152,17 @@ with open(input_path, "r") as f:
     data = json.load(f)
 
 names = data["names"]
-print(f"Encoding {len(names)} company names with {model_name}...", file=sys.stderr)
 
-model = SentenceTransformer(model_name, device="cpu")
+# Detect best available device
+if torch.cuda.is_available():
+    device = "cuda"
+elif torch.backends.mps.is_available():
+    device = "mps"
+else:
+    device = "cpu"
+print(f"Encoding {len(names)} company names with {model_name} on {device}...", file=sys.stderr)
+
+model = SentenceTransformer(model_name, device=device)
 embeddings = model.encode(names, normalize_embeddings=True, batch_size=batch_size, show_progress_bar=True)
 
 np.save(output_path, embeddings)
@@ -184,10 +193,8 @@ with open(uuids_path, "r") as f:
 n, d = embeddings.shape
 print(f"Clustering {n} embeddings with {d} dimensions...", file=sys.stderr)
 
-# Calculate nlist
+# Calculate nlist (number of clusters = number of blocks)
 nlist = max(1, n // target_block_size)
-nlist = min(nlist, int(np.sqrt(n)))
-nlist = max(nlist, 1)
 print(f"Using nlist={nlist} clusters", file=sys.stderr)
 
 # Create and train index
@@ -543,13 +550,34 @@ def build_semantic_blocks(
             }
         )
 
+    # Create singleton blocks for companies filtered out (missing name/UUID)
+    invalid_companies = companies_pd[~valid_mask]
+    if len(invalid_companies) > 0:
+        logger.warning(
+            f"Creating {len(invalid_companies)} singleton blocks for companies "
+            f"with missing names/UUIDs"
+        )
+        for _, row in invalid_companies.iterrows():
+            company_data = row.to_dict()
+            cleaned = _clean_none_values(company_data)
+            if cleaned:
+                company_uuid = row.get("uuid", "unknown")
+                rows.append(
+                    {
+                        "block_key": f"unblocked_{company_uuid}",
+                        "block_key_type": "unblocked",
+                        "companies": [cleaned],
+                        "block_size": 1,
+                    }
+                )
+
     blocks_pd = pd.DataFrame(rows)
 
     # Convert to Spark DataFrame and save
     logger.info("Converting to Spark DataFrame...")
     blocks_spark = spark.createDataFrame(blocks_pd)
 
-    # Save semantic blocks to output directory
+    # Save to semantic_blocks.parquet only (don't overwrite union_blocks.parquet from name blocking)
     semantic_blocks_path = os.path.join(output_path, "semantic_blocks.parquet")
     logger.info(f"Saving semantic blocks to {semantic_blocks_path}")
     blocks_spark.repartition(1).write.mode("overwrite").parquet(semantic_blocks_path)

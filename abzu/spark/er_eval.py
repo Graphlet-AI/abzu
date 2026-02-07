@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Entity resolution match evaluation using PySpark."""
+
 import logging
 import os
 from typing import Optional
@@ -120,6 +121,14 @@ def evaluate_er_matches(
             logger.info(
                 f"Previous iteration ({prev_iteration}) output not found at {prev_iteration_path}, skipping comparison"
             )
+
+    # Calculate the actual input to THIS iteration (not the raw original)
+    # For iteration 1: input is the raw companies
+    # For iteration 2+: input is the previous iteration's output
+    if iteration == 1 or previous_iteration_df is None:
+        iteration_input_companies = original_raw_companies_df.count()
+    else:
+        iteration_input_companies = previous_iteration_df.count()
 
     total_blocks = blocks_df.count()
     total_companies = matches_df.count()
@@ -422,6 +431,7 @@ def evaluate_er_matches(
         (
             iteration,
             total_blocks,
+            iteration_input_companies,
             total_original_companies,
             companies_that_went_into_matching,
             skipped_records,
@@ -449,6 +459,7 @@ def evaluate_er_matches(
         [
             StructField("iteration", IntegerType(), False),
             StructField("total_blocks", LongType(), False),
+            StructField("iteration_input_companies", LongType(), False),
             StructField("total_original_companies", LongType(), False),
             StructField("companies_that_went_into_matching", LongType(), False),
             StructField("skipped_records", LongType(), False),
