@@ -14,13 +14,19 @@ from typing import Any, Optional
 
 import numpy as np
 import pandas as pd
+import pyspark.sql.functions as F
 from Levenshtein import distance as levenshtein_distance
 from pyspark.sql import SparkSession
+from pyspark.sql.types import ArrayType
 
 from abzu.config import config
 from abzu.logs import get_logger
 from abzu.spark.config import get_spark_session
-from abzu.spark.schemas import normalize_company_dataframe
+from abzu.spark.schemas import (
+    get_company_fields_without_blocks,
+    normalize_company_dataframe,
+)
+from abzu.spark.utils import create_split_large_blocks_udtf
 
 logger = get_logger(__name__)
 
@@ -514,9 +520,6 @@ def build_semantic_blocks(
 
     logger.info(f"Created {len(blocks):,} semantic blocks")
 
-    # Build UUID to company data mapping
-    uuid_to_company = valid_companies_pd.set_index("uuid").to_dict("index")
-
     # Phase 3: Compute Levenshtein distance statistics for each block
     logger.info("Phase 3: Computing Levenshtein distance statistics...")
     block_levenshtein_stats: dict[str, dict[str, Any]] = {}
@@ -527,30 +530,17 @@ def build_semantic_blocks(
         block_names[block_key] = names_in_block
         block_levenshtein_stats[block_key] = _compute_block_levenshtein_stats(names_in_block)
 
-    # Convert blocks to DataFrame format
-    logger.info("Converting blocks to DataFrame format...")
-    rows = []
+    # Build blocks in Spark using the same canonical struct as er_block.py
+    # This ensures the companies struct schema is identical across blocking methods
+    logger.info("Building blocks DataFrame in Spark...")
+
+    # Create a mapping DataFrame: block_key -> uuid
+    block_assignment_rows = []
     for block_key, block_uuids in blocks.items():
-        companies = []
-        for uuid in block_uuids:
-            if uuid in uuid_to_company:
-                company_data = uuid_to_company[uuid].copy()
-                company_data["uuid"] = uuid
-                # Recursively clean None values from nested dicts to avoid VOID type in Parquet
-                cleaned_data = _clean_none_values(company_data)
-                if cleaned_data is not None:
-                    companies.append(cleaned_data)
+        for uuid_val in block_uuids:
+            block_assignment_rows.append((block_key, "semantic", uuid_val))
 
-        rows.append(
-            {
-                "block_key": block_key,
-                "block_key_type": "semantic",
-                "companies": companies,
-                "block_size": len(companies),
-            }
-        )
-
-    # Create singleton blocks for companies filtered out (missing name/UUID)
+    # Add singleton blocks for invalid companies (missing name/UUID)
     invalid_companies = companies_pd[~valid_mask]
     if len(invalid_companies) > 0:
         logger.warning(
@@ -558,35 +548,99 @@ def build_semantic_blocks(
             f"with missing names/UUIDs"
         )
         for _, row in invalid_companies.iterrows():
-            company_data = row.to_dict()
-            cleaned = _clean_none_values(company_data)
-            if cleaned:
-                company_uuid = row.get("uuid", "unknown")
-                rows.append(
-                    {
-                        "block_key": f"unblocked_{company_uuid}",
-                        "block_key_type": "unblocked",
-                        "companies": [cleaned],
-                        "block_size": 1,
-                    }
-                )
+            company_uuid = row.get("uuid", "unknown")
+            block_assignment_rows.append(
+                (f"unblocked_{company_uuid}", "unblocked", str(company_uuid))
+            )
 
-    blocks_pd = pd.DataFrame(rows)
+    block_assignments_df = spark.createDataFrame(
+        block_assignment_rows, schema="block_key string, block_key_type string, uuid string"
+    )
 
-    # Convert to Spark DataFrame and save
-    logger.info("Converting to Spark DataFrame...")
-    blocks_spark = spark.createDataFrame(blocks_pd)
+    # Join with the normalized company DataFrame to get full company data
+    blocks_with_companies = block_assignments_df.join(companies_df, "uuid", how="inner")
+
+    # Build the company struct using the same canonical fields as er_block.py
+    company_fields = get_company_fields_without_blocks()
+    company_struct = F.struct(
+        *[
+            F.col(f) if f in blocks_with_companies.columns else F.lit(None).alias(f)
+            for f in company_fields
+        ]
+    )
+
+    # Group by block_key and collect companies into arrays
+    blocks_spark = (
+        blocks_with_companies.groupBy("block_key", "block_key_type")
+        .agg(
+            F.collect_list(company_struct).alias("companies"),
+            F.countDistinct("uuid").alias("block_size"),
+        )
+        .select("block_key", "block_key_type", "companies", "block_size")
+    )
+
+    # Split large blocks into smaller chunks using the shared UDTF
+    blocks_before_split = blocks_spark.count()
+    oversized_before = blocks_spark.filter(F.col("block_size") > target_block_size).count()
+
+    if oversized_before > 0:
+        logger.info(
+            f"Splitting {oversized_before} blocks exceeding max size of {target_block_size}..."
+        )
+
+        # Build UDTF return type from the DataFrame schema
+        companies_field = blocks_spark.schema["companies"]
+        companies_array_type = companies_field.dataType
+        assert isinstance(companies_array_type, ArrayType), "companies must be an ArrayType"
+        companies_schema = companies_array_type.elementType.simpleString()
+        udtf_return_type = (
+            f"block_key: string, block_key_type: string, "
+            f"companies: array<{companies_schema}>, "
+            f"block_size: long"
+        )
+
+        SplitLargeBlocks = create_split_large_blocks_udtf(udtf_return_type, target_block_size)
+        spark.udtf.register("split_large_blocks", SplitLargeBlocks)  # type: ignore[arg-type]
+
+        blocks_spark.createOrReplaceTempView("semantic_blocks_temp")
+        blocks_spark = spark.sql("""
+            SELECT udtf_output.* FROM semantic_blocks_temp,
+            LATERAL split_large_blocks(block_key, block_key_type, companies, block_size)
+            AS udtf_output
+            """)
+
+        blocks_after_split = blocks_spark.count()
+        new_blocks = blocks_after_split - blocks_before_split
+        logger.info(
+            f"Block splitting: {blocks_before_split} -> {blocks_after_split} "
+            f"(+{new_blocks} sub-blocks from {oversized_before} oversized blocks)"
+        )
+    else:
+        logger.info(f"No blocks exceed max size of {target_block_size}, no splitting needed")
 
     # Save to semantic_blocks.parquet only (don't overwrite union_blocks.parquet from name blocking)
     semantic_blocks_path = os.path.join(output_path, "semantic_blocks.parquet")
     logger.info(f"Saving semantic blocks to {semantic_blocks_path}")
     blocks_spark.repartition(1).write.mode("overwrite").parquet(semantic_blocks_path)
 
-    # Compute statistics
-    block_sizes: list[int] = [len(block_uuids) for block_uuids in blocks.values()]
-    singleton_count = sum(1 for s in block_sizes if s == 1)
-    multi_company_count = sum(1 for s in block_sizes if s > 1)
-    total_company_instances = sum(block_sizes)
+    # Compute statistics from pre-split FAISS clusters
+    pre_split_sizes: list[int] = [len(block_uuids) for block_uuids in blocks.values()]
+
+    # Compute post-split statistics from the final Spark DataFrame
+    final_stats = blocks_spark.agg(
+        F.count("*").alias("total_blocks"),
+        F.sum(F.when(F.col("block_size") == 1, 1).otherwise(0)).alias("singleton_count"),
+        F.sum(F.when(F.col("block_size") > 1, 1).otherwise(0)).alias("multi_company_count"),
+        F.sum("block_size").alias("total_instances"),
+        F.min("block_size").alias("min_size"),
+        F.max("block_size").alias("max_size"),
+        F.avg("block_size").alias("mean_size"),
+    ).collect()[0]
+
+    singleton_count = int(final_stats["singleton_count"])
+    multi_company_count = int(final_stats["multi_company_count"])
+    total_company_instances = int(final_stats["total_instances"])
+    total_final_blocks = int(final_stats["total_blocks"])
 
     # Get distance statistics from clustering
     dist_stats = clustering_stats.get("distance_stats", {})
@@ -660,16 +714,25 @@ def build_semantic_blocks(
     logger.info("4. BLOCK SIZE DISTRIBUTION")
     logger.info("-" * 40)
     if len(blocks) > 0:
-        logger.info(f"   Total blocks:        {len(blocks):,}")
-        singleton_pct = singleton_count / len(blocks) * 100
-        multi_pct = multi_company_count / len(blocks) * 100
-        logger.info(f"   Singleton blocks:    {singleton_count:,} ({singleton_pct:.1f}%)")
-        logger.info(f"   Multi-company:       {multi_company_count:,} ({multi_pct:.1f}%)")
-        logger.info(f"   Min size:            {min(block_sizes)}")
-        logger.info(f"   Max size:            {max(block_sizes)}")
-        logger.info(f"   Mean size:           {np.mean(block_sizes):.1f}")
-        logger.info(f"   Median size:         {np.median(block_sizes):.1f}")
-        logger.info(f"   Total instances:     {total_company_instances:,}")
+        logger.info("   Pre-split (FAISS clusters):")
+        logger.info(f"     Total blocks:      {len(blocks):,}")
+        logger.info(f"     Min size:          {min(pre_split_sizes)}")
+        logger.info(f"     Max size:          {max(pre_split_sizes)}")
+        logger.info(f"     Mean size:         {np.mean(pre_split_sizes):.1f}")
+        logger.info(f"     Median size:       {np.median(pre_split_sizes):.1f}")
+        oversized = sum(1 for s in pre_split_sizes if s > target_block_size)
+        if oversized > 0:
+            logger.info(f"     Oversized (>{target_block_size}): {oversized}")
+        logger.info("")
+        logger.info("   Post-split (final output):")
+        logger.info(f"     Total blocks:      {total_final_blocks:,}")
+        singleton_pct = singleton_count / total_final_blocks * 100
+        multi_pct = multi_company_count / total_final_blocks * 100
+        logger.info(f"     Singleton blocks:  {singleton_count:,} ({singleton_pct:.1f}%)")
+        logger.info(f"     Multi-company:     {multi_company_count:,} ({multi_pct:.1f}%)")
+        logger.info(f"     Max size:          {int(final_stats['max_size'])}")
+        logger.info(f"     Mean size:         {final_stats['mean_size']:.1f}")
+        logger.info(f"     Total instances:   {total_company_instances:,}")
 
     # Section 5: Levenshtein Distance Analysis
     logger.info("")
@@ -741,11 +804,11 @@ def build_semantic_blocks(
         logger.info("       Semantic blocking may not add value over deduplication")
         logger.info("       Try: Higher --max-distance to catch more semantic matches")
 
-    avg_block_size = np.mean(block_sizes) if block_sizes else 0
-    if avg_block_size > target_block_size * 2:
+    avg_pre_split_size = np.mean(pre_split_sizes) if pre_split_sizes else 0
+    if avg_pre_split_size > target_block_size * 2:
         logger.info("")
         logger.info(
-            f"   [!] Actual avg block size ({avg_block_size:.0f}) >> target ({target_block_size})"
+            f"   [!] Pre-split avg block size ({avg_pre_split_size:.0f}) >> target ({target_block_size})"
         )
         logger.info("       Clusters are larger than expected")
         logger.info("       Try: Lower --max-distance or lower --target-block-size")
