@@ -419,6 +419,7 @@ def build_semantic_blocks(
     batch_size: int = 64,
     model_name: str = config.get("process.kg.er.model.blocker", "intfloat/multilingual-e5-base"),
     stop_spark: bool = True,
+    iteration: int = 1,
 ) -> None:
     """Build semantic blocks using FAISS IVF clustering on embeddings.
 
@@ -442,10 +443,34 @@ def build_semantic_blocks(
         Name of the sentence-transformers model to use.
     stop_spark : bool, optional
         Whether to stop the Spark session after processing, by default True.
+    iteration : int, optional
+        Current ER iteration number, by default 1.
+        On later iterations the target block size is automatically scaled down
+        to produce smaller, more focused clusters.
     """
     logger.info("=" * 60)
     logger.info("SEMANTIC BLOCKING WITH FAISS IVF CLUSTERING")
     logger.info("=" * 60)
+
+    # ----------------------------------------------------------------
+    # AUTO-SCALING: On later iterations the dataset has already been
+    # deduplicated, so we shrink the FAISS target to produce smaller,
+    # more focused clusters.  The formula divides the user-supplied
+    # target_block_size by the iteration number (floored, min 10).
+    #
+    #   Iteration 1  -m 100  ->  effective_target = 100
+    #   Iteration 2  -m 100  ->  effective_target =  50
+    #   Iteration 3  -m 100  ->  effective_target =  33
+    #
+    # The effective target controls BOTH the FAISS nlist parameter
+    # (number of Voronoi cells / clusters) AND the block-splitting
+    # threshold that caps the maximum block size in the output.
+    # ----------------------------------------------------------------
+    effective_target = max(10, target_block_size // iteration)
+    logger.info(
+        f"Auto-scaled target block size: {target_block_size} / iteration {iteration}"
+        f" = {effective_target}"
+    )
 
     # Check if input file exists
     if not os.path.exists(input_path):
@@ -515,7 +540,7 @@ def build_semantic_blocks(
         # Phase 2: Run FAISS clustering in subprocess
         logger.info("Phase 2: Running FAISS clustering...")
         blocks, clustering_stats = _run_faiss_subprocess(
-            embeddings, valid_uuids, target_block_size, max_distance, temp_dir
+            embeddings, valid_uuids, effective_target, max_distance, temp_dir
         )
 
     logger.info(f"Created {len(blocks):,} semantic blocks")
@@ -581,11 +606,11 @@ def build_semantic_blocks(
 
     # Split large blocks into smaller chunks using the shared UDTF
     blocks_before_split = blocks_spark.count()
-    oversized_before = blocks_spark.filter(F.col("block_size") > target_block_size).count()
+    oversized_before = blocks_spark.filter(F.col("block_size") > effective_target).count()
 
     if oversized_before > 0:
         logger.info(
-            f"Splitting {oversized_before} blocks exceeding max size of {target_block_size}..."
+            f"Splitting {oversized_before} blocks exceeding max size of {effective_target}..."
         )
 
         # Build UDTF return type from the DataFrame schema
@@ -599,7 +624,7 @@ def build_semantic_blocks(
             f"block_size: long"
         )
 
-        SplitLargeBlocks = create_split_large_blocks_udtf(udtf_return_type, target_block_size)
+        SplitLargeBlocks = create_split_large_blocks_udtf(udtf_return_type, effective_target)
         spark.udtf.register("split_large_blocks", SplitLargeBlocks)  # type: ignore[arg-type]
 
         blocks_spark.createOrReplaceTempView("semantic_blocks_temp")
@@ -616,7 +641,7 @@ def build_semantic_blocks(
             f"(+{new_blocks} sub-blocks from {oversized_before} oversized blocks)"
         )
     else:
-        logger.info(f"No blocks exceed max size of {target_block_size}, no splitting needed")
+        logger.info(f"No blocks exceed max size of {effective_target}, no splitting needed")
 
     # Save to semantic_blocks.parquet only (don't overwrite union_blocks.parquet from name blocking)
     semantic_blocks_path = os.path.join(output_path, "semantic_blocks.parquet")
@@ -677,7 +702,10 @@ def build_semantic_blocks(
     logger.info("2. CLUSTERING PARAMETERS")
     logger.info("-" * 40)
     logger.info(f"   Model:             {model_name}")
-    logger.info(f"   Target block size: {target_block_size}")
+    logger.info(
+        f"   Target block size: {target_block_size}"
+        f" (effective: {effective_target}, iteration {iteration})"
+    )
     logger.info(f"   Actual nlist:      {clustering_stats.get('nlist', 'N/A')}")
     logger.info(
         f"   Max distance:      {max_distance if max_distance is not None else 'None (no filtering)'}"
@@ -720,9 +748,9 @@ def build_semantic_blocks(
         logger.info(f"     Max size:          {max(pre_split_sizes)}")
         logger.info(f"     Mean size:         {np.mean(pre_split_sizes):.1f}")
         logger.info(f"     Median size:       {np.median(pre_split_sizes):.1f}")
-        oversized = sum(1 for s in pre_split_sizes if s > target_block_size)
+        oversized = sum(1 for s in pre_split_sizes if s > effective_target)
         if oversized > 0:
-            logger.info(f"     Oversized (>{target_block_size}): {oversized}")
+            logger.info(f"     Oversized (>{effective_target}): {oversized}")
         logger.info("")
         logger.info("   Post-split (final output):")
         logger.info(f"     Total blocks:      {total_final_blocks:,}")
@@ -805,10 +833,10 @@ def build_semantic_blocks(
         logger.info("       Try: Higher --max-distance to catch more semantic matches")
 
     avg_pre_split_size = np.mean(pre_split_sizes) if pre_split_sizes else 0
-    if avg_pre_split_size > target_block_size * 2:
+    if avg_pre_split_size > effective_target * 2:
         logger.info("")
         logger.info(
-            f"   [!] Pre-split avg block size ({avg_pre_split_size:.0f}) >> target ({target_block_size})"
+            f"   [!] Pre-split avg block size ({avg_pre_split_size:.0f}) >> target ({effective_target})"
         )
         logger.info("       Clusters are larger than expected")
         logger.info("       Try: Lower --max-distance or lower --target-block-size")

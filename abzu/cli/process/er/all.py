@@ -118,7 +118,13 @@ def all(
 
     # Step 1: Blocking
     method_label = "name" if blocking_method == "name" else "embed"
-    click.echo(f"[1/3] BLOCKING ({method_label}, max_block_size={max_block_size})")
+    if blocking_method == "embed":
+        effective_target = max(10, max_block_size // iteration)
+        click.echo(
+            f"[1/3] BLOCKING ({method_label}, target={effective_target}, max={max_block_size})"
+        )
+    else:
+        click.echo(f"[1/3] BLOCKING ({method_label}, max_block_size={max_block_size})")
     click.echo("-" * 80)
     block_start = time.time()
 
@@ -141,6 +147,7 @@ def all(
                 target_block_size=max_block_size,
                 max_distance=None,  # Use default (no filtering) for pipeline
                 batch_size=64,
+                iteration=iteration,
             )
         block_time = time.time() - block_start
 

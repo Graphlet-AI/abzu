@@ -87,6 +87,7 @@ def semantic(
             target_block_size=target_block_size,
             max_distance=max_distance,
             batch_size=batch_size,
+            iteration=iteration,
         )
     except FileNotFoundError as e:
         click.echo(str(e), err=True)
