@@ -64,29 +64,21 @@ mlflow = ">=3.8.1"
 faiss-cpu = ">=1.13.2"
 python-levenshtein = "^0.27.3"
 botocore = "^1.42.25"
-ty = "^0.0.12"
 
 [tool.poetry.group.dev.dependencies]
-flake8 = "^7.2.0"
-isort = "^5.13.2"
+ruff = ">=0.11.0"
+ty = ">=0.0.12"
 pytest = "^9.0.2"
 ipython = "^8.31.0"
-pandas-stubs = "^2.2.3.241126"
 ipykernel = "^6.29.5"
 nbformat = "^5.10.4"
 jupyter-black = "^0.4.0"
 pre-commit = "^4.1.0"
 jupyter = "^1.1.1"
 nbdime = "^4.0.2"
-types-requests = "^2.32.0.20250328"
-flake8-pyproject = "^1.2.3"
 poetry-types = "^0.6.0"
-types-beautifulsoup4 = "^4.12.0.20250204"
 pytest-asyncio = "^1.0.0"
-types-pyyaml = "^6.0.12.20250822"
 pytest-xdist = "^3.8.0"
-mypy = "^1.19.1"
-types-python-dateutil = "^2.9.0.20251115"
 
 [build-system]
 requires = ["poetry-core"]
@@ -101,51 +93,64 @@ name = "rapids"
 url = "https://pypi.nvidia.com"
 priority = "supplemental"
 
-[tool.black]
+[tool.ruff]
 line-length = 100
-target-version = ["py312"]
-
-[tool.isort]
-profile = "black"
-src_paths = ["abzu", "tests"]
-
-[tool.mypy]
-python_version = "3.12.12"
-files = ["abzu"]
-exclude = ["abzu/baml_client", "tests", "notebooks"]
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = "abzu.baml_client.*"
-ignore_errors = true
-
-[[tool.mypy.overrides]]
-module = "discord.*"
-ignore_missing_imports = true
-
-[tool.flake8]
-max-line-length = 100
-docstring-convention = "numpy"
-format-greedy = 2
-inline-quotes = "double"
-multiline-quotes = "double"
-min_python_version = "3.12.12"
-ignore = ["E203", "E266", "E501", "W503", "C901", "E712"]
-extend-ignore = ["E203", "E266", "E501", "W503", "C901", "E712"]
+target-version = "py312"
+src = ["abzu", "tests"]
 exclude = [
-    ".git",
-    "__pycache__",
-    "build",
-    "dist",
-    ".venv",
-    "venv",
-    ".mypy_cache",
-    ".pytest_cache",
-    ".ipynb_checkpoints",
-    "docs/source/conf.py",
     "abzu/baml_client",
-    "tests/data",
+    "subs",
 ]
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # pyflakes
+    "I",      # isort
+    "UP",     # pyupgrade
+]
+ignore = [
+    "E203",   # whitespace before ':' (black compat)
+    "E266",   # too many leading '#' for block comment
+    "E501",   # line too long (handled by formatter)
+    "E712",   # comparison to True/False
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["abzu"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true
+
+[tool.ty.environment]
+python-version = "3.12"
+
+[tool.ty.src]
+include = ["abzu"]
+exclude = ["abzu/baml_client", "subs"]
+
+[tool.ty.rules]
+# Downgraded to warn for initial migration; tighten to error as code is fixed
+unresolved-import = "warn"
+possibly-unresolved-reference = "warn"
+unused-ignore-comment = "ignore"
+invalid-return-type = "warn"
+invalid-argument-type = "warn"
+invalid-method-override = "warn"
+unknown-argument = "warn"
+no-matching-overload = "warn"
+missing-argument = "warn"
+invalid-assignment = "warn"
+call-non-callable = "warn"
+
+[[tool.ty.overrides]]
+include = ["tests/**"]
+
+[tool.ty.overrides.rules]
+unresolved-import = "ignore"
 
 [tool.pytest.ini_options]
 asyncio_mode = "strict"
