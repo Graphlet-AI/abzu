@@ -89,6 +89,7 @@ class IterationMetrics(TypedDict):
     companies_in: int
     companies_out: int
     reduction_pct: float
+    overall_reduction_pct: float
 
 
 def get_all_iteration_metrics(
@@ -106,6 +107,7 @@ def get_all_iteration_metrics(
     from pathlib import Path
 
     results: list[IterationMetrics] = []
+    original_companies: int | None = None
 
     for i in range(1, current_iteration + 1):
         metrics_path = Path(base_path) / str(i) / "er_evaluation_metrics.parquet"
@@ -117,13 +119,39 @@ def get_all_iteration_metrics(
             df = pd.read_parquet(metrics_path)
             row = df.iloc[0]
 
+            # Use iteration_input_companies for the actual input to this iteration
+            # Fall back to total_original_companies for backwards compatibility
+            companies_in = int(
+                row.get("iteration_input_companies", row.get("total_original_companies", 0))
+            )
+            companies_out = int(row.get("total_output_companies", 0))
+
+            # Track the original companies count from iteration 1
+            if i == 1:
+                original_companies = companies_in
+
+            # Calculate per-round reduction (from iteration input to output)
+            if companies_in > 0:
+                per_round_reduction_pct = ((companies_in - companies_out) / companies_in) * 100
+            else:
+                per_round_reduction_pct = 0.0
+
+            # Calculate overall reduction (from original to current output)
+            if original_companies is not None and original_companies > 0:
+                overall_reduction_pct = (
+                    (original_companies - companies_out) / original_companies
+                ) * 100
+            else:
+                overall_reduction_pct = per_round_reduction_pct
+
             results.append(
                 {
                     "iteration": i,
                     "blocks": int(row.get("total_blocks", 0)),
-                    "companies_in": int(row.get("total_original_companies", 0)),
-                    "companies_out": int(row.get("total_output_companies", 0)),
-                    "reduction_pct": float(row.get("total_reduction_pct", 0.0)),
+                    "companies_in": companies_in,
+                    "companies_out": companies_out,
+                    "reduction_pct": per_round_reduction_pct,
+                    "overall_reduction_pct": overall_reduction_pct,
                 }
             )
         except Exception:

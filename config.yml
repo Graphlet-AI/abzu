@@ -159,7 +159,13 @@ process:
       paths:
         input: "${process.kg.raw.output}/companies.parquet"
         output: "${base_dir}/er/"
-        # Names workflow paths (iteration subdirectories)
+        # Iteration-based paths for blocking, matching, and evaluation
+        blocks_dir: "${base_dir}/er/iterations/{iteration}/"
+        blocks: "${base_dir}/er/iterations/{iteration}/union_blocks.parquet"
+        semantic_blocks: "${base_dir}/er/iterations/{iteration}/semantic_blocks.parquet"
+        matches: "${base_dir}/er/iterations/{iteration}/matches.jsonl"
+        eval: "${base_dir}/er/iterations/{iteration}/companies_resolved.parquet"
+        # Legacy names paths (for backwards compatibility)
         names:
           blocks_dir: "${base_dir}/er/iterations/{iteration}/"
           blocks: "${base_dir}/er/iterations/{iteration}/union_blocks.parquet"
@@ -170,6 +176,8 @@ process:
           eval: "${base_dir}/er/iterations/{iteration}/companies_resolved.parquet"
       max_block_size: 50
       iteration: 3
+      model:
+        blocker: "intfloat/multilingual-e5-base"
 
     refine:
       input:
@@ -178,6 +186,10 @@ process:
       output:
         nodes: "${base_dir}/refined_knowledge_graph/nodes.parquet"
         edges: "${base_dir}/refined_knowledge_graph/edges.parquet"
+      edge_er:
+        enabled: false
+        batch_size: 5
+        min_block_size: 2
 
 chat:
   start:

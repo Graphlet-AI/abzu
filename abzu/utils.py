@@ -8,6 +8,7 @@ from typing import (
     Any,
     Dict,
     List,
+    Literal,
     Optional,
     Set,
     Tuple,
@@ -18,10 +19,35 @@ from typing import (
 )
 
 import pandas as pd
+import torch
 
 from abzu.logs import get_logger
 
 logger = get_logger(__name__)
+
+
+# --- PyTorch Device Detection ---
+
+
+def get_torch_device() -> Literal["cuda", "mps", "cpu"]:
+    """Get the best available PyTorch device.
+
+    Returns the most performant device available:
+    - "cuda" if NVIDIA GPU is available
+    - "mps" if Apple Silicon GPU is available
+    - "cpu" as fallback
+
+    Returns
+    -------
+    Literal["cuda", "mps", "cpu"]
+        The best available device identifier.
+    """
+    if torch.cuda.is_available():
+        return "cuda"
+    elif torch.backends.mps.is_available():
+        return "mps"
+    return "cpu"
+
 
 # --- Hybrid Cache Mode Utilities ---
 

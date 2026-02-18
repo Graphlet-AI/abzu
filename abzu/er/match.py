@@ -167,9 +167,10 @@ def match_entities(
             f"Blocks file not found: {blocks_parquet_path}\n\n"
             f"The matching step requires blocks from the blocking step.\n"
             f"Please run the blocking step first:\n"
-            f"  abzu process er block names --iteration {iteration}\n\n"
+            f"  abzu process er block names --iteration {iteration}\n"
+            f"  abzu process er block semantic --iteration {iteration}\n\n"
             f"Or run the complete pipeline:\n"
-            f"  abzu process er all names --iteration {iteration}"
+            f"  abzu process er all --iteration {iteration}"
         )
         logger.error(error_msg)
         raise FileNotFoundError(error_msg)

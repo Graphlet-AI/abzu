@@ -18,11 +18,14 @@ class LazyGroup(click.Group):
         return sorted(self.lazy_subcommands.keys())
 
     def get_command(self, ctx: click.Context, name: str) -> click.Command | None:
-        if name in self.lazy_subcommands:
-            # Use relative import for submodules
+        if name == "names":
             from . import names
 
             return names.names
+        elif name == "semantic":
+            from . import semantic
+
+            return semantic.semantic
         return None
 
 
@@ -30,6 +33,7 @@ class LazyGroup(click.Group):
     cls=LazyGroup,
     lazy_subcommands={
         "names": ".names:names",
+        "semantic": ".semantic:semantic",
     },
 )
 def block() -> None:

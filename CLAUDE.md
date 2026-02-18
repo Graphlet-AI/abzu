@@ -94,11 +94,15 @@ Download and use the [Bloomberg Exchange codes](https://www.inforeachinc.com/wp-
 4. **KG Refine**: Deduplicate and enrich → refined Parquet files
 5. **APIs**: Enrich with financial/SEC data
 
-### Semantic Matching
+### Semantic Blocking via Semantic Clustering
 
 - **Blocking**: Semantic clustering to group similar entities. See @markdown/BLOCKING.md
 - **Matching**: LLM-based pairwise entity comparison. See @abzu/er/match.py
 - **Evaluation**: Precision/recall metrics against ground truth
+
+### Edge Resolution
+
+Merging duplicate edges between nodes post-entity resolution. See @markdown/EDGES.md
 
 ## Code Style
 

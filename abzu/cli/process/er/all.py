@@ -28,11 +28,18 @@ logger = get_logger(__name__)
     help="Iteration number for multi-round ER processing",
 )
 @click.option(
+    "--blocking-method",
+    "-B",
+    type=click.Choice(["name", "embed"], case_sensitive=False),
+    default="name",
+    help="Blocking method: 'name' for heuristic name-based, 'embed' for semantic embedding-based",
+)
+@click.option(
     "--max-block-size",
     "-m",
     default=50,
     type=int,
-    help="Maximum block size for blocking step",
+    help="Maximum/target block size for blocking step",
 )
 @click.option(
     "--batch-size",
@@ -55,6 +62,7 @@ logger = get_logger(__name__)
 )
 def all(
     iteration: int,
+    blocking_method: str,
     max_block_size: int,
     batch_size: int,
     local_mode: bool,
@@ -63,9 +71,16 @@ def all(
     """Run complete entity resolution cycle: block, match, and evaluate.
 
     This command orchestrates the full ER pipeline:
-    1. Block: Create similarity-based blocks of companies
+    1. Block: Create similarity-based blocks of companies (name or embed method)
     2. Match: Resolve entities within blocks using BAML
     3. Eval: Evaluate results, deduplicate exact copies, and generate metrics
+
+    Use --blocking-method to choose between:
+    - 'name': Heuristic blocking using first-word and acronym keys (fast, good baseline)
+    - 'embed': Semantic blocking using FAISS IVF clustering on embeddings (slower, better recall)
+
+    Both methods output compatible block formats, so you can alternate between them
+    across iterations (e.g., iteration 1 with 'name', iteration 2 with 'embed').
 
     At the end, prints a comprehensive report of the entire cycle.
     """
@@ -74,7 +89,6 @@ def all(
         os.environ["BAML_LOG"] = "warn"
 
     from abzu.er.match import match_entities
-    from abzu.spark.er_block import build_blocks
     from abzu.spark.er_eval import evaluate_er_matches
 
     cycle_start = time.time()
@@ -89,29 +103,52 @@ def all(
     if iteration > 1:
         # For later iterations, use previous iteration's resolved companies (Parquet)
         prev_iteration = iteration - 1
-        companies_path = config.get("process.kg.er.paths.names.eval").format(
-            iteration=prev_iteration
-        )
+        companies_path = config.get("process.kg.er.paths.eval").format(iteration=prev_iteration)
     else:
         companies_path = config.get("process.kg.er.paths.input")
 
-    blocks_dir = config.get("process.kg.er.paths.names.blocks_dir").format(iteration=iteration)
-    blocks_path = config.get("process.kg.er.paths.names.blocks").format(iteration=iteration)
-    matches_path = config.get("process.kg.er.paths.names.matches").format(iteration=iteration)
-    eval_path = config.get("process.kg.er.paths.names.eval").format(iteration=iteration)
+    blocks_dir = config.get("process.kg.er.paths.blocks_dir").format(iteration=iteration)
+    # Use semantic_blocks.parquet for embed method, union_blocks.parquet for name method
+    if blocking_method == "embed":
+        blocks_path = config.get("process.kg.er.paths.semantic_blocks").format(iteration=iteration)
+    else:
+        blocks_path = config.get("process.kg.er.paths.blocks").format(iteration=iteration)
+    matches_path = config.get("process.kg.er.paths.matches").format(iteration=iteration)
+    eval_path = config.get("process.kg.er.paths.eval").format(iteration=iteration)
 
     # Step 1: Blocking
-    click.echo(f"[1/3] BLOCKING (max_block_size={max_block_size})")
+    method_label = "name" if blocking_method == "name" else "embed"
+    if blocking_method == "embed":
+        effective_target = max(10, max_block_size // iteration)
+        click.echo(
+            f"[1/3] BLOCKING ({method_label}, target={effective_target}, max={max_block_size})"
+        )
+    else:
+        click.echo(f"[1/3] BLOCKING ({method_label}, max_block_size={max_block_size})")
     click.echo("-" * 80)
     block_start = time.time()
 
     try:
-        build_blocks(
-            input_path=companies_path,
-            output_path=blocks_dir,
-            local_mode=local_mode if local_mode else None,
-            max_block_size=max_block_size,
-        )
+        if blocking_method == "name":
+            from abzu.spark.er_block import build_blocks
+
+            build_blocks(
+                input_path=companies_path,
+                output_path=blocks_dir,
+                local_mode=local_mode if local_mode else None,
+                max_block_size=max_block_size,
+            )
+        else:  # embed
+            from abzu.spark.er_block_semantic import build_semantic_blocks
+
+            build_semantic_blocks(
+                input_path=companies_path,
+                output_path=blocks_dir,
+                target_block_size=max_block_size,
+                max_distance=None,  # Use default (no filtering) for pipeline
+                batch_size=64,
+                iteration=iteration,
+            )
         block_time = time.time() - block_start
 
         # Extract and display blocking metrics
@@ -171,7 +208,7 @@ def all(
         # Extract and display evaluation metrics
         eval_dir = str(Path(eval_path).parent)
         metrics_path = str(Path(eval_dir) / "er_evaluation_metrics.parquet")
-        eval_metrics = get_evaluation_metrics(eval_path, metrics_path)
+        eval_metrics = get_evaluation_metrics(metrics_path)
         click.echo(f"✓ Evaluation completed in {timedelta(seconds=int(eval_time))}")
         click.echo(f"  • Original companies: {eval_metrics['original_companies']:,}")
         click.echo(f"  • Final companies: {eval_metrics['final_companies']:,}")
@@ -194,7 +231,10 @@ def all(
     click.echo("=" * 80)
     click.echo()
     click.echo("WHAT HAPPENED:")
-    click.echo("  1. BLOCKING: Grouped similar companies into blocks for efficient comparison")
+    if blocking_method == "name":
+        click.echo("  1. BLOCKING: Grouped companies by first-word and acronym keys (heuristic)")
+    else:
+        click.echo("  1. BLOCKING: Grouped companies by semantic embedding similarity (FAISS IVF)")
     click.echo("  2. MATCHING: Used BAML/LLM to identify duplicates within each block")
     click.echo(
         "  3. EVALUATION: Deduplicated exact copies, validated results, tracked UUID lineage"
@@ -254,20 +294,56 @@ def all(
     if all_metrics:
         click.echo("ITERATION HISTORY:")
         click.echo(
-            "+" + "-" * 11 + "+" + "-" * 10 + "+" + "-" * 16 + "+" + "-" * 16 + "+" + "-" * 12 + "+"
+            "+"
+            + "-" * 11
+            + "+"
+            + "-" * 10
+            + "+"
+            + "-" * 16
+            + "+"
+            + "-" * 16
+            + "+"
+            + "-" * 12
+            + "+"
+            + "-" * 10
+            + "+"
         )
         click.echo(
-            f"| {'Iteration':^9} | {'Blocks':^8} | {'Companies In':^14} | {'Companies Out':^14} | {'Reduction':^10} |"
+            f"| {'Iteration':^9} | {'Blocks':^8} | {'Companies In':^14} | {'Companies Out':^14} | {'Reduction':^10} | {'Overall':^8} |"
         )
         click.echo(
-            "+" + "-" * 11 + "+" + "-" * 10 + "+" + "-" * 16 + "+" + "-" * 16 + "+" + "-" * 12 + "+"
+            "+"
+            + "-" * 11
+            + "+"
+            + "-" * 10
+            + "+"
+            + "-" * 16
+            + "+"
+            + "-" * 16
+            + "+"
+            + "-" * 12
+            + "+"
+            + "-" * 10
+            + "+"
         )
         for m in all_metrics:
             click.echo(
-                f"| {m['iteration']:^9} | {m['blocks']:>8,} | {m['companies_in']:>14,} | {m['companies_out']:>14,} | {m['reduction_pct']:>9.1f}% |"
+                f"| {m['iteration']:^9} | {m['blocks']:>8,} | {m['companies_in']:>14,} | {m['companies_out']:>14,} | {m['reduction_pct']:>9.1f}% | {m['overall_reduction_pct']:>7.1f}% |"
             )
         click.echo(
-            "+" + "-" * 11 + "+" + "-" * 10 + "+" + "-" * 16 + "+" + "-" * 16 + "+" + "-" * 12 + "+"
+            "+"
+            + "-" * 11
+            + "+"
+            + "-" * 10
+            + "+"
+            + "-" * 16
+            + "+"
+            + "-" * 16
+            + "+"
+            + "-" * 12
+            + "+"
+            + "-" * 10
+            + "+"
         )
         click.echo()
 
