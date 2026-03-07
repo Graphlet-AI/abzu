@@ -16,7 +16,6 @@ from abzu.spark.schemas import (
     get_company_fields_without_blocks,
     normalize_company_dataframe,
 )
-from abzu.spark.utils import create_split_large_blocks_udtf
 
 logger = get_logger(__name__)
 
@@ -530,71 +529,101 @@ def build_blocks(
     if logger.isEnabledFor(logging.DEBUG):
         acronym_only_blocks.printSchema()
 
-    # Split large blocks (> 50 companies) into smaller chunks
+    # Split large blocks using salt-based approach with window functions
     logger.info(
         f"Splitting large blocks (> {actual_max_block_size} companies) into smaller chunks..."
     )
 
-    # Build the UDTF returnType dynamically from the actual DataFrame schema
-    # Get the companies array element type from the first non-empty block
-    from pyspark.sql.types import ArrayType
+    # Helper function to split blocks using salt-based approach
+    def split_blocks_with_salt(blocks_df, max_size: int):
+        """Split blocks into chunks using window functions and salt-based grouping.
 
-    companies_field = combined_blocks.schema["companies"]
-    companies_array_type = companies_field.dataType
-    assert isinstance(companies_array_type, ArrayType), "companies must be an ArrayType"
-    companies_schema = companies_array_type.elementType.simpleString()
-    udtf_return_type = (
-        f"block_key: string, block_key_type: string, "
-        f"companies: array<{companies_schema}>, "
-        f"block_size: long"
-    )
-    logger.debug(f"UDTF return type: {udtf_return_type}")
+        For blocks larger than max_size, this function:
+        1. Explodes the companies array to individual rows
+        2. Assigns sequential row numbers within each block
+        3. Calculates a salt value using modulus: (row_number - 1) % max_size
+        4. Creates new block keys with chunk suffixes for large blocks
+        5. Re-aggregates companies by the new block keys
 
-    # Use shared UDTF factory from utils.py
-    SplitLargeBlocks = create_split_large_blocks_udtf(udtf_return_type, actual_max_block_size)
-    spark.udtf.register("split_large_blocks", SplitLargeBlocks)  # type: ignore
+        Args:
+            blocks_df: DataFrame with columns [block_key, block_key_type, companies, block_size]
+            max_size: Maximum number of companies per block
 
-    # 3) Create temp views for the DataFrames
-    combined_blocks.createOrReplaceTempView("combined_blocks_temp")
-    first_word_only_blocks.createOrReplaceTempView("first_word_blocks_temp")
-    acronym_only_blocks.createOrReplaceTempView("acronym_blocks_temp")
+        Returns:
+            DataFrame with same schema, but large blocks split into chunks
+        """
+        from pyspark.sql.window import Window
 
-    # 4) Apply the UDTF using SQL with LATERAL syntax - only select UDTF output columns
+        # Separate small blocks (no splitting needed) from large blocks
+        small_blocks = blocks_df.filter(F.col("block_size") <= max_size)
+        large_blocks = blocks_df.filter(F.col("block_size") > max_size)  # type: ignore[operator]
+
+        # If no large blocks, return as-is
+        if large_blocks.count() == 0:
+            return blocks_df
+
+        # Explode companies array to individual rows with positional index
+        exploded = large_blocks.select(
+            F.col("block_key"),
+            F.col("block_key_type"),
+            F.posexplode("companies").alias("pos", "company"),
+        )
+
+        # Create window partitioned by block_key, ordered by position
+        window_spec = Window.partitionBy("block_key").orderBy("pos")
+
+        # Assign row numbers and calculate salt
+        with_row_numbers = exploded.withColumn("row_num", F.row_number().over(window_spec))
+
+        # Calculate salt: (row_number - 1) // max_size gives us the chunk number
+        with_salt = with_row_numbers.withColumn(
+            "salt", ((F.col("row_num") - 1) / max_size).cast("int")
+        )
+
+        # Create new block keys with chunk suffix (matching UDTF: all chunks get _chunk_N suffix)
+        with_new_keys = with_salt.withColumn(
+            "new_block_key", F.concat(F.col("block_key"), F.lit("_chunk_"), F.col("salt") + 1)
+        )
+
+        # Re-aggregate by new block keys
+        split_blocks = (
+            with_new_keys.groupBy("new_block_key", "block_key_type")
+            .agg(
+                F.collect_list("company").alias("companies"),
+                F.count("*").alias("block_size"),
+            )
+            .select(
+                F.col("new_block_key").alias("block_key"),
+                F.col("block_key_type"),
+                F.col("companies"),
+                F.col("block_size"),
+            )
+        )
+
+        # Union small blocks with split blocks
+        return small_blocks.unionByName(split_blocks)
+
     # Count blocks before splitting
     combined_blocks_before = combined_blocks.count()
     first_word_blocks_before = first_word_only_blocks.count()
     acronym_blocks_before = acronym_only_blocks.count()
     total_blocks_before = combined_blocks_before + first_word_blocks_before + acronym_blocks_before
 
+    # Apply salt-based splitting to each block type
     combined_blocks_final = (
-        spark.sql(
-            """
-            SELECT udtf_output.* FROM combined_blocks_temp,
-            LATERAL split_large_blocks(block_key, block_key_type, companies, block_size) AS udtf_output
-            """
-        )
+        split_blocks_with_salt(combined_blocks, actual_max_block_size)
         .orderBy(F.col("block_size"))
         .cache()
     )
 
     first_word_blocks_final = (
-        spark.sql(
-            """
-            SELECT udtf_output.* FROM first_word_blocks_temp,
-            LATERAL split_large_blocks(block_key, block_key_type, companies, block_size) AS udtf_output
-            """
-        )
+        split_blocks_with_salt(first_word_only_blocks, actual_max_block_size)
         .orderBy(F.col("block_size"))
         .cache()
     )
 
     acronym_blocks_final = (
-        spark.sql(
-            """
-            SELECT udtf_output.* FROM acronym_blocks_temp,
-            LATERAL split_large_blocks(block_key, block_key_type, companies, block_size) AS udtf_output
-         """
-        )
+        split_blocks_with_salt(acronym_only_blocks, actual_max_block_size)
         .orderBy(F.col("block_size"))
         .cache()
     )
