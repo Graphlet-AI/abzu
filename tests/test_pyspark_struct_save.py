@@ -166,9 +166,9 @@ def test_pyspark_saves_structs_properly() -> None:
                 print(f"source_uuids type: {type(source_uuids)}")
                 print(f"source_uuids value: {source_uuids}")
 
-                assert isinstance(
-                    source_uuids, list
-                ), f"source_uuids should be list, got {type(source_uuids)}"
+                assert isinstance(source_uuids, list), (
+                    f"source_uuids should be list, got {type(source_uuids)}"
+                )
                 assert source_uuids == ["u1", "u2"], f"source_uuids mismatch: {source_uuids}"
 
             # Check handling of None values

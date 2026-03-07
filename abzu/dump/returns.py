@@ -8,7 +8,7 @@ logger = get_logger(__name__)
 
 def load_price_data(file_path: str) -> dict[str, Any]:
     """Load price data from a JSON file."""
-    with open(file_path, "r", encoding="utf-8") as f:
+    with open(file_path, encoding="utf-8") as f:
         data: dict[str, Any] = json.load(f)
         return data
 

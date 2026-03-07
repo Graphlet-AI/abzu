@@ -3,7 +3,8 @@
 import asyncio
 import os
 import re
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any
 
 from discord import Guild, Intents, Message, TextChannel, errors
 from discord.ext import commands
@@ -20,10 +21,10 @@ class URLMonitorBot(commands.Bot):
     def __init__(
         self,
         command_prefix: str = "!",
-        intents: Optional[Intents] = None,
-        specific_channels: Optional[list[int]] = None,
-        ignored_domains: Optional[list[str]] = None,
-        on_url_found_callback: Optional[Callable[[str, Message], Any]] = None,
+        intents: Intents | None = None,
+        specific_channels: list[int] | None = None,
+        ignored_domains: list[str] | None = None,
+        on_url_found_callback: Callable[[str, Message], Any] | None = None,
     ):
         """Initialize the Discord bot.
 
@@ -37,8 +38,8 @@ class URLMonitorBot(commands.Bot):
                 Function should accept (url: str, message: Message).
         """
 
-        self.specific_channels: Optional[list[int]] = specific_channels or []
-        self.ignored_domains: Optional[list[str]] = ignored_domains or []
+        self.specific_channels: list[int] | None = specific_channels or []
+        self.ignored_domains: list[str] | None = ignored_domains or []
 
         # Set up intents (permissions)
         if intents is None:
@@ -189,12 +190,12 @@ class BotRunner:
 
     def __init__(
         self,
-        application_id: Optional[str] = None,
-        token: Optional[str] = None,
+        application_id: str | None = None,
+        token: str | None = None,
         command_prefix: str = "!",
-        specific_channels: Optional[list[int]] = None,
-        ignored_domains: Optional[list[str]] = None,
-        on_url_found_callback: Optional[Callable[[str, Message], Any]] = None,
+        specific_channels: list[int] | None = None,
+        ignored_domains: list[str] | None = None,
+        on_url_found_callback: Callable[[str, Message], Any] | None = None,
     ) -> None:
         """Initialize the bot runner.
 
@@ -230,7 +231,7 @@ class BotRunner:
         self.on_url_found_callback = on_url_found_callback
         self.bot: URLMonitorBot | None = None
 
-    def get_auth_url(self, redirect_uri: Optional[str] = None) -> str:
+    def get_auth_url(self, redirect_uri: str | None = None) -> str:
         """Generate the OAuth2 authorization URL for adding the bot to servers.
 
         Args:

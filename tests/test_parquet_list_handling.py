@@ -79,15 +79,15 @@ def test_parquet_with_pyarrow_backend(tmp_path: Path) -> None:
                 assert test_id in company["source_ids"], "Should be able to append to list"
 
             if "match_skip_history" in company and company["match_skip_history"] is not None:
-                assert isinstance(
-                    company["match_skip_history"], list
-                ), "match_skip_history should be a list"
+                assert isinstance(company["match_skip_history"], list), (
+                    "match_skip_history should be a list"
+                )
                 # Test that we can append to it
                 test_iteration = 2
                 company["match_skip_history"].append(test_iteration)
-                assert (
-                    test_iteration in company["match_skip_history"]
-                ), "Should be able to append to list"
+                assert test_iteration in company["match_skip_history"], (
+                    "Should be able to append to list"
+                )
 
 
 def test_parquet_without_pyarrow_creates_arrays(tmp_path: Path) -> None:
@@ -118,9 +118,9 @@ def test_parquet_without_pyarrow_creates_arrays(tmp_path: Path) -> None:
     first_val_pyarrow = df_loaded_pyarrow["list_column"].iloc[0]
     # This preserves Python lists!
     assert isinstance(first_val_pyarrow, list), "dtype_backend='pyarrow' preserves Python lists"
-    assert not isinstance(
-        first_val_pyarrow, np.ndarray
-    ), "dtype_backend='pyarrow' prevents numpy arrays"
+    assert not isinstance(first_val_pyarrow, np.ndarray), (
+        "dtype_backend='pyarrow' prevents numpy arrays"
+    )
 
 
 def test_match_entities_preserves_lists(tmp_path: Path) -> None:
@@ -165,24 +165,24 @@ def test_match_entities_preserves_lists(tmp_path: Path) -> None:
     for company in companies:
         # Check that all list fields are Python lists
         if "match_skip_history" in company and company["match_skip_history"] is not None:
-            assert isinstance(
-                company["match_skip_history"], list
-            ), "match_skip_history should be a list"
-            assert not isinstance(
-                company["match_skip_history"], np.ndarray
-            ), "match_skip_history should NOT be numpy array"
+            assert isinstance(company["match_skip_history"], list), (
+                "match_skip_history should be a list"
+            )
+            assert not isinstance(company["match_skip_history"], np.ndarray), (
+                "match_skip_history should NOT be numpy array"
+            )
             # Test that we can append (would fail with numpy array)
             company["match_skip_history"].append(2)
             assert 2 in company["match_skip_history"], "Should be able to append to list"
 
         if "source_uuids" in company and company["source_uuids"] is not None:
             assert isinstance(company["source_uuids"], list), "source_uuids should be a list"
-            assert not isinstance(
-                company["source_uuids"], np.ndarray
-            ), "source_uuids should NOT be numpy array"
+            assert not isinstance(company["source_uuids"], np.ndarray), (
+                "source_uuids should NOT be numpy array"
+            )
 
         if "source_ids" in company and company["source_ids"] is not None:
             assert isinstance(company["source_ids"], list), "source_ids should be a list"
-            assert not isinstance(
-                company["source_ids"], np.ndarray
-            ), "source_ids should NOT be numpy array"
+            assert not isinstance(company["source_ids"], np.ndarray), (
+                "source_ids should NOT be numpy array"
+            )

@@ -10,7 +10,7 @@ from abzu.baml_client.types import IndustryArticle
 def sample_article_html():
     """Load sample article HTML from tests/article.py."""
 
-    with open("tests/article.html", "r") as f:
+    with open("tests/article.html") as f:
         html = f.read()
 
     return html

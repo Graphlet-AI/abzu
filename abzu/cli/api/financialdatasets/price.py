@@ -1,7 +1,6 @@
 """CLI command for retrieving historical price data from Financial Datasets API."""
 
 import os
-from typing import Optional
 
 import click
 
@@ -79,16 +78,16 @@ logger = get_logger(__name__)
     help="Disable progress bar when processing multiple tickers",
 )
 def price(
-    ticker: Optional[str],
-    input_file: Optional[str],
+    ticker: str | None,
+    input_file: str | None,
     start_date: str,
     end_date: str,
     interval: str,
     interval_multiplier: int,
     max_workers: int,
-    api_key: Optional[str],
+    api_key: str | None,
     pretty: bool,
-    output_file: Optional[str],
+    output_file: str | None,
     no_progress: bool,
 ) -> int:
     """Get historical price data for ticker(s).

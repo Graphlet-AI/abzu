@@ -4,7 +4,7 @@ import json
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import praw
 from praw.models import Comment, Submission
@@ -184,7 +184,7 @@ class RedditFetcher:
         return post_data
 
     def search_posts(
-        self, query: str, subreddit: Optional[str] = None, limit: int = 10
+        self, query: str, subreddit: str | None = None, limit: int = 10
     ) -> list[dict[str, Any]]:
         """
         Search for posts.

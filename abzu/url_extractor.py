@@ -121,7 +121,6 @@ class URLExtractor:
             if url.startswith(("http://", "https://")) and not url.startswith(
                 ("javascript:", "mailto:", "#")
             ):
-
                 if not self.should_ignore_url(url):
                     filtered_urls.append(url)
                 else:

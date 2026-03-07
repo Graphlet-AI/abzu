@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from pathlib import Path
-from typing import Optional
 
 from abzu.config import config
 from abzu.crawl.rss import DEFAULT_USER_AGENT, parse_rss_and_save, setup_browser
@@ -18,7 +17,7 @@ RSS_URL = "https://www.theinformation.com/feed"
 
 async def _crawl_theinformation_async(
     output_file: str,
-    cookie: Optional[str] = None,
+    cookie: str | None = None,
     user_agent: str = DEFAULT_USER_AGENT,
     bypass_cf: bool = False,
 ) -> int:
@@ -46,7 +45,7 @@ async def _crawl_theinformation_async(
 
 def crawl_theinformation(
     output_file: str = config.get("crawl.theinformation.output"),
-    cookie: Optional[str] = None,
+    cookie: str | None = None,
     user_agent: str = DEFAULT_USER_AGENT,
     bypass_cf: bool = False,
     batch_size: int = 1,

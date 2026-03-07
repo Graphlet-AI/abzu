@@ -1,4 +1,4 @@
-from typing import Any, TypedDict
+from typing import TypedDict, cast
 
 import pandas as pd
 
@@ -29,10 +29,11 @@ def get_blocking_metrics(input_path: str, blocks_path: str) -> BlockingMetrics:
     largest_block = blocks_df["block_size"].max() if "block_size" in blocks_df.columns else 0
 
     # Get top 10 largest blocks with their keys
-    top_blocks: list[Any] = []
+    top_blocks: list[BlockInfo] = []
     if "block_size" in blocks_df.columns and "block_key" in blocks_df.columns:
-        top_blocks = blocks_df.nlargest(10, "block_size")[["block_key", "block_size"]].to_dict(
-            "records"
+        top_blocks = cast(
+            list[BlockInfo],
+            blocks_df.nlargest(10, "block_size")[["block_key", "block_size"]].to_dict("records"),
         )
 
     return {

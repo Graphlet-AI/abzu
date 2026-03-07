@@ -35,13 +35,15 @@ def save_pandas_df_with_pyspark(
         mode: Write mode - "overwrite", "append", "ignore", "error"
 
     Example:
-        >>> df = pd.DataFrame({
-        ...     "id": [1, 2],
-        ...     "items": [
-        ...         [{"name": "a", "values": [1, 2]}, {"name": "b", "values": [3]}],
-        ...         [{"name": "c", "values": [4, 5, 6]}]
-        ...     ]
-        ... })
+        >>> df = pd.DataFrame(
+        ...     {
+        ...         "id": [1, 2],
+        ...         "items": [
+        ...             [{"name": "a", "values": [1, 2]}, {"name": "b", "values": [3]}],
+        ...             [{"name": "c", "values": [4, 5, 6]}],
+        ...         ],
+        ...     }
+        ... )
         >>> save_pandas_df_with_pyspark(df, "/path/to/output.parquet")
     """
     # Get or create Spark session

@@ -17,12 +17,12 @@ class LazyGroup(click.Group):
     def list_commands(self, ctx: click.Context) -> list[str]:
         return sorted(self.lazy_subcommands.keys())
 
-    def get_command(self, ctx: click.Context, name: str) -> click.Command | None:
-        if name == "names":
+    def get_command(self, ctx: click.Context, cmd_name: str) -> click.Command | None:
+        if cmd_name == "names":
             from . import names
 
             return names.names
-        elif name == "semantic":
+        elif cmd_name == "semantic":
             from . import semantic
 
             return semantic.semantic

@@ -9,7 +9,7 @@ import time
 import traceback
 from datetime import datetime  # timedelta was unused
 from pathlib import Path
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 import pandas as pd
 import requests
@@ -94,7 +94,7 @@ CONCEPT_MAP: dict[str, list[str]] = {
 
 
 # --- Helper Functions ---
-def parse_date_flexible(date_str: Optional[str]) -> Optional[datetime]:
+def parse_date_flexible(date_str: str | None) -> datetime | None:
     """
     Parses a date string from various common formats into a datetime object.
     Returns None if parsing fails or input is None.
@@ -434,9 +434,7 @@ def parse_xbrl_instance(file_path: str, filing_date_obj: datetime) -> dict[str, 
         return {"error": f"Failed to parse XBRL: {str(e)}"}
 
 
-def find_best_quarter_end_date(
-    xbrl_data: dict[str, Any], filing_date_obj: datetime
-) -> Optional[str]:
+def find_best_quarter_end_date(xbrl_data: dict[str, Any], filing_date_obj: datetime) -> str | None:
     """
     Determines the most relevant quarter end date from parsed XBRL data.
     Prioritizes 'DocumentPeriodEndDate' facts and validates against the filing date.
@@ -518,7 +516,7 @@ def extract_relevant_facts_for_period(
     contexts = xbrl_data.get("contexts", {})
 
     for concept_key, fact_list in xbrl_data.get("facts", {}).items():
-        best_fact_for_concept: Optional[dict[str, Any]] = None
+        best_fact_for_concept: dict[str, Any] | None = None
         for fact_data in fact_list:
             context_id = fact_data["context_id"]
             context = contexts.get(context_id)
@@ -556,7 +554,7 @@ def extract_relevant_facts_for_period(
 def get_data_from_sec_api(
     cik: str,
     api_type: str,
-    concept_name_map: Optional[dict[str, list[str]]] = None,
+    concept_name_map: dict[str, list[str]] | None = None,
     min_filing_year: int = 0,
     form_type: str = config.get("api.sec.download.form_type"),
 ) -> dict[str, Any]:
@@ -645,9 +643,7 @@ def get_data_from_sec_api(
     ):  # Ensure concept_name_map is provided for 'concept' type
         for our_concept, sec_concept_list in concept_name_map.items():
             found_concept_data_api = False
-            for (
-                sec_concept_name
-            ) in (
+            for sec_concept_name in (
                 sec_concept_list
             ):  # e.g., "Revenues" or "PaymentsToAcquirePropertyPlantAndEquipment"
                 url = COMPANY_CONCEPT_URL.format(cik=cik.zfill(10), concept=sec_concept_name)
@@ -834,7 +830,7 @@ def extract_from_html(html_path: str, filing_date_obj: datetime) -> dict[str, An
 
             row_label = cells[0].get_text(strip=True).lower()
             # Try to get value from the last few cells, preferring the rightmost numeric one
-            numeric_value: Optional[float] = None
+            numeric_value: float | None = None
             for cell_idx in range(len(cells) - 1, 0, -1):  # Iterate backwards from last cell
                 row_value_text = cells[cell_idx].get_text(strip=True)
                 # Clean value: remove currency, commas; handle parentheses for negatives
@@ -868,10 +864,8 @@ def extract_from_html(html_path: str, filing_date_obj: datetime) -> dict[str, An
                                     f"HTML: Found {concept_key} ('{kw}' in '{row_label}'): {numeric_value}"
                                 )
                                 break  # Keyword found for this concept, move to next concept_key
-                    if (
-                        financial_data.get(concept_key) is not None and kw in keywords_list
-                    ):  # break outer loop if concept filled
-                        break
+                    if financial_data.get(concept_key) is not None:
+                        break  # break outer loop if concept filled
     return financial_data
 
 
@@ -984,9 +978,9 @@ def process_filing(
             final_results["errors"].append("No XBRL files found for parsing.")
             logger.info("No XBRL files found to parse.")
         else:
-            parsed_xbrl_data: Optional[dict[str, Any]] = None
-            target_xbrl_doc_end_date: Optional[str] = None
-            best_xbrl_file_source_name: Optional[str] = None
+            parsed_xbrl_data: dict[str, Any] | None = None
+            target_xbrl_doc_end_date: str | None = None
+            best_xbrl_file_source_name: str | None = None
 
             for xbrl_file_info in xbrl_files_list:  # Already sorted by likelihood of being instance
                 logger.info(
@@ -1030,9 +1024,9 @@ def process_filing(
                     final_results["source_method"] = (
                         f"xbrl_file_parsing ({best_xbrl_file_source_name})"
                     )
-                    final_results["financial_data"][
-                        "DocumentPeriodEndDate"
-                    ] = target_xbrl_doc_end_date
+                    final_results["financial_data"]["DocumentPeriodEndDate"] = (
+                        target_xbrl_doc_end_date
+                    )
                     populated_count = 0
                     for concept, data_val in xbrl_extracted_facts.items():
                         if data_val:
@@ -1124,9 +1118,9 @@ def process_filing(
                         if final_results["source_method"] == "N/A":
                             final_results["source_method"] = "html_extraction_WARN (supplement)"
                         elif "WARN" not in final_results["source_method"]:
-                            final_results[
-                                "source_method"
-                            ] += " +html_supplement_WARN"  # Added space
+                            final_results["source_method"] += (
+                                " +html_supplement_WARN"  # Added space
+                            )
 
                 if "error_html_parsing" in html_extracted_data:
                     final_results["errors"].append(

@@ -285,9 +285,9 @@ def test_schema_consistency_across_iterations(spark, tmp_path):
     raw_fields = sorted([f.name for f in raw_company_schema.fields])
     resolved_fields = sorted([f.name for f in resolved_company_schema.fields])
 
-    assert (
-        raw_fields == resolved_fields
-    ), f"Schema mismatch: {set(raw_fields) ^ set(resolved_fields)}"
+    assert raw_fields == resolved_fields, (
+        f"Schema mismatch: {set(raw_fields) ^ set(resolved_fields)}"
+    )
 
     # Neither should have block fields
     assert "block_key" not in raw_fields

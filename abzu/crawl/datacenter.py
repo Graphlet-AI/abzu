@@ -3,7 +3,7 @@
 import asyncio
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from numpy.random import default_rng
 from playwright.async_api import Page, async_playwright
@@ -82,7 +82,7 @@ class DataCenterPlaywrightCrawler:
         logger.info(f"Found {len(article_links)} article links on page")
         return list(article_links)  # Ensure list type
 
-    async def fetch_article_content(self, page: Page, url: str) -> Optional[dict[str, Any]]:
+    async def fetch_article_content(self, page: Page, url: str) -> dict[str, Any] | None:
         """Fetch and extract content from an individual article."""
         try:
             logger.info(f"Fetching article: {url}")
@@ -436,7 +436,7 @@ class DataCenterPlaywrightCrawler:
 
 
 def crawl_datacenter(
-    url: Optional[str] = None,
+    url: str | None = None,
     output_path: str = config.get("crawl.datacenter.output"),
     pages: int = 10,
     batch_size: int = 10,

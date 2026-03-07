@@ -5,16 +5,11 @@ import os
 import shutil
 from pathlib import Path
 from typing import (
+    TYPE_CHECKING,
     Any,
-    Dict,
-    List,
     Literal,
-    Optional,
-    Set,
-    Tuple,
     TypedDict,
     TypeVar,
-    Union,
     cast,
 )
 
@@ -71,7 +66,7 @@ class S3Object(TypedDict):
 
 
 class S3ListResponse(TypedDict):
-    Contents: List[S3Object]
+    Contents: list[S3Object]
     IsTruncated: bool
     KeyCount: int
     MaxKeys: int
@@ -92,51 +87,51 @@ class StateItem(TypedDict):
 
     key: str
     value: str
-    etag: Optional[str]
-    metadata: Optional[Dict[str, str]]
-    options: Optional[Dict[str, str]]  # For consistency and concurrency options
+    etag: str | None
+    metadata: dict[str, str] | None
+    options: dict[str, str] | None  # For consistency and concurrency options
 
 
 class StateOptions(TypedDict, total=False):
     """Options for state operations."""
 
-    consistency: Optional[str]  # "strong" or "eventual"
-    concurrency: Optional[str]  # "first-write" or "last-write"
+    consistency: str | None  # "strong" or "eventual"
+    concurrency: str | None  # "first-write" or "last-write"
 
 
 class QueryFilter(TypedDict, total=False):
     """Type for query filters."""
 
-    EQ: Dict[str, Any]
-    NEQ: Dict[str, Any]
-    GT: Dict[str, Any]
-    GTE: Dict[str, Any]
-    LT: Dict[str, Any]
-    LTE: Dict[str, Any]
-    IN: Dict[str, List[Any]]
-    AND: List["QueryFilter"]
-    OR: List["QueryFilter"]
+    EQ: dict[str, Any]
+    NEQ: dict[str, Any]
+    GT: dict[str, Any]
+    GTE: dict[str, Any]
+    LT: dict[str, Any]
+    LTE: dict[str, Any]
+    IN: dict[str, list[Any]]
+    AND: list["QueryFilter"]
+    OR: list["QueryFilter"]
 
 
 class SortOrder(TypedDict):
     """Type for sort orders."""
 
     key: str
-    order: Optional[str]  # "ASC" or "DESC"
+    order: str | None  # "ASC" or "DESC"
 
 
 class QueryPage(TypedDict, total=False):
     """Type for query pagination."""
 
     limit: int
-    token: Optional[str]
+    token: str | None
 
 
 class QueryRequest(TypedDict, total=False):
     """Type for query requests."""
 
     filter: QueryFilter
-    sort: List[SortOrder]
+    sort: list[SortOrder]
     page: QueryPage
 
 
@@ -144,18 +139,21 @@ class QueryResult(TypedDict):
     """Type for query results."""
 
     key: str
-    data: Dict[str, Any]
+    data: dict[str, Any]
     etag: str
 
 
 class QueryResponse(TypedDict):
     """Type for query responses."""
 
-    results: List[QueryResult]
-    token: Optional[str]
+    results: list[QueryResult]
+    token: str | None
 
 
 # --- Dapr Integration (for hybrid mode) ---
+if TYPE_CHECKING:
+    from dapr.clients.grpc._state import StateOptions as DaprStateOptions
+
 try:
     import boto3
     from botocore.config import Config
@@ -169,13 +167,14 @@ try:
 
     DAPR_AVAILABLE = True
 except ImportError:
+    DaprStateOptions = Any  # type: ignore[assignment,misc]
     DAPR_AVAILABLE = False
 
 
 T = TypeVar("T")
 
 
-def ensure_str(value: Optional[str], default: str) -> str:
+def ensure_str(value: str | None, default: str) -> str:
     """Ensure a value is a string, using default if None."""
     if value is None:
         return default
@@ -187,7 +186,7 @@ def ensure_str(value: Optional[str], default: str) -> str:
 class DaprStateStore:
     """Dapr state store client for hybrid cache mode."""
 
-    def __init__(self, store_name: Optional[str] = None):
+    def __init__(self, store_name: str | None = None):
         if not DAPR_AVAILABLE:
             raise ImportError("dapr Python SDK is not installed.")
         self.store_name = ensure_str(store_name or os.environ.get("DAPR_STATE_STORE"), "statestore")
@@ -196,9 +195,9 @@ class DaprStateStore:
     def get(
         self,
         key: str,
-        metadata: Optional[Dict[str, str]] = None,
-        options: Optional[DaprStateOptions] = None,
-    ) -> Optional[str]:
+        metadata: dict[str, str] | None = None,
+        options: DaprStateOptions | None = None,
+    ) -> str | None:
         """Get state from Dapr state store.
 
         Args:
@@ -222,9 +221,9 @@ class DaprStateStore:
         self,
         key: str,
         value: str,
-        metadata: Optional[Dict[str, str]] = None,
-        options: Optional[DaprStateOptions] = None,
-        etag: Optional[str] = None,
+        metadata: dict[str, str] | None = None,
+        options: DaprStateOptions | None = None,
+        etag: str | None = None,
     ) -> None:
         """Set state in Dapr state store.
 
@@ -246,9 +245,9 @@ class DaprStateStore:
     def delete(
         self,
         key: str,
-        metadata: Optional[Dict[str, str]] = None,
-        options: Optional[DaprStateOptions] = None,
-        etag: Optional[str] = None,
+        metadata: dict[str, str] | None = None,
+        options: DaprStateOptions | None = None,
+        etag: str | None = None,
     ) -> None:
         """Delete state from Dapr state store.
 
@@ -266,9 +265,7 @@ class DaprStateStore:
             logger.error(f"Failed to delete state for key {key}: {e}")
             raise
 
-    def get_bulk(
-        self, keys: List[str], metadata: Optional[Dict[str, str]] = None
-    ) -> List[StateItem]:
+    def get_bulk(self, keys: list[str], metadata: dict[str, str] | None = None) -> list[StateItem]:
         """Get multiple states from Dapr state store.
 
         Args:
@@ -282,7 +279,7 @@ class DaprStateStore:
             result = self.client.get_bulk_state(
                 store_name=self.store_name, keys=keys, states_metadata=metadata
             ).items
-            return [
+            return [  # ty: ignore[invalid-return-type]
                 {
                     "key": item.key,
                     "value": (
@@ -298,7 +295,7 @@ class DaprStateStore:
             logger.error(f"Failed to get bulk states for keys {keys}: {e}")
             return []
 
-    def set_bulk(self, states: List[StateItem]) -> None:
+    def set_bulk(self, states: list[StateItem]) -> None:
         """Set multiple states in Dapr state store.
 
         Args:
@@ -315,7 +312,7 @@ class DaprStateStore:
             raise
 
     def execute_transaction(
-        self, operations: List[Tuple[str, str, Optional[str], Optional[Dict[str, str]]]]
+        self, operations: list[tuple[str, str, str | None, dict[str, str] | None]]
     ) -> None:
         """Execute a state transaction.
 
@@ -388,7 +385,7 @@ class DaprStateStore:
             if not response or not response.results:
                 return {"results": [], "token": None}
 
-            return {
+            return {  # ty: ignore[invalid-return-type, invalid-argument-type]
                 "results": [
                     {
                         "key": item.key,
@@ -411,7 +408,7 @@ class DaprStateStore:
 class DaprS3Storage:
     """Dapr S3 binding client for hybrid cache mode."""
 
-    def __init__(self, binding_name: Optional[str] = None):
+    def __init__(self, binding_name: str | None = None):
         if not DAPR_AVAILABLE:
             raise ImportError("dapr Python SDK is not installed.")
         self.binding_name = ensure_str(
@@ -437,12 +434,12 @@ class DaprS3Storage:
             s3_key: The S3 object key
             data: The data to upload as bytes
         """
-        metadata: Tuple[Tuple[str, str], ...] = (("key", s3_key),)
+        metadata: tuple[tuple[str, str], ...] = (("key", s3_key),)
         self.client.invoke_binding(
             self.binding_name, operation="create", data=data, metadata=metadata
         )
 
-    def download(self, s3_key: str) -> Optional[bytes]:
+    def download(self, s3_key: str) -> bytes | None:
         """Download data from S3 using direct S3 client.
 
         Args:
@@ -459,7 +456,7 @@ class DaprS3Storage:
             logger.error(f"Failed to download from S3: {e}")
             return None
 
-    def list_keys(self, prefix: str = "") -> List[str]:
+    def list_keys(self, prefix: str = "") -> list[str]:
         """List all keys in the S3 bucket with optional prefix.
 
         Args:
@@ -470,13 +467,13 @@ class DaprS3Storage:
         """
         try:
             # Try Dapr binding first
-            metadata: Tuple[Tuple[str, str], ...] = (("prefix", prefix),)
+            metadata: tuple[tuple[str, str], ...] = (("prefix", prefix),)
             response = self.client.invoke_binding(
                 self.binding_name, operation="list", data=b"", metadata=metadata
             )
             if response.data:
                 try:
-                    return cast(List[str], json.loads(response.data.decode()))
+                    return cast(list[str], json.loads(response.data.decode()))
                 except json.JSONDecodeError:
                     logger.error("Failed to decode Dapr binding response")
                     return []
@@ -505,7 +502,7 @@ class DaprS3Storage:
 #     # Use disk only
 
 
-def backup_file(file_path: Union[str, Path]) -> bool:
+def backup_file(file_path: str | Path) -> bool:
     """
     Create a backup of a file if it exists.
 
@@ -531,7 +528,7 @@ def backup_file(file_path: Union[str, Path]) -> bool:
 
 def save_jsonl(
     data: list[dict[str, Any]] | pd.DataFrame,
-    file_path: Union[str, Path],
+    file_path: str | Path,
     create_backup: bool = True,
 ) -> bool:
     """
@@ -593,14 +590,14 @@ def save_jsonl(
         return False
 
 
-def _get_existing_urls(file_path: Path) -> Set[str]:
+def _get_existing_urls(file_path: Path) -> set[str]:
     """Get set of existing URLs from JSONL file."""
     if not file_path.exists():
         return set()
 
     existing_urls = set()
     try:
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             for line in f:
                 try:
                     item = json.loads(line.strip())
@@ -614,9 +611,7 @@ def _get_existing_urls(file_path: Path) -> Set[str]:
     return existing_urls
 
 
-def append_jsonl(
-    data: dict[str, Any], file_path: Union[str, Path], create_backup: bool = True
-) -> bool:
+def append_jsonl(data: dict[str, Any], file_path: str | Path, create_backup: bool = True) -> bool:
     """
     Append a record to a JSONL file with backup option.
     Prevents duplicate URLs from being added.
@@ -649,7 +644,7 @@ def append_jsonl(
         return False
 
 
-def load_jsonl(file_path: Union[str, Path]) -> list[dict[str, Any]]:
+def load_jsonl(file_path: str | Path) -> list[dict[str, Any]]:
     """
     Load data from a JSONL file.
 
@@ -667,7 +662,7 @@ def load_jsonl(file_path: Union[str, Path]) -> list[dict[str, Any]]:
 
     data = []
     try:
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             for line in f:
                 try:
                     item = json.loads(line.strip())
@@ -680,7 +675,7 @@ def load_jsonl(file_path: Union[str, Path]) -> list[dict[str, Any]]:
     return data
 
 
-def build_crawled_url_index(file_path: Union[str, Path]) -> set[str]:
+def build_crawled_url_index(file_path: str | Path) -> set[str]:
     """
     Read a JSONL file and build an index of already crawled URLs.
 
@@ -700,7 +695,7 @@ def build_crawled_url_index(file_path: Union[str, Path]) -> set[str]:
     try:
         # Count entries for logging
         total_entries = 0
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             for line in f:
                 try:
                     item = json.loads(line.strip())

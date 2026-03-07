@@ -59,8 +59,7 @@ playwright = "^1.54.0"
 sparkdantic = {git = "https://github.com/Graphlet-AI/sparkdantic.git", rev = "fix-forward-references"}
 wandb = "0.23.0"
 sec-edgar-api = "^1.1.0"
-pyspark-mcp = ">=0.0.3"
-mlflow = ">=3.8.1"
+pyspark-mcp = ">=0.0.6"
 faiss-cpu = ">=1.13.2"
 python-levenshtein = "^0.27.3"
 botocore = "^1.42.25"
@@ -133,18 +132,16 @@ include = ["abzu"]
 exclude = ["abzu/baml_client", "subs"]
 
 [tool.ty.rules]
-# Downgraded to warn for initial migration; tighten to error as code is fixed
+# Third-party stubs (faiss, pyspark, dapr, lxml) cause false positives
 unresolved-import = "warn"
 possibly-unresolved-reference = "warn"
 unused-ignore-comment = "ignore"
-invalid-return-type = "warn"
+# Third-party library stubs with incorrect/missing type info
+possibly-missing-attribute = "ignore"
+missing-argument = "ignore"
+no-matching-overload = "ignore"
+# TypedDict structural typing limitations
 invalid-argument-type = "warn"
-invalid-method-override = "warn"
-unknown-argument = "warn"
-no-matching-overload = "warn"
-missing-argument = "warn"
-invalid-assignment = "warn"
-call-non-callable = "warn"
 
 [[tool.ty.overrides]]
 include = ["tests/**"]

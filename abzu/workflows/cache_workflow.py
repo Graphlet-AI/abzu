@@ -2,8 +2,9 @@
 
 import json
 import logging
+from collections.abc import Callable, Generator
 from datetime import datetime
-from typing import Any, Callable, Dict, Generator, Optional, TypedDict, cast
+from typing import Any, TypedDict, cast
 
 import dapr.ext.workflow as wf
 
@@ -19,8 +20,8 @@ logger = logging.getLogger(__name__)
 # Tests can monkey-patch them **after** importing this module but **before** the
 # first activity executes – avoiding real Dapr network calls during import.
 
-state_store: Optional[DaprStateStore] = None
-s3_storage: Optional[DaprS3Storage] = None
+state_store: DaprStateStore | None = None
+s3_storage: DaprS3Storage | None = None
 
 
 def _ensure_clients() -> None:  # noqa: D401
@@ -48,8 +49,8 @@ class WorkflowResponse(TypedDict):
     """Response type for workflow operations."""
 
     success: bool
-    data: Optional[Dict[str, Any]]
-    error: Optional[str]
+    data: dict[str, Any] | None
+    error: str | None
 
 
 @wfr.activity
@@ -78,7 +79,7 @@ if hasattr(check_cloud_cache, "__wrapped__"):
 
 
 @wfr.activity
-def download_from_cloud(ctx: wf.WorkflowActivityContext, key: str) -> Optional[Dict[str, Any]]:
+def download_from_cloud(ctx: wf.WorkflowActivityContext, key: str) -> dict[str, Any] | None:
     """Download data from cloud cache."""
     _ensure_clients()
     ss = cast(DaprS3Storage, s3_storage)
@@ -87,7 +88,7 @@ def download_from_cloud(ctx: wf.WorkflowActivityContext, key: str) -> Optional[D
         # Try S3 first
         s3_data = ss.download(key)
         if s3_data:
-            return cast(Dict[str, Any], json.loads(s3_data.decode()))
+            return cast(dict[str, Any], json.loads(s3_data.decode()))
 
         # Then try state store
         store_data = st.get(key)
@@ -103,7 +104,7 @@ if hasattr(download_from_cloud, "__wrapped__"):
 
 
 @wfr.activity
-def upload_to_cloud(ctx: wf.WorkflowActivityContext, key: str, data: Dict[str, Any]) -> bool:
+def upload_to_cloud(ctx: wf.WorkflowActivityContext, key: str, data: dict[str, Any]) -> bool:
     """Upload data to cloud cache."""
     _ensure_clients()
     ss = cast(DaprS3Storage, s3_storage)
@@ -137,7 +138,7 @@ if hasattr(upload_to_cloud, "__wrapped__"):
 
 @wfr.workflow(name="cache_sync_wf")
 def cache_sync_workflow(
-    ctx: wf.DaprWorkflowContext, category: str, key: str, data: Optional[Dict[str, Any]] = None
+    ctx: wf.DaprWorkflowContext, category: str, key: str, data: dict[str, Any] | None = None
 ) -> Generator[Any, None, WorkflowResponse]:
     """Run the cache sync workflow."""
     try:

@@ -3,7 +3,6 @@
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 import click
 
@@ -36,7 +35,7 @@ logger = get_logger(__name__)
     help="Output JSONL file for Reddit posts",
 )
 @click.option("--limit", "-l", default=25, help="Number of posts to fetch per ticker")
-def reddit(input: Optional[str], ticker: Optional[str], output: str, limit: int) -> None:
+def reddit(input: str | None, ticker: str | None, output: str, limit: int) -> None:
     """Crawl Reddit for posts about tickers.
 
     Use either --input to process multiple tickers from a file, or --ticker for a single ticker.
@@ -80,7 +79,7 @@ def reddit(input: Optional[str], ticker: Optional[str], output: str, limit: int)
         if input is None:
             raise ValueError("Input parameter is required when ticker is not provided")
         input_path = Path(input)
-        with open(input_path, "r") as f:
+        with open(input_path) as f:
             for line in f:
                 try:
                     data = json.loads(line.strip())

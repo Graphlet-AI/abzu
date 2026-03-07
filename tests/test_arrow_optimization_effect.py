@@ -1,6 +1,6 @@
 """Demonstrate the effect of Arrow optimization on list preservation."""
 
-from typing import Any, Optional
+from typing import Any
 
 import pandas as pd
 
@@ -79,7 +79,7 @@ def test_arrow_optimization_effect() -> None:
     print("=" * 60)
 
     # Simulate what happens in BAML when it expects a list
-    def simulate_baml_processing(items: list[Any]) -> Optional[list[Any]]:
+    def simulate_baml_processing(items: list[Any]) -> list[Any] | None:
         """Simulate BAML expecting to call list.append()"""
         try:
             # BAML might try to do this

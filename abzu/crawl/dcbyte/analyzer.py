@@ -2,7 +2,7 @@
 
 import asyncio
 import json
-from typing import Any, Optional
+from typing import Any
 
 from playwright.async_api import Page, Request, Response, async_playwright
 
@@ -135,7 +135,7 @@ class DCByteAnalyzer:
         )
         return posts
 
-    async def find_load_more_button(self, page: Page) -> Optional[str]:
+    async def find_load_more_button(self, page: Page) -> str | None:
         """Find the LOAD MORE button on the page."""
         button_selectors = [
             # DC Byte specific selectors first

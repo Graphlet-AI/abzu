@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Entity resolution blocking strategies for company matching."""
+
 import logging
 import os
-from typing import Optional
 
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
@@ -24,9 +24,9 @@ MAX_BLOCK_SIZE = config.get("process.kg.er.max_block_size", 50)
 
 # Known domain suffixes to remove from company names
 # Sorted by length (longest first) for efficient matching
-DOMAIN_SUFFIXES = tuple(
+DOMAIN_SUFFIXES: tuple[str, ...] = tuple(  # ty: ignore[invalid-assignment]
     sorted(
-        {
+        [
             ".com",
             ".org",
             ".net",
@@ -100,7 +100,7 @@ DOMAIN_SUFFIXES = tuple(
             ".cat",
             ".jobs",
             ".post",
-        },
+        ],
         key=len,
         reverse=True,
     )
@@ -163,9 +163,9 @@ def get_acronym(name: str) -> str | None:
 def build_blocks(
     input_path: str = config.get("process.kg.er.paths.input"),
     output_path: str = config.get("process.kg.er.paths.names.blocks_dir"),
-    local_mode: Optional[bool] = None,
+    local_mode: bool | None = None,
     stop_spark: bool = True,
-    max_block_size: Optional[int] = None,
+    max_block_size: int | None = None,
 ) -> None:
     """
     Analyze company blocking strategies by computing size distributions.

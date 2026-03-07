@@ -6,13 +6,11 @@ import asyncio
 import datetime
 import os
 from pathlib import Path
-from typing import Optional
 
 import dateutil.parser
 import feedparser
-from playwright.async_api import Browser
+from playwright.async_api import Browser, async_playwright
 from playwright.async_api import Error as PlaywrightError
-from playwright.async_api import async_playwright
 
 try:
     import cloudscraper
@@ -37,7 +35,7 @@ DEFAULT_USER_AGENT = (
 
 async def setup_browser(
     user_agent: str = DEFAULT_USER_AGENT,
-    cookie_string: Optional[str] = None,
+    cookie_string: str | None = None,
 ) -> Browser:
     """Create a Playwright browser instance with user agent and cookies."""
     playwright = await async_playwright().start()
@@ -88,7 +86,7 @@ async def setup_browser(
 
 
 def fetch_rss_with_cloudscraper(
-    rss_url: str, cookie_string: Optional[str] = None, user_agent: str = DEFAULT_USER_AGENT
+    rss_url: str, cookie_string: str | None = None, user_agent: str = DEFAULT_USER_AGENT
 ) -> str:
     """Fetch RSS feed using cloudscraper to bypass Cloudflare protection."""
     if not CLOUDSCRAPER_AVAILABLE:
@@ -122,9 +120,9 @@ async def parse_rss_and_save(
     rss_url: str,
     output_file: str,
     browser: Browser,
-    min_year: Optional[int] = None,
+    min_year: int | None = None,
     bypass_cf: bool = False,
-    cookie_string: Optional[str] = None,
+    cookie_string: str | None = None,
     user_agent: str = DEFAULT_USER_AGENT,
 ) -> None:
     """Parse an RSS feed and write entries with full text to JSONL.
@@ -264,7 +262,7 @@ async def parse_rss_and_save(
             logger.error(f"Playwright error fetching {link}: {e}")
             content = ""
 
-        collected_at = datetime.datetime.utcnow().isoformat() + "Z"
+        collected_at = datetime.datetime.now(datetime.UTC).isoformat()
 
         record = {
             "title": title,
@@ -290,9 +288,9 @@ async def parse_rss_and_save(
 
 
 def crawl_rss(
-    feeds_file: Optional[str] = None,
+    feeds_file: str | None = None,
     output_dir: str = config.get("crawl.rss.output_dir"),
-    cookie: Optional[str] = None,
+    cookie: str | None = None,
     user_agent: str = DEFAULT_USER_AGENT,
     bypass_cf: bool = False,
     batch_size: int = 1,
@@ -323,9 +321,9 @@ def crawl_rss(
 
 
 async def _crawl_rss_async(
-    feeds_file: Optional[str] = None,
+    feeds_file: str | None = None,
     output_dir: str = config.get("crawl.rss.output_dir"),
-    cookie: Optional[str] = None,
+    cookie: str | None = None,
     user_agent: str = DEFAULT_USER_AGENT,
     bypass_cf: bool = False,
 ) -> int:

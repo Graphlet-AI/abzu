@@ -348,7 +348,5 @@ def all(
         click.echo()
 
     click.echo("✓ Entity resolution cycle completed successfully!")
-    click.echo(
-        "  Next step: Run iteration {0} with resolved companies as input".format(iteration + 1)
-    )
+    click.echo(f"  Next step: Run iteration {iteration + 1} with resolved companies as input")
     click.echo("=" * 80)

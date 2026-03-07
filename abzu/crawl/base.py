@@ -3,10 +3,11 @@
 import logging
 import time
 from abc import ABC, abstractmethod
+from collections.abc import Callable, Generator, Iterator
 from datetime import datetime
 from pathlib import Path
 from types import FrameType
-from typing import Any, Callable, Generator, Iterator, Optional, cast
+from typing import Any, cast
 
 import dateutil.parser
 import scrapy
@@ -75,7 +76,7 @@ class BaseArticleCrawler(scrapy.Spider, ABC):
         self,
         archive_url: str,
         output_path: str,
-        crawled_urls: Optional[set[str]] = None,
+        crawled_urls: set[str] | None = None,
         *args: Any,
         **kwargs: Any,
     ) -> None:
@@ -286,7 +287,7 @@ class BaseArticleCrawler(scrapy.Spider, ABC):
 
 
 # Global progress bar
-_progress_bar: Optional[tqdm] = None
+_progress_bar: tqdm | None = None
 
 
 def run_batch_crawl(
@@ -294,8 +295,8 @@ def run_batch_crawl(
     urls: list[str],
     output_path: str,
     concurrent_requests: int = 1,
-    progress_bar: Optional[tqdm] = None,
-    crawled_urls: Optional[set[str]] = None,
+    progress_bar: tqdm | None = None,
+    crawled_urls: set[str] | None = None,
 ) -> Generator[Any, Any, Any]:
     """Run crawlers sequentially with configurable concurrency.
 
@@ -366,7 +367,7 @@ def crawl_site(
     crawler_class: type[BaseArticleCrawler],
     get_archive_urls_func: Callable[[int], list[str]],
     output_path: str,
-    url: Optional[str] = None,
+    url: str | None = None,
     pages: int = 10,
     batch_size: int = 1,
     concurrent_requests: int = 1,
@@ -471,7 +472,7 @@ def crawl_site(
                     logger.info("Reactor stopped")
 
         # Set up signal handlers to gracefully exit on interrupt
-        def signal_handler(sig: int, frame: Optional[FrameType]) -> None:
+        def signal_handler(sig: int, frame: FrameType | None) -> None:
             logger.info("Received interrupt signal, shutting down gracefully...")
             if progress:
                 progress.close()

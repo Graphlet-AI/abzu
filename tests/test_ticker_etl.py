@@ -21,7 +21,7 @@ async def test_add_tickers_to_companies(max_tickers):
     # Load ticker data
     ticker_file = Path("data/financialdatasets/all_tickers_facts_baml.jsonl")
     tickers = []
-    with open(ticker_file, "r") as f:
+    with open(ticker_file) as f:
         for i, line in enumerate(f):
             if max_tickers is not None and i >= max_tickers:
                 break
@@ -36,7 +36,7 @@ async def test_add_tickers_to_companies(max_tickers):
     # Load company names
     company_file = Path("data/company_names.json")
     companies = []
-    with open(company_file, "r") as f:
+    with open(company_file) as f:
         # Load first 100 companies for testing
         for i, line in enumerate(f):
             if i >= 1000:

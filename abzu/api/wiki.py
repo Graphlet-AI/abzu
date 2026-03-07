@@ -4,7 +4,7 @@ import asyncio
 import re
 import warnings
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import aiohttp
 import mwparserfromhell
@@ -522,7 +522,7 @@ async def crawl_company_wikipedia_async(
 
 async def crawl_companies_batch_async(
     companies: list[dict[str, Any]],
-    output_file: Optional[Path] = None,
+    output_file: Path | None = None,
     max_concurrent: int = 5,
     raw: bool = False,
 ) -> list[dict[str, Any]]:

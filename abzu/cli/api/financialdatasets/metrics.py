@@ -1,7 +1,6 @@
 """CLI command for retrieving financial metrics from Financial Datasets API."""
 
 import os
-from typing import Optional
 
 import click
 
@@ -72,14 +71,14 @@ logger = get_logger(__name__)
     help="Disable progress bar when processing multiple tickers",
 )
 def metrics(
-    ticker: Optional[str],
-    input_file: Optional[str],
+    ticker: str | None,
+    input_file: str | None,
     period: str,
     limit: int,
     max_workers: int,
-    api_key: Optional[str],
+    api_key: str | None,
     pretty: bool,
-    output_file: Optional[str],
+    output_file: str | None,
     no_progress: bool,
 ) -> int:
     """Get financial metrics for ticker(s).
@@ -92,8 +91,8 @@ def metrics(
     containing records with 'ticker' or 'symbol' fields.
 
     Default paths:
-    - Default input file path: {0}
-    - Default output file path when using input file: {1}
+    - Default input file path: {}
+    - Default output file path when using input file: {}
 
     Examples:
         abzu api financialdatasets metrics -t AAPL

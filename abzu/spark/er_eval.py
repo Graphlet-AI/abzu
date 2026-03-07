@@ -3,7 +3,6 @@
 
 import logging
 import os
-from typing import Optional
 
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame, SparkSession
@@ -23,7 +22,7 @@ def evaluate_er_matches(
     ),
     output_path: str = config.get("process.kg.er.paths.names.eval"),
     iteration: int = 1,
-    local_mode: Optional[bool] = None,
+    local_mode: bool | None = None,
 ) -> None:
     """
     Evaluate entity resolution matches by exploding companies and validating source UUIDs.
@@ -93,7 +92,7 @@ def evaluate_er_matches(
         original_raw_companies_df = spark.read.json(raw_companies_path)
 
     # For iteration 2+, also load the previous iteration's output for comparison
-    previous_iteration_df: Optional[DataFrame] = None
+    previous_iteration_df: DataFrame | None = None
     if iteration > 1:
         prev_iteration = iteration - 1
         # Check if output_path has {iteration} placeholder
@@ -244,6 +243,8 @@ def evaluate_er_matches(
     )
 
     # For iteration 2+, get previous iteration counts
+    unique_prev_companies = 0
+    prev_uuids: DataFrame | None = None
     if previous_iteration_df is not None:
         total_prev_companies = previous_iteration_df.count()
         unique_prev_companies = previous_iteration_df.select("uuid").distinct().count()
@@ -360,6 +361,7 @@ def evaluate_er_matches(
     tracked_prev_uuids = 0
     prev_coverage_pct = 0.0
     if previous_iteration_df is not None:
+        assert prev_uuids is not None
         tracked_prev_uuids = unique_source_uuids_df.intersect(prev_uuids).count()
         prev_coverage_pct = (
             (tracked_prev_uuids / unique_prev_companies) * 100 if unique_prev_companies > 0 else 0.0

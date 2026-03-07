@@ -20,9 +20,9 @@ class LazyGroup(click.Group):
     def list_commands(self, ctx: click.Context) -> list[str]:
         return sorted(self.lazy_subcommands.keys())
 
-    def get_command(self, ctx: click.Context, name: str) -> click.Command | None:
-        if name in self.lazy_subcommands:
-            value = self.lazy_subcommands[name]
+    def get_command(self, ctx: click.Context, cmd_name: str) -> click.Command | None:
+        if cmd_name in self.lazy_subcommands:
+            value = self.lazy_subcommands[cmd_name]
             if isinstance(value, tuple):
                 import_path, _ = value
             else:
