@@ -1,7 +1,7 @@
 """Process URLs into IndustryArticle objects using BAML."""
 
 import os
-from typing import Any, Union
+from typing import Any
 
 from abzu.baml_client.async_client import b as async_b
 from abzu.baml_client.types import IndustryArticle
@@ -18,13 +18,10 @@ class ArticleProcessor:
         # Check for required environment variables
         if not os.environ.get("GEMINI_API_KEY"):
             logger.warning(
-                "GEMINI_API_KEY environment variable is not set. "
-                "BAML article processing may fail."
+                "GEMINI_API_KEY environment variable is not set. BAML article processing may fail."
             )
 
-    async def process_article(
-        self, article: dict[str, Any]
-    ) -> tuple[bool, Union[IndustryArticle, str]]:
+    async def process_article(self, article: dict[str, Any]) -> tuple[bool, IndustryArticle | str]:
         """Process an article using BAML.
 
         Args:

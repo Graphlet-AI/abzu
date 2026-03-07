@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Build a knowledge graph from pre-processed articles."""
+
 import logging
 import os
-from typing import Optional
 
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
@@ -24,7 +24,7 @@ logger = get_logger(__name__)
 def build_knowledge_graph(
     input_path: list[str] = config.get("process.kg.raw.input"),
     output_path: str = config.get("process.kg.raw.output"),
-    local_mode: Optional[bool] = None,
+    local_mode: bool | None = None,
 ) -> None:
     """
     Build a knowledge graph from pre-processed articles.
@@ -79,9 +79,7 @@ def build_knowledge_graph(
         "url",
         "posted_at",
         "collected_at",
-    ).repartition(1).write.mode(
-        "overwrite"
-    ).csv(bad_article_csv_path)
+    ).repartition(1).write.mode("overwrite").csv(bad_article_csv_path)
 
     logger.info(
         f"{clean_articles_df.count():,} good articles. {bad_articles_df.count():,} bad articles."
@@ -477,13 +475,13 @@ def build_knowledge_graph(
 
     # UDFs that use the broadcast variables
     @F.udf(T.ArrayType(T.StringType()))
-    def replace_product_uuids(uuids: list) -> list:
+    def replace_product_uuids(uuids: list) -> list | None:
         if uuids is None:
             return None
         return [products_map_bc.value.get(uuid, uuid) for uuid in uuids if uuid is not None]
 
     @F.udf(T.ArrayType(T.StringType()))
-    def replace_tech_uuids(uuids: list) -> list:
+    def replace_tech_uuids(uuids: list) -> list | None:
         if uuids is None:
             return None
         return [technologies_map_bc.value.get(uuid, uuid) for uuid in uuids if uuid is not None]

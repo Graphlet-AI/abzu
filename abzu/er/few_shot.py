@@ -1,4 +1,4 @@
-from typing import Any, Union
+from typing import Any
 
 from abzu.baml_client.types import FewShotExample, MergeCompany, MergeCompanyExampleSet
 
@@ -9,23 +9,23 @@ def company_dicts_to_baml(
         list[  # MergeCompanyExampleSet.merge_companies
             dict[
                 str,  # companies / merged_company
-                Union[
-                    list[dict[str, Union[int, list[int], str]]],  # MergeCompany
-                    dict[str, Union[int, list[int], str]],  # MergeCompany
-                ],  # This is also to format the line I hope
-            ]  # This is also to format the line I hope
-        ],  # This is to format the line I hope
+                list[dict[str, int | list[int] | str]]  # MergeCompany
+                | dict[str, int | list[int] | str],  # MergeCompany
+            ]
+        ],
     ],
 ) -> MergeCompanyExampleSet:
     """Convert a list of company dicts to a FewShotMergedCompanies object.
 
     Note that we do hard asserts, if the few-shot examples aren't complete, we want to die hard."""
+    companies: list[MergeCompany] = []
+    output_master_record: MergeCompany | None = None
     for few_shot_example in merge_company_example_set_dict["merge_companies"]:
         assert "companies" in few_shot_example
         assert "output_master_record" in few_shot_example
 
         # Fill in the FewShotExample.companies field
-        companies: list[MergeCompany] = []
+        companies = []
         for company in few_shot_example["companies"]:
             assert "id" in company
             # assert "name" in company
@@ -50,6 +50,7 @@ def company_dicts_to_baml(
             source_ids=output_master_record_dict["source_ids"],  # type: ignore
         )
 
+    assert output_master_record is not None, "No few-shot examples found in merge_companies"
     merge_companies = [
         FewShotExample(
             companies=companies,
@@ -63,9 +64,7 @@ def company_dicts_to_baml(
     return merge_company_example_set
 
 
-company_id_tracking_dicts: dict[
-    str, list[dict[str, Union[list[dict[str, Any]], dict[str, Any]]]]
-] = {
+company_id_tracking_dicts: dict[str, list[dict[str, list[dict[str, Any]] | dict[str, Any]]]] = {
     "merge_companies": [
         {
             "companies": [

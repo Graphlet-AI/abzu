@@ -2,8 +2,8 @@
 
 import asyncio
 import re
-from datetime import datetime
-from typing import Any, Optional, Union
+from datetime import UTC, datetime
+from typing import Any
 
 from playwright.async_api import Browser, Page, async_playwright
 
@@ -36,7 +36,7 @@ class PlaywrightFetcher:
         self.timeout = timeout * 1000  # Convert to milliseconds for Playwright
         self.headless = headless
         self.browser_type = browser_type
-        self.browser: Optional[Browser] = None
+        self.browser: Browser | None = None
         self.playwright = None
 
         # Initialize HTML extractor
@@ -106,7 +106,7 @@ class PlaywrightFetcher:
             return title_match.group(1).strip()
         return ""
 
-    def extract_posted_date(self, content: str, url: str) -> Optional[str]:
+    def extract_posted_date(self, content: str, url: str) -> str | None:
         """Extract the posted date from HTML content.
 
         Args:
@@ -141,7 +141,7 @@ class PlaywrightFetcher:
 
         return None
 
-    async def fetch_url(self, url: str) -> tuple[bool, Union[dict[str, Any], str]]:
+    async def fetch_url(self, url: str) -> tuple[bool, dict[str, Any] | str]:
         """Fetch content from a URL using Playwright.
 
         Args:
@@ -168,7 +168,7 @@ class PlaywrightFetcher:
         if not self.browser:
             return False, "Failed to initialize browser"
 
-        page: Optional[Page] = None
+        page: Page | None = None
         retries = 0
 
         while retries < self.max_retries:
@@ -223,7 +223,7 @@ class PlaywrightFetcher:
                 posted_at = self.extract_posted_date(html_content, url)
 
                 # Create article dict according to schema
-                collected_at = datetime.utcnow().isoformat()
+                collected_at = datetime.now(UTC).isoformat()
                 article = {
                     "url": url,
                     "title": title,
@@ -240,7 +240,7 @@ class PlaywrightFetcher:
 
                 return True, article
 
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 retries += 1
                 logger.warning(f"Timeout fetching {url} (attempt {retries}/{self.max_retries})")
                 if page:
@@ -261,7 +261,7 @@ class PlaywrightFetcher:
         logger.error(error_msg)
         return False, error_msg
 
-    def fetch_url_sync(self, url: str) -> tuple[bool, Union[dict[str, Any], str]]:
+    def fetch_url_sync(self, url: str) -> tuple[bool, dict[str, Any] | str]:
         """Synchronous wrapper for fetch_url for compatibility.
 
         Args:

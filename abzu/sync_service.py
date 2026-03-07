@@ -3,7 +3,7 @@
 import json
 import logging
 import os
-from typing import Any, Dict
+from typing import Any
 
 from dapr.ext.fastapi import DaprApp
 from fastapi import FastAPI
@@ -24,7 +24,7 @@ class CloudEvent(BaseModel):
     source: str
     topic: str
     pubsubname: str
-    data: Dict[str, Any]
+    data: dict[str, Any]
     id: str
     specversion: str
     tracestate: str
@@ -37,12 +37,12 @@ class SyncEntry(BaseModel):
 
     category: str
     key: str
-    data: Dict[str, Any]
+    data: dict[str, Any]
     timestamp: str
 
 
 @dapr_app.subscribe(pubsub="cachepubsub", topic="cache-sync")
-async def handle_sync_event(event: CloudEvent) -> Dict[str, bool]:
+async def handle_sync_event(event: CloudEvent) -> dict[str, bool]:
     """Handle cache sync events."""
     try:
         sync_entry = SyncEntry(**event.data)

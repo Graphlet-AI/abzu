@@ -56,7 +56,7 @@ def wiki(ticker: str, name: str, input: str, output: str, concurrent: int) -> in
             raise click.UsageError("Cannot use --ticker/--name with --input")
 
         try:
-            result = crawl_company_structured(ticker=ticker, name=name)
+            result = crawl_company_structured(name=name or ticker)
 
             if output and output != config.get("process.kg.wiki.output"):
                 with open(output, "w") as f:
@@ -75,5 +75,5 @@ def wiki(ticker: str, name: str, input: str, output: str, concurrent: int) -> in
     return process_wiki(
         companies_path=input,
         output_path=output,
-        concurrent=concurrent,
+        batch_size=concurrent,
     )

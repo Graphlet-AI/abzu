@@ -37,9 +37,9 @@ def test_pyspark_preserves_lists() -> None:
 
         # Load with pandas (default) - this creates numpy arrays
         pandas_df = pd.read_parquet(parquet_path)
-        assert hasattr(
-            pandas_df["source_uuids"].iloc[0], "tolist"
-        ), "Pandas default converts lists to numpy arrays"
+        assert hasattr(pandas_df["source_uuids"].iloc[0], "tolist"), (
+            "Pandas default converts lists to numpy arrays"
+        )
 
         # Load with PySpark
         spark = get_spark_session("TestListPreservation")
@@ -52,16 +52,16 @@ def test_pyspark_preserves_lists() -> None:
         for i in range(len(test_data["id"])):
             # Check source_uuids
             source_uuids = pyspark_df["source_uuids"].iloc[i]
-            assert isinstance(
-                source_uuids, list
-            ), f"source_uuids should be list, got {type(source_uuids)}"
+            assert isinstance(source_uuids, list), (
+                f"source_uuids should be list, got {type(source_uuids)}"
+            )
             assert source_uuids == test_data["source_uuids"][i]
 
             # Check match_skip_history
             skip_history = pyspark_df["match_skip_history"].iloc[i]
-            assert isinstance(
-                skip_history, list
-            ), f"match_skip_history should be list, got {type(skip_history)}"
+            assert isinstance(skip_history, list), (
+                f"match_skip_history should be list, got {type(skip_history)}"
+            )
             assert skip_history == test_data["match_skip_history"][i]
 
         spark.stop()
@@ -122,9 +122,9 @@ def test_pyspark_with_nested_structs() -> None:
                 # Each company should be a dict or Row (PySpark's representation)
                 from pyspark.sql.types import Row
 
-                assert isinstance(
-                    company, (dict, Row)
-                ), f"company should be dict or Row, got {type(company)}"
+                assert isinstance(company, (dict, Row)), (
+                    f"company should be dict or Row, got {type(company)}"
+                )
 
                 # Check nested lists within company (Row objects support attribute access)
                 if isinstance(company, Row):
@@ -134,13 +134,13 @@ def test_pyspark_with_nested_structs() -> None:
                     source_uuids = company.get("source_uuids")
                     skip_history = company.get("match_skip_history")
 
-                assert isinstance(
-                    source_uuids, list
-                ), f"company source_uuids should be list, got {type(source_uuids)}"
+                assert isinstance(source_uuids, list), (
+                    f"company source_uuids should be list, got {type(source_uuids)}"
+                )
 
-                assert isinstance(
-                    skip_history, list
-                ), f"company match_skip_history should be list, got {type(skip_history)}"
+                assert isinstance(skip_history, list), (
+                    f"company match_skip_history should be list, got {type(skip_history)}"
+                )
 
         spark.stop()
 
@@ -162,9 +162,9 @@ def test_compare_loading_methods() -> None:
 
         # Method 1: pandas default (creates numpy arrays)
         pandas_default = pd.read_parquet(parquet_path)
-        assert hasattr(
-            pandas_default["list_field"].iloc[0], "tolist"
-        ), "Default pandas creates numpy arrays"
+        assert hasattr(pandas_default["list_field"].iloc[0], "tolist"), (
+            "Default pandas creates numpy arrays"
+        )
 
         # Method 2: PySpark (preserves Python lists)
         spark = get_spark_session("TestComparison")
@@ -173,12 +173,12 @@ def test_compare_loading_methods() -> None:
         spark_df = spark.read.parquet(str(parquet_path))
         pyspark_result = spark_df.toPandas()
 
-        assert isinstance(
-            pyspark_result["list_field"].iloc[0], list
-        ), "PySpark should preserve Python lists"
-        assert isinstance(
-            pyspark_result["int_list"].iloc[0], list
-        ), "PySpark should preserve integer lists"
+        assert isinstance(pyspark_result["list_field"].iloc[0], list), (
+            "PySpark should preserve Python lists"
+        )
+        assert isinstance(pyspark_result["int_list"].iloc[0], list), (
+            "PySpark should preserve integer lists"
+        )
 
         spark.stop()
 

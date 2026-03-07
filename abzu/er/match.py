@@ -5,7 +5,7 @@ import shutil
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 import pandas as pd
 from baml_py import Collector
@@ -133,9 +133,9 @@ def match_entities(
     output_path: str = config.get("process.kg.er.paths.names.matches"),
     iteration: int = 1,
     batch_size: int = 5,
-    limit: Optional[int] = None,
-    min_block_size: Optional[int] = None,
-    max_block_size: Optional[int] = None,
+    limit: int | None = None,
+    min_block_size: int | None = None,
+    max_block_size: int | None = None,
 ) -> None:
     """
     Match entities within blocks using BAML MultiEntityResolution.
@@ -516,7 +516,7 @@ def match_entities(
     logger.info(f"  Companies merged: {reduction_count:,} ({reduction_pct:.1f}% reduction)")
     logger.info(f"  API errors encountered: {len(error_blocks):,}")
     if len(error_blocks) > 0:
-        error_path = "data/er/iterations/{iteration}/errors.parquet".format(iteration=iteration)
+        error_path = f"data/er/iterations/{iteration}/errors.parquet"
         logger.info(f"    └─ Error blocks saved to: {error_path}")
         logger.info(f"    └─ Companies recovered: {error_recovery_count:,}")
     logger.info("")

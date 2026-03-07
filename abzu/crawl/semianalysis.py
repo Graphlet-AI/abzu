@@ -1,7 +1,5 @@
 """Crawl articles from SemiAnalysis website."""
 
-from typing import Optional
-
 from scrapy.http.response import Response
 
 from abzu.config import config
@@ -40,7 +38,7 @@ def get_semianalysis_archive_urls(pages: int) -> list[str]:
 
 
 def crawl_semianalysis(
-    url: Optional[str] = None,
+    url: str | None = None,
     output_path: str = config.get("crawl.semianalysis.output"),
     pages: int = 24,
     batch_size: int = 10,

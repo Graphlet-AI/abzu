@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Utility functions for Spark operations."""
+
 import random
 import uuid
-from typing import Any, Optional
+from typing import Any
 
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
@@ -18,7 +19,7 @@ def select_most_common_property(
     df: DataFrame,
     unique_id_column: str,
     property_column: str,
-    additional_columns: Optional[list[str]] = None,
+    additional_columns: list[str] | None = None,
 ) -> DataFrame:
     """
     Select the most common value of a property for each unique identifier.
@@ -51,9 +52,7 @@ def select_most_common_property(
     --------
     >>> # Select most common ticker per company
     >>> result = select_most_common_property(
-    ...     companies_df,
-    ...     unique_id_column="name",
-    ...     property_column="ticker"
+    ...     companies_df, unique_id_column="name", property_column="ticker"
     ... )
 
     >>> # Select most common symbol per company with exchange info
@@ -61,7 +60,7 @@ def select_most_common_property(
     ...     ticker_df,
     ...     unique_id_column="name",
     ...     property_column="symbol",
-    ...     additional_columns=["exchange"]
+    ...     additional_columns=["exchange"],
     ... )
     """
     # Prepare columns to group by
@@ -193,7 +192,7 @@ def update_entity_with_uuid(
     if entity is None:
         return None
     # Convert to dict if it's a Row
-    entity_dict = entity.asDict() if hasattr(entity, "asDict") else entity.copy()
+    entity_dict = entity.asDict() if isinstance(entity, Row) else entity.copy()
 
     # Always ensure both ID and UUID exist
     # If ID is missing or null, assign a random one

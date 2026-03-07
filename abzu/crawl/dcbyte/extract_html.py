@@ -4,7 +4,7 @@
 import json
 import re
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 from urllib.parse import urlparse
 
 from bs4 import BeautifulSoup
@@ -18,7 +18,7 @@ logger = get_logger(__name__)
 
 def parse_mhtml(mhtml_path: str) -> str:
     """Parse MHTML file and extract the main HTML content."""
-    with open(mhtml_path, "r", encoding="utf-8", errors="ignore") as f:
+    with open(mhtml_path, encoding="utf-8", errors="ignore") as f:
         content = f.read()
 
     # Find the main HTML content section
@@ -180,7 +180,7 @@ def extract_posts_from_html(html_content: str) -> list[dict[str, Any]]:
     return list(unique_posts.values())
 
 
-def fetch_article_content(url: str) -> Optional[dict[str, Any]]:
+def fetch_article_content(url: str) -> dict[str, Any] | None:
     """Fetch content for a single article URL."""
     try:
         from datetime import datetime

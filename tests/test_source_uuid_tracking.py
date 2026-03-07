@@ -6,7 +6,7 @@ import os
 import shutil
 import tempfile
 import uuid
-from typing import Any, Optional
+from typing import Any
 
 import pytest
 from pyspark.sql import DataFrame, Row, SparkSession
@@ -121,7 +121,7 @@ def run_single_iteration(
     output_base_path: str,
     original_raw_path: str,
     max_block_size: int = 2,
-    spark: Optional[SparkSession] = None,
+    spark: SparkSession | None = None,
 ) -> dict[str, Any]:
     """
     Run a single iteration of block -> match -> eval.
@@ -167,11 +167,11 @@ def run_single_iteration(
 
         part_files = glob.glob(os.path.join(union_blocks_path, "part-*.json"))
         for part_file in sorted(part_files):
-            with open(part_file, "r") as f:
+            with open(part_file) as f:
                 blocks_data.extend([json.loads(line) for line in f])
     elif os.path.isfile(union_blocks_path):
         # Single file
-        with open(union_blocks_path, "r") as f:
+        with open(union_blocks_path) as f:
             blocks_data = [json.loads(line) for line in f]
     else:
         # Try alternative location - combined_blocks.json
@@ -181,10 +181,10 @@ def run_single_iteration(
 
             part_files = glob.glob(os.path.join(combined_blocks_path, "part-*.json"))
             for part_file in sorted(part_files):
-                with open(part_file, "r") as f:
+                with open(part_file) as f:
                     blocks_data.extend([json.loads(line) for line in f])
         elif os.path.isfile(combined_blocks_path):
-            with open(combined_blocks_path, "r") as f:
+            with open(combined_blocks_path) as f:
                 blocks_data = [json.loads(line) for line in f]
 
     logger.info(f"Created {len(blocks_data)} blocks")
@@ -407,9 +407,9 @@ def test_source_uuid_tracking_multiple_iterations(temp_dir, spark_session):
         iteration += 1
 
     # Verify final results
-    assert (
-        iteration <= max_iterations
-    ), f"Failed to merge all companies within {max_iterations} iterations"
+    assert iteration <= max_iterations, (
+        f"Failed to merge all companies within {max_iterations} iterations"
+    )
 
     # Load final resolved companies
     final_path = os.path.join(temp_dir, f"iteration_{iteration}", "companies_resolved.parquet")
@@ -438,9 +438,9 @@ def test_source_uuid_tracking_multiple_iterations(temp_dir, spark_session):
 
     # The key assertion: all original UUIDs should be in source_uuids
     assert len(missing_uuids) == 0, f"Lost {len(missing_uuids)} original UUIDs during iterations"
-    assert (
-        len(final_source_uuids) >= num_companies
-    ), f"Should have at least {num_companies} source_uuids"
+    assert len(final_source_uuids) >= num_companies, (
+        f"Should have at least {num_companies} source_uuids"
+    )
 
     # Log iteration progression
     logger.info("\nIteration progression:")

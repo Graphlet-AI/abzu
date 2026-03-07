@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Entity resolution blocking strategies for company matching."""
+
 import logging
 import os
-from typing import Optional
 
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
@@ -17,16 +17,15 @@ from abzu.spark.schemas import (
     normalize_company_dataframe,
 )
 
-
 logger = get_logger(__name__)
 
 MAX_BLOCK_SIZE = config.get("process.kg.er.max_block_size", 50)
 
 # Known domain suffixes to remove from company names
 # Sorted by length (longest first) for efficient matching
-DOMAIN_SUFFIXES = tuple(
+DOMAIN_SUFFIXES: tuple[str, ...] = tuple(  # ty: ignore[invalid-assignment]
     sorted(
-        {
+        [
             ".com",
             ".org",
             ".net",
@@ -100,7 +99,7 @@ DOMAIN_SUFFIXES = tuple(
             ".cat",
             ".jobs",
             ".post",
-        },
+        ],
         key=len,
         reverse=True,
     )
@@ -163,9 +162,9 @@ def get_acronym(name: str) -> str | None:
 def build_blocks(
     input_path: str = config.get("process.kg.er.paths.input"),
     output_path: str = config.get("process.kg.er.paths.names.blocks_dir"),
-    local_mode: Optional[bool] = None,
+    local_mode: bool | None = None,
     stop_spark: bool = True,
-    max_block_size: Optional[int] = None,
+    max_block_size: int | None = None,
 ) -> None:
     """
     Analyze company blocking strategies by computing size distributions.
@@ -583,8 +582,7 @@ def build_blocks(
 
         # Create new block keys with chunk suffix (matching UDTF: all chunks get _chunk_N suffix)
         with_new_keys = with_salt.withColumn(
-            "new_block_key",
-            F.concat(F.col("block_key"), F.lit("_chunk_"), F.col("salt") + 1)
+            "new_block_key", F.concat(F.col("block_key"), F.lit("_chunk_"), F.col("salt") + 1)
         )
 
         # Re-aggregate by new block keys
@@ -612,17 +610,23 @@ def build_blocks(
     total_blocks_before = combined_blocks_before + first_word_blocks_before + acronym_blocks_before
 
     # Apply salt-based splitting to each block type
-    combined_blocks_final = split_blocks_with_salt(combined_blocks, actual_max_block_size).orderBy(
-        F.col("block_size")
-    ).cache()
+    combined_blocks_final = (
+        split_blocks_with_salt(combined_blocks, actual_max_block_size)
+        .orderBy(F.col("block_size"))
+        .cache()
+    )
 
-    first_word_blocks_final = split_blocks_with_salt(
-        first_word_only_blocks, actual_max_block_size
-    ).orderBy(F.col("block_size")).cache()
+    first_word_blocks_final = (
+        split_blocks_with_salt(first_word_only_blocks, actual_max_block_size)
+        .orderBy(F.col("block_size"))
+        .cache()
+    )
 
-    acronym_blocks_final = split_blocks_with_salt(
-        acronym_only_blocks, actual_max_block_size
-    ).orderBy(F.col("block_size")).cache()
+    acronym_blocks_final = (
+        split_blocks_with_salt(acronym_only_blocks, actual_max_block_size)
+        .orderBy(F.col("block_size"))
+        .cache()
+    )
 
     # Count blocks after splitting
     combined_blocks_after = combined_blocks_final.count()

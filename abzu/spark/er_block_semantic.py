@@ -10,7 +10,7 @@ import sys
 import tempfile
 from itertools import combinations
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -344,7 +344,7 @@ def _run_faiss_subprocess(
     embeddings: np.ndarray,
     uuids: list[str],
     target_block_size: int,
-    max_distance: Optional[float],
+    max_distance: float | None,
     temp_dir: str,
 ) -> tuple[dict[str, list[str]], dict[str, Any]]:
     """Run FAISS clustering in a subprocess.
@@ -402,10 +402,10 @@ def _run_faiss_subprocess(
     logger.info(result.stderr.strip())
 
     # Load results
-    with open(output_path, "r") as f:
+    with open(output_path) as f:
         blocks = json.load(f)
 
-    with open(stats_path, "r") as f:
+    with open(stats_path) as f:
         stats = json.load(f)
 
     return blocks, stats
@@ -415,7 +415,7 @@ def build_semantic_blocks(
     input_path: str = config.get("process.kg.er.paths.input"),
     output_path: str = config.get("process.kg.er.paths.names.blocks_dir"),
     target_block_size: int = 50,
-    max_distance: Optional[float] = None,
+    max_distance: float | None = None,
     batch_size: int = 64,
     model_name: str = config.get("process.kg.er.model.blocker", "intfloat/multilingual-e5-base"),
     stop_spark: bool = True,

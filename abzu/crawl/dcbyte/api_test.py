@@ -2,7 +2,7 @@
 
 import json
 import re
-from typing import Any, Optional
+from typing import Any
 
 import requests
 from bs4 import BeautifulSoup
@@ -31,11 +31,11 @@ class DCByteAPIClient:
         self.base_url = "https://www.dcbyte.com"
         self.ajax_url = f"{self.base_url}/wp-admin/admin-ajax.php"
         self.blog_url = f"{self.base_url}/us/news-blogs/"
-        self.token: Optional[str] = None
-        self.gridid: Optional[str] = None
+        self.token: str | None = None
+        self.gridid: str | None = None
         self.loaded_post_ids: list[str] = []
 
-    def get_initial_page(self) -> tuple[Optional[str], Optional[str], list[dict[str, Any]]]:
+    def get_initial_page(self) -> tuple[str | None, str | None, list[dict[str, Any]]]:
         """Get the initial blog page and extract Essential Grid configuration."""
         try:
             response = self.session.get(self.blog_url)

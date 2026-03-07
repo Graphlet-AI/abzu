@@ -4,7 +4,7 @@ import json
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from abzu.baml_client.types import IndustryArticle
 from abzu.config import config
@@ -107,14 +107,14 @@ class ArticleStorage:
         if not Path(backup_path).exists():
             try:
                 os.makedirs(os.path.dirname(os.path.abspath(backup_path)), exist_ok=True)
-                with open(file_path, "r", encoding="utf-8") as src_file:
+                with open(file_path, encoding="utf-8") as src_file:
                     with open(backup_path, "w", encoding="utf-8") as bak_file:
                         bak_file.write(src_file.read())
                 logger.info(f"Created backup of {file_path} at {backup_path}")
             except Exception as e:
                 logger.error(f"Failed to create backup of {file_path}: {e}")
 
-    def load_raw_articles(self, limit: Optional[int] = None) -> list[dict[str, Any]]:
+    def load_raw_articles(self, limit: int | None = None) -> list[dict[str, Any]]:
         """Load raw articles from storage.
 
         Args:
@@ -125,7 +125,7 @@ class ArticleStorage:
         """
         return self._load_jsonl(self.raw_articles_path, limit)
 
-    def load_processed_articles(self, limit: Optional[int] = None) -> list[dict[str, Any]]:
+    def load_processed_articles(self, limit: int | None = None) -> list[dict[str, Any]]:
         """Load processed articles from storage.
 
         Args:
@@ -136,7 +136,7 @@ class ArticleStorage:
         """
         return self._load_jsonl(self.processed_articles_path, limit)
 
-    def _load_jsonl(self, file_path: str, limit: Optional[int] = None) -> list[dict[str, Any]]:
+    def _load_jsonl(self, file_path: str, limit: int | None = None) -> list[dict[str, Any]]:
         """Load JSON Lines file.
 
         Args:
@@ -152,7 +152,7 @@ class ArticleStorage:
                 logger.warning(f"File does not exist: {file_path}")
                 return []
 
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 for i, line in enumerate(f):
                     if limit is not None and i >= limit:
                         break

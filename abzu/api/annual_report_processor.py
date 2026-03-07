@@ -90,7 +90,7 @@ def process_annual_report(
         Path to the processed JSON file.
     """
     text_path = download_annual_report(ticker, year, save_dir=output_dir)
-    with open(text_path, "r", encoding="utf-8") as f:
+    with open(text_path, encoding="utf-8") as f:
         report_text = f.read()
 
     logger.info("Processing annual report %s %s", ticker, year)
@@ -130,7 +130,7 @@ def process_annual_report_data_only(
         Processed annual report data.
     """
     text_path = download_annual_report(ticker, year, save_dir=output_dir)
-    with open(text_path, "r", encoding="utf-8") as f:
+    with open(text_path, encoding="utf-8") as f:
         report_text = f.read()
 
     logger.info("Processing annual report %s %s", ticker, year)

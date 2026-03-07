@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Optional
 
 from abzu.articles.processor import process_main
 from abzu.config import config
@@ -9,7 +8,7 @@ logger = get_logger(__name__)
 
 
 def process_rss_feeds(
-    feeds_file: Optional[str] = None,
+    feeds_file: str | None = None,
     input_path: str = config.get("process.rss.input_dir"),
     output_dir: str = config.get("process.rss.output_dir"),
     batch_size: int = 5,

@@ -2,7 +2,7 @@
 
 import copy
 import json
-from typing import Any, Optional
+from typing import Any
 
 from pyspark.sql.types import Row
 
@@ -46,7 +46,7 @@ class UUIDMapper:
             self.next_id += 1
         return self.uuid_to_int[uuid]
 
-    def get_uuid(self, int_id: int) -> Optional[str]:
+    def get_uuid(self, int_id: int) -> str | None:
         """
         Get the UUID for a given integer ID.
 
@@ -58,7 +58,7 @@ class UUIDMapper:
         """
         return self.int_to_uuid.get(int_id)
 
-    def map_ids_to_uuids(self, ids: Optional[list[int]]) -> Optional[list[str]]:
+    def map_ids_to_uuids(self, ids: list[int] | None) -> list[str] | None:
         """
         Map a list of integer IDs back to UUIDs.
 
@@ -79,7 +79,7 @@ class UUIDMapper:
                 logger.warning(f"No UUID found for integer ID {id_val}")
         return uuids if uuids else None
 
-    def map_uuids_to_ids(self, uuids: Optional[list[str]]) -> Optional[list[int]]:
+    def map_uuids_to_ids(self, uuids: list[str] | None) -> list[int] | None:
         """
         Map a list of UUIDs to their integer IDs.
 
@@ -98,7 +98,7 @@ class UUIDMapper:
 async def process_block_with_uuid_mapping(
     block: dict[str, Any],
     baml_client: BamlAsyncClient,
-    collector: Optional[Any] = None,
+    collector: Any | None = None,
     iteration: int = 1,
 ) -> dict[str, Any]:
     """
@@ -357,7 +357,6 @@ async def process_block_with_uuid_mapping(
         # Convert resolved companies back to dictionaries with UUID mapping restored
         resolved_companies = []
         for company in result.companies:
-
             # Track the master record UUID (the output company's ID maps back to an input UUID)
             master_uuid = mapper.get_uuid(company.id)
             if master_uuid:

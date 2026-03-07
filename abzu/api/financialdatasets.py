@@ -5,9 +5,10 @@ import os
 import pathlib
 import re
 import time
+from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date, datetime
-from typing import Any, Iterator, Optional, Union
+from typing import Any
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -27,7 +28,7 @@ class FinancialDatasetsAPI:
     BASE_URL = "https://api.financialdatasets.ai"
 
     def __init__(
-        self, api_key: Optional[str] = None, max_retries: int = 5, pause_seconds: float = 0.6
+        self, api_key: str | None = None, max_retries: int = 5, pause_seconds: float = 0.6
     ):
         """Initialize the API client with retry capabilities.
 
@@ -70,8 +71,8 @@ class FinancialDatasetsAPI:
     def get_historical_prices(
         self,
         ticker: str,
-        start_date: Union[str, date, datetime],
-        end_date: Union[str, date, datetime],
+        start_date: str | date | datetime,
+        end_date: str | date | datetime,
         interval: str = "day",
         interval_multiplier: int = 1,
     ) -> dict[str, Any]:
@@ -164,7 +165,7 @@ class FinancialDatasetsAPI:
             raise
 
     def get_company_facts(
-        self, ticker: Optional[str] = None, cik: Optional[str] = None
+        self, ticker: str | None = None, cik: str | None = None
     ) -> dict[str, Any]:
         """Get company facts from the Financial Datasets API with rate limiting.
 
@@ -244,8 +245,8 @@ class FinancialDatasetsAPI:
     def get_multiple_prices(
         self,
         tickers: list[str],
-        start_date: Union[str, date, datetime],
-        end_date: Union[str, date, datetime],
+        start_date: str | date | datetime,
+        end_date: str | date | datetime,
         interval: str = "day",
         interval_multiplier: int = 1,
         max_workers: int = 5,
@@ -409,7 +410,7 @@ def read_jsonl(file_path: str) -> Iterator[dict[str, Any]]:
     Yields:
         Each line parsed as a JSON object
     """
-    with open(file_path, "r") as f:
+    with open(file_path) as f:
         for line in f:
             line = line.strip()
             if line:  # Skip empty lines
@@ -478,7 +479,7 @@ def read_data_file(file_path: str) -> Iterator[dict[str, Any]]:
 def process_batch_companies(
     api: FinancialDatasetsAPI,
     companies: list[dict[str, Any | None]],
-    output_file: Optional[str] = None,
+    output_file: str | None = None,
     show_progress: bool = True,
 ) -> list[dict[str, Any]]:
     """Process a batch of companies in parallel.
@@ -541,12 +542,12 @@ def process_batch_companies(
 
 
 def financialdatasets_facts_main(  # noqa: C901
-    ticker: Optional[str] = None,
-    cik: Optional[str] = None,
-    input_file: Optional[str] = None,
-    api_key: Optional[str] = None,
+    ticker: str | None = None,
+    cik: str | None = None,
+    input_file: str | None = None,
+    api_key: str | None = None,
     pretty: bool = False,
-    output_file: Optional[str] = None,
+    output_file: str | None = None,
     max_retries: int = 5,
     pause_seconds: float = 0.5,
     show_progress: bool = True,
@@ -631,8 +632,8 @@ def financialdatasets_price_main(
     end_date: str,
     interval: str = "day",
     interval_multiplier: int = 1,
-    api_key: Optional[str] = None,
-    output_file: Optional[str] = None,
+    api_key: str | None = None,
+    output_file: str | None = None,
     pretty: bool = False,
     max_retries: int = 5,
     pause_seconds: float = 0.5,
@@ -703,8 +704,8 @@ def financialdatasets_metrics_main(
     ticker: str,
     period: str = "annual",
     limit: int = 30,
-    api_key: Optional[str] = None,
-    output_file: Optional[str] = None,
+    api_key: str | None = None,
+    output_file: str | None = None,
     pretty: bool = False,
     max_retries: int = 5,
     pause_seconds: float = 0.5,
@@ -772,8 +773,8 @@ def financialdatasets_metrics_multiple_main(
     tickers: list[str],
     period: str = "annual",
     limit: int = 30,
-    api_key: Optional[str] = None,
-    output_file: Optional[str] = None,
+    api_key: str | None = None,
+    output_file: str | None = None,
     pretty: bool = False,
     max_retries: int = 5,
     pause_seconds: float = 0.5,
@@ -881,8 +882,8 @@ def financialdatasets_price_multiple_main(
     end_date: str,
     interval: str = "day",
     interval_multiplier: int = 1,
-    api_key: Optional[str] = None,
-    output_file: Optional[str] = None,
+    api_key: str | None = None,
+    output_file: str | None = None,
     pretty: bool = False,
     max_retries: int = 5,
     pause_seconds: float = 0.5,
@@ -962,7 +963,7 @@ def financialdatasets_price_multiple_main(
 
 
 def financialdatasets_tickers_main(
-    api_key: Optional[str] = None,
+    api_key: str | None = None,
     output_file: str = config.get("api.financialdatasets.tickers.output"),
     pretty: bool = False,
     max_retries: int = 5,

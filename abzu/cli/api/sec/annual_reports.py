@@ -105,7 +105,7 @@ def bulk(tickers_file: str, output_dir: str, batch_size: int, bfs: bool) -> None
     except Exception as e:
         # Fallback: try to read as text file for backward compatibility
         try:
-            with open(tickers_file, "r", encoding="utf-8") as f:
+            with open(tickers_file, encoding="utf-8") as f:
                 tickers = [line.strip() for line in f if line.strip()]
             logger.info("Loaded %s tickers from text file %s", len(tickers), tickers_file)
         except Exception:

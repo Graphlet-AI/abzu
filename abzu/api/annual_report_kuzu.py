@@ -5,8 +5,9 @@ from __future__ import annotations
 import csv
 import json
 import re
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Iterable, Optional
+from typing import Any
 
 from cleanco import basename
 
@@ -39,7 +40,7 @@ def _company_id(company: dict[str, Any]) -> str:
     return ""
 
 
-def _add_company(companies: dict[str, dict[str, Optional[str]]], company: dict[str, Any]) -> str:
+def _add_company(companies: dict[str, dict[str, str | None]], company: dict[str, Any]) -> str:
     cid = _company_id(company)
     if not cid:
         return ""
@@ -59,7 +60,7 @@ def _add_company(companies: dict[str, dict[str, Optional[str]]], company: dict[s
 
 def _process_file(
     path: Path,
-    companies: dict[str, dict[str, Optional[str]]],
+    companies: dict[str, dict[str, str | None]],
     invests_in: set[tuple[str, str]],
     has_investor: set[tuple[str, str]],
     partnered_with: set[tuple[str, str]],
@@ -68,7 +69,7 @@ def _process_file(
     subsidiary_of: set[tuple[str, str]],
     has_subsidiary: set[tuple[str, str]],
 ) -> None:
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         data = json.load(f)
 
     reporting = data.get("reporting_company")
@@ -143,7 +144,7 @@ def build_annual_report_kuzu_graph(input_dir: str, output_dir: str) -> dict[str,
     if not base.exists():
         raise FileNotFoundError(f"Input directory not found: {input_dir}")
 
-    companies: dict[str, dict[str, Optional[str]]] = {}
+    companies: dict[str, dict[str, str | None]] = {}
     invests_in: set[tuple[str, str]] = set()
     has_investor: set[tuple[str, str]] = set()
     partnered_with: set[tuple[str, str]] = set()

@@ -9,7 +9,7 @@ def test_extract_nvidia_info():
     """Test that we can extract all key fields from NVIDIA's Wikipedia page."""
     # Load the downloaded NVIDIA text
     nvidia_file = Path(__file__).parent / "assets" / "nvidia.txt"
-    with open(nvidia_file, "r") as f:
+    with open(nvidia_file) as f:
         content = f.read()
 
     # Create page data structure

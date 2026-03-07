@@ -6,7 +6,7 @@ to company names in the knowledge graph.
 
 import json
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 import numpy as np
 import requests
@@ -143,7 +143,7 @@ def load_companies(companies_path: str) -> list[dict[str, Any]]:
     df = pd.read_parquet(companies_path)
 
     # Convert to list of dicts
-    companies = df.to_dict(orient="records")
+    companies: list[dict[str, Any]] = cast(list[dict[str, Any]], df.to_dict(orient="records"))
 
     # Replace NaN/NaT with None for Pydantic compatibility
     # Pandas converts null integers to float NaN, which Pydantic rejects

@@ -4,8 +4,6 @@ Uses FAISS IndexIVFFlat to cluster embeddings into blocks for efficient
 entity comparison during matching.
 """
 
-from typing import Optional
-
 import faiss
 import numpy as np
 
@@ -42,7 +40,7 @@ class FAISSBlocker:
     def __init__(
         self,
         target_block_size: int = 50,
-        max_distance: Optional[float] = None,
+        max_distance: float | None = None,
     ):
         """Initialize the FAISS blocker.
 

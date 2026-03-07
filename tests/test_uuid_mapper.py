@@ -91,7 +91,7 @@ class TestProcessBlockWithUUIDMapping:
             return self._create_mock_blocks()
 
         blocks = []
-        with open(blocks_file, "r") as f:
+        with open(blocks_file) as f:
             for i, line in enumerate(f):
                 block = json.loads(line)
                 # Get a mix of single and multi-company blocks

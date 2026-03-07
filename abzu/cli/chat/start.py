@@ -2,7 +2,6 @@
 
 import asyncio
 import os
-from typing import Optional
 
 import click
 
@@ -76,7 +75,7 @@ logger = get_logger(__name__)
     help="Use cloudscraper instead of requests for harder-to-scrape sites",
 )
 def start(
-    token: Optional[str],
+    token: str | None,
     prefix: str,
     channels: list[int],
     ignore_domains: list[str],
@@ -118,6 +117,8 @@ def start(
 
     logger.info("Starting Chat agent...")
 
+    agent = None
+    loop = None
     try:
         # Create and start the agent
         loop = asyncio.get_event_loop()
@@ -138,7 +139,7 @@ def start(
         logger.info("Stopping Chat agent...")
         try:
             # Stop the agent
-            if "agent" in locals() and agent._running:
+            if agent is not None and agent._running and loop is not None:
                 loop.run_until_complete(agent.stop())
         except Exception as e:
             logger.error(f"Error stopping agent: {e}")

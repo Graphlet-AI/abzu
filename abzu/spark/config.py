@@ -1,14 +1,13 @@
 """Spark configuration module for Abzu."""
 
 import os
-from typing import Optional
 
 from pyspark.sql import SparkSession
 
 
 def get_spark_session(
     app_name: str,
-    local_mode: Optional[bool] = None,
+    local_mode: bool | None = None,
     driver_memory: str = "4g",
     executor_memory: str = "2g",
 ) -> SparkSession:
@@ -27,7 +26,7 @@ def get_spark_session(
     # Determine if we should use local mode
     if local_mode is None:
         # Check if we're running in Docker with distributed setup
-        spark_master: Optional[str] = os.getenv("SPARK_MASTER")
+        spark_master: str | None = os.getenv("SPARK_MASTER")
         local_mode = not (spark_master is not None and spark_master.startswith("spark://"))
 
     # Start building the SparkSession

@@ -2,8 +2,8 @@
 
 import re
 import time
-from datetime import datetime
-from typing import Any, Optional, Union
+from datetime import UTC, datetime
+from typing import Any
 
 import cloudscraper
 import requests
@@ -81,7 +81,7 @@ class ContentFetcher:
             return title_match.group(1).strip()
         return ""
 
-    def extract_posted_date(self, content: str, url: str) -> Optional[str]:
+    def extract_posted_date(self, content: str, url: str) -> str | None:
         """Extract the posted date from HTML content.
 
         Attempts to find a publication date in the HTML content using common patterns.
@@ -120,7 +120,7 @@ class ContentFetcher:
 
         return None
 
-    def fetch_url(self, url: str) -> tuple[bool, Union[dict[str, Any], str]]:
+    def fetch_url(self, url: str) -> tuple[bool, dict[str, Any] | str]:
         """Fetch content from a URL with retry capabilities.
 
         Args:
@@ -168,7 +168,7 @@ class ContentFetcher:
             posted_at = self.extract_posted_date(html_content, url)
 
             # Create article dict according to schema in README
-            collected_at = datetime.utcnow().isoformat()
+            collected_at = datetime.now(UTC).isoformat()
             article = {
                 "url": url,
                 "title": title,

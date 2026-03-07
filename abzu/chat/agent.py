@@ -1,7 +1,7 @@
 """Chat agent for URL monitoring and article processing."""
 
 import asyncio
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 from discord import Message
 from pydantic import BaseModel, Field
@@ -20,18 +20,18 @@ logger = get_logger(__name__)
 class AgentConfig(BaseModel):
     """Configuration for the DiscordAgent."""
 
-    application_id: Optional[str] = Field(
+    application_id: str | None = Field(
         None,
         description="Discord application ID. Will use DISCORD_APPLICATION_ID env var if not provided.",
     )
-    discord_token: Optional[str] = Field(
+    discord_token: str | None = Field(
         None, description="Discord bot token. Will use DISCORD_BOT_TOKEN env var if not provided."
     )
     command_prefix: str = Field("!", description="Command prefix for the Discord bot.")
-    specific_channels: Optional[list[int]] = Field(
+    specific_channels: list[int] | None = Field(
         None, description="Specific channel IDs to monitor. If None, all channels are monitored."
     )
-    ignored_domains: Optional[list[str]] = Field(
+    ignored_domains: list[str] | None = Field(
         None, description="Domains to ignore when processing URLs."
     )
     raw_articles_path: str = Field(
@@ -65,14 +65,14 @@ class DiscordAgent:
     """Agent for monitoring Discord for URLs and processing articles."""
 
     config: AgentConfig
-    bot_runner: Optional[BotRunner] = None
-    playwright_fetcher: Optional[PlaywrightFetcher] = None
-    article_processor: Optional[ArticleProcessor] = None
-    article_storage: Optional[ArticleStorage] = None
-    _bot_task: Optional[asyncio.Task[None]] = None
+    bot_runner: BotRunner | None = None
+    playwright_fetcher: PlaywrightFetcher | None = None
+    article_processor: ArticleProcessor | None = None
+    article_storage: ArticleStorage | None = None
+    _bot_task: asyncio.Task[None] | None = None
     _running: bool = False
 
-    def __init__(self, config: Optional[AgentConfig] = None):
+    def __init__(self, config: AgentConfig | None = None):
         """Initialize the agent.
 
         Args:
@@ -243,7 +243,7 @@ class DiscordAgent:
             await send_error_to_bots(f"Error processing URL: {url}")
 
 
-async def start_agent(config: Optional[dict[str, Any]] = None) -> DiscordAgent:
+async def start_agent(config: dict[str, Any] | None = None) -> DiscordAgent:
     """Create and start a DiscordAgent.
 
     Args:

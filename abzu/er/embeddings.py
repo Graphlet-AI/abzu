@@ -35,7 +35,12 @@ class CompanyEmbedder:
     (3, 768)
     """
 
-    def __init__(self, model_name: str = config.get("process.kg.er.model.blocker", "intfloat/multilingual-e5-base")) -> None:
+    def __init__(
+        self,
+        model_name: str = config.get(
+            "process.kg.er.model.blocker", "intfloat/multilingual-e5-base"
+        ),
+    ) -> None:
         """Initialize the embedder with the best available device."""
         self.device = get_torch_device()
         logger.info(f"Initializing CompanyEmbedder on device: {self.device}")

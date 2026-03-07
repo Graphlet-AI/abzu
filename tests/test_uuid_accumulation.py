@@ -123,9 +123,9 @@ async def test_uuid_accumulation_with_existing_source_uuids():
     assert len(missing_uuids) == 0, f"Missing UUIDs in accumulation: {missing_uuids}"
 
     # Verify the count
-    assert (
-        len(actual_source_uuids) == 6
-    ), f"Should have 6 source_uuids, got {len(actual_source_uuids)}"
+    assert len(actual_source_uuids) == 6, (
+        f"Should have 6 source_uuids, got {len(actual_source_uuids)}"
+    )
 
     logger.info("✅ UUID accumulation test passed - all source_uuids properly accumulated")
 

@@ -1,7 +1,6 @@
 """CLI command for generating Discord bot authorization URLs."""
 
 import os
-from typing import Optional
 
 import click
 
@@ -21,7 +20,7 @@ logger = get_logger(__name__)
     "--redirect-uri",
     help="Optional redirect URI after authorization",
 )
-def auth(app_id: Optional[str], redirect_uri: Optional[str]) -> int:
+def auth(app_id: str | None, redirect_uri: str | None) -> int:
     """Generate Discord bot authorization URL.
 
     This command generates a URL that can be used to add the bot to a Discord server.

@@ -2,7 +2,7 @@
 
 import asyncio
 import os
-from typing import Any, Optional
+from typing import Any
 
 import click
 from discord.errors import HTTPException, LoginFailure
@@ -19,7 +19,7 @@ logger = get_logger(__name__)
     "--token",
     help="Discord bot token (defaults to DISCORD_BOT_TOKEN env var)",
 )
-def key(token: Optional[str]) -> int:
+def key(token: str | None) -> int:
     """Verify Discord authentication token.
 
     This command performs a simple API call to verify that the Discord token is valid.
@@ -38,11 +38,11 @@ def key(token: Optional[str]) -> int:
         http: HTTPClient = HTTPClient(loop=loop)
         try:
             await http.static_login(token)
-            user: dict[str, Any] = await http.get_user("@me")
+            user: Any = await http.get_user("@me")
             await http.close()
 
-            bot_name: str = user.get("username", "Unknown")
-            bot_id: str = user.get("id", "Unknown")
+            bot_name = str(user.get("username", "Unknown"))
+            bot_id = str(user.get("id", "Unknown"))
 
             click.secho("✓ Token authenticated successfully!", fg="green")
             click.echo(f"Bot Name: {bot_name}")
